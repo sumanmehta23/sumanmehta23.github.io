@@ -484,6 +484,50 @@
                                                                 <?php    endforeach; ?>
                                                             </div>
                                                         @endcan
+                                                        @can('account:viewDemoAccounts')
+                                                            <div class="mt-3 row">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <h4>DEMO ACCOUNTS</h4>
+                                                                </div>
+                                                            </div>
+                                                            <div class="px-2 row">
+                                                                @if (empty($demo_accounts) || $demo_accounts->isEmpty())
+                                                                    <div class="my-4 text-muted">No Demo Accounts Found.</div>
+                                                                @endif
+                                                                @foreach ($demo_accounts as $acc)
+                                                                    <div
+                                                                        class="my-2 border border-dashed col-xl-4 col-lg-6 border-3">
+                                                                        <div>
+                                                                            <div
+                                                                                class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
+                                                                                <div class="d-flex w-50 flex-column">
+                                                                                    <img src="/assets/{{ $acc->product->platformGroup->platform->name ?? config('platforms.default') }}.png"
+                                                                                        alt="card img" style="width:50px;">
+                                                                                    <div class="mt-1 fs-18 text-black-50 fw-bold">
+                                                                                        {{ $acc->code }}
+                                                                                        <span class="badge bg-info text-white ms-2">DEMO</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="d-flex justify-content-end w-50">
+                                                                                    <span
+                                                                                        class="mt-2 h4 fw-normal">${{ $acc->balance }}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="d-flex justify-content-between">
+                                                                                <div>
+                                                                                    <div class="fw-bold fs-12">
+                                                                                        {{ $acc->product->name }}
+                                                                                    </div>
+                                                                                    <div class="mb-2 fw-normal fs-10">
+                                                                                        {{ $acc->product->platformGroup->name }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        @endcan
                                                     </div>
                                                 </div>
                                             </div>
