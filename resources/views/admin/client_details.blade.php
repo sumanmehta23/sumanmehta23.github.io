@@ -501,7 +501,7 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    <img src="/assets/{{ $acc->product->platformGroup->platform->name ?? config('platforms.default') }}.png"
+                                                                                    <img src="/assets/admin_assets/assets/images/mt5.png"
                                                                                         alt="card img" style="width:50px;">
                                                                                     <div class="mt-1 fs-18 text-black-50 fw-bold">
                                                                                         {{ $acc->code }}
@@ -516,10 +516,10 @@
                                                                             <div class="d-flex justify-content-between">
                                                                                 <div>
                                                                                     <div class="fw-bold fs-12">
-                                                                                        {{ $acc->product->name }}
+                                                                                        {{ $acc->accountType->ac_name }}
                                                                                     </div>
                                                                                     <div class="mb-2 fw-normal fs-10">
-                                                                                        {{ $acc->product->platformGroup->name }}
+                                                                                         {{ $acc->accountType->ac_group }}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
