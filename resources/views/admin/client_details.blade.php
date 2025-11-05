@@ -501,7 +501,7 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    <img src="/assets/admin_assets/assets/images/mt5.png"
+                                                                                    <img src="/admin_assets/assets/images/mt5.png"
                                                                                         alt="card img" style="width:50px;">
                                                                                     <div class="mt-1 fs-18 text-black-50 fw-bold">
                                                                                         {{ $acc->code }}
