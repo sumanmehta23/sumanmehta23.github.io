@@ -583,7 +583,7 @@
                 },
                 columns: [
                     { data: 'email', name: 'email' },
-                    { data: 'total_accounts', name: 'total_accounts' },
+                    { data: 'liveaccounts', name: 'liveaccounts' },
                     { data: 'total_deposit', name: 'total_deposit' },
                     { data: 'profile_status', name: 'profile_status' },
                     { data: 'client_name', name: 'client_name',visible: false },
