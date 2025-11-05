@@ -3909,7 +3909,7 @@ class AjaxController extends Controller
                     ->editColumn('client_email', function ($row) {
                         return $row->email;
                     })
-                    ->rawColumns(['email', 'profile_status', 'client_name', 'client_email'])
+                    ->rawColumns(['email','total_accounts', 'profile_status', 'client_name', 'client_email'])
                     ->make(true);
             }
 
