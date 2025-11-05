@@ -186,6 +186,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ib-enroll', [Ib::class, 'ibEnroll'])->name('ib-enroll');
     Route::post('/ib-resend', [Ib::class, 'ibResend'])->name('ib-resend');
     Route::post('/ib-update-referral', [Ib::class, 'ibUpdateReferral'])->name('ib-update-referral');
+    
+    // IB Profile DataTables AJAX routes
+    Route::get('/ib/commission-data', [Ib::class, 'getCommissionData'])->name('ib.commission-data');
+    Route::get('/ib/client-profile', [Ib::class, 'getClientIbProfile'])->name('ib.client-profile');
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');

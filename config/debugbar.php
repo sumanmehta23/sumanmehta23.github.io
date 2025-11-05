@@ -14,11 +14,13 @@ return [
      |
      */
 
-    'enabled' => env('DEBUGBAR_ENABLED', null),
+        'enabled' => env('DEBUGBAR_ENABLED', null),
     'hide_empty_tabs' => false, // Hide tabs until they have content
     'except' => [
         'telescope*',
         'horizon*',
+        'ib/commission-data',
+        'ib/client-profile',
     ],
 
     /*
