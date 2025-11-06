@@ -63,16 +63,24 @@
                             </div>
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
-                                    <div class="wideget-user-desc d-flex align-items-center">
-                                        <div class="wideget-user-img">
-                                            <img src="/admin_assets/assets/images/users/client.png" alt="img"
-                                                style="width:50px">
+                                    @php
+                                        // Determine the user id and fullname with fallbacks
+                                        $clientId = $details->user->id ?? $details->user_id ?? null;
+                                        $clientFullname = $details->user->fullname ?? $details->fullname ?? 'N/A';
+                                        $clientEmail = $details->user->email ?? $details->email ?? '';
+                                    @endphp
+                                    <a href="{{ $clientId ? route('admin.admin-view-client-details', $clientId) : 'javascript:void(0);' }}" class="text-decoration-none">
+                                        <div class="wideget-user-desc d-flex align-items-center">
+                                            <div class="wideget-user-img">
+                                                <img src="/admin_assets/assets/images/users/client.png" alt="img"
+                                                    style="width:50px">
+                                            </div>
+                                            <div class="user-wrap">
+                                                <h4 class="fw-normal">{{ $clientFullname }}</h4>
+                                                <h6 class="mb-3 text-muted fw-normal">{{ $clientEmail }}</h6>
+                                            </div>
                                         </div>
-                                        <div class="user-wrap">
-                                            <h4 class="fw-normal">{{ $details->fullname }}</h4>
-                                            <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
-                                        </div>
-                                    </div>
+                                    </a>
                                 </div>
                                 <div class="cursor-pointer col-lg-3 col-md-12 rmToggle" data-rm="{{ $details->rm_id }}"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"

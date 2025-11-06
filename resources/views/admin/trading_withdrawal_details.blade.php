@@ -20,15 +20,21 @@
                             <h6 class="card-title fw-medium">WITHDRAW TICKET #{{ $details->id }}</h6>
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
+                                    @php
+                                        // Determine the user id and fullname with fallbacks
+                                        $clientId = $details->user->id ?? $details->user_id ?? null;
+                                        $clientFullname = $details->user->fullname ?? $details->fullname ?? 'N/A';
+                                        $clientEmail = $details->user->email ?? $details->email ?? '';
+                                    @endphp
                                     <div class="wideget-user-desc d-flex align-items-center">
                                         <div class="wideget-user-img">
-                                            <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')" src="/admin_assets/assets/images/users/client.png" alt="img" href='{{ route('admin.admin-view-client-details', $details->user_id) }}'
+                                            <img class="cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')" src="/admin_assets/assets/images/users/client.png" alt="img" href='{{ route('admin.admin-view-client-details', $clientId) }}'
                                                 style="width:50px">
                                         </div>
 
                                         <div class="user-wrap">
                                             <h4 class="fw-normal d-flex align-items-center">
-                                                {{ $details->user->fullname }}
+                                                {{ $clientFullname }}
                                                 <span class="badge bg-success text-white ms-2">
                                                     Wallet balance: ${{ number_format($details->user->wallet_balance?$details->user->wallet_balance:0, 2) }}
                                                 </span>
@@ -39,7 +45,7 @@
                                                 @endif
                                             </h4>
 
-                                            <h6 class="mb-3 text-muted fw-normal cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $details->user_id) }}')">{{ $details->email }}</h6>
+                                            <h6 class="mb-3 text-muted fw-normal cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">{{ $clientEmail }}</h6>
                                         </div>
                                     </div>
                                 </div>
