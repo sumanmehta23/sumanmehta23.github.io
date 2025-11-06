@@ -1549,7 +1549,7 @@ class AjaxController extends Controller
                 })
                 ->addColumn('withdraw_method', function ($row) {
                     if ($row->status == 1) {
-                        return '<a class="text-success" target="_blank" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type. '</a>';
+                        return "<a class='text-success' target='_blank' href='https://uniwire.com/payout/{$row->transaction_id}> {$row->withdraw_type} </a>";
                     }else{
                         return 'N/A';
                     }
