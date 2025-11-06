@@ -186,7 +186,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ib-enroll', [Ib::class, 'ibEnroll'])->name('ib-enroll');
     Route::post('/ib-resend', [Ib::class, 'ibResend'])->name('ib-resend');
     Route::post('/ib-update-referral', [Ib::class, 'ibUpdateReferral'])->name('ib-update-referral');
-    
+
     // IB Profile DataTables AJAX routes
     Route::get('/ib/commission-data', [Ib::class, 'getCommissionData'])->name('ib.commission-data');
     Route::get('/ib/client-profile', [Ib::class, 'getClientIbProfile'])->name('ib.client-profile');
@@ -298,6 +298,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
 
         Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
+        Route::get('/export-all-demo-accounts', [AjaxController::class, 'exportAllDemoAccounts'])->name('export.all_demo_accounts');
 
         Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
         Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);

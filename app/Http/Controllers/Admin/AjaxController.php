@@ -4007,6 +4007,50 @@ class AjaxController extends Controller
         ]);
     }
 
+    public function exportAllDemoAccounts(Request $request)
+    {
+        $fileName = 'Demo_Accounts_' . date('Y-m-d') . '.csv';
+
+        return Response::streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance', 'Equity', 'Status', 'Date', 'Time']);
+
+            $chunkCount = 0;
+
+            Account::with('user', 'accountType')->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+                $chunkCount++;
+                Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
+
+                foreach ($accounts as $account) {
+                    try {
+                        fputcsv($handle, [
+                            $account->id,
+                            $account->user->fullname ?? '',
+                            $account->email,
+                            $account->code,
+                            $account->accountType->ac_group ?? '',
+                            $account->leverage,
+                            $account->balance,
+                            $account->equity,
+                            $account->status,
+                            $account->created_at->format('Y-m-d'),
+                            $account->created_at->format('H:i:s'),
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Error writing account ID {$account->id}: " . $e->getMessage());
+                    }
+                }
+            });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
 
     public function exportAllTradingDeposit(Request $request)
     {
