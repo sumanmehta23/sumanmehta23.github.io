@@ -1547,6 +1547,13 @@ class AjaxController extends Controller
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
                 })
+                ->addColumn('withdraw_method', function ($row) {
+                    if ($row->status == 1) {
+                        return '<a class="text-success" target="_blank" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type. '</a>';
+                    }else{
+                        return 'N/A';
+                    }
+                })
                 ->addColumn('withdraw_to', function ($row) {
                     if ($row->withdraw_to) {
                         $acc = Account::where('id', $row->withdraw_to)->first();

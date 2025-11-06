@@ -185,7 +185,8 @@
                             </p>
                           </td>
                           <td>
-                            <h6 class="f-w-500">{{ $history->withdraw_type }}</h6>
+                             <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="https://uniwire.com/payout/{{ $history->transaction_id }}"> {{ $history->withdraw_type }}</a>
+                            {{-- <h6 class="f-w-500">{{ $history->withdraw_type }}</h6> --}}
                           </td>
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdrawal_amount, 2) }}</h6>
