@@ -1639,7 +1639,7 @@ class AjaxController extends Controller
                 ->addColumn('client_email', function ($row) {
                     return $row->user->email;
                 })
-                ->rawColumns(['account_no', 'email', 'amount', 'transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action', 'withdrawal_amount', 'withdrawal_fee', 'total_withdrawal', 'total_withdrawal', 'created_date', 'created_time', 'client_email'])
+                ->rawColumns(['withdraw_method', 'account_no', 'email', 'amount', 'transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action', 'withdrawal_amount', 'withdrawal_fee', 'total_withdrawal', 'total_withdrawal', 'created_date', 'created_time', 'client_email'])
                 ->make(true);
         }
 
