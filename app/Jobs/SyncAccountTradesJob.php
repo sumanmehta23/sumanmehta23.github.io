@@ -61,12 +61,13 @@ class SyncAccountTradesJob implements ShouldQueue
      */
     public function handle(): void
     {
+        Log::info("SyncAccountTradesJob: Starting trade sync for " . json_encode($this->accountIds) . " accounts");
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
 
             // The QueueSafeMT5Service handles connection management internally
             Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
-            Log::info("SyncAccountTradesJob: Starting trade sync for " . json_encode($this->accountIds) . " accounts");
+
 
             // Process each account
             foreach ($this->accountIds as $accountId) {
