@@ -41,6 +41,7 @@ class SyncAccountTradesJob implements ShouldQueue
      */
     public function __construct($accountIds, $referral_code, $ib_user_id, $ib_acc_plans)
     {
+        Log::info("accountIds for ibs".json_encode($accountIds));
         // Support both single account ID (backward compatibility) and array of IDs
         $this->accountIds = is_array($accountIds) ? $accountIds : [$accountIds];
         $this->referral_code = $referral_code;
