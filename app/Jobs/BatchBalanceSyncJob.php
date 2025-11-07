@@ -54,10 +54,10 @@ class BatchBalanceSyncJob implements ShouldQueue
             'not_found' => 0
         ];
 
-        Log::info('BatchBalanceSyncJob: Starting batch balance sync', [
-            'account_count' => count($this->accountIds),
-            'force_sync' => $this->forceSync
-        ]);
+        // Log::info('BatchBalanceSyncJob: Starting batch balance sync', [
+        //     'account_count' => count($this->accountIds),
+        //     'force_sync' => $this->forceSync
+        // ]);
 
         try {
             // Get accounts for this batch
@@ -105,10 +105,10 @@ class BatchBalanceSyncJob implements ShouldQueue
 
         $duration = round((microtime(true) - $startTime) * 1000, 2);
 
-        Log::info('BatchBalanceSyncJob: Batch completed', array_merge($batchResults, [
-            'duration_ms' => $duration,
-            'avg_per_account_ms' => $batchResults['processed'] > 0 ? round($duration / $batchResults['processed'], 2) : 0
-        ]));
+        // Log::info('BatchBalanceSyncJob: Batch completed', array_merge($batchResults, [
+        //     'duration_ms' => $duration,
+        //     'avg_per_account_ms' => $batchResults['processed'] > 0 ? round($duration / $batchResults['processed'], 2) : 0
+        // ]));
 
         return $batchResults;
     }
