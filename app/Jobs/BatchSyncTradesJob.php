@@ -277,6 +277,33 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         }
 
         try {
+            // NEW CHECK: Look for trades with profit = 0
+            $phaseStart = microtime(true);
+
+            $zeroProfitTrades = Trade::where('account_id', $account->id)
+                ->where('profit', 0)
+                ->whereDoesntHave('deals') // Exclude trades with matching position_id in deals
+                ->orderBy('created_at', 'desc')
+                ->get();
+            // Log::info("zeroProfitTrades ".json_encode($zeroProfitTrades));
+            if ($zeroProfitTrades->isNotEmpty()) {
+                // Get earliest trade with profit = 0
+                $earliestZeroProfitTrade = $zeroProfitTrades->first();
+                $syncFromTime = Carbon::parse($earliestZeroProfitTrade->open_time)->subHours(5);
+                Log::info("DEBUG[{$account->code}]: Found {$zeroProfitTrades->count()} trades with zero profit. " .
+                    "Triggering DealSyncJob from {$syncFromTime} (2 hours before earliest zero-profit trade at {$earliestZeroProfitTrade->created_at})");
+
+                // Dispatch deal sync job starting from 2 hours before earliest zero-profit trade
+                $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
+                $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
+
+                // Invalidate cache after deal sync
+                $cacheService->invalidateAccountDeals($account);
+                $cacheService->invalidateAccount($account);
+
+                Log::info("DEBUG[{$account->code}]: Deal sync completed for zero-profit trades, proceeding with trade sync");
+            }
+
             // PHASE 1 (MOVED): Check Deal Data Freshness FIRST - Avoid unnecessary MT5 API calls
             $phaseStart = microtime(true);
 
@@ -295,6 +322,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 Log::info("DEBUG[{$account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
 
                 // Dispatch deal sync job and wait for it to complete
+
                 $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
                 $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
 
@@ -925,7 +953,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $profit = round($priceDiff * $volumeInLots * $contractSize * $rateProfit * $multiplier, 2);
             Log::warning("DEBUG[{$account->code}]: Position {$positionId} using calculated profit: {$profit} (no deals available)");
             // Log calculation details for troubleshooting
-            Log::warning("DEBUG[{$account->code}]: Manual calculation details - " .
+            Log::warning("DEBUG[{$account->code}]: Manual calculation details line 956 - " .
                 "Type: " . ($openOrder->Type ? 'sell' : 'buy') . ", " .
                 "PriceDiff: {$priceDiff}, " .
                 "VolumeLots: {$volumeInLots}, " .
@@ -934,18 +962,18 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 "Multiplier: {$multiplier}");
 
             // Track accounts with frequent manual calculations for admin review
-            activity('trade_profit_calculation')
-                ->withProperties([
-                    'account_code' => $account->code,
-                    'position_id' => $positionId,
-                    'manual_calculation' => true,
-                    'calculated_profit' => $profit,
-                    'price_diff' => $priceDiff,
-                    'volume_lots' => $volumeInLots,
-                    'contract_size' => $contractSize,
-                    'rate_profit' => $rateProfit
-                ])
-                ->log("Manual profit calculation used for position {$positionId} - deals not found");
+            // activity('trade_profit_calculation')
+            //     ->withProperties([
+            //         'account_code' => $account->code,
+            //         'position_id' => $positionId,
+            //         'manual_calculation' => true,
+            //         'calculated_profit' => $profit,
+            //         'price_diff' => $priceDiff,
+            //         'volume_lots' => $volumeInLots,
+            //         'contract_size' => $contractSize,
+            //         'rate_profit' => $rateProfit
+            //     ])
+            //     ->log("Manual profit calculation used for position {$positionId} - deals not found");
             $profit = 0; // TEMPORARY OVERRIDE: Set to zero to avoid misleading data until deals are fixed . We will fetch such positions from positions api later like every 5 minutes
         }
 

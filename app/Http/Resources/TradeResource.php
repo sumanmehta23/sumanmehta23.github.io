@@ -30,7 +30,7 @@ class TradeResource extends JsonResource
             'position_open_date' => $this->open_time, // Optional: The position open time
             'position_base_currency' => $this->account->currency ?? null, // Optional: The transaction currency in 3 letter ISO format
             //flip profit from nevgative to positive and positive to negative  if B-Book
-            'position_pl' => $isBBook ? -$this->profit : $this->profit, // Optional: The Profit or Loss derived from the position
+            'position_pl' => $isBBook ? -$this->profit : 0, // Optional: The Profit or Loss derived from the position
             'position_trading_group' => $this->trading_group ?? null, // Optional: The associated trading group
             'position_status' => $this->status, // Optional: Indicating the outcome (Won, Lost, Cancelled)
             'position_type' => $this->type, // Optional: A description of the Position

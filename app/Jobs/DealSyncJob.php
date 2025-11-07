@@ -40,6 +40,7 @@ class DealSyncJob implements ShouldQueue
 
     public function __construct(array $accounts, array $fromTimes = [], bool $fullSync = false)
     {
+
         // Convert Account models to serializable array format
         $this->accounts = collect($accounts)->map(function ($account) {
             return [
@@ -85,6 +86,7 @@ class DealSyncJob implements ShouldQueue
             $api = $mt5Service->getApi();
 
             foreach ($this->accounts as $index => $accountData) {
+
                 $accountIterationStart = microtime(true);
                 try {
                     $account = Account::find($accountData['id']);
@@ -94,8 +96,8 @@ class DealSyncJob implements ShouldQueue
                         $results['processed']++;
                         continue;
                     }
-
                     $fromTime = $this->determineFromTime($account, $index);
+                    Log::info("fromTime abhay". $fromTime);
                     $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
 
                     $results[$result['status']]++;
@@ -220,7 +222,9 @@ class DealSyncJob implements ShouldQueue
             // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
             Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
             $phaseStart = microtime(true);
+
             $error_code = $api->DealGetTotal($login, $fromTimestamp, $toTimestamp, $totalDeals);
+
             $timings['mt5_deal_total'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             if ($error_code != MTRetCode::MT_RET_OK) {

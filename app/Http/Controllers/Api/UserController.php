@@ -20,10 +20,13 @@ class UserController extends Controller
     public function index(Request $request)
     {
         // Initialize query
-        $query = User::query()->with('countryDetail:country_name,country_alpha')->with(['liveAccounts' => function ($q) {
-            $q->where('demo', 0)
-                ->select('id', 'user_id', 'code', 'balance');
-        }])->select('id', 'email', 'fullname', 'country', 'ib1', 'cxd', 'status', 'kyc_verify', 'created_at', 'updated_at', 'client_ip');
+        $query = User::query()->with('countryDetail:country_name,country_alpha')
+                                ->with(['liveAccounts' => function ($q) {
+                                    $q->where('demo', 0)
+                                        ->select('id', 'user_id', 'code', 'balance');
+                                }])
+                                ->whereNotNull('cxd')
+                                ->select('id', 'email', 'fullname', 'country', 'ib1', 'cxd', 'status', 'kyc_verify', 'created_at', 'updated_at', 'client_ip');
 
         // Apply filters only when there are actual values
         // Filter by registration date range

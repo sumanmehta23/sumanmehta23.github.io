@@ -91,6 +91,7 @@
                                                     <th>Withdraw Type</th>
                                                     <th>Withdraw To</th>
                                                     <th>Withdraw Date</th>
+                                                    <th>Withdraw Method</th>
                                                     <th>Approve Date</th>
                                                     <th>Status</th>
                                                     <th>Actions</th>
@@ -172,6 +173,7 @@
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_to', name: 'withdraw_to' },
               { data: 'withdraw_date', name: 'withdraw_date'},
+              { data: 'withdraw_method', name: 'withdraw_method'},
               { data: 'approve_date', name: 'approve_date'},
               { data: 'status', name: 'status' },
               { data: 'action', name: 'action', orderable: false, searchable: false },

@@ -59,11 +59,20 @@ class TradeController extends Controller
         ]);
 
         // Initialize query with account relationship for user_id and currency, and filter for live accounts only
-        $query = Trade::query()->with('account:id,user_id,currency')
+        $query = Trade::query()->with('account:id,user_id,currency,account_type_id')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
             })
-            ->where('profit', '!=', 0); // Exclude trades with zero profit
+            ->whereHas('user', function ($q) {
+                $q->whereNotNull('cxd');
+            })
+            ->where(function ($q) {
+                $q->where('profit', '!=', 0)
+                    ->orWhere(function ($q2) {
+                        $q2->where('profit', 0)
+                            ->where('created_at', '<=', now()->subHours(2));
+                    });
+            }); // Exclude trades with zero profit
 
         // Apply filters only when there are actual values
         // Filter by position close date range (mandatory filter support)

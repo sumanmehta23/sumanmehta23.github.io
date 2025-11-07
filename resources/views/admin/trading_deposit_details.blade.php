@@ -16,18 +16,71 @@
                     <div class="card custom-card">
                         <div class="card-body">
                             <h6 class="card-title fw-medium">DEPOSIT TICKET #{{ $details->id }}</h6>
+                             @php
+                                // Determine a payment/explorer/invoice link based on deposit type
+                                $link = '';
+                                try {
+                                    if (!empty($details->deposit_type)) {
+                                        if ($details->deposit_type === 'CryptoChill') {
+                                            $callback_data = null;
+                                            if (!empty($details->callback_data)) {
+                                                $callback_data = json_decode($details->callback_data, true);
+                                            }
+                                            if (is_array($callback_data) && isset($callback_data['transaction']['invoice']['id'])) {
+                                                $invoiceId = $callback_data['transaction']['invoice']['id'];
+                                                $link = 'https://uniwire.com/invoice/' . $invoiceId;
+                                            }
+                                        } elseif ($details->deposit_type === 'CreditCardPayissa') {
+                                            // For Payissa we use the transaction_id if available and point to the explorer
+                                            $invoiceId = $details->transaction_id ?? null;
+                                            if (!empty($invoiceId)) {
+                                                $link = 'https://blockscan.com/tx/' . $invoiceId;
+                                            }
+                                        }
+                                    }
+                                } catch (\Throwable $e) {
+                                    // If anything goes wrong, keep $link empty to avoid breaking the view
+                                    $link = '';
+                                }
+                            @endphp
+
+                            <div class="mt-2 d-flex align-items-center">
+                                <div>
+                                    <span class="fs-11 text-muted">Payment Method:</span>
+                                    <strong class="ms-1">{{ $details->deposit_type ?? 'N/A' }}</strong>
+                                </div>
+                                @if(!empty($link))
+                                    <div class="ms-3">
+                                        <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Deposit Hash</a>
+                                    </div>
+                                @else
+                                    @if(!empty($details->transaction_id))
+                                        <div class="ms-3 text-muted">Transaction ID: <strong class="ms-1">{{ $details->transaction_id }}</strong></div>
+                                    @else
+                                        <div class="ms-3 text-muted">No payment link available</div>
+                                    @endif
+                                @endif
+                            </div>
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
-                                    <div class="wideget-user-desc d-flex align-items-center">
-                                        <div class="wideget-user-img">
-                                            <img src="/admin_assets/assets/images/users/client.png" alt="img"
-                                                style="width:50px">
+                                    @php
+                                        // Determine the user id and fullname with fallbacks
+                                        $clientId = $details->user->id ?? $details->user_id ?? null;
+                                        $clientFullname = $details->user->fullname ?? $details->fullname ?? 'N/A';
+                                        $clientEmail = $details->user->email ?? $details->email ?? '';
+                                    @endphp
+                                    <a href="{{ $clientId ? route('admin.admin-view-client-details', $clientId) : 'javascript:void(0);' }}" class="text-decoration-none">
+                                        <div class="wideget-user-desc d-flex align-items-center">
+                                            <div class="wideget-user-img">
+                                                <img src="/admin_assets/assets/images/users/client.png" alt="img"
+                                                    style="width:50px">
+                                            </div>
+                                            <div class="user-wrap">
+                                                <h4 class="fw-normal">{{ $clientFullname }}</h4>
+                                                <h6 class="mb-3 text-muted fw-normal">{{ $clientEmail }}</h6>
+                                            </div>
                                         </div>
-                                        <div class="user-wrap">
-                                            <h4 class="fw-normal">{{ $details->fullname }}</h4>
-                                            <h6 class="mb-3 text-muted fw-normal">{{ $details->email }}</h6>
-                                        </div>
-                                    </div>
+                                    </a>
                                 </div>
                                 <div class="cursor-pointer col-lg-3 col-md-12 rmToggle" data-rm="{{ $details->rm_id }}"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"

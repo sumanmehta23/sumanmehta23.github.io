@@ -671,6 +671,7 @@ class ClientController extends Controller
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
         $total_balance = $user->total_balance;  // Accessor for total balance
         $live_accounts = $user->liveAccounts->where('account_request_status', 1)->where('deleted_at', NULL);  // Relationship for live accounts
+        $demo_accounts = $user->demoAccounts;  
         $bank_details = $user->bank_details;  // Accessor for bank details
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
@@ -722,6 +723,7 @@ class ClientController extends Controller
             'wallet_balance',
             'total_balance',
             'live_accounts',
+            'demo_accounts',
             'bank_details',
             'kyc_details',
             'ib_details',
