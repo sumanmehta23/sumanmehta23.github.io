@@ -246,7 +246,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 }
             }
 
-            Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
+            // Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
 
             // Dispatch the IB commission job if we had new trades
             if ($this->newTrades) {

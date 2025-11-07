@@ -243,7 +243,7 @@ class DealSyncJob implements ShouldQueue
             if ($totalDeals == $dbDealCount) {
                 if ($totalDeals > 0) {
                     // Database is perfectly in sync with MT5 - no need to fetch from MT5!
-                    Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
+                    // Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
                     $this->updateAccountDealSyncStatus($account, 'success', 0); // 0 new deals since we already have them
                     return ['status' => 'success', 'deals_count' => 0]; // 0 new deals fetched from MT5
                 } else {

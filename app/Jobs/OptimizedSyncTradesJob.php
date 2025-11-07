@@ -207,7 +207,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
             // Log::info("OptimizedSync[{$this->account->code}]: Deal sync completed, proceeding with trade sync");
         } else {
-            Log::info("OptimizedSync[{$this->account->code}]: Deal data is recently synced (last fetch: {$this->account->deals_last_fetch_at}), using existing deals");
+            // Log::info("OptimizedSync[{$this->account->code}]: Deal data is recently synced (last fetch: {$this->account->deals_last_fetch_at}), using existing deals");
         }
 
         // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
@@ -234,7 +234,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 if ($mt5DealTotal == $dbDealCount) {
                     if ($mt5DealTotal > 0) {
                         // Database is perfectly in sync with MT5 - use database deals!
-                        Log::info("OptimizedSync[{$this->account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
+                        // Log::info("OptimizedSync[{$this->account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
 
                         // Use existing deals in database for processing
                         $dealsQuery = Deal::where('account_id', $this->account->id)
@@ -354,7 +354,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                             if ($mt5DealTotal == $dbDealCount && $mt5DealTotal > 0) {
                                 // Database is perfectly in sync with MT5 - no new deals to fetch!
-                                Log::info("OptimizedSync[{$this->account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 pagination needed.");
+                                // Log::info("OptimizedSync[{$this->account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 pagination needed.");
 
                                 // Use existing deals in database for processing
                                 $dealsQuery = Deal::where('account_id', $this->account->id)

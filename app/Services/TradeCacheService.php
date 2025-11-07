@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * High-Performance Trade Cache Service
- * 
+ *
  * Optimizes BatchSyncTradesJob performance through intelligent caching
  */
 class TradeCacheService
@@ -19,7 +19,7 @@ class TradeCacheService
 
     /**
      * Get cached existing trades for an account
-     * 
+     *
      * Uses Redis with optimized data structure
      */
     public function getAccountTrades(Account $account): \Illuminate\Support\Collection
@@ -90,7 +90,7 @@ class TradeCacheService
         $dealsKey = self::CACHE_PREFIX . "account:{$account->id}:deals";
         Cache::forget($dealsKey);
 
-        Log::info("Deal cache invalidation completed for account {$account->code}");
+        // Log::info("Deal cache invalidation completed for account {$account->code}");
     }
 
     /**
