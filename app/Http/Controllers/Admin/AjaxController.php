@@ -808,7 +808,8 @@ class AjaxController extends Controller
                         ? ($row->user->fullname)
                         : 'Unknown';
                     $email = $row->user ? $row->user->email : 'No Email';
-                    return "<a href='/admin/client_details/{$row->user->id}'>
+                    $userId = $row->user ? $row->user->id : '#';
+                    return "<a href='/admin/client_details/{$userId}'>
                                 <div class='d-flex align-items-center'>
                                     <div class='me-2'>
                                         <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' size='28' color='#000000' class='tabler-icon tabler-icon-user-square-rounded'><path d='M12 13a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z'></path><path d='M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z'></path><path d='M6 20.05v-.05a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v.05'></path></svg>
@@ -821,7 +822,7 @@ class AjaxController extends Controller
                             </a>";
                 })
                 ->addColumn('code', function ($row) {
-                    $accountGroup = $row->accountType->ac_group;
+                    $accountGroup = $row->accountType ? $row->accountType->ac_group : 'N/A';
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
@@ -840,7 +841,7 @@ class AjaxController extends Controller
                                             alt='{$platformName} platform' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span
-                                                class='text-truncate w-100'> $row->code </span>
+                                                class='text-truncate w-100'> {$row->code} </span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
                                                 class='text-truncate w-100'> {$platformName} - {$accountGroup} </span>
@@ -868,7 +869,7 @@ class AjaxController extends Controller
                             </div>";
                 })
                 ->addColumn('fullname', function ($row) {
-                    return $row->user->fullname;
+                    return $row->user ? $row->user->fullname : 'Unknown';
                 })
                 ->addColumn('fullemail', function ($row) {
                     return $row->email;
@@ -877,7 +878,7 @@ class AjaxController extends Controller
                     return $row->code;
                 })
                 ->addColumn('account_group', function ($row) {
-                    return $row->accountType->ac_group;
+                    return $row->accountType ? $row->accountType->ac_group : 'N/A';
                 })
                 ->addColumn('actions', function ($row) {
                     $html = "";
@@ -985,7 +986,7 @@ class AjaxController extends Controller
                                             alt='{$platformName} platform' class='rounded wid-50 hei-50'></div>
                                     <div class='col ps-2'>
                                         <h6 class='mb-0'><span
-                                                class='text-truncate w-100'> $row->code </span>
+                                                class='text-truncate w-100'> {$row->code} </span>
                                         </h6>
                                         <p class='mb-0 text-muted f-12'><span
                                                 class='text-truncate w-100'> {$platformName} - {$accountGroup} </span>

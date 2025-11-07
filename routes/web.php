@@ -375,6 +375,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/addUser', [ClientController::class, 'addUser'])->name('addUser')->middleware("check.permissions:client:create");
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
+        Route::post('/client/notes/store', [ClientController::class, 'storeNote'])->name('client.notes.store');
 
         Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
