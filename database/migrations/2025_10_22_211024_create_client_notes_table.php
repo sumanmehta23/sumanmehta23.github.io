@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('client_notes', function (Blueprint $table) {
             $table->id();
             $table->string('client_id');
-            $table->unsignedBigInteger('admin_id');
+            $table->uuid('admin_id');
             $table->text('note');
             $table->timestamps();
 
