@@ -118,7 +118,8 @@ class UniversalMT5Service
                     'equity' => $account->Equity ?? 0,
                     'margin' => $account->Margin ?? 0,
                     'margin_free' => $account->MarginFree ?? 0,
-                    'profit' => $account->Profit ?? 0
+                    'profit' => $account->Profit ?? 0,
+                    'credit' => $account->Credit ?? 0,
                 ];
             }
             return null;

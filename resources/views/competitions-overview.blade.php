@@ -119,9 +119,15 @@
                 </div>
 
                 @if ($status == 'Upcoming')
-                    <a href="/login" class="w-full mt-4 block text-center bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
-                        Register
-                    </a>
+                    @guest
+                        <a href="/login" class="w-full mt-4 block text-center bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
+                            Register
+                        </a>
+                    @else
+                        <a href="/createCompetition" class="w-full mt-4 block text-center bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
+                            Register
+                        </a>
+                    @endguest
                 @else
                     <button class="w-full mt-4 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium cursor-not-allowed">Registration
                         Finished</button>

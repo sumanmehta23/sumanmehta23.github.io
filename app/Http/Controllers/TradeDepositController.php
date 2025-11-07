@@ -358,12 +358,16 @@ class TradeDepositController extends Controller
                 'confirmcryptoCheckbox' => [
                     'required' // Ensures this checkbox is checked
                 ],
+                'confirmusdcCheckbox' => [
+                    'required' // Ensures this checkbox is checked
+                ],
                 'user.code' => [
                     'required' // Ensures 'code' exists and is a valid UUID
                 ],
             ],
             [
                 'confirmcryptoCheckbox.required' => 'The correct wallet address and network confirmation checkbox is required.',
+                'confirmusdcCheckbox.required' => 'The UDSC confirmation checkbox is required.',
                 'user.code.required' => 'Please select account.',
             ]
         );

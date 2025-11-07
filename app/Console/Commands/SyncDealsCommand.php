@@ -11,7 +11,7 @@ use Carbon\Carbon;
 
 class SyncDealsCommand extends Command
 {
-    protected $signature = 'app:sync-deals 
+    protected $signature = 'app:sync-deals
                             {--account= : Specific account code to sync}
                             {--demo : Sync demo accounts only}
                             {--live : Sync live accounts only}
@@ -52,10 +52,8 @@ class SyncDealsCommand extends Command
 
         $accountBatches = $accounts->chunk($batchSize);
         $jobs = [];
-
         foreach ($accountBatches as $batch) {
             $fromTimes = [];
-
             if ($fullSync) {
                 // For full sync, use the same fromTime for all accounts in batch
                 $fromTime = now()->subDays($fromDays);

@@ -1548,6 +1548,13 @@ class AjaxController extends Controller
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
                 })
+                ->addColumn('withdraw_method', function ($row) {
+                    if ($row->status == 1) {
+                        return "<a class='text-success' target='_blank' href='https://uniwire.com/payout/{$row->transaction_id}'>{$row->withdraw_type}</a>";
+                    } else {
+                        return 'N/A';
+                    }
+                })
                 ->addColumn('withdraw_to', function ($row) {
                     if ($row->withdraw_to) {
                         $acc = Account::where('id', $row->withdraw_to)->first();
@@ -1633,7 +1640,7 @@ class AjaxController extends Controller
                 ->addColumn('client_email', function ($row) {
                     return $row->user->email;
                 })
-                ->rawColumns(['account_no', 'email', 'amount', 'transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action', 'withdrawal_amount', 'withdrawal_fee', 'total_withdrawal', 'total_withdrawal', 'created_date', 'created_time', 'client_email'])
+                ->rawColumns(['withdraw_method', 'account_no', 'email', 'amount', 'transaction_fee', 'withdraw_type', 'withdraw_to', 'withdraw_date', 'approve_date', 'status', 'action', 'withdrawal_amount', 'withdrawal_fee', 'total_withdrawal', 'total_withdrawal', 'created_date', 'created_time', 'client_email'])
                 ->make(true);
         }
 
@@ -1784,25 +1791,29 @@ class AjaxController extends Controller
 
     public function getComissionData2(Request $request)
     {
-        // dd($request->id);
-        $userId = $request->id;
+        try {
+            // dd($request->id);
+            $userId = $request->id;
 
-        // Fetch histories
-        $query = IbWallet::with('account')->where('user_id', $userId)->orderBy('created_at', 'desc');
+            if (!$userId) {
+                return response()->json(['error' => 'User ID is required'], 400);
+            }
 
+            // Fetch histories
+            $query = IbWallet::with('account')->where('user_id', $userId)->orderBy('created_at', 'desc');
 
-        if ($request->ajax()) {
-            return DataTables::of($query)
-                ->editColumn('amount', function ($row) {
-                    return $row->code ? @money($row->ib_wallet) : ($row->ib_withdraw);
-                })
-                ->addColumn('type', function ($row) {
-                    return $row->ib_wallet ? 'Commission' : 'Transfer';
-                })
-                ->addColumn('account', function ($row) {
-                    $code = $row->account->code ?? '';
-                    $email = $row->account->email ?? '';
-                    return "
+            if ($request->ajax()) {
+                return DataTables::of($query)
+                    ->editColumn('amount', function ($row) {
+                        return $row->code ? @money($row->ib_wallet) : ($row->ib_withdraw);
+                    })
+                    ->addColumn('type', function ($row) {
+                        return $row->ib_wallet ? 'Commission' : 'Transfer';
+                    })
+                    ->addColumn('account', function ($row) {
+                        $code = $row->account->code ?? '';
+                        $email = $row->account->email ?? '';
+                        return "
                                 <div class='row align-items-center'>
                                      <div class='col-auto pe-0'>
                                          <img src='/assets/images/mt5.png' alt='user-image'
@@ -1817,42 +1828,46 @@ class AjaxController extends Controller
                                          </p>
                                      </div>
                                  </div>";
-                })
-                ->addColumn('date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->created_at));
-                    $time = date('H:i:s', strtotime($row->created_at));
-                    return "<div class='lh-1'>
+                    })
+                    ->addColumn('date', function ($row) {
+                        $date = date('Y-m-d', strtotime($row->created_at));
+                        $time = date('H:i:s', strtotime($row->created_at));
+                        return "<div class='lh-1'>
                                 $date
                             </div>
                             <small class='lh-2 text-muted'>
                                 $time
                             </small>";
-                })
-                ->addColumn('email', function ($row) {
-                    $email = $row->account->email ?? '';
-                    return $email;
-                })
-                ->addColumn('exp_date', function ($row) {
-                    $date = date('Y-m-d', strtotime($row->created_at));
-                    return $date;
-                })
-                ->addColumn('time', function ($row) {
-                    $time = date('H:i:s', strtotime($row->created_at));
-                    return $time;
-                })
-                ->addColumn('exp_account', function ($row) {
-                    $code = $row->account->code ?? '';
-                    return $code;
-                })
-                ->addColumn('exp_amount', function ($row) {
-                    $amount = ($row->ib_wallet) ?? ($row->ib_withdraw);
-                    return $amount;
-                })
-                ->rawColumns(['date', 'account', 'type', 'amount', 'email'])
-                ->make(true);
-        }
+                    })
+                    ->addColumn('email', function ($row) {
+                        $email = $row->account->email ?? '';
+                        return $email;
+                    })
+                    ->addColumn('exp_date', function ($row) {
+                        $date = date('Y-m-d', strtotime($row->created_at));
+                        return $date;
+                    })
+                    ->addColumn('time', function ($row) {
+                        $time = date('H:i:s', strtotime($row->created_at));
+                        return $time;
+                    })
+                    ->addColumn('exp_account', function ($row) {
+                        $code = $row->account->code ?? '';
+                        return $code;
+                    })
+                    ->addColumn('exp_amount', function ($row) {
+                        $amount = ($row->ib_wallet) ?? ($row->ib_withdraw);
+                        return $amount;
+                    })
+                    ->rawColumns(['date', 'account', 'type', 'amount', 'email'])
+                    ->make(true);
+            }
 
-        return response()->json(['message' => 'Invalid request'], 400);
+            return response()->json(['error' => 'Invalid request'], 400);
+        } catch (\Exception $e) {
+            Log::error('Error in getComissionData2: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while fetching data'], 500);
+        }
     }
 
     // public function getComissionData($data)
@@ -3024,7 +3039,7 @@ class AjaxController extends Controller
                 $callback_data = json_decode($row->callback_data, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    \Log::error("JSON Decode Error: " . json_last_error_msg(), [
+                    Log::error("JSON Decode Error: " . json_last_error_msg(), [
                         'row_id' => $row->id,
                         'callback_data' => $row->callback_data
                     ]);
@@ -3034,7 +3049,7 @@ class AjaxController extends Controller
                     $invoiceId = $callback_data['transaction']['invoice']['id'];
                     $link = 'https://uniwire.com/invoice/' . $invoiceId;
                 } else {
-                    \Log::warning("Missing invoice ID in callback_data", [
+                    Log::warning("Missing invoice ID in callback_data", [
                         'row_id' => $row->id,
                         'callback_data' => $callback_data
                     ]);
@@ -3044,7 +3059,7 @@ class AjaxController extends Controller
                 if ($invoiceId) {
                     $link = 'https://blockscan.com/tx/' . $invoiceId;
                 } else {
-                    \Log::warning("Missing transaction_id for CreditCardPayissa", [
+                    Log::warning("Missing transaction_id for CreditCardPayissa", [
                         'row_id' => $row->id
                     ]);
                 }
@@ -3844,20 +3859,29 @@ class AjaxController extends Controller
 
     public function getClientIbProfile(Request $request)
     {
-        $id = request('userId');
-        $level = request('level');
+        try {
+            $id = request('userId');
+            $level = request('level');
 
-        $user = User::with('ib')->findOrFail($id);
+            if (!$id || !$level) {
+                return response()->json(['error' => 'User ID and level are required'], 400);
+            }
 
-        $query = IbClientList::where(function ($query) use ($user, $level) {
-            $query->orWhere("ib$level", $user->ib->referral_code);
-        });
+            $user = User::with('ib')->find($id);
 
-        if ($request->ajax()) {
-            return DataTables::of($query)
+            if (!$user || !$user->ib) {
+                return response()->json(['error' => 'User or IB profile not found'], 404);
+            }
 
-                ->editColumn('email', function ($row) {
-                    return " <div class='row align-items-center'>
+            $query = IbClientList::where(function ($query) use ($user, $level) {
+                $query->orWhere("ib$level", $user->ib->referral_code);
+            });
+
+            if ($request->ajax()) {
+                return DataTables::of($query)
+
+                    ->editColumn('email', function ($row) {
+                        return " <div class='row align-items-center'>
                                 <div class='col-auto pe-0'>
                                     <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
                                 </div>
@@ -3870,31 +3894,37 @@ class AjaxController extends Controller
                                     </p>
                                 </div>
                             </div>";
-                })
+                    })
 
-                ->editColumn('total_accounts', function ($row) {
-                    return $row->liveaccounts;
-                })
+                    ->editColumn('total_accounts', function ($row) {
+                        return $row->liveaccounts;
+                    })
 
-                ->editColumn('total_deposit', function ($row) {
-                    return $row->total_deposit ? $row->total_deposit : "$";
-                })
+                    ->editColumn('total_deposit', function ($row) {
+                        return $row->total_deposit ? $row->total_deposit : "$0.00";
+                    })
 
-                ->editColumn('profile_status', function ($row) {
-                    if ($row->email_confirmed == 1) {
-                        return " <span  class='badge btn bg-success'>Active</span>";
-                    } else {
-                        return "<span class='badge btn bg-info'>Not Verified</span>";
-                    }
-                })
-                ->editColumn('client_name', function ($row) {
-                    return $row->fullname;
-                })
-                ->editColumn('client_email', function ($row) {
-                    return $row->email;
-                })
-                ->rawColumns(['email', 'profile_status', 'client_name', 'client_email'])
-                ->make(true);
+                    ->editColumn('profile_status', function ($row) {
+                        if ($row->email_confirmed == 1) {
+                            return " <span  class='badge btn bg-success'>Active</span>";
+                        } else {
+                            return "<span class='badge btn bg-info'>Not Verified</span>";
+                        }
+                    })
+                    ->editColumn('client_name', function ($row) {
+                        return $row->fullname;
+                    })
+                    ->editColumn('client_email', function ($row) {
+                        return $row->email;
+                    })
+                    ->rawColumns(['email','total_accounts', 'profile_status', 'client_name', 'client_email'])
+                    ->make(true);
+            }
+
+            return response()->json(['error' => 'Invalid request'], 400);
+        } catch (\Exception $e) {
+            Log::error('Error in getClientIbProfile: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while fetching data'], 500);
         }
     }
 
@@ -3947,6 +3977,50 @@ class AjaxController extends Controller
             $chunkCount = 0;
 
             Account::with('user', 'accountType')->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+                $chunkCount++;
+                Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
+
+                foreach ($accounts as $account) {
+                    try {
+                        fputcsv($handle, [
+                            $account->id,
+                            $account->user->fullname ?? '',
+                            $account->email,
+                            $account->code,
+                            $account->accountType->ac_group ?? '',
+                            $account->leverage,
+                            $account->balance,
+                            $account->equity,
+                            $account->status,
+                            $account->created_at->format('Y-m-d'),
+                            $account->created_at->format('H:i:s'),
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error("Error writing account ID {$account->id}: " . $e->getMessage());
+                    }
+                }
+            });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
+    public function exportAllDemoAccounts(Request $request)
+    {
+        $fileName = 'Demo_Accounts_' . date('Y-m-d') . '.csv';
+
+        return Response::streamDownload(function () {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance', 'Equity', 'Status', 'Date', 'Time']);
+
+            $chunkCount = 0;
+
+            Account::with('user', 'accountType')->where('demo', 1)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
 

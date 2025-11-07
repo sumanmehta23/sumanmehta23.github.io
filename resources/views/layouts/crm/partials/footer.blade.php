@@ -460,6 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
+@include('components.google-translate')
+
 </body>
 
 </html>

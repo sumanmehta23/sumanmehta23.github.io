@@ -74,7 +74,9 @@
                                             </div>
                                             <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
                                             <div class="row g-1">
-                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1')
+                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' && 
+                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') || 
+                                                     (isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')))
                                                     <div class="col-6 col-lg-6 col-xl-6">
                                                         <div class="border rounded address-check">
                                                             <div class="form-check">
@@ -356,6 +358,13 @@
                                                                                 Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, this option may not be available in your country. In that case, please use cryptocurrency to deposit.
                                                                             </label>
                                                                         </div>
+                                                                         <div class="form-check mt-2">
+                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditusdcCheckbox" name="confirmusdcCheckbox">
+                                                                            <label class="form-check-label" for="creditusdcCheckbox">
+                                                                                I understand this credit card option processes payments only in USDC.
+                                                                            </label>
+                                                                            <p>If any other coin is selected on the next page, it will need to be manually credited and may take up to 24 hours to process after contacting support.</p>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="">
@@ -553,16 +562,26 @@ function updateCcButtonState() {
     const amount = parseFloat(ccAmountInput.val());
     const isAmountValid = amount >= minDeposit;
     const isCheckboxChecked = $('#creditWarningCheckbox').is(':checked');
+    const isUsdcCheckboxChecked = $('#creditusdcCheckbox').is(':checked');
+    const bothChecked = isCheckboxChecked && isUsdcCheckboxChecked;
 
-    if (isCcPromocodeEntered) {
-        ccDepositButton.prop('disabled', !isCcPromocodeValid || !isAmountValid || !isCheckboxChecked);
-        ccDepositButton.css('opacity', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
-        ccDepositButton.css('cursor', isCcPromocodeValid && isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+    // Always require both checkboxes checked, even if only amount is entered
+    let isEnabled = false;
+    if (bothChecked) {
+        if (isCcPromocodeEntered) {
+            isEnabled = isCcPromocodeValid && isAmountValid;
+        } else {
+            isEnabled = isAmountValid;
+        }
     } else {
-        ccDepositButton.prop('disabled', !isAmountValid || !isCheckboxChecked);
-        ccDepositButton.css('opacity', isAmountValid && isCheckboxChecked ? '1' : '0.5');
-        ccDepositButton.css('cursor', isAmountValid && isCheckboxChecked ? 'pointer' : 'not-allowed');
+        isEnabled = false;
     }
+
+    ccDepositButton.prop('disabled', !isEnabled);
+    ccDepositButton.css({
+        opacity: isEnabled ? '1' : '0.5',
+        cursor: isEnabled ? 'pointer' : 'not-allowed'
+    });
 }
 
 // Function to update RagaPay button state
@@ -759,6 +778,7 @@ function updateRagaButtonState() {
         ragaAmountInput.on('input', updateRagaButtonState);
         $('#cryptoWarningCheckbox').on('change', updateCryptoButtonState);
         $('#creditWarningCheckbox').on('change', updateCcButtonState);
+        $('#creditusdcCheckbox').on('change', updateCcButtonState);
         $('#ragaWarningCheckbox').on('change', updateRagaButtonState);
 
         // Handle account selection

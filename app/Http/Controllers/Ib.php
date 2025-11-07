@@ -424,4 +424,150 @@ class Ib extends Controller
             }
         }
     }
+
+    /**
+     * Get IB Commission data for DataTables
+     */
+    public function getCommissionData(Request $request)
+    {
+        try {
+            $userId = auth()->user()->id;
+
+            if (!$userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Fetch histories
+            $query = IbWallet::with('account')->where('user_id', $userId)->orderBy('created_at', 'desc');
+
+            if ($request->ajax()) {
+                return datatables()->of($query)
+                    ->editColumn('amount', function ($row) {
+                        return $row->code ? @money($row->ib_wallet) : ($row->ib_withdraw);
+                    })
+                    ->addColumn('type', function ($row) {
+                        return $row->ib_wallet ? 'Commission' : 'Transfer';
+                    })
+                    ->addColumn('account', function ($row) {
+                        $code = $row->account->code ?? '';
+                        $email = $row->account->email ?? '';
+                        return "
+                            <div class='row align-items-center'>
+                                 <div class='col-auto pe-0'>
+                                     <img src='/assets/images/mt5.png' alt='user-image'
+                                         class='rounded wid-50 hei-50'>
+                                 </div>
+                                 <div class='col'>
+                                     <h4 class='mb-2 ms-2'>
+                                         <span class='text-truncate w-100'>{$code}</span>
+                                     </h4>
+                                     <p class='mb-0 text-muted ms-2 f-12'>
+                                         <span class='text-truncate w-100'>{$email}</span>
+                                     </p>
+                                 </div>
+                             </div>";
+                    })
+                    ->addColumn('date', function ($row) {
+                        $date = date('Y-m-d', strtotime($row->created_at));
+                        $time = date('H:i:s', strtotime($row->created_at));
+                        return "<div class='lh-1'>
+                            {$date}
+                        </div>
+                        <small class='lh-2 text-muted'>
+                            {$time}
+                        </small>";
+                    })
+                    ->addColumn('email', function ($row) {
+                        return $row->account->email ?? '';
+                    })
+                    ->addColumn('exp_date', function ($row) {
+                        return date('Y-m-d', strtotime($row->created_at));
+                    })
+                    ->addColumn('time', function ($row) {
+                        return date('H:i:s', strtotime($row->created_at));
+                    })
+                    ->addColumn('exp_account', function ($row) {
+                        return $row->account->code ?? '';
+                    })
+                    ->addColumn('exp_amount', function ($row) {
+                        return ($row->ib_wallet) ?? ($row->ib_withdraw);
+                    })
+                    ->rawColumns(['date', 'account', 'type', 'amount', 'email'])
+                    ->make(true);
+            }
+
+            return response()->json(['error' => 'Invalid request'], 400);
+        } catch (\Exception $e) {
+            Log::error('Error in getCommissionData: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while fetching data'], 500);
+        }
+    }
+
+    /**
+     * Get IB Client Profile data for DataTables
+     */
+    public function getClientIbProfile(Request $request)
+    {
+        try {
+            $userId = auth()->user()->id;
+            $level = $request->input('level');
+
+            if (!$userId || !$level) {
+                return response()->json(['error' => 'Invalid parameters'], 400);
+            }
+
+            $user = User::with('ib')->find($userId);
+
+            if (!$user || !$user->ib) {
+                return response()->json(['error' => 'IB profile not found'], 404);
+            }
+
+            $query = IbClientList::where("ib{$level}", $user->ib->referral_code);
+
+            if ($request->ajax()) {
+                return datatables()->of($query)
+                    ->editColumn('email', function ($row) {
+                        return " <div class='row align-items-center'>
+                            <div class='col-auto pe-0'>
+                                <img src='/assets/images/ib_avatar.png' alt='user-image' class='rounded wid-55 hei-55' style='height:50px'>
+                            </div>
+                            <div class='col'>
+                                <h6 class='mb-2'>
+                                    <span class='text-truncate w-100'>{$row->fullname}</span>
+                                </h6>
+                                <p class='mb-0 text-muted f-12'>
+                                    <span class='text-truncate w-100'>{$row->email}</span>
+                                </p>
+                            </div>
+                        </div>";
+                    })
+                    ->editColumn('total_accounts', function ($row) {
+                        return $row->liveaccounts;
+                    })
+                    ->editColumn('total_deposit', function ($row) {
+                        return $row->total_deposit ? $row->total_deposit : "$0.00";
+                    })
+                    ->editColumn('profile_status', function ($row) {
+                        if ($row->email_confirmed == 1) {
+                            return " <span  class='badge btn bg-success'>Active</span>";
+                        } else {
+                            return "<span class='badge btn bg-info'>Not Verified</span>";
+                        }
+                    })
+                    ->editColumn('client_name', function ($row) {
+                        return $row->fullname;
+                    })
+                    ->editColumn('client_email', function ($row) {
+                        return $row->email;
+                    })
+                    ->rawColumns(['email', 'profile_status', 'client_name', 'client_email'])
+                    ->make(true);
+            }
+
+            return response()->json(['error' => 'Invalid request'], 400);
+        } catch (\Exception $e) {
+            Log::error('Error in getClientIbProfile: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while fetching data'], 500);
+        }
+    }
 }

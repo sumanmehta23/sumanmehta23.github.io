@@ -24,7 +24,7 @@ class ClientWallet extends Model
     //  {
     //      $this->attributes['wallet_address'] = Crypt::encryptString($value);
     //  }
- 
+
     //  public function getWalletAddressAttribute($value)
     //  {
     //      return Crypt::decryptString($value);
@@ -32,7 +32,7 @@ class ClientWallet extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
 
