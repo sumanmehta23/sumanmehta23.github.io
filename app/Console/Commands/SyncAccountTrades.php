@@ -122,10 +122,6 @@ class SyncAccountTrades extends Command
                             }
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
-                            Log::info("sync for ibs".json_encode($accountIds));
-                            Log::info("sync for ibs".json_encode($referral_code));
-                            Log::info("sync for ibs".json_encode($userId));
-                            Log::info("sync for ibs".json_encode($ib_acc_plans));
                             $this->info("Dispatching sync for accounts: " . implode(', ', $accountIds));
                             if (in_array('9fbb706d-e237-488c-a319-16d52d2e36d2', $accountIds)) {
                                 $this->info('Dispatching sync for 505255');
