@@ -301,7 +301,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $cacheService->invalidateAccountDeals($account);
                 $cacheService->invalidateAccount($account);
 
-                Log::info("DEBUG[{$account->code}]: Deal sync completed for zero-profit trades, proceeding with trade sync");
+                // Log::info("DEBUG[{$account->code}]: Deal sync completed for zero-profit trades, proceeding with trade sync");
             }
 
             // PHASE 1 (MOVED): Check Deal Data Freshness FIRST - Avoid unnecessary MT5 API calls
@@ -329,13 +329,13 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 // Ensure cache is invalidated after deal sync
                 $cacheService->invalidateAccountDeals($account);
 
-                Log::info("DEBUG[{$account->code}]: Deal sync completed, proceeding with trade sync");
+                // Log::info("DEBUG[{$account->code}]: Deal sync completed, proceeding with trade sync");
             } else {
                 Log::info("DEBUG[{$account->code}]: Deal data is recently synced (last fetch: {$account->deals_last_fetch_at}), using existing deals");
             }
 
             // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
-            Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
+            // Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
             $dealTotalStart = microtime(true);
             $mt5DealTotal = 0;
             $fromTimestamp = $fromTime->timestamp; // Unix timestamp for MT5 API
@@ -374,7 +374,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         return $result;
                     } else {
                         // Both MT5 and DB report 0 deals for this range
-                        Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
+                        // Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
 
                         $this->updateSyncStatus($account, 'success');
                         $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
@@ -398,7 +398,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     // Invalidate cache after deal sync to ensure fresh data
                     $cacheService->invalidateAccountDeals($account);
 
-                    Log::info("DEBUG[{$account->code}]: Deal sync completed for mismatch resolution - now proceeding with trade sync");
+                    // Log::info("DEBUG[{$account->code}]: Deal sync completed for mismatch resolution - now proceeding with trade sync");
 
                     // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
                     // This ensures we get the missing deals from MT5 instead of using stale database data

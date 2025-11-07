@@ -21,15 +21,15 @@ use Carbon\Carbon;
 
 /**
  * Optimized Sync Trades Job - Incremental Strategy
- * 
+ *
  * This job implements incremental sync to dramatically reduce MT5 API requests:
- * 
+ *
  * OPTIMIZATIONS:
  * 1. Incremental Time Range: Only sync trades since last sync
  * 2. Smart Skip Logic: Skip if no recent activity expected
  * 3. Reduced API Calls: Combine operations where possible
  * 4. Activity Tracking: Update last_trade_at for tier management
- * 
+ *
  * REDUCTION: From 3+(2×positions) requests to 2-5 requests per account
  */
 class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
@@ -205,13 +205,13 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $dealSyncJob = new DealSyncJob([$this->account], [$syncFromTime]);
             $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class));
 
-            Log::info("OptimizedSync[{$this->account->code}]: Deal sync completed, proceeding with trade sync");
+            // Log::info("OptimizedSync[{$this->account->code}]: Deal sync completed, proceeding with trade sync");
         } else {
             Log::info("OptimizedSync[{$this->account->code}]: Deal data is recently synced (last fetch: {$this->account->deals_last_fetch_at}), using existing deals");
         }
 
         // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
-        Log::info("OptimizedSync[{$this->account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
+        // Log::info("OptimizedSync[{$this->account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
         $dealTotalStart = microtime(true);
         $mt5DealTotal = 0;
         $fromTimestamp = $this->fromTime->timestamp; // Unix timestamp for MT5 API
@@ -236,7 +236,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         // Database is perfectly in sync with MT5 - use database deals!
                         Log::info("OptimizedSync[{$this->account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
 
-                        // Use existing deals in database for processing  
+                        // Use existing deals in database for processing
                         $dealsQuery = Deal::where('account_id', $this->account->id)
                             ->whereBetween('time_done', [$fromDateForDB, $toDateForDB]);
 
@@ -271,7 +271,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         return 'success';
                     } else {
                         // Both MT5 and DB report 0 deals for this range
-                        Log::info("OptimizedSync[{$this->account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
+                        // Log::info("OptimizedSync[{$this->account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
 
                         $this->account->update(['last_balance_sync_at' => now()]);
                         $timing = round((microtime(true) - $dealTotalStart) * 1000, 2);
