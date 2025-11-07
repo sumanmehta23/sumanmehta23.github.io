@@ -285,7 +285,7 @@
                             <div class="wideget-user">
                                 <div class="row">
                                     <div class="col-lg-12 col-xl-12">
-                                        <div class="wideget-user-desc d-flex">
+                                        <div class="wideget-user-desc d-flex flex-column flex-md-row">
                                             <div class="wideget-user-img d-flex align-items-center ">
                                                 <img src="/admin_assets/assets/images/users/client.jpeg" alt="img"
                                                     style="width:100px">
@@ -403,37 +403,37 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="ms-auto flex-shrink-0" style="width: 320px; max-width: 400px;">
-                                                <div class="d-flex gap-2 mb-2">
-                                                    <button type="button" class="btn btn-primary" style="font-size: x-small; padding: 4px 10px;" data-bs-toggle="modal" data-bs-target="#addNoteModal">
-                                                        <i class="fe fe-plus" style="font-size: x-small;"></i> Add Note
-                                                    </button>
-                                                    <button type="button" class="btn btn-info" style="font-size: x-small; padding: 4px 10px;" data-bs-toggle="modal" data-bs-target="#notesHistoryModal">
-                                                        <i class="fe fe-file-text" style="font-size: x-small;"></i> Notes History
-                                                    </button>
-                                                </div>
+                                            <div class="ms-auto flex-shrink-0 w-100 w-md-auto mt-3 mt-md-0" style="max-width: 400px;">
                                                 @if(isset($client_notes) && count($client_notes) > 0)
                                                     @php
                                                         $lastNote = $client_notes->first();
                                                     @endphp
-                                                    <div class="card mb-0">
+                                                    <div class="card mb-2">
                                                         <div class="card-body p-2">
-                                                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                                                <small class="mb-0 fw-bold text-primary" style="font-size: 11px;">
+                                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start mb-1 gap-1">
+                                                                <small class="mb-0 fw-bold text-primary" style="font-size: 14px;">
                                                                     <i class="fe fe-user"></i> {{ $lastNote->admin->name ?? 'Admin' }}
                                                                 </small>
-                                                                <small class="text-muted text-nowrap ms-2" style="font-size: 10px;">
+                                                                <small class="text-muted text-nowrap" style="font-size: 14px;">
                                                                     <i class="fe fe-clock"></i> {{ $lastNote->created_at->diffForHumans() }}
                                                                 </small>
                                                             </div>
                                                             <div style="max-height: 150px; overflow-y: auto;">
-                                                                <p class="mb-0 text-muted" style="font-size: 12px;">
+                                                                <p class="mb-0 text-muted" style="font-size: 14px; word-wrap: break-word;">
                                                                     {{ $lastNote->note }}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 @endif
+                                                <div class="d-flex flex-column flex-sm-row gap-2">
+                                                    <button type="button" class="btn btn-primary flex-fill flex-sm-grow-0" style="font-size: 12px; padding: 4px 10px; white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                                                        <i class="fe fe-plus" style="font-size: 12px;"></i> Add Note
+                                                    </button>
+                                                    <button type="button" class="btn btn-info flex-fill flex-sm-grow-0" style="font-size: 12px; padding: 4px 10px; white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#notesHistoryModal">
+                                                        <i class="fe fe-file-text" style="font-size: 12px;"></i> Notes History
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
