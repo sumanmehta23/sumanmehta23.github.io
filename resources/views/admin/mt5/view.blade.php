@@ -58,26 +58,34 @@ if ($getUser) {
                                             </div>
                                         </div>
                                         <div class="card-body">
-                                            <div class="wideget-user-desc d-flex align-items-center">
-                                                <div class="wideget-user-img">
-                                                    <?php
-                                                        $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
-                                                        $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
-                                                    ?>
-                                                    <img src="<?= $platformImg ?>" class="me-3" alt="<?= $platformAlt ?>"
-                                                        style="width:50px">
-                                                </div>
-                                                <div class="mt-auto mb-auto user-wrap">
-                                                    <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
-                                                    <h6 class="fs-12 fw-normal text-muted">
+                                            <div class="wideget-user-desc d-flex align-items-center justify-content-between">
+                                                <div class="wideget-user-desc d-flex align-items-center">
+                                                    <div class="wideget-user-img">
                                                         <?php
-                                                            if ($account->platform === 'x9') {
-                                                                echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
-                                                            } else {
-                                                                echo $getUser->accountType->ac_group;
-                                                            }
+                                                            $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
+                                                            $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
                                                         ?>
-                                                    </h6>
+                                                        <img src="<?= $platformImg ?>" class="me-3" alt="<?= $platformAlt ?>"
+                                                            style="width:50px">
+                                                    </div>
+                                                    <div class="mt-auto mb-auto user-wrap">
+                                                        <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
+                                                        <h6 class="fs-12 fw-normal text-muted">
+                                                            <?php
+                                                                if ($account->platform === 'x9') {
+                                                                    echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
+                                                                } else {
+                                                                    echo $getUser->accountType->ac_group;
+                                                                }
+                                                            ?>
+                                                        </h6>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2 col-6" style="padding-left: 12px">
+                                                    <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                        data-bs-target="#deleteModal">Delete Account
+                                                        <i class="ti ti-database-import"></i>
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
