@@ -18,6 +18,33 @@
                     <div class="card custom-card">
                         <div class="card-body">
                             <h6 class="card-title fw-medium">WITHDRAW TICKET #{{ $details->id }}</h6>
+                              @php
+                                if ($details->status == 1) {
+                                    $link = 'https://uniwire.com/payout/' . $details->transaction_id;
+                                }else {
+                                    $link = '';
+                                }
+                                
+                            @endphp
+                            @if($link)
+                                <div class="mt-2 d-flex align-items-center">
+                                    <div>
+                                        <span class="fs-11 text-muted">Payment Method:</span>
+                                        <strong class="ms-1">{{ $details->withdraw_type ?? 'N/A' }}</strong>
+                                    </div>
+                                    @if(!empty($link))
+                                        <div class="ms-3">
+                                            <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Withdrawal Hash</a>
+                                        </div>
+                                    @else
+                                        @if(!empty($details->transaction_id))
+                                            <div class="ms-3 text-muted">Transaction ID: <strong class="ms-1">{{ $details->transaction_id }}</strong></div>
+                                        @else
+                                            <div class="ms-3 text-muted">No payment link available</div>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endif
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
                                     @php
