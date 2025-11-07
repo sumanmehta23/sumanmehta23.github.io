@@ -60,7 +60,7 @@
                                         </div>
 
                                         <div class="user-wrap">
-                                            <h4 class="fw-normal d-flex align-items-center" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">
+                                            <h4 class="fw-normal d-flex align-items-center cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">
                                                 {{ $clientFullname }}
                                                 <span class="badge bg-success text-white ms-2">
                                                     Wallet balance: ${{ number_format($details->user->wallet_balance?$details->user->wallet_balance:0, 2) }}
