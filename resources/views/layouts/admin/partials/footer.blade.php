@@ -88,3 +88,5 @@
 </script>
 @yield('scripts')
 @include('sweetalert::alert')
+
+@include('components.google-translate')

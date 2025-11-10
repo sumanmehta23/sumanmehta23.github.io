@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="{{ asset('admin_assets/assets/icon-fonts/feather/feather-v2.css?v=5') }}">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css" />
     <link rel="stylesheet" crossorigin="anonymous" href="{{ asset('assets/css/custom.css?v=4.5') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -563,6 +564,12 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                             </ul>
                         @endif
                         <ul class="list-unstyled">
+                            <li class="pc-h-item">
+                                @include('components.language-dropdown', [
+                                    'selectId' => 'custom_translate_select_header_crm',
+                                    'flagPreviewId' => 'flag-preview-crm-header'
+                                ])
+                            </li>
                             <li class="dropdown pc-h-item">
                                 <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown"
                                     href="/dashboard" role="button" aria-haspopup="false" aria-expanded="false">
