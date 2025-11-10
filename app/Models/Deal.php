@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Deal extends Model
 {
-    use HasFactory,SoftDeletes;
+    use SoftDeletes;
 
     protected $fillable = [
         'account_id',

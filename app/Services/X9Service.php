@@ -491,4 +491,40 @@ class X9Service
             ];
         }
     }
+
+    public function accountSetting($account,$field, $type)
+    {
+
+        try {
+            $response = Http::withHeaders([
+                'x-access-token' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->put($this->baseUrl . '/api/crm/account_settings', [
+                'login_id' => intval($account->code),
+                'field_to_update' => $field, // 'master', 'investor', or 'api'
+                'field_setting' => $type
+            ]);
+            if ($response->successful()) {
+                return [
+                    'status' => true,
+                    'message' => 'Account setting successful updated',
+                    'data' => $response->json()
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to update account setting: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Account setting updation failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Account setting updation failed: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }

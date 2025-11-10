@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DailyReport extends Model
 {
-    use HasFactory,SoftDeletes;
+    use SoftDeletes;
 
     protected $guarded = [];
 

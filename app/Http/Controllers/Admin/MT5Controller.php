@@ -630,14 +630,20 @@ class MT5Controller extends Controller
         $platform = $request->input('platform');
 
         if( $platform === 'x9' ) {
+            $response = $this->x9Service->getUserDetails($login);
+            if ($response['data']['trading_account']['trading_account_balance']['balance'] > 0) {
+                if($response['data']['trading_account']['client_group_type'] != 'DEMO'){
+                    return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                }
+            }
             // X9 deletion logic
-            $response = $this->x9Service->deleteUser(intval($login));
+            $response = $this->x9Service->accountSetting($account,'is_enable',false);
             if (!$response['status']) {
                 return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
             }
             // Delete from local database
             $account->delete();
-            return redirect()->back()->with('success', 'X9 Account Deleted Successfully');
+            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
         } elseif( $platform === 'mt5' ) {
 
             if (($error_code =$this->api->UserGet($login,$trade_user)!= MTRetCode::MT_RET_OK)) {
@@ -645,7 +651,7 @@ class MT5Controller extends Controller
             }
 
             if ($trade_user->Balance > 0) {
-                return redirect()->back()->with('warning', 'Account has balance, please transfer amount to another account.');
+                return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
             }
 
             // MT5 deletion logic
@@ -654,7 +660,7 @@ class MT5Controller extends Controller
             }
             // Delete from local database
             $account->delete();
-            return redirect()->back()->with('success', 'MT5 Account Deleted Successfully');
+            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
         }
     }
 
