@@ -651,7 +651,9 @@ class MT5Controller extends Controller
             }
 
             if ($trade_user->Balance > 0) {
-                return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                if ($account->demo != 1) {
+                    return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                }
             }
 
             // MT5 deletion logic

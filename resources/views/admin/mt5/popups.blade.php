@@ -15,7 +15,7 @@
 
                 <div class="modal-body">
                     <p class="mb-3">
-                        Are you sure you want to delete this account? This action cannot be undone.
+                        Are you sure you want to delete this account? This action cannot be undone. All associated data with this account will be removed.
                     </p>
                 </div>
                 <div class="modal-footer justify-content-between">
