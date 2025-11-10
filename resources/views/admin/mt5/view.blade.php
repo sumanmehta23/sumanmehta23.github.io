@@ -58,26 +58,34 @@ if ($getUser) {
                                             </div>
                                         </div>
                                         <div class="card-body">
-                                            <div class="wideget-user-desc d-flex align-items-center">
-                                                <div class="wideget-user-img">
-                                                    <?php
-                                                        $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
-                                                        $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
-                                                    ?>
-                                                    <img src="<?= $platformImg ?>" class="me-3" alt="<?= $platformAlt ?>"
-                                                        style="width:50px">
-                                                </div>
-                                                <div class="mt-auto mb-auto user-wrap">
-                                                    <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
-                                                    <h6 class="fs-12 fw-normal text-muted">
+                                            <div class="wideget-user-desc d-flex align-items-center justify-content-between">
+                                                <div class="wideget-user-desc d-flex align-items-center">
+                                                    <div class="wideget-user-img">
                                                         <?php
-                                                            if ($account->platform === 'x9') {
-                                                                echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
-                                                            } else {
-                                                                echo $getUser->accountType->ac_group;
-                                                            }
+                                                            $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
+                                                            $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
                                                         ?>
-                                                    </h6>
+                                                        <img src="<?= $platformImg ?>" class="me-3" alt="<?= $platformAlt ?>"
+                                                            style="width:50px">
+                                                    </div>
+                                                    <div class="mt-auto mb-auto user-wrap">
+                                                        <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
+                                                        <h6 class="fs-12 fw-normal text-muted">
+                                                            <?php
+                                                                if ($account->platform === 'x9') {
+                                                                    echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
+                                                                } else {
+                                                                    echo $getUser->accountType->ac_group;
+                                                                }
+                                                            ?>
+                                                        </h6>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2 col-6" style="padding-left: 12px">
+                                                    <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                        data-bs-target="#accountDeleteModal">Delete Account
+                                                        <i class="ti ti-database-import"></i>
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
@@ -198,9 +206,18 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['equity'])) {
-                                                                        echo "$" . number_format($accountHelper['equity'] , 2);
-                                                                    }
+                                                                        $equity = null;
+
+                                                                        // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $equity = $accountHelper['equity'] ?? null;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $equity = $accountHelper->equity ?? $accountHelper->Equity ?? null;
+                                                                        }
+
+                                                                        if (!is_null($equity)) {
+                                                                            echo "$" . number_format($equity, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -222,9 +239,16 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['equity'])) {
-                                                                        echo "$" . $total_profit;
-                                                                    }
+                                                                        // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_profit;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_profit;
+                                                                        }
+
+                                                                        if (!is_null($total_profit)) {
+                                                                            echo "$" . number_format($total_profit, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -246,9 +270,15 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['equity'])) {
-                                                                        echo "$" . $total_comission;
-                                                                    }
+                                                                    // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_comission;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_comission;
+                                                                        }
+                                                                        if (!is_null($total_comission)) {
+                                                                            echo "$" . number_format($total_comission, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -270,9 +300,15 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['equity'])) {
-                                                                        echo "$" . $total_swap;
-                                                                    }
+                                                                    // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_swap;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_swap;
+                                                                        }
+                                                                        if (!is_null($total_swap)) {
+                                                                            echo "$" . number_format($total_swap, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -294,9 +330,15 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['equity'])) {
-                                                                        echo $total_trades;
-                                                                    }
+                                                                    // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_trades;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_trades;
+                                                                        }
+                                                                        if (!is_null($total_trades)) {
+                                                                            echo "$" . number_format($total_trades, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -342,9 +384,16 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['margin_free'])) {
-                                                                        echo "$" . number_format($accountHelper['margin_free'] , 2);
-                                                                    }
+                                                                    $feed_margin = null;
+                                                                    // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $feed_margin = $accountHelper['margin_free'];
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $feed_margin = $accountHelper->margin_free ?? 0;
+                                                                        }
+                                                                        if (!is_null($feed_margin)) {
+                                                                            echo "$" . number_format($feed_margin, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -366,9 +415,16 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['margin'])) {
-                                                                        echo $accountHelper['margin'];
-                                                                    }
+                                                                    $margin = null;
+                                                                    // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $margin = $accountHelper['margin'];
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $margin = $accountHelper->margin ?? 0;
+                                                                        }
+                                                                        if (!is_null($margin)) {
+                                                                            echo number_format($margin, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -414,9 +470,19 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    if (isset($accountHelper['profit'])) {
-                                                                        echo $accountHelper['profit'];
-                                                                    }
+                                                                    // if (isset($accountHelper['profit'])) {
+                                                                    //     echo $accountHelper['profit'];
+                                                                    // }
+                                                                    $floating_pl = null;
+                                                                    // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $floating_pl = $accountHelper['profit'];
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $floating_pl = $accountHelper->profit ?? 0;
+                                                                        }
+                                                                        if (!is_null($floating_pl)) {
+                                                                            echo "$" . number_format($floating_pl, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>

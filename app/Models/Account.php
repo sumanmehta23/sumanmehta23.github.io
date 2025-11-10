@@ -120,11 +120,11 @@ class Account extends Model
 
     /**
      * Check if deal data is fresh enough for trade sync.
-     * 
+     *
      * Deal data is considered fresh if:
      * 1. We have recently fetched deals (within the last hour by default)
      * 2. The sync was marked as complete
-     * 
+     *
      * This logic is based on WHEN we last synced, not on deal coverage time.
      * This is correct because an account might not have recent trading activity,
      * but if we just synced deals, that data is still fresh.
@@ -144,7 +144,7 @@ class Account extends Model
 
     /**
      * Get the range of time we need to fetch deals for.
-     * 
+     *
      * This determines what time range to sync deals for based on:
      * 1. If we have previous deal data, sync from the last deal time + 1 second
      * 2. If we have no deal data, sync from 30 days ago
@@ -165,4 +165,20 @@ class Account extends Model
             'needs_sync' => $from->lt($syncUpTo)
         ];
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($account) {
+            // Delete related records safely
+            $account->trades()->delete();
+            $account->tradeDeposits()->delete();
+            $account->tradeWithdrawals()->delete();
+            $account->BonusTransaction()->delete();
+            $account->dailyReports()->delete();
+            $account->deals()->delete();
+            $account->ib1Commission()->delete();
+            $account->totalBalance()->delete();
+        });
+    }
+
 }
