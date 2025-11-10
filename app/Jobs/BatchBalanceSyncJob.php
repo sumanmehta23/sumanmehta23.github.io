@@ -2,20 +2,22 @@
 
 namespace App\Jobs;
 
+use DB;
+use Carbon\Carbon;
 use App\Models\Account;
-use App\Services\MT5RestAPIService;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
+use App\Models\BonusTransaction;
+use App\Services\MT5RestAPIService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Bus\Batchable;
-use Carbon\Carbon;
 
 /**
  * Batch Balance Sync Job
- * 
+ *
  * Processes balance synchronization for multiple accounts in batches
  * using the new MT5 REST API service with connection pooling.
  */
@@ -52,10 +54,10 @@ class BatchBalanceSyncJob implements ShouldQueue
             'not_found' => 0
         ];
 
-        Log::info('BatchBalanceSyncJob: Starting batch balance sync', [
-            'account_count' => count($this->accountIds),
-            'force_sync' => $this->forceSync
-        ]);
+        // Log::info('BatchBalanceSyncJob: Starting batch balance sync', [
+        //     'account_count' => count($this->accountIds),
+        //     'force_sync' => $this->forceSync
+        // ]);
 
         try {
             // Get accounts for this batch
@@ -103,10 +105,10 @@ class BatchBalanceSyncJob implements ShouldQueue
 
         $duration = round((microtime(true) - $startTime) * 1000, 2);
 
-        Log::info('BatchBalanceSyncJob: Batch completed', array_merge($batchResults, [
-            'duration_ms' => $duration,
-            'avg_per_account_ms' => $batchResults['processed'] > 0 ? round($duration / $batchResults['processed'], 2) : 0
-        ]));
+        // Log::info('BatchBalanceSyncJob: Batch completed', array_merge($batchResults, [
+        //     'duration_ms' => $duration,
+        //     'avg_per_account_ms' => $batchResults['processed'] > 0 ? round($duration / $batchResults['processed'], 2) : 0
+        // ]));
 
         return $batchResults;
     }
@@ -135,6 +137,7 @@ class BatchBalanceSyncJob implements ShouldQueue
         try {
             $currentBalance = (float) $balanceData[$accountCode]['balance'];
             $currentEquity = (float) $balanceData[$accountCode]['equity'];
+            $currentCredit = (float) ($balanceData[$accountCode]['credit'] ?? 0);
 
             $previousBalance = $account->last_known_balance;
             $previousEquity = $account->last_known_equity;
@@ -168,6 +171,71 @@ class BatchBalanceSyncJob implements ShouldQueue
                 //     'balance_changed' => $balanceChanged,
                 //     'equity_changed' => $equityChanged
                 // ]);
+
+                if ($currentBalance < 1 && $currentCredit >= 0) {
+                    // Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
+                    //     'account_id' => $account->id,
+                    //     'code' => $account->code,
+                    //     'current_balance' => $currentBalance,
+                    //     'current_credit' => $currentCredit
+                    // ]);
+
+                    $accountPromoBonus = $account->BonusTransaction()
+                        ->where('bonus_type', 'Bonus In')
+                        ->where('admin_remark', 'Promo Bonus')
+                        ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
+                            $query->where('created_at', '<=', $bonusPayoffSyncAt);
+                        });
+
+                    $accountBonusAmunt = $accountPromoBonus->sum('bonus_amount');
+                    $accountUsedAmunt = $accountPromoBonus->sum('bonus_used');
+
+                    // Log::debug("BatchBalanceSyncJob: Bonus amounts calculated", [
+                    //     'account_id' => $account->id,
+                    //     'total_bonus' => $accountBonusAmunt,
+                    //     'used_bonus' => $accountUsedAmunt,
+                    //     'last_payoff_sync' => $account->bonus_payoff_sync_at
+                    // ]);
+
+                    $deduction = abs((float)($accountBonusAmunt - $accountUsedAmunt)) * -1;
+                    if ($deduction > 0) {
+                        Log::info("BatchBalanceSyncJob: Creating bonus payoff transaction", [
+                            'account_id' => $account->id,
+                            'deduction_amount' => $deduction,
+                            'email' => $account->email
+                        ]);
+
+                        BonusTransaction::create([
+                            'email' => $account->email,
+                            'user_id' => $account->user_id,
+                            'account_id' => $account->id,
+                            'code' => $account->code,
+                            'bonus_amount' => $deduction,
+                            'bonus_type' => 'Bonus Out',
+                            'status' => 1,
+                            'admin_remark' => 'Bonus Pay Off',
+                            'bonus_currency' => 'USD',
+                        ]);
+
+                        Log::debug("BatchBalanceSyncJob: Updating bonus used amounts");
+                        $accountPromoBonus->update([
+                            'bonus_used' => DB::raw('bonus_amount')
+                        ]);
+
+                        $account->bonus_payoff_sync_at = now();
+                        $account->save();
+
+                        Log::info("BatchBalanceSyncJob: Bonus payoff completed", [
+                            'account_id' => $account->id,
+                            'sync_time' => $account->bonus_payoff_sync_at
+                        ]);
+                    } else {
+                        // Log::debug("BatchBalanceSyncJob: No bonus deduction needed", [
+                        //     'account_id' => $account->id,
+                        //     'deduction_calculated' => $deduction
+                        // ]);
+                    }
+                }
 
                 return 'updated';
             } else {

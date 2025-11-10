@@ -159,6 +159,7 @@
                         <th scope="col">TYPE</th>
                         <th scope="col">AMOUNT</th>
                         <th scope="col">FEE</th>
+                        <th scope="col">TRANSACTION HASH</th>
                         <th scope="col">STATUS</th>
                         <th scope="col">ACTION</th>
                       </tr>
@@ -192,6 +193,9 @@
                           </td>
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</h6>
+                          </td>
+                           <td>
+                             <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="https://uniwire.com/payout/{{ $history->transaction_id }}"> View Transaction</a>
                           </td>
                           {{-- {{ dump(($history->payout_req)) }} --}}
                           <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">

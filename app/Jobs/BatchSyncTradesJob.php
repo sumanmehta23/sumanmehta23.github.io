@@ -277,6 +277,33 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         }
 
         try {
+            // NEW CHECK: Look for trades with profit = 0
+            $phaseStart = microtime(true);
+
+            $zeroProfitTrades = Trade::where('account_id', $account->id)
+                ->where('profit', 0)
+                ->whereDoesntHave('deals') // Exclude trades with matching position_id in deals
+                ->orderBy('created_at', 'desc')
+                ->get();
+            // Log::info("zeroProfitTrades ".json_encode($zeroProfitTrades));
+            if ($zeroProfitTrades->isNotEmpty()) {
+                // Get earliest trade with profit = 0
+                $earliestZeroProfitTrade = $zeroProfitTrades->first();
+                $syncFromTime = Carbon::parse($earliestZeroProfitTrade->open_time)->subHours(5);
+                Log::info("DEBUG[{$account->code}]: Found {$zeroProfitTrades->count()} trades with zero profit. " .
+                    "Triggering DealSyncJob from {$syncFromTime} (2 hours before earliest zero-profit trade at {$earliestZeroProfitTrade->created_at})");
+
+                // Dispatch deal sync job starting from 2 hours before earliest zero-profit trade
+                $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
+                $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
+
+                // Invalidate cache after deal sync
+                $cacheService->invalidateAccountDeals($account);
+                $cacheService->invalidateAccount($account);
+
+                // Log::info("DEBUG[{$account->code}]: Deal sync completed for zero-profit trades, proceeding with trade sync");
+            }
+
             // PHASE 1 (MOVED): Check Deal Data Freshness FIRST - Avoid unnecessary MT5 API calls
             $phaseStart = microtime(true);
 
@@ -295,19 +322,20 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 Log::info("DEBUG[{$account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
 
                 // Dispatch deal sync job and wait for it to complete
+
                 $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
                 $dealSyncJob->handle(app(\App\Services\UniversalMT5Service::class), $cacheService);
 
                 // Ensure cache is invalidated after deal sync
                 $cacheService->invalidateAccountDeals($account);
 
-                Log::info("DEBUG[{$account->code}]: Deal sync completed, proceeding with trade sync");
+                // Log::info("DEBUG[{$account->code}]: Deal sync completed, proceeding with trade sync");
             } else {
-                Log::info("DEBUG[{$account->code}]: Deal data is recently synced (last fetch: {$account->deals_last_fetch_at}), using existing deals");
+                // Log::info("DEBUG[{$account->code}]: Deal data is recently synced (last fetch: {$account->deals_last_fetch_at}), using existing deals");
             }
 
             // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
-            Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
+            // Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
             $dealTotalStart = microtime(true);
             $mt5DealTotal = 0;
             $fromTimestamp = $fromTime->timestamp; // Unix timestamp for MT5 API
@@ -331,7 +359,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 if ($mt5DealTotal == $dbDealCount) {
                     if ($mt5DealTotal > 0) {
                         // Database is perfectly in sync with MT5 - use database deals!
-                        Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
+                        // Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
 
                         // Get existing deals and process them directly
                         $allDeals = Deal::where('account_id', $account->id)
@@ -341,16 +369,16 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         $result = $this->processDealsBatch($account, $allDeals, $fromTime, $cacheService);
 
                         $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
-                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms using COMPREHENSIVE DEAL COUNT optimization (avoided ALL MT5 processing!)");
+                        // Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms using COMPREHENSIVE DEAL COUNT optimization (avoided ALL MT5 processing!)");
 
                         return $result;
                     } else {
                         // Both MT5 and DB report 0 deals for this range
-                        Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
+                        // Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
 
                         $this->updateSyncStatus($account, 'success');
                         $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
-                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (no deals optimization)");
+                        // Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (no deals optimization)");
 
                         return 'no_changes';
                     }
@@ -370,7 +398,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     // Invalidate cache after deal sync to ensure fresh data
                     $cacheService->invalidateAccountDeals($account);
 
-                    Log::info("DEBUG[{$account->code}]: Deal sync completed for mismatch resolution - now proceeding with trade sync");
+                    // Log::info("DEBUG[{$account->code}]: Deal sync completed for mismatch resolution - now proceeding with trade sync");
 
                     // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
                     // This ensures we get the missing deals from MT5 instead of using stale database data
@@ -397,7 +425,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                     $this->updateSyncStatus($account, 'success');
                     $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
-                    Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (no activity optimization)");
+                    // Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (no activity optimization)");
 
                     return 'no_changes';
                 }
@@ -424,7 +452,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     $result = $this->processDealsBatch($account, $allDeals, $fromTime, $cacheService);
 
                     $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
-                    Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms using DATABASE deal optimization (requested range)");
+                    // Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms using DATABASE deal optimization (requested range)");
 
                     return $result;
                 }
@@ -453,7 +481,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                         $this->updateSyncStatus($account, 'success');
                         $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);
-                        Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (inactive account optimization)");
+                        // Log::info("PERFORMANCE[{$account->code}]: Completed in {$timings['total_processing']}ms (inactive account optimization)");
 
                         return 'no_changes';
                     }
@@ -925,7 +953,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $profit = round($priceDiff * $volumeInLots * $contractSize * $rateProfit * $multiplier, 2);
             Log::warning("DEBUG[{$account->code}]: Position {$positionId} using calculated profit: {$profit} (no deals available)");
             // Log calculation details for troubleshooting
-            Log::warning("DEBUG[{$account->code}]: Manual calculation details - " .
+            Log::warning("DEBUG[{$account->code}]: Manual calculation details line 956 - " .
                 "Type: " . ($openOrder->Type ? 'sell' : 'buy') . ", " .
                 "PriceDiff: {$priceDiff}, " .
                 "VolumeLots: {$volumeInLots}, " .
@@ -934,18 +962,18 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 "Multiplier: {$multiplier}");
 
             // Track accounts with frequent manual calculations for admin review
-            activity('trade_profit_calculation')
-                ->withProperties([
-                    'account_code' => $account->code,
-                    'position_id' => $positionId,
-                    'manual_calculation' => true,
-                    'calculated_profit' => $profit,
-                    'price_diff' => $priceDiff,
-                    'volume_lots' => $volumeInLots,
-                    'contract_size' => $contractSize,
-                    'rate_profit' => $rateProfit
-                ])
-                ->log("Manual profit calculation used for position {$positionId} - deals not found");
+            // activity('trade_profit_calculation')
+            //     ->withProperties([
+            //         'account_code' => $account->code,
+            //         'position_id' => $positionId,
+            //         'manual_calculation' => true,
+            //         'calculated_profit' => $profit,
+            //         'price_diff' => $priceDiff,
+            //         'volume_lots' => $volumeInLots,
+            //         'contract_size' => $contractSize,
+            //         'rate_profit' => $rateProfit
+            //     ])
+            //     ->log("Manual profit calculation used for position {$positionId} - deals not found");
             $profit = 0; // TEMPORARY OVERRIDE: Set to zero to avoid misleading data until deals are fixed . We will fetch such positions from positions api later like every 5 minutes
         }
 
@@ -1068,7 +1096,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             'sync_error' => $syncError
         ]);
 
-        Log::info("Updated sync status for account {$account->code}: {$status} -> {$syncStatus} (trades: {$tradesCount})");
+        // Log::info("Updated sync status for account {$account->code}: {$status} -> {$syncStatus} (trades: {$tradesCount})");
     }
 
     protected function updateLastTradeTime(Account $account, $orders): void
@@ -1254,12 +1282,12 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 // Update existing trade
                 $existingTrade->update($tradeData);
                 $updatedTrades++;
-                Log::debug("DEBUG[{$account->code}]: Updated position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
+                // Log::debug("DEBUG[{$account->code}]: Updated position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
             } else {
                 // Create new trade
                 Trade::create($tradeData);
                 $newTrades++;
-                Log::debug("DEBUG[{$account->code}]: Created position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
+                // Log::debug("DEBUG[{$account->code}]: Created position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
             }
 
             $processedTrades++;

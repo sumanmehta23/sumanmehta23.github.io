@@ -97,6 +97,22 @@ if ($getUser) {
                                                     </span>
                                                 </div>
                                                 @endcan
+                                                @can("trade_deposit:create")
+                                                <div class="mb-2 col-6">
+                                                    <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                        data-bs-target="#depositModalCellExp">Deposit Tracking
+                                                        <i class="ti ti-database-import"></i>
+                                                    </span>
+                                                </div>
+                                                @endcan
+                                                @can("trade_withdrawals:create")
+                                                <div class="mb-2 col-6">
+                                                    <span class="badge btn btn-info" data-bs-toggle="modal"
+                                                        data-bs-target="#withdrawalModalCellExp">Withdraw Tracking
+                                                        <i class="ti ti-square-rounded-arrow-down"></i>
+                                                    </span>
+                                                </div>
+                                                @endcan
                                                 @can("bonus_transaction:create")
                                                     <div class="mb-2 col-6">
                                                         <span class="badge btn btn-secondary" data-bs-toggle="modal"

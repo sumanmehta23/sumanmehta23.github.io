@@ -324,7 +324,7 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
             'sync_error' => $status === 'error' ? 'Sync failed' : null
         ]);
 
-        Log::info("Updated sync status for account {$account->code}: {$status} -> {$syncStatus} (trades: {$tradesCount})");
+        // Log::info("Updated sync status for account {$account->code}: {$status} -> {$syncStatus} (trades: {$tradesCount})");
     }
 
     public function failed(\Throwable $exception)

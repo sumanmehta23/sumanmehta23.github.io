@@ -460,8 +460,6 @@
 
 
         $(document).ready(function () {
-            let userId = <?= json_encode(auth()->user()->id) ?>; // PHP variable properly passed to JavaScript
-
             $("#commissionTbl").DataTable({
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
                 buttons: [
@@ -471,24 +469,26 @@
                         className: ' btn btn-primary',
                         filename: 'Commission_History_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [4, 7, 2, 8, 5, 6] // Updated column indices to match your use case
+                            columns: [4, 7, 2, 8, 5, 6]
                         }
                     }
                 ],
                 lengthMenu: [
-                    [10, 25, 50, 100, -1], // DataTable options
-                    [10, 25, 50, 100, "All"] // User-facing labels
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
                 ],
                 pageLength: 10,
                 processing: true,
                 serverSide: true,
                 searching: false,
                 ajax: {
-                    url: '/admin/getComissionData2',
+                    url: '{{ route('ib.commission-data') }}',
                     type: 'GET',
-                    data: { 'id': userId }, // Ensure this is populated dynamically if needed.
                     dataSrc: function (json) {
                         return json.data;
+                    },
+                    error: function(xhr, error, code) {
+                        console.error('DataTables error:', error, code);
                     }
                 },
                 "columns": [
@@ -556,27 +556,29 @@
                         className: ' btn btn-primary',
                         filename: 'Ib_Clients_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [4, 5, 1, 2, 3] // Updated column indices to match your use case
+                            columns: [4, 5, 1, 2, 3]
                         }
                     }
                 ],
                 lengthMenu: [
-                    [10, 25, 50, 100, -1], // DataTable options
-                    [10, 25, 50, 100, "All"] // User-facing labels
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "All"]
                 ],
                 processing: true,
                 serverSide: true,
                 searching: true,
                 ajax: {
-                    url: '/admin/getClientIbProfile',
+                    url: '{{ route('ib.client-profile') }}',
                     type: 'GET',
                     data: function (d) {
-                        d.userId = {!! json_encode($userId) !!};
                         d.level = level;
                         console.log('Sending data:', d);
                     },
                     dataSrc: function (json) {
                         return json.data;
+                    },
+                    error: function(xhr, error, code) {
+                        console.error('DataTables error:', error, code);
                     }
                 },
                 columns: [

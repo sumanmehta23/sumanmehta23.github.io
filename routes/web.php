@@ -187,6 +187,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ib-resend', [Ib::class, 'ibResend'])->name('ib-resend');
     Route::post('/ib-update-referral', [Ib::class, 'ibUpdateReferral'])->name('ib-update-referral');
 
+    // IB Profile DataTables AJAX routes
+    Route::get('/ib/commission-data', [Ib::class, 'getCommissionData'])->name('ib.commission-data');
+    Route::get('/ib/client-profile', [Ib::class, 'getClientIbProfile'])->name('ib.client-profile');
+
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
@@ -294,6 +298,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
 
         Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
+        Route::get('/export-all-demo-accounts', [AjaxController::class, 'exportAllDemoAccounts'])->name('export.all_demo_accounts');
 
         Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
         Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
@@ -484,7 +489,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/updatePassword", [MT5Controller::class, 'updatePassword'])->name('updatePassword');
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount')->middleware('check.permissions:trade_deposit:create');
+        Route::post("/depositToCellexpertAccount", [MT5Controller::class, 'depositToCellexpertAccount'])->name('depositToCellexpertAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
+        Route::post("/withdrawFromCellexpertAccount", [MT5Controller::class, 'withdrawFromCellexpertAccount'])->name('withdrawFromCellexpertAccount')->middleware('check.permissions:trade_withdrawals:create');
         Route::post("/bonusToAccount", [MT5Controller::class, 'bonusToAccount'])->name('bonusToAccount')->middleware('check.permissions:bonus_transaction:create');
         Route::post("/creditBonusToAccount", [MT5Controller::class, 'creditBonusToAccount'])->name('creditBonusToAccount')->middleware('check.permissions:bonus_transaction:create');
 

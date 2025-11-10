@@ -144,6 +144,7 @@ class BalanceSyncService
         // Extract balance and equity from the standardized response
         $currentBalance = (float) ($accountData['balance'] ?? 0);
         $currentEquity = (float) ($accountData['equity'] ?? 0);
+        $currentCredit = (float) ($accountData['credit'] ?? 0);
 
         $previousBalance = $account->last_known_balance;
         $previousEquity = $account->last_known_equity;
@@ -182,6 +183,71 @@ class BalanceSyncService
                 "Balance: {$previousBalance} → {$currentBalance} (Δ{$balanceDiff}), " .
                 "Equity: {$previousEquity} → {$currentEquity} (Δ{$equityDiff})");
 
+            if ($currentBalance < 1 && $currentCredit >= 0) {
+                // Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
+                //     'account_id' => $account->id,
+                //     'code' => $account->code,
+                //     'current_balance' => $currentBalance,
+                //     'current_credit' => $currentCredit
+                // ]);
+
+                $accountPromoBonus = $account->BonusTransaction()
+                    ->where('bonus_type', 'Bonus In')
+                    ->where('admin_remark', 'Promo Bonus')
+                    ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
+                        $query->where('created_at', '<=', $bonusPayoffSyncAt);
+                    });
+
+                $accountBonusAmunt = $accountPromoBonus->sum('bonus_amount');
+                $accountUsedAmunt = $accountPromoBonus->sum('bonus_used');
+
+                // Log::debug("BatchBalanceSyncJob: Bonus amounts calculated", [
+                //     'account_id' => $account->id,
+                //     'total_bonus' => $accountBonusAmunt,
+                //     'used_bonus' => $accountUsedAmunt,
+                //     'last_payoff_sync' => $account->bonus_payoff_sync_at
+                // ]);
+
+                $deduction = ((float)($accountBonusAmunt - $accountUsedAmunt));
+                if ($deduction > 0) {
+                    // Log::info("BatchBalanceSyncJob: Creating bonus payoff transaction", [
+                    //     'account_id' => $account->id,
+                    //     'deduction_amount' => $deduction,
+                    //     'email' => $account->email
+                    // ]);
+
+                    BonusTransaction::create([
+                        'email' => $account->email,
+                        'user_id' => $account->user_id,
+                        'account_id' => $account->id,
+                        'code' => $account->code,
+                        'bonus_amount' => $deduction * -1,
+                        'bonus_type' => 'Bonus Out',
+                        'status' => 1,
+                        'admin_remark' => 'Bonus Pay Off',
+                        'bonus_currency' => 'USD',
+                    ]);
+
+                    // Log::debug("BatchBalanceSyncJob: Updating bonus used amounts");
+                    $accountPromoBonus->update([
+                        'bonus_used' => \DB::raw('bonus_amount')
+                    ]);
+
+                    $account->bonus_payoff_sync_at = now();
+                    $account->save();
+
+                    // Log::info("BatchBalanceSyncJob: Bonus payoff completed", [
+                    //     'account_id' => $account->id,
+                    //     'sync_time' => $account->bonus_payoff_sync_at
+                    // ]);
+                } else {
+                    // Log::debug("BatchBalanceSyncJob: No bonus deduction needed", [
+                    //     'account_id' => $account->id,
+                    //     'deduction_calculated' => $deduction
+                    // ]);
+                }
+            }
+
             return 'updated';
         }
 
@@ -190,7 +256,7 @@ class BalanceSyncService
 
     /**
      * Mark account as having balance activity (called from deposit/withdrawal handlers)
-     * 
+     *
      * @param string|int $accountIdentifier Can be account ID (UUID), account code, or legacy integer ID
      * @param string $reason Reason for the balance activity
      */
