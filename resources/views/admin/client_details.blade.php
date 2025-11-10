@@ -303,11 +303,11 @@
                                                                 ? '<span class="badge bg-outline-success">KYC Verified</span>'
                                                                 : '') !!}
                                                          @php
-                                                        $applicantId = $kyc_log->callback_payload['applicantId'] 
-                                                            ?? $kyc_log->callback_payload['id'] 
+                                                        $applicantId = $kyc_log->callback_payload['applicantId']
+                                                            ?? $kyc_log->callback_payload['id']
                                                             ??
-                                                            $kyc_log->callback_payload['applicant_id'] 
-                                                            ?? $kyc_log->callback_payload['inspectionId'] 
+                                                            $kyc_log->callback_payload['applicant_id']
+                                                            ?? $kyc_log->callback_payload['inspectionId']
                                                             ?? null;
                                                     @endphp
 
@@ -604,8 +604,12 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    <img src="/admin_assets/assets/images/mt5.png"
-                                                                                        alt="card img" style="width:50px;">
+                                                                                    @if ($acc->platform == 'mt5')
+                                                                                        <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
+                                                                                    @elseif($acc->platform == 'x9')
+                                                                                        <img src="/admin_assets/assets/images/x9.png" alt="card img" style="width:50px;">
+                                                                                    @endif
+
                                                                                     <div class="mt-1 fs-18 text-black-50 fw-bold">
                                                                                         {{ $acc->code }}
                                                                                         <span class="badge bg-info text-white ms-2">DEMO</span>
