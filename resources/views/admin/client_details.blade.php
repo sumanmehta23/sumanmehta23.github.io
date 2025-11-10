@@ -135,6 +135,77 @@
             </div>
         </div>
     </div>
+     <!-- Add Note Modal -->
+    <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ route('admin.client.notes.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="client_id" value="{{ $user->id }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addNoteModalLabel">Add Note for {{ $user->name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="noteContent" class="form-label">Note</label>
+                            <textarea class="form-control" id="noteContent" name="note" rows="5" required placeholder="Enter your note here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Note</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes History Modal -->
+    <div class="modal fade" id="notesHistoryModal" tabindex="-1" aria-labelledby="notesHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notesHistoryModalLabel">Notes History - {{ $user->name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="notesHistoryContent">
+                        @if(isset($client_notes) && count($client_notes) > 0)
+                            <div class="timeline">
+                                @foreach($client_notes as $note)
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="mb-0">
+                                                    <i class="fe fe-user text-primary"></i>
+                                                    {{ $note->admin->name ?? 'Admin' }}
+                                                </h6>
+                                                <small class="text-muted">
+                                                    <i class="fe fe-clock"></i>
+                                                    {{ $note->created_at->format('M d, Y h:i A') }}
+                                                </small>
+                                            </div>
+                                            <p class="mb-0">{{ $note->note }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-5">
+                                <i class="fe fe-file-text" style="font-size: 48px; color: #ccc;"></i>
+                                <p class="text-muted mt-3">No notes available for this client.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -214,7 +285,7 @@
                             <div class="wideget-user">
                                 <div class="row">
                                     <div class="col-lg-12 col-xl-12">
-                                        <div class="wideget-user-desc d-flex">
+                                        <div class="wideget-user-desc d-flex flex-column flex-md-row">
                                             <div class="wideget-user-img d-flex align-items-center ">
                                                 <img src="/admin_assets/assets/images/users/client.jpeg" alt="img"
                                                     style="width:100px">
@@ -330,6 +401,38 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+                                            <div class="ms-auto flex-shrink-0 w-100 w-md-auto mt-3 mt-md-0" style="max-width: 400px;">
+                                                @if(isset($client_notes) && count($client_notes) > 0)
+                                                    @php
+                                                        $lastNote = $client_notes->first();
+                                                    @endphp
+                                                    <div class="card mb-2">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start mb-1 gap-1">
+                                                                <small class="mb-0 fw-bold text-primary" style="font-size: 14px;">
+                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->name ?? 'Admin' }}
+                                                                </small>
+                                                                <small class="text-muted text-nowrap" style="font-size: 14px;">
+                                                                    <i class="fe fe-clock"></i> {{ $lastNote->created_at->diffForHumans() }}
+                                                                </small>
+                                                            </div>
+                                                            <div style="max-height: 150px; overflow-y: auto;">
+                                                                <p class="mb-0 text-muted" style="font-size: 14px; word-wrap: break-word;">
+                                                                    {{ $lastNote->note }}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                <div class="d-flex flex-column flex-sm-row gap-2">
+                                                    <button type="button" class="btn btn-primary flex-fill flex-sm-grow-0" style="font-size: 12px; padding: 4px 10px; white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                                                        <i class="fe fe-plus" style="font-size: 12px;"></i> Add Note
+                                                    </button>
+                                                    <button type="button" class="btn btn-info flex-fill flex-sm-grow-0" style="font-size: 12px; padding: 4px 10px; white-space: nowrap;" data-bs-toggle="modal" data-bs-target="#notesHistoryModal">
+                                                        <i class="fe fe-file-text" style="font-size: 12px;"></i> Notes History
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -504,7 +607,7 @@
                                                                                     @if ($acc->platform == 'mt5')
                                                                                         <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
                                                                                     @elseif($acc->platform == 'x9')
-                                                                                        <img src="/admin_assets/assets/images/x9.png" alt="card img" style="width:50px;">
+                                                                                        <img src="/assets/images/x9.png" alt="card img" style="width:50px;">
                                                                                     @endif
 
                                                                                     <div class="mt-1 fs-18 text-black-50 fw-bold">
