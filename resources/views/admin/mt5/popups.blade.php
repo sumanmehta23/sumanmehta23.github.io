@@ -1,3 +1,32 @@
+<div class="modal fade" id="accountDeleteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="accountDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ route('admin.deleteAccount') }}" id="deleteAccountForm" method="POST">
+                @csrf
+                <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
+                <input type="hidden" name="code" id="code" value="{{ $getUser->code ?? '' }}">
+                <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
+                <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountDeleteModalLabel">Delete Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-3">
+                        Are you sure you want to delete this account? This action cannot be undone.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="depositModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="depositModalLabel" aria-hidden="true">
     <div class="modal-dialog  modal-dialog-centered">

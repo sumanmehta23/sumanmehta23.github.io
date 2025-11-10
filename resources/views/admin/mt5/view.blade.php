@@ -83,7 +83,7 @@ if ($getUser) {
                                                 </div>
                                                 <div class="mb-2 col-6" style="padding-left: 12px">
                                                     <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                        data-bs-target="#deleteModal">Delete Account
+                                                        data-bs-target="#accountDeleteModal">Delete Account
                                                         <i class="ti ti-database-import"></i>
                                                     </span>
                                                 </div>
