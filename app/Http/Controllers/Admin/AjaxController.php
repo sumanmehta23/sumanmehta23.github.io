@@ -918,7 +918,7 @@ class AjaxController extends Controller
 
         // Apply platform filter
         if ($request->has('platform') && !empty($request->platform)) {
-            $rmCondition->where('trade_platform', $request->platform)->orwhere('platform', $request->platform);
+            $rmCondition->where('platform', $request->platform);
         }
 
         if ($role !== "Super Admin") {
