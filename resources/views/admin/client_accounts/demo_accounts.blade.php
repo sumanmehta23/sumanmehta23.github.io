@@ -20,7 +20,7 @@
                     <select id="platformFilter" class="form-select">
                         <option value="">All Platforms</option>
                         <option value="x9">X9 Platform</option>
-                        <option value="MetaTrader5">MT5 Platform</option>
+                        <option value="mt5">MT5 Platform</option>
                     </select>
                 </div>
             </div>
