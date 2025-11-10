@@ -205,7 +205,6 @@
             </div>
         </div>
     </div>
-    
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -607,7 +606,7 @@
                                                                                     @if ($acc->platform == 'mt5')
                                                                                         <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
                                                                                     @elseif($acc->platform == 'x9')
-                                                                                        <img src="/admin_assets/assets/images/x9.png" alt="card img" style="width:50px;">
+                                                                                        <img src="/assets/images/x9.png" alt="card img" style="width:50px;">
                                                                                     @endif
 
                                                                                     <div class="mt-1 fs-18 text-black-50 fw-bold">
