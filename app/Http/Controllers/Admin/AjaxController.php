@@ -915,6 +915,11 @@ class AjaxController extends Controller
             ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
 
+        // Apply platform filter
+        if ($request->has('platform') && !empty($request->platform)) {
+            $rmCondition->where('trade_platform', $request->platform);
+        }
+
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
         }

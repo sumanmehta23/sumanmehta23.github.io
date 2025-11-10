@@ -15,7 +15,15 @@
             </div>
             <!-- PAGE-HEADER END -->
 
-
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <select id="platformFilter" class="form-select">
+                        <option value="">All Platforms</option>
+                        <option value="x9">X9 Platform</option>
+                        <option value="MetaTrader5">MT5 Platform</option>
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-xl-12">
                     <div class="card custom-card">
@@ -92,7 +100,9 @@
                 ajax: {
                     url: '/admin/getDemoAccountsList',
                     type: 'GET',
-                    data: {}, // Ensure this is populated dynamically if needed.
+                    data: function(d) {
+                        d.platform = $('#platformFilter').val(); // send selected platform to backend
+                    },
                     dataSrc: function(json) {
                         return json.data;
                     }
@@ -188,5 +198,9 @@
 
             });
 
+            // ✅ Reload DataTable when dropdown value changes
+            $('#platformFilter').on('change', function() {
+                dTtable.ajax.reload(null, false); // false → keeps current pagination
+            });
     </script>
 @endsection()
