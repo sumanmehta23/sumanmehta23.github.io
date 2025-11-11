@@ -44,6 +44,7 @@
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
+                                            <td>Status</td>
                                             <td>Actions</td>
                                         </tr>
                                     </thead>
@@ -230,11 +231,17 @@
                     name: 'created_time',
                     visible: false,
 
-                },{
+                },
+                {
+                    data: 'account_status',
+                    name: 'account_status',
+
+                },
+                {
                     data: 'actions',
                     name: 'actions',
 
-                },
+                }
 
             ],
             rowCallback: function(row, data) {
@@ -254,7 +261,7 @@
                     text: 'Export to Excel',
                     filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
-                        columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
+                        columns: [5, 6, 7, 8, 2, 3, 9, 10, 11] // Updated column indices to match your use case
                     }
                 },
                 {

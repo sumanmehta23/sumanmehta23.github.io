@@ -17,7 +17,6 @@ class SearchController extends Controller
         $query = DB::table('accounts')
             ->distinct() // Add distinct to prevent duplicates
             ->where('accounts.account_request_status', 1)
-            ->where('accounts.deleted_at', NULL)
             ->select('accounts.*', DB::raw('aspnetusers.id as enc_id'), 'account_types.ac_group')
             ->leftJoin('aspnetusers', 'aspnetusers.id', '=', 'accounts.user_id')
             ->join('account_types', 'account_types.id', '=', 'accounts.account_type_id');
