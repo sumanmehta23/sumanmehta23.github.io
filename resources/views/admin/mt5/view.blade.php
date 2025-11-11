@@ -82,10 +82,14 @@ if ($getUser) {
                                                     </div>
                                                 </div>
                                                 <div class="mb-2 col-6" style="padding-left: 12px">
-                                                    <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                        data-bs-target="#accountDeleteModal">Delete Account
-                                                        <i class="ti ti-database-import"></i>
-                                                    </span>
+                                                    @if ($account->deleted_at)
+                                                        <label class="fs-18 text-danger fw-bold mt-1" for="">Deleted</label>
+                                                    @else
+                                                        <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                            data-bs-target="#accountDeleteModal">Delete Account
+                                                            <i class="ti ti-database-import"></i>
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div class="mt-3 row justify-content-center">
