@@ -645,7 +645,7 @@ class MT5Controller extends Controller
             $account->delete();
             return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
         } elseif( $platform === 'mt5' ) {
-
+            $trade_user = NULL;
             if (($error_code =$this->api->UserGet($login,$trade_user)!= MTRetCode::MT_RET_OK)) {
                 return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
             }
@@ -657,8 +657,9 @@ class MT5Controller extends Controller
             }
 
             // MT5 deletion logic
-            if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
-                return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
+            $error_code = $this->api->DisableTradingOrDeleteUser($login);
+            if (!$error_code['status']) {
+                return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
             }
             // Delete from local database
             $account->delete();
