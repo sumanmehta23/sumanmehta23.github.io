@@ -563,7 +563,7 @@
                                                                                 <span class="mt-2 h4 fw-normal">@money($acc->balance)</span>
                                                                                 @if($acc->deleted_at)
                                                                                     <div class="fs-18 text-danger fw-bold mt-1">
-                                                                                        (Deleted)
+                                                                                        Deleted
                                                                                     </div>
                                                                                 @endif
                                                                             </div>
