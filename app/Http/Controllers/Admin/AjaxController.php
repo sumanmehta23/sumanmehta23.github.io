@@ -1330,7 +1330,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeDeposit::select(
             'trade_deposits.*'
-        )->with(['user', 'account']);
+        )->with(['user', 'account'])->withTrashed();
         if (!isset($_GET['id'])) {
             // if ($role == "Relationship Manager") {
             //     $query->whereHas('user.relationshipManager', function ($q) use ($alogin) {
@@ -1493,6 +1493,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
             ->with(['user', 'withdrawTo', 'account'])
+            ->withTrashed()
             ->where('trade_withdrawal.email_verified',1)
             ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 

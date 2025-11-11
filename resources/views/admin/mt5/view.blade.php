@@ -92,55 +92,57 @@ if ($getUser) {
                                                     @endif
                                                 </div>
                                             </div>
-                                            <div class="mt-3 row justify-content-center">
-                                                @can("trade_deposit:create")
-                                                <div class="mb-2 col-6">
-                                                    <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                        data-bs-target="#depositModal">Deposit
-                                                        <i class="ti ti-database-import"></i>
-                                                    </span>
-                                                </div>
-                                                @endcan
-                                                @can("trade_withdrawals:create")
-                                                <div class="mb-2 col-6">
-                                                    <span class="badge btn btn-info" data-bs-toggle="modal"
-                                                        data-bs-target="#withdrawalModal">Withdraw
-                                                        <i class="ti ti-square-rounded-arrow-down"></i>
-                                                    </span>
-                                                </div>
-                                                @endcan
-                                                @can("trade_deposit:create")
-                                                <div class="mb-2 col-6">
-                                                    <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                        data-bs-target="#depositModalCellExp">Deposit Tracking
-                                                        <i class="ti ti-database-import"></i>
-                                                    </span>
-                                                </div>
-                                                @endcan
-                                                @can("trade_withdrawals:create")
-                                                <div class="mb-2 col-6">
-                                                    <span class="badge btn btn-info" data-bs-toggle="modal"
-                                                        data-bs-target="#withdrawalModalCellExp">Withdraw Tracking
-                                                        <i class="ti ti-square-rounded-arrow-down"></i>
-                                                    </span>
-                                                </div>
-                                                @endcan
-                                                @can("bonus_transaction:create")
+                                            @if (!$account->deleted_at)
+                                                <div class="mt-3 row justify-content-center">
+                                                    @can("trade_deposit:create")
                                                     <div class="mb-2 col-6">
-                                                        <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                            data-bs-target="#bonusModalCredit">Bonus Credit
-                                                            <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                        <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                            data-bs-target="#depositModal">Deposit
+                                                            <i class="ti ti-database-import"></i>
                                                         </span>
                                                     </div>
+                                                    @endcan
+                                                    @can("trade_withdrawals:create")
+                                                    <div class="mb-2 col-6">
+                                                        <span class="badge btn btn-info" data-bs-toggle="modal"
+                                                            data-bs-target="#withdrawalModal">Withdraw
+                                                            <i class="ti ti-square-rounded-arrow-down"></i>
+                                                        </span>
+                                                    </div>
+                                                    @endcan
+                                                    @can("trade_deposit:create")
+                                                    <div class="mb-2 col-6">
+                                                        <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                            data-bs-target="#depositModalCellExp">Deposit Tracking
+                                                            <i class="ti ti-database-import"></i>
+                                                        </span>
+                                                    </div>
+                                                    @endcan
+                                                    @can("trade_withdrawals:create")
+                                                    <div class="mb-2 col-6">
+                                                        <span class="badge btn btn-info" data-bs-toggle="modal"
+                                                            data-bs-target="#withdrawalModalCellExp">Withdraw Tracking
+                                                            <i class="ti ti-square-rounded-arrow-down"></i>
+                                                        </span>
+                                                    </div>
+                                                    @endcan
+                                                    @can("bonus_transaction:create")
+                                                        <div class="mb-2 col-6">
+                                                            <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                                data-bs-target="#bonusModalCredit">Bonus Credit
+                                                                <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                            </span>
+                                                        </div>
 
-                                                    <div class="mb-2 col-6">
-                                                        <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                            data-bs-target="#bonusModal">Bonus Deposit
-                                                            <i class="ti ti-plus" style="font-weight: bold"></i>
-                                                        </span>
-                                                    </div>
-                                                @endcan
-                                            </div>
+                                                        <div class="mb-2 col-6">
+                                                            <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                                data-bs-target="#bonusModal">Bonus Deposit
+                                                                <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                            </span>
+                                                        </div>
+                                                    @endcan
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
