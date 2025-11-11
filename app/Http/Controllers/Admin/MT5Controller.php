@@ -1293,7 +1293,7 @@ class MT5Controller extends Controller
     public function view(Request $request, $id)
     {
 
-        $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
+        $account = Account::withTrashed()->where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
         $trade = Trade::where('code', $account->code)->get();
         $total_profit = $trade->sum('profit');
@@ -1313,7 +1313,7 @@ class MT5Controller extends Controller
         } else {
             $type = "demo";
         }
-        $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
+        $account = Account::withTrashed()->where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
@@ -1325,26 +1325,26 @@ class MT5Controller extends Controller
         //     ->where(DB::raw('code'), $account->code)
         //     ->where('status', 1)
         //     ->sum('deposit_amount');
-        $total_deposit = TradeDeposit::where('account_id', $account->id)
+        $total_deposit = TradeDeposit::withTrashed()->where('account_id', $account->id)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
-        $unapproved_deposit = TradeDeposit::where('account_id', $account->id)
+        $unapproved_deposit = TradeDeposit::withTrashed()->where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
-        $total_withdrawal = TradeWithdrawals::where('account_id', $account->id)
+        $total_withdrawal = TradeWithdrawals::withTrashed()->where('account_id', $account->id)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
-        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->id)
+        $unapproved_withdrawal = TradeWithdrawals::withTrashed()->where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
-        $bonus_trans = BonusTransaction::where('status', 1)
+        $bonus_trans = BonusTransaction::withTrashed()->where('status', 1)
             ->where("account_id", $account->id)
             ->get();
         $account_types = AccountType::where('status', 1)->get();

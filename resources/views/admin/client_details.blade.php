@@ -136,7 +136,7 @@
         </div>
     </div>
      <!-- Add Note Modal -->
-    <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    {{-- <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ route('admin.client.notes.store') }}" method="POST">
@@ -159,7 +159,7 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Notes History Modal -->
     <div class="modal fade" id="notesHistoryModal" tabindex="-1" aria-labelledby="notesHistoryModalLabel" aria-hidden="true">
@@ -560,9 +560,13 @@
                                                                                     {{ $acc->code }}
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="d-flex justify-content-end w-50">
-                                                                                <span
-                                                                                    class="mt-2 h4 fw-normal">@money($acc->balance)</span>
+                                                                            <div class="d-flex flex-column align-items-end w-50">
+                                                                                <span class="mt-2 h4 fw-normal">@money($acc->balance)</span>
+                                                                                @if($acc->deleted_at)
+                                                                                    <div class="fs-18 text-danger fw-bold mt-1">
+                                                                                        (Deleted)
+                                                                                    </div>
+                                                                                @endif
                                                                             </div>
                                                                         </div>
                                                                         <div class="d-flex justify-content-between">
