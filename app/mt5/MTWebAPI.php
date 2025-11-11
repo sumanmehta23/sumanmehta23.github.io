@@ -908,4 +908,93 @@ class MTWebAPI
 
     return $result;
   }
+
+
+  /**
+     * Disable trading for an MT5 account if it has trade history,
+     * otherwise delete the user entirely.
+     *
+     * @param int $login - MT5 account login
+     * @return array - summary of actions and results
+     */
+   public function DisableTradingOrDeleteUser($login)
+    {
+        $summary = [
+            'status' => true,
+            'message' => 'Success',
+            'errors' => [],
+            'trading_disabled' => false,
+            'user_deleted' => false,
+            'has_history' => false,
+        ];
+
+        try {
+            // Step 1: Check if account has trade history
+            $mt_history = new MTHistoryProtocol($this->m_connect);
+
+            $from = 'March 01, 2016';
+            $to = 'March 31, 2080';
+
+            $total = 0;
+            $ret = $mt_history->HistoryGetTotal($login, $from, $to, $total);
+
+            if ($ret != MTRetCode::MT_RET_OK) {
+                $summary['errors'][] = "Failed to get history total, code $ret";
+            }
+
+            $hasHistory = ($total > 0);
+            $summary['has_history'] = $hasHistory;
+
+            // Step 2: If account has trade history → disable trading
+            if ($hasHistory) {
+                $user = null;
+                $ret = $this->UserGet($login, $user);
+
+                if ($ret == MTRetCode::MT_RET_OK && $user) {
+                    // Disable trading rights
+                    $user->Rights = MTEnUsersRights::USER_RIGHT_TRADE_DISABLED;
+
+
+                    $updated_user = null;
+                    $update_res = $this->UserUpdate($user, $updated_user);
+
+                    if ($update_res == MTRetCode::MT_RET_OK) {
+                        $summary['trading_disabled'] = true;
+                        $summary['message'] = "Trading disabled successfully.";
+                    } else {
+                        $summary['errors'][] = "Failed to disable trading rights, code $update_res";
+                    }
+                } else {
+                    $summary['errors'][] = "Failed to fetch user info for login $login (code $ret)";
+                }
+            }
+            // Step 3: If no history → delete user
+            else {
+                $ret = $this->UserDelete($login);
+                if ($ret == MTRetCode::MT_RET_OK) {
+                    $summary['user_deleted'] = true;
+                    $summary['message'] = "User deleted successfully.";
+                } else {
+                    $summary['errors'][] = "User deletion failed: code $ret";
+                }
+            }
+
+        } catch (\Throwable $e) {
+            $summary['errors'][] = "Exception: " . $e->getMessage();
+        }
+
+        // Finalize status/message
+        if (count($summary['errors']) > 0) {
+            $summary['status'] = false;
+            $summary['message'] = implode(' | ', $summary['errors']);
+        }
+
+        return $summary;
+    }
+
+
+
+
+
+
 }

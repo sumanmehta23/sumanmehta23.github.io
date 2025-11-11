@@ -30,7 +30,7 @@ class MT5Accounts extends Controller
     protected $api;
     protected $mailService;
     protected $mt5Service;
-    protected $x9Service;   
+    protected $x9Service;
     public function __construct(MailService $mailService, X9Service $x9Service)
     {
         $this->mailService = $mailService;
@@ -960,90 +960,104 @@ class MT5Accounts extends Controller
 
         $settings = settings();
 
-        // Connection handled by ensureMT5Connection()
-        // $this->api->SetLoggerWriteDebug(config('constants.IS_WRITE_DEBUG_LOG'));
-        // $this->api->Connect(
-        //     $settings['mt5_server_ip'],
-        //     $settings['mt5_server_port'],
-        //     300,
-        //     $settings['mt5_server_web_login'],
-        //     $settings['mt5_server_web_password']
-        // );
-
+        $platform = $account->platform;
 
         try {
+            $login = (int)$account->code;
 
-            $login = $account->code;
+            if( $platform === 'x9' ) {
+                $response = $this->x9Service->getUserDetails($login);
+                if ($response['data']['trading_account']['trading_account_balance']['balance'] > 0) {
+                    if($response['data']['trading_account']['client_group_type'] != 'DEMO'){
+                        return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                    }
+                }
+                // X9 deletion logic
+                $response = $this->x9Service->accountSetting($account,'is_enable',false);
+                if (!$response['status']) {
+                    return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
+                }
+                // Delete from local database
+                $account->delete();
+            } elseif( $platform === 'mt5' ) {
 
-            if ($account->balance > 0) {
-                return redirect()->back()->with('warning', 'Account has balance, please transfer amount to another account.');
+                $trade_user = null;
+                if (($error_code =$this->api->UserGet($login,$trade_user)!= MTRetCode::MT_RET_OK)) {
+                    return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
+                }
+
+                if ($trade_user->Balance > 0) {
+                    if ($account->demo != 1) {
+                        return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                    }
+                }
+
+                // Close all trades and disable trading before deletion
+                $error_code = $this->api->DisableTradingOrDeleteUser($login);
+                if (!$error_code['status']) {
+                    return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
+                }
+
+                // MT5 deletion logic
+                // if (($error_code = $this->api->UserDelete($login)) != MTRetCode::MT_RET_OK) {
+                //     return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
+                // }
+                // Delete from local database
+                $account->delete();
             }
-            if (($error_code = $this->mt5Service->userDelete($login)) != MTRetCode::MT_RET_OK) {
-                $error = MTRetCode::GetError($error_code);
-                Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($login));
-                return ["status" => false, "message" => $error];
-            } else {
-                Log::info('MT5 account deleted successfully' . json_encode($login) . ' with server response ');
-            }
 
-            if ($account) {
-                $account->delete(); // Soft delete the account
-                activity()
-                    ->causedBy(auth()->guard('admin')->user())
-                    ->withProperties([
-                        'ip' => request()->ip(),
-                        'admin_email' => auth()->guard('admin')->user()->email,
-                        'userRole' => auth()->guard('admin')->user()->userRole,
-                        'username' => auth()->guard('admin')->user()->username,
-                        'admin_id' => auth()->guard('admin')->user()->id,
-                        'client_id' => $account->user_id,
-                        'account_id' => $account->id,
-                        'code' => $account->code,
-                        'account_email' => $account->email,
-                        'remark' => 'Delete Account'
-                    ])
-                    ->event('delete')
-                    ->log('Delete Account');
-                // Refresh the model to include the `deleted_at` timestamp
-                $account->refresh();
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $account->user_id,
+                    'account_id' => $account->id,
+                    'code' => $account->code,
+                    'account_email' => $account->email,
+                    'remark' => 'Delete Account'
+                ])
+                ->event('delete')
+                ->log('Delete Account');
 
-                $email = $validatedData['email'];
-                $type = $account->demo == "1" ? "Demo account" : "Live account";
+            $email = $validatedData['email'];
+            $type = $account->demo == "1" ? "Demo account" : "Live account";
 
-                $from = $settings['email_from_address'];
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-                $emailSubject = $settings['admin_title'] . ' - Account Deleted';
-                $content = '<div>We would like to inform you that your account has been deleted.</div>
-                            <div> Below are the details for your reference:</div>
-                            <br>
-                            <div><b>Account code: </b>' . $account->code . '</div>
-                            <div><b>Account type: </b>' . $type . '</div>
-                            <div><b>Created On: </b>' . $account->created_at . '</div>
-                            <div><b>Deleted On: </b>' . $account->deleted_at . '</div>
-                            <br>
-                            <div>If this action was performed in error or if you have any questions, please don’t hesitate to contact our support team.</div>
-                            <br>
-                            <div>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com.</div>
-                            <br>
-                            <div>Best regards,</div>
-                            <div>LQH Markets Team</div>';
-                $templateVars = [
-                    'name' => $account->name,
-                    'site_link' => $settings['copyright_site_name_text'],
-                    'email' => $settings['email_from_address'],
-                    'content' => $content,
-                    'title_right' => 'Account',
-                    'subtitle_right' => 'Deleted',
-                    'btn_text' => 'Go To Dashboard',
-                ];
-                $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+            $from = $settings['email_from_address'];
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $emailSubject = $settings['admin_title'] . ' - Account Deleted';
+            $content = '<div>We would like to inform you that your account has been deleted.</div>
+                        <div> Below are the details for your reference:</div>
+                        <br>
+                        <div><b>Account code: </b>' . $account->code . '</div>
+                        <div><b>Account type: </b>' . $type . '</div>
+                        <div><b>Created On: </b>' . $account->created_at . '</div>
+                        <div><b>Deleted On: </b>' . $account->deleted_at . '</div>
+                        <br>
+                        <div>If this action was performed in error or if you have any questions, please don’t hesitate to contact our support team.</div>
+                        <br>
+                        <div>If you need any assistance, our support team is available 24/7 at support@lqhmarkets.com.</div>
+                        <br>
+                        <div>Best regards,</div>
+                        <div>LQH Markets Team</div>';
+            $templateVars = [
+                'name' => $account->name,
+                'site_link' => $settings['copyright_site_name_text'],
+                'email' => $settings['email_from_address'],
+                'content' => $content,
+                'title_right' => 'Account',
+                'subtitle_right' => 'Deleted',
+                'btn_text' => 'Go To Dashboard',
+            ];
+            $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
 
-                return redirect()->back()->with('success', 'Account deleted successfully.');
-            } else {
-                return redirect()->back()->with('error', 'Account not found.');
-            }
+            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
+
         } catch (\Exception $e) {
             Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Exception: ' . $e->getMessage());
