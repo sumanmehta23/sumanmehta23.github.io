@@ -305,6 +305,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
         Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
         Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
+        Route::get('/getTradeHistory', [AjaxController::class, 'getTradeHistory'])->name('admin.getTradeHistory');
+        Route::get('/export-all-trades', [AjaxController::class, 'exportAllTrades'])->name('export.all_trades');
+        Route::get('/export-filtered-trades', [AjaxController::class, 'exportFilteredTrades'])->name('export.filtered_trades');
         Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
         Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
 
