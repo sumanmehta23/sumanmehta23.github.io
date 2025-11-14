@@ -317,7 +317,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="pt-1 mt-1 border-2 row border-top border-default">
-                                                    <div class="col-4">
+                                                    <div class="col-6">
                                                         <div class="d-flex align-items-center">
                                                             <button
                                                                 class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
@@ -330,6 +330,24 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                       @php
+                                                        $affiliateParent = $user->affiliateParent();
+                                                        @endphp
+                                                        @if($affiliateParent)
+                                                            <div class="col-6">
+                                                                <div class="d-flex align-items-center">
+                                                                    <button class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        <i class="ri-user-star-line"></i>
+                                                                    </button>
+                                                                    <div>
+                                                                        <div class="mb-0 text-muted fs-11">Tracknow Affiliate:</div>
+                                                                        <div class="mb-1 fs-12">
+                                                                            {{($affiliateParent->fullname ?? 'N/A') . ' (' . ($affiliateParent->affiliate_id ?? 'N/A') . ')' }}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                 </div>
                                             </div>
                                         </div>

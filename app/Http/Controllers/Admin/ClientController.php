@@ -452,6 +452,7 @@ class ClientController extends Controller
             $number = $request->country_code . $request->telephone;
 
             $emailNotification = $request->input('email_notification');
+            $affiliate_id = $request->input('affiliate_id');
 
             $countryCode = Country::where('country_name', $request->country)
                 ->select('country_code')
@@ -540,6 +541,7 @@ class ClientController extends Controller
                     $user->country_code = $country_code;
                     $user->country = $country;
                     $user->email = $email;
+                    $user->affiliate_id = $affiliate_id;
 
                     $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
                 }

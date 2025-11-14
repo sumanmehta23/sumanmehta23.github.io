@@ -292,6 +292,34 @@ class User extends Authenticatable
         return $this->countryDetail;
     }
 
+       /**
+     * Get affiliate parent user
+     * Usage: $user->affiliateParent()
+     */
+    public function affiliateParent()
+    {
+        if (!$this->cxd) return null;
+        
+        $cxdValue = strpos($this->cxd, '_') !== false 
+            ? substr($this->cxd, 0, strpos($this->cxd, '_')) 
+            : $this->cxd;
+        
+        return User::where('affiliate_id', $cxdValue)->first();
+    }
+
+    /**
+     * Get affiliate children users
+     * Usage: $user->affiliateChildren()
+     */
+    public function affiliateChildren()
+    {
+        if (!$this->affiliate_id) return collect();
+        
+        return User::where('cxd', $this->affiliate_id)
+            ->orWhere('cxd', 'LIKE', $this->affiliate_id . '_%')
+            ->get();
+    }
+
     public function getClientsAttribute()
     {
         if (!$this->ib) {
