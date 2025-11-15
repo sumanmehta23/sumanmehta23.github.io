@@ -3933,6 +3933,7 @@ class AjaxController extends Controller
                 'aspnetusers.email',
                 'aspnetusers.fullname',
                 'aspnetusers.country',
+                'aspnetusers.affiliate_id',
                 // 'aspnetusers.country_code',
                 // 'aspnetusers.number AS telephone',
                 DB::raw('concat(countries.country_code) as country_code'),
