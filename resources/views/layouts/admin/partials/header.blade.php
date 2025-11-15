@@ -619,6 +619,19 @@ if (app()->environment('local')) {
                             </ul>
                         </li> --}}
 
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">BLOG</span>
+                        </li>
+
+                        <li class="slide menu-item-main">
+                            <a href="{{ route('admin.blog.index') }}" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-file-text"></i>
+                                <span class="side-menu__label">Blog Posts</span>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li>
+
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-settings"></i>

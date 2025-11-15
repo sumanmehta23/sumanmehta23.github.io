@@ -243,6 +243,10 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -305,6 +309,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
         Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
         Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
+        Route::get('/getTradeHistory', [AjaxController::class, 'getTradeHistory'])->name('admin.getTradeHistory');
+        Route::get('/export-all-trades', [AjaxController::class, 'exportAllTrades'])->name('export.all_trades');
+        Route::get('/export-filtered-trades', [AjaxController::class, 'exportFilteredTrades'])->name('export.filtered_trades');
         Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
         Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
 
@@ -531,6 +538,17 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/current-positions', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getCurrentPositions'])->name('current-positions');
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
         });
+
+        // Admin Blog Routes
+        Route::resource('blog', \App\Http\Controllers\Admin\BlogPostController::class)->names([
+            'index' => 'blog.index',
+            'create' => 'blog.create',
+            'store' => 'blog.store',
+            'show' => 'blog.show',
+            'edit' => 'blog.edit',
+            'update' => 'blog.update',
+            'destroy' => 'blog.destroy',
+        ]);
     });
 });
 // Test route for affiliate reference code functionality
