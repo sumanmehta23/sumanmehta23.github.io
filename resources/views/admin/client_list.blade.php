@@ -145,6 +145,10 @@
                                 </select>
                             </div>
                             <div class="col-6">
+                                <label for="input-label" class="form-label">Affiliate ID:</label>
+                                <input type="text" class="form-control" name="affiliate_id" placeholder="Enter Affiliate ID">
+                            </div>
+                            <div class="col-6">
                                 <label for="input-label" class="form-label">Password:</label>
                                 <input type="password" class="form-control" name="password" >
                             </div>
