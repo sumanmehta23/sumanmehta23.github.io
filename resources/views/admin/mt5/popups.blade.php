@@ -15,7 +15,9 @@
 
                 <div class="modal-body">
                     <p class="mb-3">
-                        Are you sure you want to delete this account? This action cannot be undone. All associated data with this account will be removed.
+                        This will soft delete the account — client info will be hidden but kept for records.
+                        Accounts with trading history will be disabled, not deleted.
+                        Deposits and withdrawals remain for reconciliation, and emails to the client will stop.
                     </p>
                 </div>
                 <div class="modal-footer justify-content-between">
