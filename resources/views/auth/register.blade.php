@@ -258,7 +258,7 @@
                                                             type="text" class="form-control" value="{{ $referral_code }}"
                                                             required readonly disabled name="refercode"><!----><small data-v-97e32e5a="">*your referral link code provided.</small></div>
                                                 </div>
-                                            @else
+                                            {{-- @else
                                                 <div data-v-97e32e5a="" class="col-sm-12">
                                                     <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                         class="form-label">Referral Code<small data-v-97e32e5a="">(if
@@ -266,7 +266,7 @@
                                                         class="form-control" placeholder="Referral Code"
                                                         name="referral">
                                                     </div>
-                                                </div>
+                                                </div> --}}
                                             @endif
 
                                         </div>
