@@ -132,7 +132,9 @@
             // console.log(data.fullemail);
 
             Swal.fire({
-                    title: `Are you sure you want to delete this "${data.account_code}" account?`,
+                    title: `This will soft delete the account — client info will be hidden but kept for records.
+                        Accounts with trading history will be disabled, not deleted.
+                        Deposits and withdrawals remain for reconciliation, and emails to the client will stop.`,
 
                     html: `
                     <form id="delete_account_form" method="post" action="deleteAccounts">
