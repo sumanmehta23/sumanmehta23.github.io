@@ -27,6 +27,8 @@ use App\Http\Controllers\Controller;
 use App\Services\CompetitionService;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LeaderboardExport;
 
 
 class Leaderboard extends Controller
@@ -545,5 +547,44 @@ class Leaderboard extends Controller
             ],
             'trades' => $trades
         ]);
+    }
+
+
+    /**
+     * Export leaderboard data to Excel
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function exportLeaderboard(Request $request)
+    {
+        $competition_id = $request->input('competition_id');
+        $type = $request->input('type', 'top10'); // 'top10' or 'all'
+
+        $competition = AccountType::where('id', $competition_id)->first();
+
+        if (!$competition) {
+            return redirect()->back()->with('error', 'Competition not found.');
+        }
+
+        try {
+            // Get rankings data from service
+            $rankings = $this->competitionService->getRankings($competition);
+
+            // Determine limit based on type
+            $limit = $type === 'top10' ? 10 : null;
+
+            // Generate filename
+            $filename = $type === 'top10'
+                ? 'leaderboard_top10_' . $competition->name . '_' . now()->format('Y-m-d_His') . '.xlsx'
+                : 'leaderboard_all_' . $competition->name . '_' . now()->format('Y-m-d_His') . '.xlsx';
+
+            return Excel::download(new LeaderboardExport($rankings, $limit), $filename);
+        } catch (\Exception $e) {
+            Log::error('Error exporting leaderboard: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Unable to export leaderboard data. Please try again.');
+        }
     }
 }
