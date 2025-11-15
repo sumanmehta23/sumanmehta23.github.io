@@ -171,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
     Route::get('/competition/trader/{accountNo}/{start_date}/{end_date}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
+    Route::get('/competition/export', [CompetitionController::class, 'exportLeaderboard'])->name('user.competition.export');
 
     Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 
@@ -344,7 +345,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
         Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
-
+        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 

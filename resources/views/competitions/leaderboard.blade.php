@@ -193,6 +193,26 @@
                                     <i class="fe fe-award me-2"></i>
                                     Top 10 Performers
                                 </h5>
+
+                                @php
+                                    $exportRouteName = (isset(auth()->user()->role)
+                                        && (auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Super Admin'))
+                                        ? 'admin.competition.export'
+                                        : 'user.competition.export';
+                                @endphp
+
+                                <div class="ms-auto d-flex gap-2">
+                                    <a href="{{ route($exportRouteName, ['competition_id' => $competition->id, 'type' => 'top10']) }}"
+                                        class="btn btn-primary px-3"
+                                        title="Export Top 10 Performers">
+                                        <i class="fe fe-download me-1"></i>Top 10
+                                    </a>
+                                    <a href="{{ route($exportRouteName, ['competition_id' => $competition->id, 'type' => 'all']) }}"
+                                        class="btn btn-primary px-3"
+                                        title="Export All Participants">
+                                        <i class="fe fe-download me-1"></i>All Data
+                                    </a>
+                                </div>
                             </div>
                             <div class="card-body p-0">
                                 <div class="list-group list-group-flush">
@@ -294,7 +314,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="card-tools">
                                     <button class="btn btn-sm btn-light" id="toggleChart">
                                         <i class="fe fe-maximize-2"></i>
@@ -783,7 +803,7 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-                
+
                 // console.log(data.chart_data);
                 // Update chart
                 chart.data.labels = data.chart_data.labels;
