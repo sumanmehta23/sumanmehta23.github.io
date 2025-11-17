@@ -1777,7 +1777,21 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
         $accountId = $request->get('id');
-        $fileName = 'Trades_' . date('Y-m-d') . '.csv';
+        
+        // Build filename with account info if accountId provided
+        if ($accountId) {
+            $account = Account::with('user')->find($accountId);
+            if ($account && $account->user) {
+                // Format name: replace spaces with underscores
+                $accountName = str_replace(' ', '_', $account->user->fullname ?? 'Unknown');
+                $accountCode = $account->code ?? 'N/A';
+                $fileName = 'lqh_' . $accountName . '_' . $accountCode . '.csv';
+            } else {
+                $fileName = 'lqh_Trades_' . date('Y-m-d') . '.csv';
+            }
+        } else {
+            $fileName = 'lqh_Trades_All_' . date('Y-m-d') . '.csv';
+        }
 
         return Response::streamDownload(function () use ($role, $alogin, $userGroups, $accountId) {
             $handle = fopen('php://output', 'w');
@@ -1851,7 +1865,21 @@ class AjaxController extends Controller
         $accountId = $request->get('id');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
-        $fileName = 'Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+        
+        // Build filename with account info and date range
+        if ($accountId) {
+            $account = Account::with('user')->find($accountId);
+            if ($account && $account->user) {
+                // Format name: replace spaces with underscores
+                $accountName = str_replace(' ', '_', $account->user->fullname ?? 'Unknown');
+                $accountCode = $account->code ?? 'N/A';
+                $fileName = 'lqh_' . $accountName . '_' . $accountCode . '_' . $dateFrom . '_to_' . $dateTo . '.csv';
+            } else {
+                $fileName = 'lqh_Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+            }
+        } else {
+            $fileName = 'lqh_Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+        }
 
         return Response::streamDownload(function () use ($role, $alogin, $userGroups, $accountId, $dateFrom, $dateTo) {
             $handle = fopen('php://output', 'w');
