@@ -539,6 +539,22 @@ if (app()->environment('local')) {
                                 </li>
                             {{-- @endif --}}
                         @endcan
+
+                        @if (auth()->user()->can('setting:viewAny'))
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">AFFILIATE MANAGEMENT</span>
+                            </li>
+
+                            <li class="slide menu-item-main ">
+                                <a href="{{ route('admin.affiliates.index') }}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-users"></i>
+                                    <span class="side-menu__label">Affiliates</span>
+                                </a>
+                                <ul class="slide-menu child1">
+                                </ul>
+                            </li>
+                        @endif
+                        
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">ADMIN USERS</span>

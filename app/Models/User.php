@@ -304,7 +304,7 @@ class User extends Authenticatable
             ? substr($this->cxd, 0, strpos($this->cxd, '_')) 
             : $this->cxd;
         
-        return User::where('affiliate_id', $cxdValue)->first();
+        return Affiliate::where('custom_id', $cxdValue)->first();
     }
 
     /**

@@ -342,7 +342,7 @@
                                                                     <div>
                                                                         <div class="mb-0 text-muted fs-11">Tracknow Affiliate:</div>
                                                                         <div class="mb-1 fs-12">
-                                                                            {{($affiliateParent->fullname ?? 'N/A') . ' (' . ($affiliateParent->affiliate_id ?? 'N/A') . ')' }}
+                                                                            {{($affiliateParent->fullname ?? 'N/A') . ' (' . ($affiliateParent->custom_id ?? 'N/A') . ')' }}
                                                                         </div>
                                                                     </div>
                                                                 </div>
