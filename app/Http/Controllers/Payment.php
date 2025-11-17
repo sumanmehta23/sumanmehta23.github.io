@@ -16,6 +16,7 @@ use App\Models\WalletDeposit;
 use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\PendingManualPayment;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use App\Services\UniversalMT5Service;
