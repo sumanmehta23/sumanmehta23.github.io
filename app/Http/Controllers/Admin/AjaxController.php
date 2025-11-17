@@ -932,6 +932,11 @@ class AjaxController extends Controller
             ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
 
+        // Apply platform filter
+        if ($request->has('platform') && !empty($request->platform)) {
+            $rmCondition->where('platform', $request->platform);
+        }
+
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
         }
@@ -3683,6 +3688,7 @@ class AjaxController extends Controller
                 'aspnetusers.email',
                 'aspnetusers.fullname',
                 'aspnetusers.country',
+                'aspnetusers.affiliate_id',
                 // 'aspnetusers.country_code',
                 // 'aspnetusers.number AS telephone',
                 DB::raw('concat(countries.country_code) as country_code'),
