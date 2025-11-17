@@ -11,7 +11,6 @@ use App\Models\PaymentLog;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
-use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\BonusTransaction;
@@ -19,8 +18,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
+use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Artisan;
 use App\Events\AccountTradesDepositEvent;
 use App\Services\MailService as MailService;
 
@@ -403,6 +404,60 @@ class Payment extends Controller
                         return stripos($coinString, $coin) !== false;
                     });
                     if (empty($matches)) {
+
+                        // Store invalid coin payment for manual processing instead of just sending email
+                        Log::channel("creditcardpayissa")->info('Invalid coin payment detected: ' . json_encode($responsedata));
+
+                        // Update payment log
+                        $paymentLog->update([
+                            'payment_res' => json_encode($responsedata),
+                            'payment_status' => 'failed',
+                        ]);
+
+                        // Try to get USD value using the polygon command
+                        $usdValue = null;
+                        $polygonResponse = null;
+
+                        try {
+                            Artisan::call('polygon:usd', [
+                                'hash' => $transactionId,
+                                '--price' => null,
+                            ]);
+
+                            $output = Artisan::output();
+                            $polygonResponse = $output;
+
+                            // Try to parse the JSON output
+                            if (preg_match('/\{[\s\S]*\}/', $output, $matches)) {
+                                $jsonData = json_decode($matches[0], true);
+                                if (isset($jsonData['value_usd_at_time'])) {
+                                    $usdValue = $jsonData['value_usd_at_time'];
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::channel("creditcardpayissa")->error('Failed to fetch USD value: ' . $e->getMessage());
+                        }
+
+                        // Get account information
+                        $account = Account::where('id', $paymentLog->account_id)->first();
+
+                        // Create pending manual payment record
+                        PendingManualPayment::create([
+                            'payment_log_id' => $paymentLog->id,
+                            'user_id' => $paymentLog->user_id,
+                            'account_id' => $paymentLog->account_id,
+                            'email' => $paymentLog->initiated_by,
+                            'code' => $account ? $account->code : null,
+                            'transaction_id' => $transactionId,
+                            'coin' => $responsedata['coin'] ?? null,
+                            'coin_amount' => $responsedata['value_coin'] ?? null,
+                            'usd_value' => $usdValue,
+                            'initial_requested_amount' => $paymentLog->payment_amount,
+                            'deposit_date' => now(),
+                            'polygon_response' => $polygonResponse,
+                            'promocode' => $paymentLog->promocode,
+                            'status' => 'pending',
+                        ]);
                         //Send admin email that invalid coin was used
                         $settings = settings();
                         $from = $settings['email_from_address'];
@@ -520,19 +575,6 @@ class Payment extends Controller
                     } else {
                         try {
                             DB::beginTransaction();
-
-                            // $walletDeposit=  WalletDeposit::create([
-                            //     'user_id' => $paymentLog->user_id,
-                            //     'email' => $email,
-                            //     'deposit_type' => "CreditCardPayissa",
-                            //     'deposit_amount' => $amount,
-                            //     'company_bank' => "CreditCardPayissa",
-                            //     'transaction_id' => $transactionId,
-                            //     'status' => 1,
-                            //     'currency_type' => 'USD',
-                            //     'callback_data' => json_encode($responsedata),
-                            //     'callback_code' => "success",
-                            // ]);
                             $data = [
                                 'user_id' => $paymentLog->user_id,
                                 'account_id' => $paymentLog->account_id,
@@ -558,7 +600,7 @@ class Payment extends Controller
                             }
 
                             $tradeDeposit = TradeDeposit::create($data);
-                            
+
                             // Fire the AccountTradesDepositEvent for Customer.io integration
                             event(new AccountTradesDepositEvent($paymentLog->user, $amount));
 
@@ -834,7 +876,7 @@ class Payment extends Controller
                     }
 
                     $tradeDeposit = TradeDeposit::create($data);
-                    
+
                     // Fire the AccountTradesDepositEvent for Customer.io integration
                     event(new AccountTradesDepositEvent($paymentLog->user, $amount));
 
@@ -927,7 +969,7 @@ class Payment extends Controller
                     'callback_data' => 'Polygon Deposit',
                     'callback_code' => "success",
                 ]);
-                
+
                 // Fire the AccountTradesDepositEvent for Customer.io integration
                 $user = \App\Models\User::find($account->user_id);
                 if ($user) {
