@@ -8,6 +8,7 @@ use App\Models\Permission;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Ib;
 use App\Models\TotalBalance;
+use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\WalletDeposit;
 use App\Http\Controllers\Home;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Payment;
 use App\Http\Controllers\Tickets;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Admin\Kyc;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
@@ -28,20 +30,17 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Transactions;
-use App\Http\Controllers\MT5RedisCoordinationDemoController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-
 use App\Http\Controllers\KycController;
-use App\Http\Controllers\KycSyncController;
+
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\InternalTransfer;
-
 use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\Admin\Transaction;
+
+use App\Http\Controllers\KycSyncController;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\MT5Controller;
 use App\Http\Controllers\Admin\AjaxController;
@@ -62,7 +61,9 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\View\Components\AdminTwoFactorAuthentication;
+use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\CompetitionProductController;
+use App\Http\Controllers\MT5RedisCoordinationDemoController;
 
 Route::get("/five", function () {
     throw new \Exception("This is a test exception for Customer.io integration.");
@@ -171,6 +172,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
     Route::get('/competition/trader/{accountNo}/{start_date}/{end_date}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
+    Route::get('/competition/export', [CompetitionController::class, 'exportLeaderboard'])->name('user.competition.export');
 
     Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 
@@ -242,6 +244,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/verify-promocode', [AjaxController::class, 'verify_promocode'])->name('verify.promocode');
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
+
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
 
 Route::prefix("/admin")->name("admin.")->group(function () {
 
@@ -318,6 +324,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getTasks', [AjaxController::class, 'getTasks']);
         Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
 
+
+        // Manual Payment Routes
+        Route::get('/manual-payments', [ManualPaymentController::class, 'index'])->name('manual-payments.index');
+        Route::post('/manual-payments/process', [ManualPaymentController::class, 'processPayments'])->name('manual-payments.process');
+        Route::post('/manual-payments/reject', [ManualPaymentController::class, 'rejectPayments'])->name('manual-payments.reject');
+        Route::post('/manual-payments/{id}/refresh-usd', [ManualPaymentController::class, 'refreshUsdValue'])->name('manual-payments.refresh-usd');
+        Route::post('/manual-payments/{id}/notes', [ManualPaymentController::class, 'updateNotes'])->name('manual-payments.update-notes');
+        Route::get('/manual-payments/{id}', [ManualPaymentController::class, 'show'])->name('manual-payments.show');
+
         //
         Route::get('/getPendingWalletWithdrawal2', [AjaxController::class, 'getPendingWalletWithdrawal2']);
         Route::get('/getPendingTradingDeposit2', [AjaxController::class, 'getPendingTradingDeposit2']);
@@ -340,7 +355,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
         Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
-
+        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
@@ -534,6 +549,17 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/current-positions', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getCurrentPositions'])->name('current-positions');
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
         });
+
+        // Admin Blog Routes
+        Route::resource('blog', \App\Http\Controllers\Admin\BlogPostController::class)->names([
+            'index' => 'blog.index',
+            'create' => 'blog.create',
+            'store' => 'blog.store',
+            'show' => 'blog.show',
+            'edit' => 'blog.edit',
+            'update' => 'blog.update',
+            'destroy' => 'blog.destroy',
+        ]);
     });
 });
 // Test route for affiliate reference code functionality
