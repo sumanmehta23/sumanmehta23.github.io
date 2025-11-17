@@ -193,6 +193,26 @@
                                     <i class="fe fe-award me-2"></i>
                                     Top 10 Performers
                                 </h5>
+
+                                @php
+                                    $exportRouteName = (isset(auth()->user()->role)
+                                        && (auth()->user()->role->name === 'Admin' || auth()->user()->role->name === 'Super Admin'))
+                                        ? 'admin.competition.export'
+                                        : 'user.competition.export';
+                                @endphp
+
+                                <div class="ms-auto d-flex gap-2">
+                                    <a href="{{ route($exportRouteName, ['competition_id' => $competition->id, 'type' => 'top10']) }}"
+                                        class="btn btn-primary px-3"
+                                        title="Export Top 10 Performers">
+                                        <i class="fe fe-download me-1"></i>Top 10
+                                    </a>
+                                    <a href="{{ route($exportRouteName, ['competition_id' => $competition->id, 'type' => 'all']) }}"
+                                        class="btn btn-primary px-3"
+                                        title="Export All Participants">
+                                        <i class="fe fe-download me-1"></i>All Data
+                                    </a>
+                                </div>
                             </div>
                             <div class="card-body p-0">
                                 <div class="list-group list-group-flush">
@@ -211,12 +231,23 @@
                                                 </div>
                                                 <!-- Trader Info -->
                                                 <div class="flex-grow-1 ms-3">
-                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <div>
+                                                            <p class="mb-0 fs-14 trader-name">{{ $rank['name'] }}</p>
+                                                            <div class="mt-1">
+                                                                <span class="account-pill"><i class="fe fe-hash me-1"></i><strong>{{ $rank['account_code'] }}</strong></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="equity-amount">${{ number_format($rank['equity'], 2) }}</div>
+                                                        </div>
+                                                    </div>
+                                                    {{-- <div class="d-flex justify-content-between align-items-center mb-1">
                                                         <medium class=" trader-text">{{ $rank['name'] }}</medium>
                                                         <span class="trader-text px-2 py-1">
                                                             ${{ number_format($rank['equity'], 2) }}
                                                         </span>
-                                                    </div>
+                                                    </div> --}}
                                                     {{-- <div class="d-flex align-items-center mb-1">
                                                         <small class="trader-text me-3">
                                                             <i class="fe fe-mail me-1"></i>
@@ -273,7 +304,17 @@
                         <!-- Performance Chart -->
                         <div class="card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Performance Chart</h5>
+                                 <div class="d-flex align-items-start">
+                                    <h5 class="card-title mb-0">Performance Chart</h5>
+                                    <div id="selectedTraderInfo" class="d-flex align-items-center ms-3 selected-trader-info">
+                                        <div class="avatar avatar-sm bg-secondary text-white me-2" id="selectedTraderAvatar"><span id="selectedTraderInitials">?</span></div>
+                                        <div>
+                                            <div class="fw-bold" id="selectedTraderName">Select a trader</div>
+                                            <div class="fs-14 text-muted" id="selectedTraderAccount"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="card-tools">
                                     <button class="btn btn-sm btn-light" id="toggleChart">
                                         <i class="fe fe-maximize-2"></i>
@@ -662,6 +703,29 @@
             chart.resize();
         });
 
+        // Simple HTML escape to prevent accidental injection when inserting trader names/accounts
+        function escapeHtml(unsafe) {
+            return String(unsafe).replace(/[&<>"'`=\/]/g, function (s) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    '/': '&#x2F;',
+                    '`': '&#x60;',
+                    '=': '&#x3D;'
+                })[s];
+            });
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.trim().split(/\s+/).filter(Boolean);
+            if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
         // Handle period selection
         document.getElementById('periodSelector').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -682,6 +746,31 @@
 
                 const accountNo = item.dataset.account;
                 // Do NOT update "Your Rank" card here!
+                const traderName = item.dataset.name || item.querySelector('.trader-name')?.textContent?.trim() || '';
+
+                // Update selected trader display in chart header (avatar, name, account)
+                const selectedNameEl = document.getElementById('selectedTraderName');
+                const selectedAccountEl = document.getElementById('selectedTraderAccount');
+                const selectedAvatarEl = document.getElementById('selectedTraderAvatar');
+                const selectedInitialsEl = document.getElementById('selectedTraderInitials');
+
+                if (selectedNameEl) selectedNameEl.textContent = traderName || 'Unknown';
+                if (selectedAccountEl) selectedAccountEl.innerHTML = `<strong>${escapeHtml(accountNo)}</strong>`;
+                if (selectedInitialsEl) selectedInitialsEl.textContent = getInitials(traderName || accountNo || '?');
+                if (selectedAvatarEl) {
+                    // rotate through a small palette for avatar background
+                    selectedAvatarEl.classList.remove('bg-primary','bg-success','bg-info','bg-warning','bg-danger','bg-secondary');
+                    const colors = ['bg-primary','bg-success','bg-info','bg-warning','bg-danger','bg-secondary'];
+                    const hash = Array.from(String(accountNo)).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+                    selectedAvatarEl.classList.add(colors[hash % colors.length]);
+                }
+
+                // Update chart dataset label to include trader name and account, then refresh chart
+                if (chart && chart.data && chart.data.datasets && chart.data.datasets[0]) {
+                    chart.data.datasets[0].label = `${traderName} (${accountNo}) Equity`;
+                    chart.update();
+                }
+
                 await updateTraderData(accountNo);
             });
         });
@@ -704,8 +793,8 @@
 
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin
-                    ? `/admin/competition/trader-data/${testAccountNo}/${startDate}/${endDate}`
-                    : `/competition/trader/${testAccountNo}/${startDate}/${endDate}`;
+                    ? `/admin/competition/trader-data/${accountNo}/${startDate}/${endDate}`
+                    : `/competition/trader/${accountNo}/${startDate}/${endDate}`;
 
                     // console.log('Using test account:', endpoint);
 
@@ -714,7 +803,7 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const data = await response.json();
-                
+
                 // console.log(data.chart_data);
                 // Update chart
                 chart.data.labels = data.chart_data.labels;

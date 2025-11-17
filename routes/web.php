@@ -171,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
     Route::get('/competition/trader/{accountNo}/{start_date}/{end_date}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
+    Route::get('/competition/export', [CompetitionController::class, 'exportLeaderboard'])->name('user.competition.export');
 
     Route::get('/get-account-rank', [CompetitionController::class, 'getAccountRank'])->name('get-account-rank');
 
@@ -337,7 +338,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
         Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
-
+        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
@@ -529,6 +530,19 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/current-balance', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getCurrentBalance'])->name('current-balance');
             Route::get('/{account}/current-positions', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getCurrentPositions'])->name('current-positions');
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
+        });
+
+        // Affiliate Management Routes
+        Route::prefix('affiliates')->name('affiliates.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\AffiliateController::class, 'getAffiliates'])->name('data');
+            Route::get('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'importForm'])->name('import.form');
+            Route::post('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'import'])->name('import');
+            Route::get('/export', [\App\Http\Controllers\Admin\AffiliateController::class, 'export'])->name('export');
+            Route::get('/sample', [\App\Http\Controllers\Admin\AffiliateController::class, 'downloadSample'])->name('sample');
+            Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
+            Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
         });
     });
 });
