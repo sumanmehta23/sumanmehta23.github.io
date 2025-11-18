@@ -858,11 +858,9 @@ class Transaction extends Controller
         $login = $request->code;
         $depositAmount = (float)$validatedData['amount'];
         // $transaction_id = $request->transaction_id;
-        Log::info("depositAmount".json_encode($depositAmount));
-        Log::info("rejection_reason".json_encode($rejection_reason));
-        Log::info("email".json_encode($email));
+
         $transaction = TradeWithdrawals::whereRaw('id = ?', [$did])->first();
-        Log::info("transaction".json_encode($transaction));
+
         if ($transaction->status == 1) {
             return redirect()->back()->with('status', 'Your transaction is already approved.');
         }
@@ -1020,19 +1018,7 @@ class Transaction extends Controller
                 ];
                 $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                 return redirect()->back()->with('status', 'Transaction Approved Successfully');
-            }
-
-
-            elseif (($status == 2 || $status == 3) && $rejection_reason == 'Invalid cryptocurrency address') {
-                Log::info("Reject Wallet Withdraw: Starting rejection flow", [
-                    'transaction_id' => $transaction->id,
-                    'status' => $status,
-                    'rejection_reason' => $rejection_reason,
-                    'withdrawal_amount' => $transaction->withdrawal_amount,
-                    'transaction_fee' => $transaction->transaction_fee,
-                    'user' => auth()->guard('admin')->user()->id,
-                ]);
-
+            } elseif (($status == 2 || $status == 3) && $rejection_reason == 'Invalid cryptocurrency address') {
                 activity()
                     ->causedBy(auth()->guard('admin')->user())
                     ->withProperties([
@@ -1052,97 +1038,61 @@ class Transaction extends Controller
 
                 $comment = 'Cancelled Withdrawal';
                 $ticket = null;
-
-                $refundAmount = $transaction->withdrawal_amount + $transaction->transaction_fee;
-
-                Log::info("Processing MT5 Refund", [
-                    'transaction_code' => $transaction->code,
-                    'refund_amount' => $refundAmount
-                ]);
-
-                $errorCode = $this->api->TradeBalance(
-                    $transaction->code,
-                    MTEnDealAction::DEAL_BALANCE,
-                    $refundAmount,
-                    $comment,
-                    $ticket,
-                    true
-                );
+                $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
-
                     $error = MTRetCode::GetError($errorCode);
+                } else {
+                    if (($transaction->payout_res) == NULL) {
+                        // Decode the JSON string if it's not null or empty
+                        // $payout_res = !empty($transaction->payout_res) ? json_decode($transaction->payout_res, true) : [];
+                        // $message = isset($payout_res['message']) ? $payout_res['message'] : '';
 
-                    Log::error("MT5 Refund Failed", [
-                        'transaction_id' => $transaction->id,
-                        'error_code' => $errorCode,
-                        'error_message' => $error
-                    ]);
+                        // if($message){
+                        //Send email
+                        $from = $settings['email_from_address'];
+                        // $transid = "WDID" . $payout_res;
+                        $headers = "MIME-Version: 1.0" . "\r\n";
+                        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                        $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                        $content = '<p>
+                                        We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                    </p>
+                                    <p>
+                                        To complete your withdrawal:
+                                        <ol>
+                                            <li>Please <b>submit a new request</b></li>
+                                            <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
+                                            <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
+                                            <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
+                                        </ol>
+                                    </p>
+                                    <p>
+                                        Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com" style="color: #00b98e; text-decoration: none;">support@lqhmarkets.com</a>
+                                    </p>
+                                    <p>
+                                        Thank you for your understanding.
+                                    </p>
+                                    <p>
+                                        Best regards,<br>
+                                        The LQHMarkets Team
+                                    </p>';
 
-                    return redirect()->back()->with('error', 'MT5 Error: ' . $error);
-                }
-
-                Log::info("MT5 Refund Success", [
-                    'transaction_id' => $transaction->id
-                ]);
-
-                // ---------------- EMAIL SECTION ----------------
-                if ($transaction->payout_res == null) {
-
-                    Log::info("Sending Rejection Email", [
-                        'transaction_id' => $transaction->id,
-                        'email' => $email
-                    ]);
-
-                    $from = $settings['email_from_address'];
-
-                    $headers = "MIME-Version: 1.0" . "\r\n";
-                    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                    $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-
-                    $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
-
-                    $content = '
-                        <p>Your <b>withdrawal request</b> on <b>LQHMarkets</b> was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.</p>
-                        <p>
-                            To complete your withdrawal:
-                            <ol>
-                                <li>Submit a <b>new request</b></li>
-                                <li>Use a <b>valid cryptocurrency address</b></li>
-                                <li>Verify the address matches the <b>correct cryptocurrency</b></li>
-                                <li>Always <b>copy & paste</b> from your wallet</li>
-                            </ol>
-                        </p>
-                        <p>For help, contact <a href="mailto:support@lqhmarkets.com">support@lqhmarkets.com</a></p>
-                        <p>Best regards,<br>The LQHMarkets Team</p>
-                    ';
-
-                    $templateVars = [
-                        'name' => $transaction->user->fullname,
-                        'site_link' => $settings['copyright_site_name_text'],
-                        'email' => $settings['email_from_address'],
-                        'content' => $content,
-                        'title_right' => 'Transaction',
-                        'subtitle_right' => 'Declined',
-                        'btn_text' => 'Go To Dashboard',
-                    ];
-
-                    try {
+                        $templateVars = [
+                            'name' => $transaction->user->fullname,
+                            'site_link' => $settings['copyright_site_name_text'],
+                            'email' => $settings['email_from_address'],
+                            'content' => $content,
+                            'title_right' => 'Transaction',
+                            'subtitle_right' => 'Declined',
+                            'btn_text' => 'Go To Dashboard',
+                        ];
                         $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                        Log::info("Rejection Email Sent Successfully", ['email' => $email]);
-                    } catch (\Exception $e) {
-                        Log::error("Email Sending Failed", [
-                            'transaction_id' => $transaction->id,
-                            'error' => $e->getMessage()
-                        ]);
+                        return redirect()->back()->with('status', 'Transaction Rejected Successfully');
                     }
-
-                    return redirect()->back()->with('status', 'Transaction Rejected Successfully');
                 }
-            }
-
-
-            elseif (($status == 2 || $status == 3) && $rejection_reason != 'Invalid cryptocurrency address') {
+            } elseif (($status == 2 || $status == 3) && $rejection_reason != 'Invalid cryptocurrency address') {
                 $comment = 'Cancelled Withdrawal';
                 $ticket = null;
                 $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
