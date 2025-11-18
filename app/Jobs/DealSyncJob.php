@@ -220,7 +220,7 @@ class DealSyncJob implements ShouldQueue
             $totalDeals = 0;
 
             // PRIORITY OPTIMIZATION: Check MT5 deal total count vs database count for ENTIRE date range FIRST
-            Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
+            // Log::info("DEBUG[{$account->code}]: Checking MT5 deal total count vs database count for entire requested range to avoid unnecessary processing...");
             $phaseStart = microtime(true);
 
             $error_code = $api->DealGetTotal($login, $fromTimestamp, $toTimestamp, $totalDeals);
@@ -243,12 +243,12 @@ class DealSyncJob implements ShouldQueue
             if ($totalDeals == $dbDealCount) {
                 if ($totalDeals > 0) {
                     // Database is perfectly in sync with MT5 - no need to fetch from MT5!
-                    Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
+                    // Log::info("DEBUG[{$account->code}]: Deal counts match perfectly! Using DATABASE OPTIMIZATION - no MT5 processing needed.");
                     $this->updateAccountDealSyncStatus($account, 'success', 0); // 0 new deals since we already have them
                     return ['status' => 'success', 'deals_count' => 0]; // 0 new deals fetched from MT5
                 } else {
                     // Both MT5 and DB report 0 deals for this range
-                    Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
+                    // Log::info("DEBUG[{$account->code}]: Both MT5 and DB report 0 deals for range. No activity to sync.");
                     $this->updateAccountDealSyncStatus($account, 'no_changes');
                     return ['status' => 'no_changes', 'deals_count' => 0];
                 }

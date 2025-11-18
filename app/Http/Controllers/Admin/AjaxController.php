@@ -25,6 +25,7 @@ use App\Helpers\AccountHelper;
 use App\Models\WalletWithdraw;
 
 use App\Models\TradeWithdrawals;
+use App\Models\Trade;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
 use Illuminate\Support\Facades\Log;
@@ -767,6 +768,7 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = Account::where('demo', false)
             ->select('accounts.*')
+            ->withTrashed()
             ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
 
@@ -880,13 +882,29 @@ class AjaxController extends Controller
                 ->addColumn('account_group', function ($row) {
                     return $row->accountType ? $row->accountType->ac_group : 'N/A';
                 })
+                ->addColumn('account_status', function ($row) {
+                    return $row->deleted_at ? "<button class=' badge bg-outline-danger'>Deleted</button>" : "<button class=' badge bg-outline-success'>Active</button>";
+                })
                 ->addColumn('actions', function ($row) {
-                    $html = "";
-                    $html .= "<a class='deleteAcc statusToggle' data-bs-toggle='tooltip' data-enc='{$row->id}'>
-                    <span class='badge text-danger'>
-                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-trash'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M4 7l16 0' /><path d='M10 11l0 6' /><path d='M14 11l0 6' /><path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12' /><path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3' /></svg>
-                    </span>
-                  </a>";
+                    // If account is deleted, return empty string
+                    if ($row->deleted_at) {
+                        return '';
+                    }
+
+                    // Otherwise show delete button
+                    $html = "<a class='deleteAcc statusToggle' data-bs-toggle='tooltip' data-enc='{$row->id}'>
+                        <span class='badge text-danger'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-trash'>
+                                <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                <path d='M4 7l16 0'/>
+                                <path d='M10 11l0 6'/>
+                                <path d='M14 11l0 6'/>
+                                <path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12'/>
+                                <path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3'/>
+                            </svg>
+                        </span>
+                    </a>";
+
                     return $html;
                 })
                 ->addColumn('created_date', function ($row) {
@@ -897,7 +915,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'actions'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail','account_status', 'actions'])
                 ->make(true);
         }
 
@@ -915,6 +933,11 @@ class AjaxController extends Controller
             ->select('accounts.*')
             ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
+
+        // Apply platform filter
+        if ($request->has('platform') && !empty($request->platform)) {
+            $rmCondition->where('platform', $request->platform);
+        }
 
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
@@ -1308,7 +1331,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeDeposit::select(
             'trade_deposits.*'
-        )->with(['user', 'account']);
+        )->with(['user', 'account'])->withTrashed();
         if (!isset($_GET['id'])) {
             // if ($role == "Relationship Manager") {
             //     $query->whereHas('user.relationshipManager', function ($q) use ($alogin) {
@@ -1471,6 +1494,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
             ->with(['user', 'withdrawTo', 'account'])
+            ->withTrashed()
             ->where('trade_withdrawal.email_verified',1)
             ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
@@ -1645,6 +1669,277 @@ class AjaxController extends Controller
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getTradeHistory(Request $request)
+    {
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+        $userGroups = session('user_groups');
+        
+        $query = Trade::select('trades.*')
+            ->with(['account.user']);
+
+        // Filter by account ID if provided
+        if (isset($request->id)) {
+            $query->where('account_id', $request->id);
+        } else {
+            // Country-based filtering (if user_groups contains country codes)
+            if ($role !== "Super Admin" && $userGroups) {
+                $allowedCountries = explode(',', $userGroups);
+                if (!empty($allowedCountries)) {
+                    $query->whereHas('account.user', function ($q) use ($allowedCountries) {
+                        $q->whereIn('country', $allowedCountries);
+                    });
+                }
+            }
+
+            // Relationship Manager filtering
+            if ($role === "Relationship Manager" && $alogin) {
+                $query->whereHas('account.user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin);
+                });
+            }
+        }
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('order_id_display', function ($row) {
+                    return $row->order_id ?? $row->code ?? '-';
+                })
+                ->addColumn('symbol_display', function ($row) {
+                    return '<span class="fw-semibold">' . ($row->symbol ?? '-') . '</span>';
+                })
+                ->addColumn('type_display', function ($row) {
+                    $type = strtoupper($row->type ?? '');
+                    $badgeClass = $type === 'BUY' ? 'badge bg-success' : 'badge bg-danger';
+                    return '<span class="' . $badgeClass . '">' . $type . '</span>';
+                })
+                ->addColumn('volume_display', function ($row) {
+                    return number_format($row->volume ?? 0, 2);
+                })
+                ->addColumn('open_price_display', function ($row) {
+                    return number_format($row->open_price ?? 0, 5);
+                })
+                ->addColumn('close_price_display', function ($row) {
+                    return $row->close_price ? number_format($row->close_price, 5) : '-';
+                })
+                ->addColumn('profit_display', function ($row) {
+                    $profit = $row->profit ?? 0;
+                    $color = $profit >= 0 ? 'text-success' : 'text-danger';
+                    return '<span class="' . $color . '">$' . number_format($profit, 2) . '</span>';
+                })
+                ->addColumn('status_display', function ($row) {
+                    $status = strtolower($row->status ?? '');
+                    $badgeClass = 'badge bg-secondary';
+                    if ($status === 'closed') {
+                        $badgeClass = 'badge bg-success';
+                    } elseif ($status === 'open') {
+                        $badgeClass = 'badge bg-primary';
+                    } elseif ($status === 'cancelled') {
+                        $badgeClass = 'badge bg-danger';
+                    }
+                    return '<span class="' . $badgeClass . '">' . ucfirst($row->status ?? '') . '</span>';
+                })
+                ->addColumn('open_time_display', function ($row) {
+                    if (!$row->open_time) return '-';
+                    $date = Carbon::parse($row->open_time)->addHours(3);
+                    return '<div class="d-grid">
+                        <div class="date">' . $date->format('Y-m-d') . '</div>
+                        <div class="time text-muted">' . $date->format('H:i:s') . '</div>
+                    </div>';
+                })
+                ->addColumn('action', function ($row) {
+                    return "<a href='#' class='btn btn-sm btn-info' title='View Details'><i class='fe fe-eye'></i></a>";
+                })
+                ->orderColumn('open_time', function ($query, $order) {
+                    $query->orderBy('trades.open_time', $order);
+                })
+                ->orderColumn('order_id', function ($query, $order) {
+                    $query->orderBy('trades.order_id', $order);
+                })
+                ->orderColumn('symbol', function ($query, $order) {
+                    $query->orderBy('trades.symbol', $order);
+                })
+                ->orderColumn('profit', function ($query, $order) {
+                    $query->orderBy('trades.profit', $order);
+                })
+                ->rawColumns(['order_id_display', 'symbol_display', 'type_display', 'profit_display', 'status_display', 'open_time_display', 'action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function exportAllTrades(Request $request)
+    {
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+        $userGroups = session('user_groups');
+        $accountId = $request->get('id');
+        
+        // Build filename with account info if accountId provided
+        if ($accountId) {
+            $account = Account::with('user')->find($accountId);
+            if ($account && $account->user) {
+                // Format name: replace spaces with underscores
+                $accountName = str_replace(' ', '_', $account->user->fullname ?? 'Unknown');
+                $accountCode = $account->code ?? 'N/A';
+                $fileName = 'lqh_' . $accountName . '_' . $accountCode . '.csv';
+            } else {
+                $fileName = 'lqh_Trades_' . date('Y-m-d') . '.csv';
+            }
+        } else {
+            $fileName = 'lqh_Trades_All_' . date('Y-m-d') . '.csv';
+        }
+
+        return Response::streamDownload(function () use ($role, $alogin, $userGroups, $accountId) {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Order ID', 'Symbol', 'Type', 'Volume', 'Open Price', 'Close Price', 'Profit', 'Commission', 'Swap', 'Status', 'Open Time', 'Close Time']);
+
+            // Build query
+            $query = Trade::select('trades.*')
+                ->with(['account.user']);
+
+            if ($accountId) {
+                $query->where('account_id', $accountId);
+            } else {
+                // Country-based filtering
+                if ($role !== "Super Admin" && $userGroups) {
+                    $allowedCountries = explode(',', $userGroups);
+                    if (!empty($allowedCountries)) {
+                        $query->whereHas('account.user', function ($q) use ($allowedCountries) {
+                            $q->whereIn('country', $allowedCountries);
+                        });
+                    }
+                }
+
+                // Relationship Manager filtering
+                if ($role === "Relationship Manager" && $alogin) {
+                    $query->whereHas('account.user.employee', function ($q) use ($alogin) {
+                        $q->where('relationship_manager.rm_id', $alogin);
+                    });
+                }
+            }
+
+            // Fetch trades data in chunks
+            $query->orderBy('open_time', 'desc')
+                ->chunk(500, function ($trades) use ($handle) {
+                    foreach ($trades as $trade) {
+                        fputcsv($handle, [
+                            $trade->order_id ?? $trade->code ?? '',
+                            $trade->symbol ?? '',
+                            strtoupper($trade->type ?? ''),
+                            number_format($trade->volume ?? 0, 2),
+                            number_format($trade->open_price ?? 0, 5),
+                            $trade->close_price ? number_format($trade->close_price, 5) : '',
+                            number_format($trade->profit ?? 0, 2),
+                            number_format($trade->commission ?? 0, 2),
+                            number_format($trade->swap ?? 0, 2),
+                            ucfirst($trade->status ?? ''),
+                            $trade->open_time ? Carbon::parse($trade->open_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                            $trade->close_time ? Carbon::parse($trade->close_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
+    public function exportFilteredTrades(Request $request)
+    {
+        $request->validate([
+            'date_from' => 'required|date',
+            'date_to' => 'required|date|after_or_equal:date_from',
+        ]);
+
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+        $userGroups = session('user_groups');
+        $accountId = $request->get('id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        
+        // Build filename with account info and date range
+        if ($accountId) {
+            $account = Account::with('user')->find($accountId);
+            if ($account && $account->user) {
+                // Format name: replace spaces with underscores
+                $accountName = str_replace(' ', '_', $account->user->fullname ?? 'Unknown');
+                $accountCode = $account->code ?? 'N/A';
+                $fileName = 'lqh_' . $accountName . '_' . $accountCode . '_' . $dateFrom . '_to_' . $dateTo . '.csv';
+            } else {
+                $fileName = 'lqh_Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+            }
+        } else {
+            $fileName = 'lqh_Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+        }
+
+        return Response::streamDownload(function () use ($role, $alogin, $userGroups, $accountId, $dateFrom, $dateTo) {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Order ID', 'Symbol', 'Type', 'Volume', 'Open Price', 'Close Price', 'Profit', 'Commission', 'Swap', 'Status', 'Open Time', 'Close Time']);
+
+            // Build query
+            $query = Trade::select('trades.*')
+                ->with(['account.user'])
+                ->whereDate('open_time', '>=', $dateFrom)
+                ->whereDate('open_time', '<=', $dateTo);
+
+            if ($accountId) {
+                $query->where('account_id', $accountId);
+            } else {
+                // Country-based filtering
+                if ($role !== "Super Admin" && $userGroups) {
+                    $allowedCountries = explode(',', $userGroups);
+                    if (!empty($allowedCountries)) {
+                        $query->whereHas('account.user', function ($q) use ($allowedCountries) {
+                            $q->whereIn('country', $allowedCountries);
+                        });
+                    }
+                }
+
+                // Relationship Manager filtering
+                if ($role === "Relationship Manager" && $alogin) {
+                    $query->whereHas('account.user.employee', function ($q) use ($alogin) {
+                        $q->where('relationship_manager.rm_id', $alogin);
+                    });
+                }
+            }
+
+            // Fetch trades data in chunks
+            $query->orderBy('open_time', 'desc')
+                ->chunk(500, function ($trades) use ($handle) {
+                    foreach ($trades as $trade) {
+                        fputcsv($handle, [
+                            $trade->order_id ?? $trade->code ?? '',
+                            $trade->symbol ?? '',
+                            strtoupper($trade->type ?? ''),
+                            number_format($trade->volume ?? 0, 2),
+                            number_format($trade->open_price ?? 0, 5),
+                            $trade->close_price ? number_format($trade->close_price, 5) : '',
+                            number_format($trade->profit ?? 0, 2),
+                            number_format($trade->commission ?? 0, 2),
+                            number_format($trade->swap ?? 0, 2),
+                            ucfirst($trade->status ?? ''),
+                            $trade->open_time ? Carbon::parse($trade->open_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                            $trade->close_time ? Carbon::parse($trade->close_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     public function getInternalTransfer2(Request $request)
@@ -3666,6 +3961,7 @@ class AjaxController extends Controller
                 'aspnetusers.email',
                 'aspnetusers.fullname',
                 'aspnetusers.country',
+                'aspnetusers.affiliate_id',
                 // 'aspnetusers.country_code',
                 // 'aspnetusers.number AS telephone',
                 DB::raw('concat(countries.country_code) as country_code'),
@@ -3976,7 +4272,7 @@ class AjaxController extends Controller
 
             $chunkCount = 0;
 
-            Account::with('user', 'accountType')->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+            Account::with('user', 'accountType')->withTrashed()->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
 
@@ -3991,7 +4287,7 @@ class AjaxController extends Controller
                             $account->leverage,
                             $account->balance,
                             $account->equity,
-                            $account->status,
+                            $account->deleted_at ? 'Deleted' : 'Active',
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
                         ]);

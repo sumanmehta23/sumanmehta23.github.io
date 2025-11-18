@@ -613,6 +613,60 @@ class MT5Controller extends Controller
         }
     }
 
+    public function deleteAccount(Request $request)
+    {
+
+        $account = Account::where('code', $request->input('code'))->first();
+        $login = $account->code;
+
+        $this->ensureMT5Connection();
+
+        $settings = settings();
+        // Validate platform selection
+        $request->validate([
+            'platform' => 'required|in:mt5,x9',
+        ]);
+
+        $platform = $request->input('platform');
+
+        if( $platform === 'x9' ) {
+            $response = $this->x9Service->getUserDetails($login);
+            if ($response['data']['trading_account']['trading_account_balance']['balance'] > 0) {
+                if($response['data']['trading_account']['client_group_type'] != 'DEMO'){
+                    return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                }
+            }
+            // X9 deletion logic
+            $response = $this->x9Service->accountSetting($account,'is_enable',false);
+            if (!$response['status']) {
+                return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
+            }
+            // Delete from local database
+            $account->delete();
+            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
+        } elseif( $platform === 'mt5' ) {
+            $trade_user = NULL;
+            if (($error_code =$this->api->UserGet($login,$trade_user)!= MTRetCode::MT_RET_OK)) {
+                return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
+            }
+
+            if ($trade_user->Balance > 0) {
+                if ($account->demo != 1) {
+                    return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+                }
+            }
+
+            // MT5 deletion logic
+            $error_code = $this->api->DisableTradingOrDeleteUser($login);
+            if (!$error_code['status']) {
+                return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
+            }
+            // Delete from local database
+            $account->delete();
+            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
+        }
+    }
+
     public function depositToCellexpertAccount(Request $request)
     {
         if (!$this->ensureMT5Connection()) {
@@ -1240,7 +1294,7 @@ class MT5Controller extends Controller
     public function view(Request $request, $id)
     {
 
-        $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
+        $account = Account::withTrashed()->where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
         $trade = Trade::where('code', $account->code)->get();
         $total_profit = $trade->sum('profit');
@@ -1260,7 +1314,7 @@ class MT5Controller extends Controller
         } else {
             $type = "demo";
         }
-        $account = Account::where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
+        $account = Account::withTrashed()->where('id', $id)->with(['accountType', 'user', 'BonusTransaction'])->first();
 
         if (!$account) {
             alert()->error("The MT5 account does not exist or has been deleted. Please try again.");
@@ -1272,26 +1326,26 @@ class MT5Controller extends Controller
         //     ->where(DB::raw('code'), $account->code)
         //     ->where('status', 1)
         //     ->sum('deposit_amount');
-        $total_deposit = TradeDeposit::where('account_id', $account->id)
+        $total_deposit = TradeDeposit::withTrashed()->where('account_id', $account->id)
             ->where('status', 1)
             ->sum('deposit_amount');
 
         // Total unapproved deposits
-        $unapproved_deposit = TradeDeposit::where('account_id', $account->id)
+        $unapproved_deposit = TradeDeposit::withTrashed()->where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('deposit_amount');
 
         // Total approved withdrawals
-        $total_withdrawal = TradeWithdrawals::where('account_id', $account->id)
+        $total_withdrawal = TradeWithdrawals::withTrashed()->where('account_id', $account->id)
             ->where('status', 1)
             ->sum('withdrawal_amount');
 
         // Total unapproved withdrawals
-        $unapproved_withdrawal = TradeWithdrawals::where('account_id', $account->id)
+        $unapproved_withdrawal = TradeWithdrawals::withTrashed()->where('account_id', $account->id)
             ->where('status', '!=', 1)
             ->sum('withdrawal_amount');
 
-        $bonus_trans = BonusTransaction::where('status', 1)
+        $bonus_trans = BonusTransaction::withTrashed()->where('status', 1)
             ->where("account_id", $account->id)
             ->get();
         $account_types = AccountType::where('status', 1)->get();

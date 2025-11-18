@@ -293,7 +293,7 @@ class SyncTrades implements ShouldQueue
             'sync_error' => $status === 'error' ? 'Sync failed' : null
         ]);
 
-        Log::info("Updated sync status for account {$account->code}: {$status} (trades: {$tradesCount})");
+        // Log::info("Updated sync status for account {$account->code}: {$status} (trades: {$tradesCount})");
     }
     /**
      * Log invalid position_id attempts with comprehensive details for admin investigation

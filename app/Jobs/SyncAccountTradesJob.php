@@ -65,7 +65,8 @@ class SyncAccountTradesJob implements ShouldQueue
             $this->mt5Service = app(QueueSafeMT5Service::class);
 
             // The QueueSafeMT5Service handles connection management internally
-            Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
+            // Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
+
 
             // Process each account
             foreach ($this->accountIds as $accountId) {
@@ -141,8 +142,8 @@ class SyncAccountTradesJob implements ShouldQueue
 
     protected function processAccount($accountId): void
     {
-        if ($accountId == '9fbb706d-e237-488c-a319-16d52d2e36d2') {
-            Log::info('processing sync for 505255');
+        if ($accountId == 'a0382ba7-7977-4914-865f-2b306e549c9e') {
+            Log::info('processing sync for 794195');
         }
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
@@ -246,7 +247,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 }
             }
 
-            Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
+            // Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
 
             // Dispatch the IB commission job if we had new trades
             if ($this->newTrades) {

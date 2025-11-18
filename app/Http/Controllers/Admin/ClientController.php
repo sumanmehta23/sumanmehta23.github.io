@@ -453,6 +453,7 @@ class ClientController extends Controller
             $number = $request->country_code . $request->telephone;
 
             $emailNotification = $request->input('email_notification');
+            $affiliate_id = $request->input('affiliate_id');
 
             $countryCode = Country::where('country_name', $request->country)
                 ->select('country_code')
@@ -541,6 +542,7 @@ class ClientController extends Controller
                     $user->country_code = $country_code;
                     $user->country = $country;
                     $user->email = $email;
+                    $user->affiliate_id = $affiliate_id;
 
                     $user->save();  // This will trigger the 'updated' event and the logic in your booted() method
                 }
@@ -671,8 +673,8 @@ class ClientController extends Controller
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
         $total_balance = $user->total_balance;  // Accessor for total balance
-        $live_accounts = $user->liveAccounts->where('account_request_status', 1)->where('deleted_at', NULL);  // Relationship for live accounts
-        $demo_accounts = $user->demoAccounts;  
+        $live_accounts = $user->liveAccounts()->withTrashed()->where('account_request_status', 1)->get();  // Relationship for live accounts
+        $demo_accounts = $user->demoAccounts;
         $bank_details = $user->bank_details;  // Accessor for bank details
         $kyc_details = $user->kyc_details;  // Accessor for KYC details
         $ib_details = $user->ib_details;  // Accessor for IB details
@@ -691,7 +693,7 @@ class ClientController extends Controller
 
         $IbTotalDeposits = $user->IbTotalDeposits;
 
-        foreach ($user->liveAccounts->where('account_request_status', 1) as $key => $liveAccount) {
+        foreach ($user->liveAccounts()->withTrashed()->where('account_request_status', 1) as $key => $liveAccount) {
             $login = $liveAccount->code;
             // dd($login);
             if ($user->ib1) {

@@ -136,7 +136,7 @@
         </div>
     </div>
      <!-- Add Note Modal -->
-    <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    {{-- <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form action="{{ route('admin.client.notes.store') }}" method="POST">
@@ -159,7 +159,7 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Notes History Modal -->
     <div class="modal fade" id="notesHistoryModal" tabindex="-1" aria-labelledby="notesHistoryModalLabel" aria-hidden="true">
@@ -205,7 +205,6 @@
             </div>
         </div>
     </div>
-    
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -303,11 +302,11 @@
                                                                 ? '<span class="badge bg-outline-success">KYC Verified</span>'
                                                                 : '') !!}
                                                          @php
-                                                        $applicantId = $kyc_log->callback_payload['applicantId'] 
-                                                            ?? $kyc_log->callback_payload['id'] 
+                                                        $applicantId = $kyc_log->callback_payload['applicantId']
+                                                            ?? $kyc_log->callback_payload['id']
                                                             ??
-                                                            $kyc_log->callback_payload['applicant_id'] 
-                                                            ?? $kyc_log->callback_payload['inspectionId'] 
+                                                            $kyc_log->callback_payload['applicant_id']
+                                                            ?? $kyc_log->callback_payload['inspectionId']
                                                             ?? null;
                                                     @endphp
 
@@ -388,7 +387,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="pt-1 mt-1 border-2 row border-top border-default">
-                                                    <div class="col-4">
+                                                    <div class="col-6">
                                                         <div class="d-flex align-items-center">
                                                             <button
                                                                 class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
@@ -401,6 +400,24 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                       @php
+                                                        $affiliateParent = $user->affiliateParent();
+                                                        @endphp
+                                                        @if($affiliateParent)
+                                                            <div class="col-6">
+                                                                <div class="d-flex align-items-center">
+                                                                    <button class="btn btn-icon bg-light border-light rounded-pill disabled me-3 text-secondary">
+                                                                        <i class="ri-user-star-line"></i>
+                                                                    </button>
+                                                                    <div>
+                                                                        <div class="mb-0 text-muted fs-11">Tracknow Affiliate:</div>
+                                                                        <div class="mb-1 fs-12">
+                                                                            {{($affiliateParent->fullname ?? 'N/A') . ' (' . ($affiliateParent->affiliate_id ?? 'N/A') . ')' }}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                 </div>
                                             </div>
                                             <div class="ms-auto flex-shrink-0 w-100 w-md-auto mt-3 mt-md-0" style="max-width: 400px;">
@@ -560,9 +577,13 @@
                                                                                     {{ $acc->code }}
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="d-flex justify-content-end w-50">
-                                                                                <span
-                                                                                    class="mt-2 h4 fw-normal">@money($acc->balance)</span>
+                                                                            <div class="d-flex flex-column align-items-end w-50">
+                                                                                <span class="mt-2 h4 fw-normal">@money($acc->balance)</span>
+                                                                                @if($acc->deleted_at)
+                                                                                    <div class="fs-18 text-danger fw-bold mt-1">
+                                                                                        Deleted
+                                                                                    </div>
+                                                                                @endif
                                                                             </div>
                                                                         </div>
                                                                         <div class="d-flex justify-content-between">
@@ -604,8 +625,12 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    <img src="/admin_assets/assets/images/mt5.png"
-                                                                                        alt="card img" style="width:50px;">
+                                                                                    @if ($acc->platform == 'mt5')
+                                                                                        <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
+                                                                                    @elseif($acc->platform == 'x9')
+                                                                                        <img src="/assets/images/x9.png" alt="card img" style="width:50px;">
+                                                                                    @endif
+
                                                                                     <div class="mt-1 fs-18 text-black-50 fw-bold">
                                                                                         {{ $acc->code }}
                                                                                         <span class="badge bg-info text-white ms-2">DEMO</span>
