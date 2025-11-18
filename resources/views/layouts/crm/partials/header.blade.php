@@ -467,45 +467,6 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                     </div>
                 </div>
             </nav>
-            <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel"
-                aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="staticBackdropLabel">Platform Downloads</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-lg-4">
-                                    <a target="_blank" href="{{ $settings['mt5_android_platform'] }}"
-                                        class="text-center card platform-download">
-                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/playstore.png"
-                                            alt="Android">
-                                        <span class="pt-2 pb-3">Android</span>
-                                    </a>
-                                </div>
-                                <div class="col-lg-4">
-                                    <a target="_blank" href="{{ $settings['mt5_ios_platform'] }}"
-                                        class="text-center card platform-download">
-                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/appstore.png"
-                                            alt="Apple iOS">
-                                        <span class="pt-2 pb-3">Apple iOS</span>
-                                    </a>
-                                </div>
-                                <div class="col-lg-4">
-                                    <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}"
-                                        class="text-center card platform-download">
-                                        <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/windowslogo.png"
-                                            alt="Windows">
-                                        <span class="pt-2 pb-3">Windows</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             @if (app()->environment('local'))
                 <div
                     style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
