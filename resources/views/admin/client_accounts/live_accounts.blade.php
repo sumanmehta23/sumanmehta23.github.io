@@ -44,6 +44,7 @@
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
+                                            <td>Status</td>
                                             <td>Actions</td>
                                         </tr>
                                     </thead>
@@ -131,7 +132,9 @@
             // console.log(data.fullemail);
 
             Swal.fire({
-                    title: `Are you sure you want to delete this "${data.account_code}" account?`,
+                    title: `This will soft delete the account — client info will be hidden but kept for records.
+                        Accounts with trading history will be disabled, not deleted.
+                        Deposits and withdrawals remain for reconciliation, and emails to the client will stop.`,
 
                     html: `
                     <form id="delete_account_form" method="post" action="deleteAccounts">
@@ -230,11 +233,17 @@
                     name: 'created_time',
                     visible: false,
 
-                },{
+                },
+                {
+                    data: 'account_status',
+                    name: 'account_status',
+
+                },
+                {
                     data: 'actions',
                     name: 'actions',
 
-                },
+                }
 
             ],
             rowCallback: function(row, data) {
@@ -254,7 +263,7 @@
                     text: 'Export to Excel',
                     filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
-                        columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
+                        columns: [5, 6, 7, 8, 2, 3, 9, 10, 11] // Updated column indices to match your use case
                     }
                 },
                 {

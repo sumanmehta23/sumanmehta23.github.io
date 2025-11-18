@@ -767,6 +767,7 @@ class AjaxController extends Controller
         // Base query
         $rmCondition = Account::where('demo', false)
             ->select('accounts.*')
+            ->withTrashed()
             ->where('account_request_status', 1)
             ->with(['user', 'accountType']);
 
@@ -879,13 +880,29 @@ class AjaxController extends Controller
                 ->addColumn('account_group', function ($row) {
                     return $row->accountType->ac_group;
                 })
+                ->addColumn('account_status', function ($row) {
+                    return $row->deleted_at ? "<button class=' badge bg-outline-danger'>Deleted</button>" : "<button class=' badge bg-outline-success'>Active</button>";
+                })
                 ->addColumn('actions', function ($row) {
-                    $html = "";
-                    $html .= "<a class='deleteAcc statusToggle' data-bs-toggle='tooltip' data-enc='{$row->id}'>
-                    <span class='badge text-danger'>
-                        <svg  xmlns='http://www.w3.org/2000/svg'  width='24'  height='24'  viewBox='0 0 24 24'  fill='none'  stroke='currentColor'  stroke-width='2'  stroke-linecap='round'  stroke-linejoin='round'  class='icon icon-tabler icons-tabler-outline icon-tabler-trash'><path stroke='none' d='M0 0h24v24H0z' fill='none'/><path d='M4 7l16 0' /><path d='M10 11l0 6' /><path d='M14 11l0 6' /><path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12' /><path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3' /></svg>
-                    </span>
-                  </a>";
+                    // If account is deleted, return empty string
+                    if ($row->deleted_at) {
+                        return '';
+                    }
+
+                    // Otherwise show delete button
+                    $html = "<a class='deleteAcc statusToggle' data-bs-toggle='tooltip' data-enc='{$row->id}'>
+                        <span class='badge text-danger'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-trash'>
+                                <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                <path d='M4 7l16 0'/>
+                                <path d='M10 11l0 6'/>
+                                <path d='M14 11l0 6'/>
+                                <path d='M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12'/>
+                                <path d='M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3'/>
+                            </svg>
+                        </span>
+                    </a>";
+
                     return $html;
                 })
                 ->addColumn('created_date', function ($row) {
@@ -896,7 +913,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'actions'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail','account_status', 'actions'])
                 ->make(true);
         }
 
@@ -1312,7 +1329,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeDeposit::select(
             'trade_deposits.*'
-        )->with(['user', 'account']);
+        )->with(['user', 'account'])->withTrashed();
         if (!isset($_GET['id'])) {
             // if ($role == "Relationship Manager") {
             //     $query->whereHas('user.relationshipManager', function ($q) use ($alogin) {
@@ -1475,6 +1492,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'];
         $query = TradeWithdrawals::select('trade_withdrawal.*')
             ->with(['user', 'withdrawTo', 'account'])
+            ->withTrashed()
             ->where('trade_withdrawal.email_verified',1)
             ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
@@ -3981,7 +3999,7 @@ class AjaxController extends Controller
 
             $chunkCount = 0;
 
-            Account::with('user', 'accountType')->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+            Account::with('user', 'accountType')->withTrashed()->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
 
@@ -3996,7 +4014,7 @@ class AjaxController extends Controller
                             $account->leverage,
                             $account->balance,
                             $account->equity,
-                            $account->status,
+                            $account->deleted_at ? 'Deleted' : 'Active',
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
                         ]);
