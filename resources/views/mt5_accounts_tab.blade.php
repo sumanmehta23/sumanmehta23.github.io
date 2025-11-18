@@ -73,7 +73,8 @@
                         <div class="col-lg-4">
                             <a target="_blank" href="{{ $settings['mt5_android_platform'] }}"
                                 class="text-center card platform-download">
-                                <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/playstore.png" alt="Android">
+                                <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/playstore.png"
+                                    alt="Android">
                                 <span class="pt-2 pb-3">Android</span>
                             </a>
                         </div>
@@ -88,8 +89,28 @@
                         <div class="col-lg-4">
                             <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}"
                                 class="text-center card platform-download">
-                                <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/windowslogo.png" alt="Windows">
+                                <img class="pt-3 w-100 ps-4 pe-4" src="/assets/platform/windowslogo.png"
+                                    alt="Windows">
                                 <span class="pt-2 pb-3">Windows</span>
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <p class="mt-3 mb-2 text-uppercase text-muted fw-semibold small">X9 Platform</p>
+                        </div>
+                        <div class="col-lg-4">
+                            <a target="_blank" href="https://web.x9trader.com/login?returnUrl=%2Fterminal"
+                                class="text-center card platform-download">
+                                <img class="pt-3 w-100 ps-4 pe-4" src="/assets/images/x9.png"
+                                    alt="X9 Web Terminal">
+                                <span class="pt-2 pb-3">Web Terminal</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-4">
+                            <a target="_blank" href="https://app.x9trader.com/login"
+                                class="text-center card platform-download">
+                                <img class="pt-3 w-100 ps-4 pe-4" src="/assets/images/x9.png"
+                                    alt="X9 Mobile Trader">
+                                <span class="pt-2 pb-3">Mobile Trader</span>
                             </a>
                         </div>
                     </div>
