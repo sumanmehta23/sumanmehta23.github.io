@@ -560,6 +560,18 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             'update' => 'blog.update',
             'destroy' => 'blog.destroy',
         ]);
+        // Affiliate Management Routes
+        Route::prefix('affiliates')->name('affiliates.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\AffiliateController::class, 'getAffiliates'])->name('data');
+            Route::get('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'importForm'])->name('import.form');
+            Route::post('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'import'])->name('import');
+            Route::get('/export', [\App\Http\Controllers\Admin\AffiliateController::class, 'export'])->name('export');
+            Route::get('/sample', [\App\Http\Controllers\Admin\AffiliateController::class, 'downloadSample'])->name('sample');
+            Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
+            Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
+        });
     });
 });
 // Test route for affiliate reference code functionality

@@ -24,7 +24,7 @@
                                 }else {
                                     $link = '';
                                 }
-                                
+
                             @endphp
                             @if($link)
                                 <div class="mt-2 d-flex align-items-center">
@@ -408,6 +408,28 @@
             </div>
         </div>
     </div>
+
+    <script>
+        if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: "{{ session('success') }}",
+            timer: 2500,
+            showConfirmButton: false
+        });
+        endif
+
+        if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "{{ session('error') }}",
+            timer: 3000,
+            showConfirmButton: true
+        });
+        endif
+    </script>
     <script>
         function takeAction(data, email, amount, status, code) {
             const sanitizedData = data.replace(/\\/g, '\\\\');
