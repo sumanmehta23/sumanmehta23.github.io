@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\User;
-use App\Notifications\EmailBroadcasting;
+use App\Services\MailService; // adjust if your service is in different namespace
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,35 +14,44 @@ class SendBroadcastEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $subject, $content, $settings;
+    public $subject;
+    public $content;
+    public $settings;
 
+    /**
+     * Create a new job instance.
+     */
     public function __construct($subject, $content, $settings)
     {
-        $this->subject = $subject;
-        $this->content = $content;
-        $this->settings = $settings;
+        $this->subject   = $subject;
+        $this->content   = $content;
+        $this->settings  = $settings;
     }
 
-    public function handle()
+    /**
+     * Execute the job.
+     */
+    public function handle(MailService $mailService)
     {
-        User::chunk(50, function ($users) {
-            foreach ($users as $user) {
-                $emailSubject = $this->settings['admin_title'] . ' ' . $this->subject;
+        $users = User::select('fullname', 'email')->get();
 
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'email' => $this->settings['email_from_address'],
-                    'content' => $this->content,
-                    "title_right" => "",
-                    "subtitle_right" => ""
-                ];
+        foreach ($users as $user) {
 
-                $user->notify(new EmailBroadcasting(
-                    $this->settings,
-                    $emailSubject,
-                    $templateVars
-                ));
-            }
-        });
+            // personalize email
+            $personalContent = str_replace('{{name}}', $user->fullname, $this->content);
+
+            $emailSubject = $this->settings['admin_title'] . ' ' . $this->subject;
+
+            $templateVars = [
+                'name'      => $user->fullname,
+                'email'     => $this->settings['email_from_address'],
+                'content'   => $personalContent,
+                "title_right" => "",
+                "subtitle_right" => ""
+            ];
+
+            // send email using your mail service
+            $mailService->sendEmail($user->email, $emailSubject, '', '', $templateVars);
+        }
     }
 }
