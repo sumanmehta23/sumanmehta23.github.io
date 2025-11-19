@@ -9,12 +9,13 @@ use App\Models\Setting;
 use App\Models\RestrictIps;
 use App\Models\ToggleGroup;
 use App\Models\EmployeeList;
-use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\SendBroadcastEmailJob;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
@@ -226,30 +227,37 @@ class SettingsController extends Controller
             'message' => 'required|string',
         ]);
 
-        $emails = explode(',', $request->emails);
-        $emails = array_map('trim', $emails);
         $subject = $request->subject;
-        $content = $request->message; // CKEditor provides HTML content
-        $content = str_replace("\n", "<br>", $content); // Convert newlines to <br> for HTML
+        $content = $request->message;
+        $settings = settings();
+
+        // 1. Broadcast to ALL users
+        if (trim($request->emails) === 'all') {
+
+            dispatch(new SendBroadcastEmailJob($subject, $content, $settings));
+
+            return back()->with('success', 'Email broadcast job started! Emails will be sent in background.');
+        }
+
+        // 2. Send to specific emails
+        $emails = array_map('trim', explode(',', $request->emails));
 
         foreach ($emails as $email) {
-            $user = User::where('email', $email)->first();
+
+            $user = User::with('liveAccounts')->where('email', $email)->first();
+
             if ($user) {
-                //Replace placeholder such as name with actual user name
-                $content = str_replace('{{name}}', $user->fullname, $content);
-                $settings = settings();
                 $emailSubject = $settings['admin_title'] . ' ' . $subject;
-                //replace name with actual client name in message body
-                $content = str_replace('{{name}}', $user->fullname, $content);
+
                 $templateVars = [
                     'name' => $user->fullname,
-                    'email' => settings()['email_from_address'],
-                    'content' => $content, // Ensure this contains HTML
+                    'email' => $settings['email_from_address'],
+                    'content' => $content,
                     "title_right" => "",
                     "subtitle_right" => ""
                 ];
 
-                $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
+                $user->notify(new EmailBroadcasting($settings, $emailSubject, $templateVars));
             }
         }
 
@@ -720,10 +728,10 @@ class SettingsController extends Controller
         $payissaEnabled = $request->input('enable_creditcardpayissa', '0') === '1';
         $ragapayEnabled = $request->input('enable_ragapay', '0') === '1';
         $cryptochillEnabled = $request->input('enable_cryptochill', '0') === '1';
-        
+
         // Auto-manage credit card: enabled if either sub-option is enabled
         $creditEnabled = $payissaEnabled || $ragapayEnabled;
-        
+
         // Gateway settings to update
         $settings = [
             'enable_cryptochill' => $cryptochillEnabled ? '1' : '0',
@@ -739,10 +747,10 @@ class SettingsController extends Controller
                     ['name' => $name],
                     ['value' => $value, 'updated_at' => now()]
                 );
-                
+
                 // Log what actually happened
                 Log::info("Gateway {$name}: " . ($result->wasRecentlyCreated ? 'CREATED' : 'UPDATED') . " with value {$value}, ID: {$result->id}");
-                
+
             } catch (\Exception $e) {
                 Log::error("Failed to update/create setting {$name}: " . $e->getMessage());
             }

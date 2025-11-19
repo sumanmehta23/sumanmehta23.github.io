@@ -15,7 +15,8 @@
                             <div class="mb-3">
                                 <label for="emails" class="form-label">Client Emails (Comma Separated)</label>
                                 <textarea name="emails" id="emails" class="form-control" rows="3" placeholder="Enter multiple emails separated by commas"></textarea>
-                                <button type="button" class="btn btn-primary mt-2" id="selectAllEmails">Select All Emails</button>
+                                {{-- <button type="button" class="btn btn-primary mt-2" id="selectAllEmails">Select All Emails</button> --}}
+                                <button type="button" class="btn btn-success mt-2" id="sendToAllClients">Send to All Clients</button>
                             </div>
                             <div class="mb-3">
                                 <label for="subject" class="form-label">Email Subject</label>
@@ -55,6 +56,10 @@
             let emails = @json($emails); // Fetch emails passed from controller
             $('#emails').val(emails.join(', ')); // Join emails with a comma
         });
+        $('#sendToAllClients').click(function() {
+            $('#emails').val('all'); // Special keyword
+        });
+
     });
 </script>
 
