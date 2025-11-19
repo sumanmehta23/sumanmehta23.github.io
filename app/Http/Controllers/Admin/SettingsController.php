@@ -231,38 +231,46 @@ class SettingsController extends Controller
         $content = $request->message;
         $settings = settings();
 
-        // 1. Broadcast to ALL users
-        if (trim($request->emails) === 'all') {
+        // If user selected "Send to All Clients"
+        if (strtolower(trim($request->emails)) === 'all') {
 
-            dispatch(new SendBroadcastEmailJob($subject, $content, $settings));
+            // Dispatch queue job for all users
+            dispatch(new SendBroadcastEmailJob(
+                $subject,
+                $content,
+                $settings
+            ));
 
-            return back()->with('success', 'Email broadcast job started! Emails will be sent in background.');
+            return back()->with('success', 'Broadcast email sent to all clients (queued)!');
         }
 
-        // 2. Send to specific emails
-        $emails = array_map('trim', explode(',', $request->emails));
+        // Otherwise manual email list
+        $emails = explode(',', $request->emails);
+        $emails = array_map('trim', $emails);
 
         foreach ($emails as $email) {
+            $user = User::where('email', $email)->first();
+            if (!$user) continue;
 
-            $user = User::with('liveAccounts')->where('email', $email)->first();
+            // Clone content so placeholders do not override next user
+            $personalContent = str_replace('{{name}}', $user->fullname, $content);
 
-            if ($user) {
-                $emailSubject = $settings['admin_title'] . ' ' . $subject;
+            $emailSubject = $settings['admin_title'] . ' ' . $subject;
 
-                $templateVars = [
-                    'name' => $user->fullname,
-                    'email' => $settings['email_from_address'],
-                    'content' => $content,
-                    "title_right" => "",
-                    "subtitle_right" => ""
-                ];
+            $templateVars = [
+                'name'      => $user->fullname,
+                'email'     => $settings['email_from_address'],
+                'content'   => $personalContent,
+                "title_right" => "",
+                "subtitle_right" => ""
+            ];
 
-                $user->notify(new EmailBroadcasting($settings, $emailSubject, $templateVars));
-            }
+            $this->mailService->sendEmail($user->email, $emailSubject, '', '', $templateVars);
         }
 
         return back()->with('success', 'Emails sent successfully!');
     }
+
 
 
     public function ip_ban(Request $request)
