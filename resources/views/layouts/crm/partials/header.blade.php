@@ -178,6 +178,54 @@ if (app()->environment('local') || config('services.sales.promotion')) {
             transition-duration: 400ms;
         }
 
+        .platform-download-modal {
+            max-width: 650px;
+            width: 90%;
+        }
+
+        .platform-download-btn {
+            display: block;
+            padding: 20px 15px;
+            border: 1px solid rgba(220, 53, 69, 0.4);
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            background-color: #fff;
+            color: #333;
+        }
+
+        .platform-download-btn:hover {
+            border-color: rgba(220, 53, 69, 0.6);
+            box-shadow: 0px 4px 8px rgba(220, 53, 69, 0.2);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: #333;
+        }
+
+        .platform-icon-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            min-height: 60px;
+        }
+
+        .platform-icon {
+            max-width: 60px;
+            max-height: 60px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .platform-label {
+            display: block;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+            margin-top: 8px;
+        }
+
         /* Style the main item */
         .pc-item {
             position: relative;
