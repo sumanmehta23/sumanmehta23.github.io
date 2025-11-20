@@ -563,6 +563,15 @@ if (app()->environment('local')) {
                                 <ul class="slide-menu child1">
                                 </ul>
                             </li>
+
+                            <li class="slide menu-item-main ">
+                                <a href="{{ route('admin.login-history.index') }}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-clock"></i>
+                                    <span class="side-menu__label">Login History</span>
+                                </a>
+                                <ul class="slide-menu child1">
+                                </ul>
+                            </li>
                         @endif
 
                         @can('employee:viewAny')
