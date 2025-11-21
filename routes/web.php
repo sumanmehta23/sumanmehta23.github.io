@@ -579,6 +579,12 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
             Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
         });
+
+        // Inactive Users Routes
+        Route::prefix('inactive-users')->name('inactive-users.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
+        });
     });
 });
 // Test route for affiliate reference code functionality

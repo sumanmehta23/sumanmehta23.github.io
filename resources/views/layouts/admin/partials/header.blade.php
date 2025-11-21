@@ -572,6 +572,15 @@ if (app()->environment('local')) {
                                 <ul class="slide-menu child1">
                                 </ul>
                             </li>
+
+                            <li class="slide menu-item-main ">
+                                <a href="{{ route('admin.inactive-users.index') }}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-user-x"></i>
+                                    <span class="side-menu__label">Inactive Users</span>
+                                </a>
+                                <ul class="slide-menu child1">
+                                </ul>
+                            </li>
                         @endif
                         
                         @can('employee:viewAny')
