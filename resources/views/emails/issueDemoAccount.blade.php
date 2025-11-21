@@ -268,7 +268,7 @@
                                                         <tr>
                                                             <td class="pad" style="width:100%;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    @if ($platform == 'MT5')
+                                                                    @if ($platform == 'mt5')
                                                                         <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                     @else
                                                                         <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/x9.jpg' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
@@ -379,7 +379,7 @@
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:5px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;">You're now ready to begin your trading journey! If you have any questions, our team is here to help.</p>
-                                                                    @if ($platform == 'MT5')
+                                                                    @if ($platform == 'mt5')
                                                                         <p style="margin: 0; margin-bottom: 16px;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Live" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>Download MetaTrader iOS</strong></u></span></a></strong></u></span></p>
                                                                         <p style="margin: 0; margin-bottom: 16px;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Live" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>Download MetaTrader Android</strong></u></span></a></strong></u></span></p>
                                                                         <p style="margin: 0;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>Download Desktop</strong></u><u></u></span></a></strong></u><u></u></span></p>

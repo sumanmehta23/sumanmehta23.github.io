@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\WalletDeposit;
 use App\Models\TotalBalance;
+use App\Models\TradeDeposit;
 use App\Models\User;
 use Exception;
 
@@ -53,6 +54,10 @@ class PaymentCallbackController extends Controller
 
             // Check if transaction already exists
             if (WalletDeposit::where('transaction_id', $transactionId)->exists()) {
+                return response("true", 200);
+            }
+
+            if (TradeDeposit::where('transaction_id', $transactionId)->exists()) {
                 return response("true", 200);
             }
 
