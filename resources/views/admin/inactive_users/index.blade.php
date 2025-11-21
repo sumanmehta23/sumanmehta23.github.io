@@ -4,10 +4,10 @@
         <div class="container-fluid">
             <!-- PAGE-HEADER -->
             <div class="page-header">
-                <h1 class="page-title">Login History</h1>
+                <h1 class="page-title">Inactive Users</h1>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Login History</li>
+                    <li class="breadcrumb-item active" aria-current="page">Inactive Users</li>
                 </ol>
             </div>
             <!-- PAGE-HEADER END -->
@@ -18,57 +18,45 @@
                     <div class="card custom-card">
                         <div class="card-header justify-content-between">
                             <div class="card-title">
-                                User Login History
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-info btn-sm" id="exportBtn" title="Export to Excel">
-                                    <i class="fe fe-download me-1"></i> Export
-                                </button>
+                                Inactive Users List
                             </div>
                         </div>
                         <div class="card-body">
                             <!-- Info Alert -->
-                            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                <i class="fe fe-info me-2"></i>
-                                <strong>Note:</strong> By default, this page shows login history from the last 30 days. Use the date filters below to view a different date range.
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fe fe-alert-circle me-2"></i>
+                                <strong>Note:</strong> This page shows users who have been marked as inactive based on login history. Users are automatically reactivated when they log in.
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                             
                             <!-- Filter Section -->
-                            <div class="row mb-3 g-2">
-                                <div class="col-12 col-sm-6 col-md-3">
-                                    <label for="actionFilter" class="form-label">Filter by Action</label>
-                                    <select id="actionFilter" class="form-select">
-                                        <option value="">All Actions</option>
-                                        <option value="login">Login</option>
-                                        <option value="logout">Logout</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6 col-md-3">
-                                    <label for="dateFromFilter" class="form-label">Date From</label>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="dateFromFilter" class="form-label">Registration Date From</label>
                                     <input type="date" id="dateFromFilter" class="form-control">
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-3">
-                                    <label for="dateToFilter" class="form-label">Date To</label>
+                                <div class="col-md-4">
+                                    <label for="dateToFilter" class="form-label">Registration Date To</label>
                                     <input type="date" id="dateToFilter" class="form-control">
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-3 d-flex align-items-end">
+                                <div class="col-md-2 d-flex align-items-end">
                                     <button type="button" class="btn btn-secondary btn-sm w-100" id="clearFilters">
-                                        <i class="fe fe-x me-1"></i> Clear
+                                        <i class="fe fe-x"></i> Clear
                                     </button>
                                 </div>
                             </div>
 
                             <!-- DataTable -->
                             <div class="table-responsive">
-                                <table id="loginHistoryTable" class="table table-bordered text-nowrap border-bottom w-100">
+                                <table id="inactiveUsersTable" class="table table-bordered text-nowrap border-bottom w-100">
                                     <thead>
                                         <tr>
                                             <th>User Email</th>
                                             <th>User Name</th>
-                                            <th>IP Address</th>
                                             <th>Country</th>
-                                            <th>Date & Time</th>
+                                            <th>Registration Date</th>
+                                            <th>Last Login</th>
+                                            <th>Days Inactive</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -88,13 +76,12 @@
 <script>
 $(document).ready(function() {
     // Initialize DataTable
-    const table = $('#loginHistoryTable').DataTable({
+    const table = $('#inactiveUsersTable').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
-            url: '{{ route('admin.login-history.data') }}',
+            url: '{{ route('admin.inactive-users.data') }}',
             data: function(d) {
-                d.action = $('#actionFilter').val();
                 d.date_from = $('#dateFromFilter').val();
                 d.date_to = $('#dateToFilter').val();
             }
@@ -119,12 +106,6 @@ $(document).ready(function() {
                 width: '180px'
             },
             { 
-                data: 'ip', 
-                name: 'ip',
-                defaultContent: '-',
-                width: '150px'
-            },
-            { 
                 data: 'country', 
                 name: 'country',
                 defaultContent: 'Unknown',
@@ -132,28 +113,55 @@ $(document).ready(function() {
                 className: 'text-center'
             },
             { 
-                data: 'created_date_js',
-                name: 'created_date_js',
+                data: 'reg_date_formatted',
+                name: 'reg_date',
                 defaultContent: '-',
-                width: '180px',
+                width: '150px',
+                className: 'text-center'
+            },
+            { 
+                data: 'last_login_formatted',
+                name: 'last_login',
+                defaultContent: 'Never',
+                width: '150px',
                 className: 'text-center',
                 render: function(data) {
-                    return data || 'N/A';
+                    if (data === 'Never') {
+                        return '<span class="badge bg-danger">Never</span>';
+                    }
+                    return data;
+                }
+            },
+            { 
+                data: 'days_inactive',
+                name: 'days_inactive',
+                defaultContent: '-',
+                width: '120px',
+                className: 'text-center',
+                render: function(data) {
+                    if (data === 'N/A' || data === null) {
+                        return '<span class="badge bg-secondary">N/A</span>';
+                    }
+                    const days = parseInt(data);
+                    let badgeClass = 'warning';
+                    if (days >= 90) {
+                        badgeClass = 'danger';
+                    } else if (days >= 60) {
+                        badgeClass = 'warning';
+                    } else {
+                        badgeClass = 'info';
+                    }
+                    return '<span class="badge bg-' + badgeClass + '">' + days + ' days</span>';
                 }
             }
         ],
-        order: [[4, 'desc']], // Sort by date descending
+        order: [[3, 'desc']], // Sort by registration date descending
         pageLength: 25,
         scrollX: false,
         autoWidth: false,
         language: {
             processing: '<div class="spinner-border text-primary" role="status"></div>'
         }
-    });
-
-    // Filter by action
-    $('#actionFilter').on('change', function() {
-        table.ajax.reload();
     });
 
     // Filter by date from
@@ -168,30 +176,9 @@ $(document).ready(function() {
 
     // Clear all filters
     $('#clearFilters').on('click', function() {
-        $('#actionFilter').val('');
         $('#dateFromFilter').val('');
         $('#dateToFilter').val('');
         table.ajax.reload();
-    });
-
-    // Export functionality
-    $('#exportBtn').on('click', function() {
-        const action = $('#actionFilter').val();
-        const dateFrom = $('#dateFromFilter').val();
-        const dateTo = $('#dateToFilter').val();
-
-        // Build export URL with filters
-        let exportUrl = '{{ route('admin.login-history.export') }}?';
-        const params = [];
-        
-        if (action) params.push('action=' + encodeURIComponent(action));
-        if (dateFrom) params.push('date_from=' + encodeURIComponent(dateFrom));
-        if (dateTo) params.push('date_to=' + encodeURIComponent(dateTo));
-        
-        exportUrl += params.join('&');
-
-        // Trigger download
-        window.location.href = exportUrl;
     });
 });
 </script>

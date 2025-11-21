@@ -164,6 +164,12 @@ class LoginController extends Controller
             ->whereNull('client_ip')
             ->update(['client_ip' => $request->ip()]);
 
+        // Reactivate user if they were marked as inactive
+        if ($user->is_inactive) {
+            $user->is_inactive = false;
+            $user->save();
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
         // Set session variables
