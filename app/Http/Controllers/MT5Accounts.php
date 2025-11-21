@@ -1333,8 +1333,8 @@ class MT5Accounts extends Controller
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content = '
-                        <p>Your ' . $platform . ' account is ready! You are all set to dive into the exciting world of trading.</p>
-                        <p>Here are your ' . $platform . ' account details</p>
+                        <p>Your ' . strtoupper($platform) . ' account is ready! You are all set to dive into the exciting world of trading.</p>
+                        <p>Here are your ' . strtoupper($platform) . ' account details</p>
                     ';
         $templateVars = [
             'name' => $new_user->Name,
