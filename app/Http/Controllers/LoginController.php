@@ -161,8 +161,8 @@ class LoginController extends Controller
             }
         }
         User::where('id', $user->id)
-                ->whereNull('client_ip')
-                ->update(['client_ip' => $request->ip()]);
+            ->whereNull('client_ip')
+            ->update(['client_ip' => $request->ip()]);
 
         // Reactivate user if they were marked as inactive
         if ($user->is_inactive) {
@@ -446,7 +446,7 @@ class LoginController extends Controller
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>Your password has been successfully reset! If you made this change, no further action is needed. If you did not request this change, please contact our support team immediately.</p>
             <p></p>
             Thank you for being a valued member of our community!</div>';
@@ -596,7 +596,7 @@ class LoginController extends Controller
         $user = User::create($userData);
 
         if ($user) {
-            // Fire the Registered event for Customer.io integration
+            // Fire the Registered event for Omnisend integration
             event(new \Illuminate\Auth\Events\Registered($user));
 
             $settings = settings();
@@ -610,9 +610,9 @@ class LoginController extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $content =
                 '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-                '<p></p>'.
+                '<p></p>' .
                 '<p>You are receiving this email because you have registered for a Trading Account.</p>' .
-                '<p></p>'.
+                '<p></p>' .
                 '<p>Click the link below to activate your Trading Account</p>';
 
             $templateVars = [
@@ -626,8 +626,8 @@ class LoginController extends Controller
                 "btn_text" => "Activate",
             ];
             $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-            // User registration will automatically trigger Customer.io via Registered event
-            // No additional Customer.io code needed here
+            // User registration will automatically trigger Omnisend via Registered event
+            // No additional Omnisend code needed here
 
             return redirect()->route('register')->with('status', 'We have sent an email to ' . $toEmail . '. Please click on the confirmation link in the email to activate your account and login.');
         }
@@ -656,9 +656,9 @@ class LoginController extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
                     '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-                    '<p></p>'.
+                    '<p></p>' .
                     '<p>Your email address has been successfully confirmed, and you’re all set to start exploring everything we have to offer.</p>' .
-                    '<p></p>'.
+                    '<p></p>' .
                     '<p><b>Here are your login credentials:</b></p>
                      <p></p>
                      <p><b>Username: </b> <a href="mailto:' . $user->email . '" style="color: #00b98e; text-decoration: none;">' . $user->email . '</a></p>';

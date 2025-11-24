@@ -65,11 +65,9 @@ return [
         'webhook_secret' => env('SUMSUB_WEBHOOK_SECRET', ''),
         'clientId' => env('SUMSUB_CLIENT_ID', ''),
     ],
-    'customerio' => [
-        'api_url' => env('CUSTOMERIO_API_URL', 'https://track.customer.io'),
-        'site_id' => env('CUSTOMERIO_SITE_ID'),
-        'app_key' => env('CUSTOMERIO_APP_KEY'),
-        'tracking_api_key' => env('CUSTOMERIO_TRACKING_API_KEY')
+    'omnisend' => [
+        'api_url' => env('OMNISEND_API_URL', 'https://api.omnisend.com/v5'),
+        'api_key' => env('OMNISEND_API_KEY'),
     ],
     '1forge' => [
         'api_key' => env('FORGE_API_KEY', ''),

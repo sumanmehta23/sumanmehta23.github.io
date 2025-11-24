@@ -65,10 +65,6 @@ use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
 
-Route::get("/five", function () {
-    throw new \Exception("This is a test exception for Customer.io integration.");
-});
-
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
 Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::class, 'competitionsOverviewLeaderboard'])->name('competitionsOverviewLeaderboard');

@@ -151,7 +151,7 @@ class Payment extends Controller
 
                     DB::commit();
 
-                    // Fire Customer.io event for deposit
+                    // Fire Omnisend event for deposit
                     event(new AccountTradesDepositEvent($paymentLog->user, $amount));
                     Cache::forget("user:{$userId}:wallet_balance");
 
@@ -338,7 +338,7 @@ class Payment extends Controller
 
                     DB::commit();
 
-                    // Fire Customer.io event for deposit
+                    // Fire Omnisend event for deposit
                     event(new AccountTradesDepositEvent($paymentLog->user, $amount));
                     Cache::forget("user:{$userId}:wallet_balance");
 
@@ -602,7 +602,7 @@ class Payment extends Controller
 
                             $tradeDeposit = TradeDeposit::create($data);
 
-                            // Fire the AccountTradesDepositEvent for Customer.io integration
+                            // Fire the AccountTradesDepositEvent for Omnisend integration
                             event(new AccountTradesDepositEvent($paymentLog->user, $amount));
 
                             if (isset($paymentLog->promocode) && $paymentLog->promocode != '') {
@@ -664,7 +664,7 @@ class Payment extends Controller
                             );
 
                             DB::commit();
-                            // Fire Customer.io event for deposit
+                            // Fire Omnisend event for deposit
                             event(new AccountTradesDepositEvent($paymentLog->user, $amount));
                             Cache::forget("user:{$paymentLog->user_id}:wallet_balance");
                             Log::channel("creditcardpayissa")->info('Transaction confirmed successfully.');
@@ -878,7 +878,7 @@ class Payment extends Controller
 
                     $tradeDeposit = TradeDeposit::create($data);
 
-                    // Fire the AccountTradesDepositEvent for Customer.io integration
+                    // Fire the AccountTradesDepositEvent for Omnisend integration
                     event(new AccountTradesDepositEvent($paymentLog->user, $amount));
 
                     TotalBalance::create([
@@ -971,7 +971,7 @@ class Payment extends Controller
                     'callback_code' => "success",
                 ]);
 
-                // Fire the AccountTradesDepositEvent for Customer.io integration
+                // Fire the AccountTradesDepositEvent for Omnisend integration
                 $user = \App\Models\User::find($account->user_id);
                 if ($user) {
                     event(new AccountTradesDepositEvent($user, $amount));
@@ -1029,14 +1029,14 @@ class Payment extends Controller
                                     if (($error_code = $this->mt5Service->userGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
                                         return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
                                     }
-                                    Log::info("account ". $account->code);
-                                    Log::info("message". $trade_user->Leverage);
-                                    Log::info("message". $amount);
-                                    Log::info("message". $trade_user->Balance);
-                                    Log::info("message". $trade_user->Credit);
+                                    Log::info("account " . $account->code);
+                                    Log::info("message" . $trade_user->Leverage);
+                                    Log::info("message" . $amount);
+                                    Log::info("message" . $trade_user->Balance);
+                                    Log::info("message" . $trade_user->Credit);
                                     Log::info(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
                                     $leverage = round($account->leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
-                                    Log::info("New Leverage". $leverage);
+                                    Log::info("New Leverage" . $leverage);
                                     $trade_user->Leverage = $leverage;
 
                                     $updated_user = "";
