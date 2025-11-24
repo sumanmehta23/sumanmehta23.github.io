@@ -260,7 +260,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -281,7 +280,6 @@
                 @endif --}}
             </div>
         </div>
-    </div>
     @if (session('success'))
         <script>
             Swal.fire({

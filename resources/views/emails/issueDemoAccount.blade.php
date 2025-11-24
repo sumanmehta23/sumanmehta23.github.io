@@ -269,7 +269,7 @@
                                                             <td class="pad" style="width:100%;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
                                                                     @if ($platform == 'mt5')
-                                                                        <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                        <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed_2.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                     @else
                                                                         <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/x9.jpg' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                     @endif

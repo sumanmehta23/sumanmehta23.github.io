@@ -68,7 +68,6 @@
                                                                                     A commission-free account, perfect for new traders to start investing.
                                                                                 </span>
                                                                             @endif --}}
-
                                                                             <hr>
                                                                             <span
                                                                                 class="h6 d-block mt-3 f-w-300 f-14"><strong
@@ -83,7 +82,7 @@
                                                                             <span
                                                                                 class="h6 d-block mt-3 f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">Yes</span></strong>
+                                                                                        class="f-w-400 f-16">{{ $acc->ac_swap }}</span></strong>
                                                                                 Swap </span>
                                                                         </span>
                                                                     </div>
