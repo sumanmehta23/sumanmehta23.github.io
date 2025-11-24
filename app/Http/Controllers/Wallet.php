@@ -1026,7 +1026,7 @@ class Wallet extends Controller
 
                         DB::commit();
                         $user = User::where('id', $customerID)->first();
-                        // Fire Customer.io event for deposit
+                        // Fire Omnisend event for deposit
                         event(new AccountTradesDepositEvent($user, $amount));
                         Cache::forget("user:{$customerID}:wallet_balance");
                         Log::channel("cryptochillcallback")->info('Transaction confirmed successfully.');
@@ -1197,16 +1197,16 @@ class Wallet extends Controller
                                             }
 
                                             if ($trade_user) {
-                                                Log::info("account ". $account->code);
-                                                Log::info("message". $trade_user->Leverage);
-                                                Log::info("message". $amount);
-                                                Log::info("message". $trade_user->Balance);
-                                                Log::info("message". $trade_user->Credit);
+                                                Log::info("account " . $account->code);
+                                                Log::info("message" . $trade_user->Leverage);
+                                                Log::info("message" . $amount);
+                                                Log::info("message" . $trade_user->Balance);
+                                                Log::info("message" . $trade_user->Credit);
                                                 Log::info(" $trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)) ");
 
                                                 $leverage = round($trade_user->Leverage * (($amount / ($trade_user->Balance + $trade_user->Credit))), 2);
 
-                                                Log::info("New Leverage". $leverage);
+                                                Log::info("New Leverage" . $leverage);
                                                 $trade_user->Leverage = $leverage;
 
                                                 $updated_user = "";
@@ -1250,7 +1250,7 @@ class Wallet extends Controller
                                 DB::commit();
 
                                 $user = User::where('id', $customerID)->first();
-                                // Fire Customer.io event for deposit
+                                // Fire Omnisend event for deposit
                                 event(new AccountTradesDepositEvent($user, $amount));
                                 Cache::forget("user:{$customerID}:wallet_balance");
 
