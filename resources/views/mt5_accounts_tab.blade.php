@@ -62,7 +62,7 @@
 @once
     <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered platform-download-modal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable platform-download-modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="staticBackdropLabel">Platform Downloads</h5>
