@@ -53,19 +53,17 @@
             return v? (v.split('/')[2]||'en') : 'en';
         }
         function applyTranslation(code){
-            var val='/en/'+code;
+            // Store target language in cookie for Google Translate
+            var val = '/en/' + code;
             setCookie('googtrans', val, 365);
             var host = location.hostname;
             if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-                setCookie('googtrans', val, 365, '.'+host);
+                setCookie('googtrans', val, 365, '.' + host);
             }
-            var combo=document.querySelector('select.goog-te-combo');
-            if(combo){ combo.value=code; combo.dispatchEvent(new Event('change')); return; }
-            setTimeout(function(){
-                var c2=document.querySelector('select.goog-te-combo');
-                if(c2){ c2.value=code; c2.dispatchEvent(new Event('change')); }
-                else location.reload();
-            },300);
+
+            // Minimal, reliable behaviour: always reload page so Google applies
+            // the new language based on the updated cookie.
+            location.reload();
         }
         
         // Make functions globally available

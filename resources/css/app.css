@@ -1,0 +1,5 @@
+/* Capitalize footer links after translation */
+.footer-link-capitalize {
+    text-transform: capitalize !important;
+}
+
