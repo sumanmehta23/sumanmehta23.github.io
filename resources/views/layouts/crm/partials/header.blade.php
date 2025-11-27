@@ -515,6 +515,78 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                     </div>
                 </div>
             </nav>
+            <div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable platform-download-modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="staticBackdropLabel">Platform Downloads</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <p class="mb-3 text-uppercase text-muted fw-semibold small">MT5 Platform</p>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                    <a target="_blank" href="{{ $settings['mt5_android_platform'] }}"
+                                        class="text-center d-block platform-download-btn">
+                                        <div class="platform-icon-wrapper">
+                                            <img class="platform-icon" src="/assets/platform/playstore.png"
+                                                alt="Android">
+                                        </div>
+                                        <span class="platform-label">Android</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                    <a target="_blank" href="{{ $settings['mt5_ios_platform'] }}"
+                                        class="text-center d-block platform-download-btn">
+                                        <div class="platform-icon-wrapper">
+                                            <img class="platform-icon" src="/assets/platform/appstore.png"
+                                                alt="Apple iOS">
+                                        </div>
+                                        <span class="platform-label">Apple iOS</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                    <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}"
+                                        class="text-center d-block platform-download-btn">
+                                        <div class="platform-icon-wrapper">
+                                            <img class="platform-icon" src="/assets/platform/windowslogo.png"
+                                                alt="Windows">
+                                        </div>
+                                        <span class="platform-label">Windows</span>
+                                    </a>
+                                </div>
+                                <div class="col-12">
+                                    <p class="mt-4 mb-3 text-uppercase text-muted fw-semibold small">X9 Platform</p>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                    <a target="_blank" href="https://web.x9trader.com/login?returnUrl=%2Fterminal"
+                                        class="text-center d-block platform-download-btn">
+                                        <div class="platform-icon-wrapper">
+                                            <img class="platform-icon" src="/assets/images/x9.png"
+                                                alt="X9 Web Terminal">
+                                        </div>
+                                        <span class="platform-label">Web Terminal</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                    <a target="_blank" href="https://app.x9trader.com/login"
+                                        class="text-center d-block platform-download-btn">
+                                        <div class="platform-icon-wrapper">
+                                            <img class="platform-icon" src="/assets/images/x9.png"
+                                                alt="X9 Mobile Trader">
+                                        </div>
+                                        <span class="platform-label">Mobile Trader</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @if (app()->environment('local'))
                 <div
                     style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
