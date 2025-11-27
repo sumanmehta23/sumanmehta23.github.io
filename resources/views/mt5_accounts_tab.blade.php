@@ -124,6 +124,7 @@
                                         alt="X9 Mobile Trader">
                                 </div>
                                 <span class="platform-label">Mobile Trader</span>
+
                             </a>
                         </div>
                     </div>

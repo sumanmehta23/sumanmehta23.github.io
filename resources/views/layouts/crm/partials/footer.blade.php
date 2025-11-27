@@ -31,20 +31,20 @@
 
             <!-- Disclosures -->
             <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Disclosures</h6>
+                <h6 class="fw-bold mb-3 footer-link-capitalize">Disclosures</h6>
                 <ul class="list-unstyled">
-                <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark">Risk Disclaimer</a></li>
-                <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark">Terms &amp; Conditions</a></li>
-                <li><a href="https://www.lqhmarkets.com/privacy-policy" class="text-decoration-none text-dark">Privacy Policy</a></li>
+                <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark footer-link-capitalize">Risk Disclaimer</a></li>
+                <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark footer-link-capitalize">Terms &amp; Conditions</a></li>
+                <li><a href="https://www.lqhmarkets.com/privacy-policy" class="text-decoration-none text-dark footer-link-capitalize">Privacy Policy</a></li>
                 </ul>
             </div>
 
             <!-- Company -->
             <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Company</h6>
+                <h6 class="fw-bold mb-3 footer-link-capitalize">Company</h6>
                 <ul class="list-unstyled">
-                <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About</a></li>
-                <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark">Contact</a></li>
+                <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark footer-link-capitalize">About</a></li>
+                <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark footer-link-capitalize">Contact</a></li>
                 </ul>
             </div>
 
@@ -312,8 +312,73 @@
 
 
 <script>
+    // Client-side wallet address validation
+    function validateWalletAddress(address, network) {
+        address = address.trim();
+        var length = address.length;
+
+        switch (network) {
+            case 'BTC':
+                // BTC: Must start with 1, 3, or bc1, length 26-62
+                var startsWithValid = address.startsWith('1') || 
+                                     address.startsWith('3') || 
+                                     address.startsWith('bc1');
+                
+                if (!startsWithValid) {
+                    return 'BTC address must start with 1, 3, or bc1.';
+                }
+                
+                if (length < 26 || length > 62) {
+                    return 'BTC address must be between 26 and 62 characters long.';
+                }
+                break;
+
+            case 'ETH_USDT':
+                // USDT ERC20: Must start with 0x, must be 42 characters long
+                if (!address.startsWith('0x')) {
+                    return 'USDT ERC20 address must start with 0x.';
+                }
+                
+                if (length !== 42) {
+                    return 'USDT ERC20 address must be exactly 42 characters long.';
+                }
+                break;
+
+            case 'USDT-TRX':
+                // USDT TRC20: Must start with T, must be 34 characters long
+                if (!address.startsWith('T')) {
+                    return 'USDT TRC20 address must start with T.';
+                }
+                
+                if (length !== 34) {
+                    return 'USDT TRC20 address must be exactly 34 characters long.';
+                }
+                break;
+
+            default:
+                return 'Invalid wallet network type.';
+        }
+
+        return null; // Valid
+    }
+
     $("#bankDetailsForm").submit(function(e) {
         e.preventDefault();
+        
+        var walletAddress = $("input[name='wallet_address']", this).val();
+        var walletNetwork = $("select[name='wallet_network']", this).val();
+        
+        // Client-side validation
+        var validationError = validateWalletAddress(walletAddress, walletNetwork);
+        if (validationError) {
+            Swal.fire({
+                title: "Invalid Wallet Address",
+                text: validationError,
+                icon: "error"
+            });
+            return false;
+        }
+        
         $.ajax({
             url: "{{ route('wallet.store') }}",
             type: "POST",
@@ -322,7 +387,6 @@
                 $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
             },
             success: function(data) {
-                $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
                 if (data.success == true) {
                     Swal.fire({
                         title: "Check email to verify new wallet address",
@@ -332,25 +396,52 @@
                     });
                 } else {
                     Swal.fire({
-                        title: "Something went wrong",
+                        title: data.message || "Something went wrong",
                         icon: "error"
                     });
+                    $("#bankDetailsForm input,#bankDetailsForm select").removeAttr("disabled");
                 }
+            },
+            error: function(xhr, status, error) {
+                var errorMessage = "Something went wrong";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                Swal.fire({
+                    title: "Error",
+                    text: errorMessage,
+                    icon: "error"
+                });
+                $("#bankDetailsForm input,#bankDetailsForm select").removeAttr("disabled");
             }
         });
     })
     $("#editDetailsForm").submit(function(e) {
         e.preventDefault();
+        
+        var walletAddress = $("input[name='wallet_address']", this).val();
+        var walletNetwork = $("select[name='wallet_network']", this).val();
+        
+        // Client-side validation
+        var validationError = validateWalletAddress(walletAddress, walletNetwork);
+        if (validationError) {
+            Swal.fire({
+                title: "Invalid Wallet Address",
+                text: validationError,
+                icon: "error"
+            });
+            return false;
+        }
+        
         $.ajax({
             url: "{{ route('wallet.verify_edit') }}",
             type: "POST",
             data: $(this).serialize(),
             beforeSend: function() {
-                $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
+                $("#editDetailsForm input, #editDetailsForm select, #editDetailsForm button").attr("disabled", "true");
             },
             success: function(data) {
                 console.log(data);
-                $("#bankDetailsForm input,#bankDetailsForm select").attr("disabled", "true");
                 if (data.success === true) {
                     Swal.fire({
                         title: "Check your email to verify new wallet details",
@@ -363,17 +454,20 @@
                         title: data.message || "Something went wrong",
                         icon: "error"
                     });
+                    $("#editDetailsForm input, #editDetailsForm select, #editDetailsForm button").removeAttr("disabled");
                 }
             },
             error: function(xhr, status, error) {
                 console.error("AJAX Error:", status, error);
+                var errorMessage = "Please try again later.";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
                 Swal.fire({
                     title: "An error occurred",
-                    text: xhr.responseJSON?.message || "Please try again later.",
+                    text: errorMessage,
                     icon: "error"
                 });
-            },
-            complete: function() {
                 $("#editDetailsForm input, #editDetailsForm select, #editDetailsForm button").removeAttr("disabled");
             }
         });
@@ -459,6 +553,8 @@ document.addEventListener('DOMContentLoaded', () => {
 }); --}}
 
 </script>
+
+@include('components.google-translate')
 
 </body>
 
