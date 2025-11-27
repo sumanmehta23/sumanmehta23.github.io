@@ -31,20 +31,20 @@
 
             <!-- Disclosures -->
             <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Disclosures</h6>
+                <h6 class="fw-bold mb-3 footer-link-capitalize">Disclosures</h6>
                 <ul class="list-unstyled">
-                <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark">Risk Disclaimer</a></li>
-                <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark">Terms &amp; Conditions</a></li>
-                <li><a href="https://www.lqhmarkets.com/privacy-policy" class="text-decoration-none text-dark">Privacy Policy</a></li>
+                <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark footer-link-capitalize">Risk Disclaimer</a></li>
+                <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark footer-link-capitalize">Terms &amp; Conditions</a></li>
+                <li><a href="https://www.lqhmarkets.com/privacy-policy" class="text-decoration-none text-dark footer-link-capitalize">Privacy Policy</a></li>
                 </ul>
             </div>
 
             <!-- Company -->
             <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Company</h6>
+                <h6 class="fw-bold mb-3 footer-link-capitalize">Company</h6>
                 <ul class="list-unstyled">
-                <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About</a></li>
-                <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark">Contact</a></li>
+                <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark footer-link-capitalize">About</a></li>
+                <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark footer-link-capitalize">Contact</a></li>
                 </ul>
             </div>
 
@@ -553,6 +553,8 @@ document.addEventListener('DOMContentLoaded', () => {
 }); --}}
 
 </script>
+
+@include('components.google-translate')
 
 </body>
 

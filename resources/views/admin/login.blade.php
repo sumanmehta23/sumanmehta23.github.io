@@ -149,5 +149,16 @@
         </div>
         <script src="{{ asset('admin_assets/assets/admin_files/jquery.min.js') }}"></script>
         <script src="{{ asset('admin_assets/assets/admin_files/sweetalert-2.all.min.js') }}"></script>
+
+        @include('components.google-translate')
+        
+        <!-- Visible language dropdown for login page -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
+            @include('components.language-dropdown', [
+                'selectId' => 'custom_translate_select_login',
+                'flagPreviewId' => 'flag-preview-login'
+            ])
+        </div>
     </body>
 @endsection

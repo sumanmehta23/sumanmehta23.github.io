@@ -129,6 +129,7 @@
     @endif
 
     <!-- Add your scripts here -->
+@include('components.google-translate')
 </body>
 
 </html>
