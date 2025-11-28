@@ -376,7 +376,7 @@ class Users extends Controller
         // Ensure at least one identifier is provided
         if (!$request->user_id && !$request->user_email) {
             return response()->json([
-                'status' => 'false', 
+                'status' => 'false',
                 'message' => 'Either user_id or user_email is required.'
             ]);
         }
@@ -388,7 +388,7 @@ class Users extends Controller
         } elseif ($request->user_email) {
             $user = User::where('email', $request->user_email)->first();
         }
-        
+
         if (!$user) {
             return response()->json(['status' => 'false', 'message' => 'User not found.']);
         }
@@ -401,9 +401,9 @@ class Users extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
-                'status' => 'false', 
+                'status' => 'false',
                 'message' => 'Failed to sync KYC data: ' . $e->getMessage()
             ]);
         }
@@ -434,13 +434,13 @@ class Users extends Controller
                 $usersByIds = User::whereIn('id', $request->user_ids)->get();
                 $users = $users->merge($usersByIds);
             }
-            
+
             // Get users by emails
             if ($request->user_emails) {
                 $usersByEmails = User::whereIn('email', $request->user_emails)->get();
                 $users = $users->merge($usersByEmails);
             }
-            
+
             // Remove duplicates (in case same user was specified by both ID and email)
             $users = $users->unique('id');
         } else {
@@ -464,7 +464,7 @@ class Users extends Controller
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                
+
                 $results[] = [
                     'user_id' => $user->id,
                     'email' => $user->email,
@@ -490,17 +490,17 @@ class Users extends Controller
     private function syncKycFromSumsub(User $user, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         $email = $user->email;
-        
+
         // Try to find applicant by user email
         $applicantId = $this->getApplicantIdByEmail($email);
-        
+
         if (!$applicantId) {
             return ['status' => 'false', 'message' => 'No applicant found for this user in Sumsub.'];
         }
 
         // Get applicant status from Sumsub
         $statusResponse = $this->getSumsubApplicantStatus($applicantId);
-        
+
         if (!$statusResponse) {
             return ['status' => 'false', 'message' => 'Failed to get applicant status from Sumsub.'];
         }
@@ -516,10 +516,10 @@ class Users extends Controller
         // Check if review status is completed and approved
         if (isset($statusResponse['reviewStatus']) && $statusResponse['reviewStatus'] == 'completed') {
             if (isset($statusResponse['reviewResult']['reviewAnswer']) && $statusResponse['reviewResult']['reviewAnswer'] == 'GREEN') {
-                
+
                 // Get full applicant details
                 $applicantDetails = $this->getSumsubApplicantDetails($applicantId);
-                
+
                 if ($applicantDetails) {
                     // Log the applicant details
                     KycLog::create([
@@ -547,7 +547,6 @@ class Users extends Controller
                 }
 
                 return ['status' => 'true', 'message' => 'KYC status synced and verified successfully.'];
-                
             } else {
                 return ['status' => 'false', 'message' => 'KYC review completed but not approved (not GREEN status).'];
             }
@@ -591,7 +590,7 @@ class Users extends Controller
         }
 
         $applicants = $response->json();
-        
+
         // If applicants found, return the first one's ID
         if (isset($applicants['items']) && count($applicants['items']) > 0) {
             return $applicants['items'][0]['id'];

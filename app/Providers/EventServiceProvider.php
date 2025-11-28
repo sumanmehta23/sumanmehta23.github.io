@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Events\AccountTradesDepositEvent;
 use App\Events\KycVerifiedEvent;
-use App\Listeners\CustomerIoEventsListener;
+use App\Listeners\OmnisendEventsListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -20,15 +20,15 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
-            CustomerIoEventsListener::class,
+            OmnisendEventsListener::class,
         ],
 
         KycVerifiedEvent::class => [
-            CustomerIoEventsListener::class,
+            OmnisendEventsListener::class,
         ],
 
         AccountTradesDepositEvent::class => [
-            CustomerIoEventsListener::class,
+            OmnisendEventsListener::class,
         ],
     ];
 
