@@ -184,6 +184,13 @@
                 </div>
             </div>
         </div>
-
+        @include('components.google-translate')
+        <!-- Visible language dropdown for client login page -->
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
+            @include('components.language-dropdown', [
+                'selectId' => 'custom_translate_select_client_login',
+                'flagPreviewId' => 'flag-preview-client-login'
+            ])
+        </div>
 
 @endsection

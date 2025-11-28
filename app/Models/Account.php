@@ -15,6 +15,13 @@ class Account extends Model
     use HasFactory, HasUuids, SoftDeletes;
     protected $guarded = [];
 
+    // Hide encrypted fields from JSON serialization to prevent MAC errors
+    protected $hidden = [
+        'trader_password',
+        'invester_password',
+        'phone_password',
+    ];
+
     // Define platform constants
     const PLATFORM_MT5 = 'mt5';
     const PLATFORM_X9 = 'x9';

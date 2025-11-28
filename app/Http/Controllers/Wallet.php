@@ -192,6 +192,84 @@ class Wallet extends Controller
         return back()->with('success', 'Deposit added successfully.');
     }
 
+    /**
+     * Validate wallet address based on network type
+     *
+     * @param string $address
+     * @param string $network
+     * @return array ['valid' => bool, 'message' => string]
+     */
+    private function validateWalletAddress($address, $network)
+    {
+        $address = trim($address);
+        $length = strlen($address);
+
+        switch ($network) {
+            case 'BTC':
+                // BTC: Must start with 1, 3, or bc1, length 26-62
+                $startsWithValid = (strpos($address, '1') === 0) || 
+                                   (strpos($address, '3') === 0) || 
+                                   (strpos($address, 'bc1') === 0);
+                
+                if (!$startsWithValid) {
+                    return [
+                        'valid' => false,
+                        'message' => 'BTC address must start with 1, 3, or bc1.'
+                    ];
+                }
+                
+                if ($length < 26 || $length > 62) {
+                    return [
+                        'valid' => false,
+                        'message' => 'BTC address must be between 26 and 62 characters long.'
+                    ];
+                }
+                break;
+
+            case 'ETH_USDT':
+                // USDT ERC20: Must start with 0x, must be 42 characters long
+                if (strpos($address, '0x') !== 0) {
+                    return [
+                        'valid' => false,
+                        'message' => 'USDT ERC20 address must start with 0x.'
+                    ];
+                }
+                
+                if ($length !== 42) {
+                    return [
+                        'valid' => false,
+                        'message' => 'USDT ERC20 address must be exactly 42 characters long.'
+                    ];
+                }
+                break;
+
+            case 'USDT-TRX':
+                // USDT TRC20: Must start with T, must be 34 characters long
+                if (strpos($address, 'T') !== 0) {
+                    return [
+                        'valid' => false,
+                        'message' => 'USDT TRC20 address must start with T.'
+                    ];
+                }
+                
+                if ($length !== 34) {
+                    return [
+                        'valid' => false,
+                        'message' => 'USDT TRC20 address must be exactly 34 characters long.'
+                    ];
+                }
+                break;
+
+            default:
+                return [
+                    'valid' => false,
+                    'message' => 'Invalid wallet network type.'
+                ];
+        }
+
+        return ['valid' => true, 'message' => ''];
+    }
+
     public function storeClientWallet(Request $request)
     {
         $request->validate([
@@ -200,6 +278,15 @@ class Wallet extends Controller
             'wallet_address' => 'required|string|max:255',
             'status' => 'required',
         ]);
+
+        // Validate wallet address format
+        $validation = $this->validateWalletAddress($request->wallet_address, $request->wallet_network);
+        if (!$validation['valid']) {
+            return response()->json([
+                'success' => false,
+                'message' => $validation['message']
+            ], 422);
+        }
 
         $user = DB::table('aspnetusers')->where('email', auth()->user()->email)->first();
 
@@ -467,6 +554,15 @@ class Wallet extends Controller
         $wallet_name = $request->wallet_name;
         $wallet_status = $request->status;
 
+        // Validate wallet address format
+        $validation = $this->validateWalletAddress($wallet_address, $wallet_network);
+        if (!$validation['valid']) {
+            return response()->json([
+                'success' => false,
+                'message' => $validation['message']
+            ], 422);
+        }
+
         // Check for pending withdrawals
         $pendingWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet_id)->where('status', 0)->count();
 
@@ -540,6 +636,14 @@ class Wallet extends Controller
                 'error' => true,
                 'message' => 'Cannot delete wallet address with pending withdrawals.'
             ]);
+        }
+
+        // Validate wallet address format
+        if (isset($wallet_details['wallet_address']) && isset($wallet_details['wallet_network'])) {
+            $validation = $this->validateWalletAddress($wallet_details['wallet_address'], $wallet_details['wallet_network']);
+            if (!$validation['valid']) {
+                return redirect()->route('user-profile')->with('error', $validation['message']);
+            }
         }
 
         if ($wallet) {

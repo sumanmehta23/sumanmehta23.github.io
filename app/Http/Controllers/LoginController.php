@@ -35,9 +35,10 @@ class LoginController extends Controller
     // Show login form
     public function showLoginForm()
     {
-        // if (Auth::check()) {
-        //     return redirect()->route('dashboard');
-        // }
+        // Redirect authenticated users to dashboard
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
         return view('auth.login');
     }
 
@@ -265,6 +266,10 @@ class LoginController extends Controller
     }
     public function forgot_password()
     {
+        // Redirect authenticated users to dashboard
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
         return view('auth.forgot-password');
     }
     public function sendResetLink(Request $request)
@@ -453,6 +458,10 @@ class LoginController extends Controller
     }
     public function register()
     {
+        // Redirect authenticated users to dashboard
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
         $countries = Country::all();
         return view('auth.register', compact('countries'));
     }
