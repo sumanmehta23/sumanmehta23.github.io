@@ -72,7 +72,7 @@ class KycSyncController extends Controller
 
             // Find user by ID or email
             $user = $this->findUser($request->user_id, $request->user_email);
-        
+
             if (!$user) {
                 return response()->json([
                     'status' => false,
@@ -92,14 +92,13 @@ class KycSyncController extends Controller
                     'kyc_status' => $user->fresh()->kyc_verify
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('KYC Sync Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all()
             ]);
-            
+
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while syncing KYC data. Please try again.'
@@ -153,14 +152,13 @@ class KycSyncController extends Controller
                     'results' => $results
                 ]
             ]);
-
         } catch (\Exception $e) {
             Log::error('Bulk KYC Sync Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all()
             ]);
-            
+
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred during bulk sync. Please try again.'
@@ -172,15 +170,15 @@ class KycSyncController extends Controller
      * Find user by ID or email
      */
     private function findUser($userId = null, $userEmail = null)
-    {       
+    {
         if ($userId) {
             return User::find($userId);
         }
-        
+
         if ($userEmail) {
             return User::where('email', $userEmail)->first();
         }
-        
+
         return null;
     }
 
@@ -200,13 +198,13 @@ class KycSyncController extends Controller
             $usersByIds = User::whereIn('id', $request->user_ids)->get();
             $users = $users->merge($usersByIds);
         }
-        
+
         // Get users by emails
         if ($request->user_emails) {
             $usersByEmails = User::whereIn('email', $request->user_emails)->get();
             $users = $users->merge($usersByEmails);
         }
-        
+
         // Remove duplicates
         return $users->unique('id');
     }
@@ -232,7 +230,7 @@ class KycSyncController extends Controller
                     'user_id' => $user->id,
                     'error' => $e->getMessage()
                 ]);
-                
+
                 $results[] = [
                     'user_id' => $user->id,
                     'email' => $user->email,
@@ -251,10 +249,10 @@ class KycSyncController extends Controller
     private function performKycSync(User $user)
     {
         $email = $user->email;
-        
+
         // Try to find applicant by user email
         $applicantId = $this->getApplicantIdByEmail($email);
-    
+
         // Add debug logging for applicant ID retrieval
         Log::info('Applicant ID retrieval result', [
             'email' => $email,
@@ -262,7 +260,7 @@ class KycSyncController extends Controller
             'applicant_id' => $applicantId,
             'found_applicant' => !empty($applicantId)
         ]);
-        
+
         if (!$applicantId) {
             return [
                 'success' => false,
@@ -272,7 +270,7 @@ class KycSyncController extends Controller
 
         // Get applicant status from Sumsub
         $statusResponse = $this->getSumsubApplicantStatus($applicantId);
-        
+
         if (!$statusResponse) {
             return [
                 'success' => false,
@@ -282,7 +280,7 @@ class KycSyncController extends Controller
 
         // Get full applicant details
         $applicantDetails = $this->getSumsubApplicantDetails($applicantId);
-        
+
         // Create comprehensive response with all available data
         $comprehensiveResponse = [
             'applicant_id' => $applicantId,
@@ -346,7 +344,7 @@ class KycSyncController extends Controller
                 'reason' => $this->getKycStatusMessage($statusResponse)
             ];
             $this->logKycResponse($user, 'KYC_SYNC_NOT_APPROVED', $partialResponse);
-            
+
             return [
                 'success' => false,
                 'message' => $this->getKycStatusMessage($statusResponse)
@@ -364,7 +362,7 @@ class KycSyncController extends Controller
         // Update user's KYC status to verified
         // $user->update(['kyc_verify' => 1]);
 
-        // Fire Customer.io event for KYC verification
+        // Fire Omnisend event for KYC verification
         event(new KycVerifiedEvent($user));
 
         return [
@@ -378,9 +376,9 @@ class KycSyncController extends Controller
      */
     private function isKycApproved($statusResponse)
     {
-        return isset($statusResponse['reviewStatus']) 
+        return isset($statusResponse['reviewStatus'])
             && $statusResponse['reviewStatus'] == 'completed'
-            && isset($statusResponse['reviewResult']['reviewAnswer']) 
+            && isset($statusResponse['reviewResult']['reviewAnswer'])
             && $statusResponse['reviewResult']['reviewAnswer'] == 'GREEN';
     }
 
@@ -397,8 +395,10 @@ class KycSyncController extends Controller
             return 'KYC review is not completed yet.';
         }
 
-        if (!isset($statusResponse['reviewResult']['reviewAnswer']) 
-            || $statusResponse['reviewResult']['reviewAnswer'] != 'GREEN') {
+        if (
+            !isset($statusResponse['reviewResult']['reviewAnswer'])
+            || $statusResponse['reviewResult']['reviewAnswer'] != 'GREEN'
+        ) {
             return 'KYC review completed but not approved.';
         }
 
@@ -413,7 +413,7 @@ class KycSyncController extends Controller
         try {
             // Ensure payload is properly serialized
             $serializedPayload = is_array($payload) || is_object($payload) ? $payload : ['raw_data' => $payload];
-            
+
             $logEntry = KycLog::create([
                 'client_id' => $user->email,
                 'user_id' => $user->id,
@@ -430,7 +430,6 @@ class KycSyncController extends Controller
                 'has_applicant_id' => isset($serializedPayload['applicant_id']),
                 'payload_keys' => is_array($serializedPayload) ? array_keys($serializedPayload) : 'not_array'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to log KYC response', [
                 'user_id' => $user->id,
@@ -452,13 +451,12 @@ class KycSyncController extends Controller
         try {
             // Try to get applicant by external user ID (email)
             $applicantId = $this->getApplicantByExternalUserId($email);
-                
+
             if ($applicantId) {
                 return $applicantId;
             }
 
             return null;
-
         } catch (\Exception $e) {
             Log::error('Exception getting applicant by email', [
                 'email' => $email,
@@ -494,10 +492,10 @@ class KycSyncController extends Controller
                 'X-App-Access-Ts' => $timestamp,
                 'Accept' => 'application/json',
             ])->get('https://api.sumsub.com' . $apiUrl);
- 
+
             if ($response->status() == 200) {
                 $applicant = $response->json();
-                
+
                 // Use either id or inspectionId based on what's available
                 $applicantId = $applicant['list']['items'][0]['id'] ?? $applicant['list']['items'][0]['inspectionId'] ?? null;
 
@@ -513,7 +511,6 @@ class KycSyncController extends Controller
             }
 
             return null;
-
         } catch (\Exception $e) {
             Log::error('Exception getting applicant by external user ID', [
                 'external_user_id' => $externalUserId,

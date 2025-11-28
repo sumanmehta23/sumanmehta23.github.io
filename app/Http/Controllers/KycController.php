@@ -98,8 +98,8 @@ class KycController extends Controller
                 // Update user's KYC status to verified
                 $user->kyc_verify = 1;
                 $user->save();
-                
-                // Fire the KycVerifiedEvent for Customer.io integration
+
+                // Fire the KycVerifiedEvent for Omnisend integration
                 event(new KycVerifiedEvent($user));
 
                 $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
