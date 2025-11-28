@@ -193,12 +193,15 @@ class Users extends Controller
     {
         $user = auth()->user();
         $secretKey = config('services.sumsub.api_secret');
-        $timestamp = time();
+        $timestamp = time(); // Current timestamp in seconds
 
+        // Example values (replace with actual values as needed)
+        // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
         $appToken = config('services.sumsub.api_token');
-        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level';
-        $requestMethod = 'POST';
-        $requestBody = '';
+        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level'; // URI of the request
+        $requestMethod = 'POST'; // HTTP method
+        $requestBody = ''; // Add your request body if needed, empty for this example
+
         // Create the valueToSign string
         $valueToSign = $timestamp . $requestMethod . $apiUrl;
 
@@ -207,27 +210,43 @@ class Users extends Controller
         }
 
         // Compute HMAC SHA256 signature
-        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true);
+        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true); // Binary format
 
         // Convert binary signature to hexadecimal
         $signatureHex = bin2hex($signature);
+        // Initialize cURL
+        $curl = curl_init();
+        // Set cURL options
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.sumsub.com' . $apiUrl, // Full URL including hostname
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => $requestMethod,
+            CURLOPT_POSTFIELDS => $requestBody,
+            CURLOPT_HTTPHEADER => [
+                'X-App-Token: ' . $appToken,
+                'X-App-Access-Ts: ' . $timestamp,
+                'X-App-Access-Sig: ' . $signatureHex,
+            ],
+        ]);
+        // Execute cURL request and fetch response
+        $response = curl_exec($curl);
 
-        // Make HTTP request using Laravel's Http client
-        $response = Http::withHeaders([
-            'X-App-Token' => $appToken,
-            'X-App-Access-Ts' => $timestamp,
-            'X-App-Access-Sig' => $signatureHex,
-        ])->post('https://api.sumsub.com' . $apiUrl, $requestBody);
-
-        // Check for HTTP errors
-        if ($response->failed()) {
-            // return response()->json(['error' => 'Failed to connect to Sumsub API'], 500);
+        // Check for cURL errors
+        if (curl_errno($curl)) {
+            return response()->json(['error' => curl_error($curl)], 500);
         }
 
         // Parse the response
-        $auth = $response->json();
+        $auth = json_decode($response);
 
-        $token = $auth['token'] ?? null;
+        // Close cURL session
+        curl_close($curl);
+        $token = $auth->token ?? null;
         return view('sumsub', compact('token'));
     }
     public function sumsub_verify(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
