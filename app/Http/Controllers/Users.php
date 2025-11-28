@@ -193,15 +193,12 @@ class Users extends Controller
     {
         $user = auth()->user();
         $secretKey = config('services.sumsub.api_secret');
-        $timestamp = time(); // Current timestamp in seconds
+        $timestamp = time();
 
-        // Example values (replace with actual values as needed)
-        // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
         $appToken = config('services.sumsub.api_token');
-        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level'; // URI of the request
-        $requestMethod = 'POST'; // HTTP method
-        $requestBody = ''; // Add your request body if needed, empty for this example
-
+        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level';
+        $requestMethod = 'POST';
+        $requestBody = '';
         // Create the valueToSign string
         $valueToSign = $timestamp . $requestMethod . $apiUrl;
 
@@ -210,43 +207,27 @@ class Users extends Controller
         }
 
         // Compute HMAC SHA256 signature
-        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true); // Binary format
+        $signature = hash_hmac('sha256', $valueToSign, $secretKey, true);
 
         // Convert binary signature to hexadecimal
         $signatureHex = bin2hex($signature);
-        // Initialize cURL
-        $curl = curl_init();
-        // Set cURL options
-        curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.sumsub.com' . $apiUrl, // Full URL including hostname
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => $requestMethod,
-            CURLOPT_POSTFIELDS => $requestBody,
-            CURLOPT_HTTPHEADER => [
-                'X-App-Token: ' . $appToken,
-                'X-App-Access-Ts: ' . $timestamp,
-                'X-App-Access-Sig: ' . $signatureHex,
-            ],
-        ]);
-        // Execute cURL request and fetch response
-        $response = curl_exec($curl);
 
-        // Check for cURL errors
-        if (curl_errno($curl)) {
-            return response()->json(['error' => curl_error($curl)], 500);
+        // Make HTTP request using Laravel's Http client
+        $response = Http::withHeaders([
+            'X-App-Token' => $appToken,
+            'X-App-Access-Ts' => $timestamp,
+            'X-App-Access-Sig' => $signatureHex,
+        ])->post('https://api.sumsub.com' . $apiUrl, $requestBody);
+
+        // Check for HTTP errors
+        if ($response->failed()) {
+            // return response()->json(['error' => 'Failed to connect to Sumsub API'], 500);
         }
 
         // Parse the response
-        $auth = json_decode($response);
+        $auth = $response->json();
 
-        // Close cURL session
-        curl_close($curl);
-        $token = $auth->token ?? null;
+        $token = $auth['token'] ?? null;
         return view('sumsub', compact('token'));
     }
     public function sumsub_verify(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
@@ -376,7 +357,7 @@ class Users extends Controller
         // Ensure at least one identifier is provided
         if (!$request->user_id && !$request->user_email) {
             return response()->json([
-                'status' => 'false', 
+                'status' => 'false',
                 'message' => 'Either user_id or user_email is required.'
             ]);
         }
@@ -388,7 +369,7 @@ class Users extends Controller
         } elseif ($request->user_email) {
             $user = User::where('email', $request->user_email)->first();
         }
-        
+
         if (!$user) {
             return response()->json(['status' => 'false', 'message' => 'User not found.']);
         }
@@ -401,9 +382,9 @@ class Users extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
-                'status' => 'false', 
+                'status' => 'false',
                 'message' => 'Failed to sync KYC data: ' . $e->getMessage()
             ]);
         }
@@ -434,13 +415,13 @@ class Users extends Controller
                 $usersByIds = User::whereIn('id', $request->user_ids)->get();
                 $users = $users->merge($usersByIds);
             }
-            
+
             // Get users by emails
             if ($request->user_emails) {
                 $usersByEmails = User::whereIn('email', $request->user_emails)->get();
                 $users = $users->merge($usersByEmails);
             }
-            
+
             // Remove duplicates (in case same user was specified by both ID and email)
             $users = $users->unique('id');
         } else {
@@ -464,7 +445,7 @@ class Users extends Controller
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                
+
                 $results[] = [
                     'user_id' => $user->id,
                     'email' => $user->email,
@@ -490,17 +471,17 @@ class Users extends Controller
     private function syncKycFromSumsub(User $user, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         $email = $user->email;
-        
+
         // Try to find applicant by user email
         $applicantId = $this->getApplicantIdByEmail($email);
-        
+
         if (!$applicantId) {
             return ['status' => 'false', 'message' => 'No applicant found for this user in Sumsub.'];
         }
 
         // Get applicant status from Sumsub
         $statusResponse = $this->getSumsubApplicantStatus($applicantId);
-        
+
         if (!$statusResponse) {
             return ['status' => 'false', 'message' => 'Failed to get applicant status from Sumsub.'];
         }
@@ -516,10 +497,10 @@ class Users extends Controller
         // Check if review status is completed and approved
         if (isset($statusResponse['reviewStatus']) && $statusResponse['reviewStatus'] == 'completed') {
             if (isset($statusResponse['reviewResult']['reviewAnswer']) && $statusResponse['reviewResult']['reviewAnswer'] == 'GREEN') {
-                
+
                 // Get full applicant details
                 $applicantDetails = $this->getSumsubApplicantDetails($applicantId);
-                
+
                 if ($applicantDetails) {
                     // Log the applicant details
                     KycLog::create([
@@ -547,7 +528,6 @@ class Users extends Controller
                 }
 
                 return ['status' => 'true', 'message' => 'KYC status synced and verified successfully.'];
-                
             } else {
                 return ['status' => 'false', 'message' => 'KYC review completed but not approved (not GREEN status).'];
             }
@@ -591,7 +571,7 @@ class Users extends Controller
         }
 
         $applicants = $response->json();
-        
+
         // If applicants found, return the first one's ID
         if (isset($applicants['items']) && count($applicants['items']) > 0) {
             return $applicants['items'][0]['id'];
