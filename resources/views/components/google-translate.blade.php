@@ -81,6 +81,7 @@
         
         // Initialize all custom selects if they exist
         function initCustomSelects(selectIds) {
+            console.log("Initializing custom Google Translate selects:", selectIds);
             var current = currentLang();
             selectIds.forEach(function(id) {
                 var sel = document.getElementById(id);
