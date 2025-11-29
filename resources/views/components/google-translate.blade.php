@@ -52,7 +52,14 @@
             var v=getCookie('googtrans');
             return v? (v.split('/')[2]||'en') : 'en';
         }
+        
+        var translationInProgress = false;
+        
         function applyTranslation(code){
+            // Prevent multiple simultaneous calls
+            if (translationInProgress) return;
+            translationInProgress = true;
+            
             // Store target language in cookie for Google Translate
             var val = '/en/' + code;
             setCookie('googtrans', val, 365);
@@ -77,7 +84,7 @@
                 var sel = document.getElementById(id);
                 if(sel){
                     sel.value = current;
-                    //sel.addEventListener('change', function(){ applyTranslation(this.value); });
+                    sel.addEventListener('change', function(){ applyTranslation(this.value); });
                     
                     // Update flag icon after setting value
                     var flagPreviewId = '';
