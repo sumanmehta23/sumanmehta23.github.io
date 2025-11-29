@@ -58,12 +58,14 @@
                         console.log("Changing language to:", code);
 
             var val = '/en/' + code;
+            console.log("Setting cookie value to:", val);
             setCookie('googtrans', val, 365);
             var host = location.hostname;
+            console.log("Current hostname:", host);
             if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
                 setCookie('googtrans', val, 365, '.' + host);
             }
-
+ 
             // Minimal, reliable behaviour: always reload page so Google applies
             // the new language based on the updated cookie.
             setTimeout(function () {
