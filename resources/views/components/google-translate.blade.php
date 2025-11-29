@@ -53,31 +53,26 @@
             return v? (v.split('/')[2]||'en') : 'en';
         }
         function applyTranslation(code) {
-            console.log("Changing language to:", code);
+    console.log("Changing language to:", code);
 
-            // Mark translation as in progress globally
-            window.translationInProgress = true;
+    var val = "/en/" + code;
+    console.log("Setting cookie value to:", val);
 
-            // Store language in cookie
-            var val = '/en/' + code;
-            console.log("Setting cookie value to:", val);
+    // Set cookies
+    setCookie("googtrans", val, 365);
+    var host = location.hostname;
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+        setCookie("googtrans", val, 365, "." + host);
+    }
 
-            setCookie('googtrans', val, 365);
+    // Reload AFTER cookie is fully saved
+    setTimeout(function () {
+        console.log("Timeout complete — reloading page now.");
+        window.localStorage.setItem("force_google_translate_reload", "1");
+        location.reload();
+    }, 150);
+}
 
-            var host = location.hostname;
-            console.log("Current hostname:", host);
-
-            if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-                setCookie('googtrans', val, 365, '.' + host);
-            }
-
-            // RELOAD ONLY AFTER COOKIE IS WRITTEN
-            setTimeout(function () {
-                console.log("Timeout complete — reloading page now.");
-                window.translationInProgress = false;
-                location.reload();
-            }, 120); // 120ms is safer
-        }
 
         
         // Make functions globally available
@@ -129,4 +124,20 @@
         }
     })();
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (localStorage.getItem("force_google_translate_reload") === "1") {
+
+        console.log("Reinitializing Google Translate after reload...");
+
+        // Force Google Translate to re-run
+        if (typeof google !== "undefined" && google.translate) {
+            googleTranslateElementInit(); 
+        }
+
+        localStorage.removeItem("force_google_translate_reload");
+    }
+});
+</script>
+
 
