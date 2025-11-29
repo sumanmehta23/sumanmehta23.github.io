@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Account;
-use App\Services\UniversalMT5Service;
-use App\MT5\MTRetCode;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\MT5\MTRetCode;
+use App\Models\Account;
+use App\Models\BonusTransaction;
+use Illuminate\Support\Facades\Log;
+use App\Services\UniversalMT5Service;
 
 class BalanceSyncService
 {
