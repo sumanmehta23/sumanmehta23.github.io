@@ -77,7 +77,7 @@
                 var sel = document.getElementById(id);
                 if(sel){
                     sel.value = current;
-                    sel.addEventListener('change', function(){ applyTranslation(this.value); });
+                    //sel.addEventListener('change', function(){ applyTranslation(this.value); });
                     
                     // Update flag icon after setting value
                     var flagPreviewId = '';
