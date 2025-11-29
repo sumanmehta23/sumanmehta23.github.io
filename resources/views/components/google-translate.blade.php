@@ -68,6 +68,11 @@
                 setCookie('googtrans', val, 365, '.' + host);
             }
 
+            // Reset flag after a short delay to allow the next translation
+            setTimeout(function() {
+                translationInProgress = false;
+            }, 500);
+
             // Minimal, reliable behaviour: always reload page so Google applies
             // the new language based on the updated cookie.
             location.reload();
