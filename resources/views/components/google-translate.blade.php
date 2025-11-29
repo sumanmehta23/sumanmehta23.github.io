@@ -52,28 +52,19 @@
             var v=getCookie('googtrans');
             return v? (v.split('/')[2]||'en') : 'en';
         }
-        function applyTranslation(code) {
-    console.log("Changing language to:", code);
+        function applyTranslation(code){
+            // Store target language in cookie for Google Translate
+            var val = '/en/' + code;
+            setCookie('googtrans', val, 365);
+            var host = location.hostname;
+            if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+                setCookie('googtrans', val, 365, '.' + host);
+            }
 
-    var val = "/en/" + code;
-    console.log("Setting cookie value to:", val);
-
-    // Set cookies
-    setCookie("googtrans", val, 365);
-    var host = location.hostname;
-    if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-        setCookie("googtrans", val, 365, "." + host);
-    }
-
-    // Reload AFTER cookie is fully saved
-    setTimeout(function () {
-        console.log("Timeout complete — reloading page now.");
-        window.localStorage.setItem("force_google_translate_reload", "1");
-        location.reload();
-    }, 150);
-}
-
-
+            // Minimal, reliable behaviour: always reload page so Google applies
+            // the new language based on the updated cookie.
+            location.reload();
+        }
         
         // Make functions globally available
         window.__googleTranslateApply = applyTranslation;
@@ -81,7 +72,6 @@
         
         // Initialize all custom selects if they exist
         function initCustomSelects(selectIds) {
-            console.log("Initializing custom Google Translate selects:", selectIds);
             var current = currentLang();
             selectIds.forEach(function(id) {
                 var sel = document.getElementById(id);
@@ -124,20 +114,4 @@
         }
     })();
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    if (localStorage.getItem("force_google_translate_reload") === "1") {
-
-        console.log("Reinitializing Google Translate after reload...");
-
-        // Force Google Translate to re-run
-        if (typeof google !== "undefined" && google.translate) {
-            googleTranslateElementInit(); 
-        }
-
-        localStorage.removeItem("force_google_translate_reload");
-    }
-});
-</script>
-
 
