@@ -52,28 +52,33 @@
             var v=getCookie('googtrans');
             return v? (v.split('/')[2]||'en') : 'en';
         }
-        function applyTranslation(code){
-        var translationInProgress = false;
-            // Store target language in cookie for Google Translate
-                        console.log("Changing language to:", code);
+        function applyTranslation(code) {
+            console.log("Changing language to:", code);
 
+            // Mark translation as in progress globally
+            window.translationInProgress = true;
+
+            // Store language in cookie
             var val = '/en/' + code;
             console.log("Setting cookie value to:", val);
+
             setCookie('googtrans', val, 365);
+
             var host = location.hostname;
             console.log("Current hostname:", host);
+
             if (!/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
                 setCookie('googtrans', val, 365, '.' + host);
             }
- 
-            // Minimal, reliable behaviour: always reload page so Google applies
-            // the new language based on the updated cookie.
-            setTimeout(function () {
-                        console.log("Timeout complete — reloading page now.");
 
-            }, 80);
-              location.reload();
+            // RELOAD ONLY AFTER COOKIE IS WRITTEN
+            setTimeout(function () {
+                console.log("Timeout complete — reloading page now.");
+                window.translationInProgress = false;
+                location.reload();
+            }, 120); // 120ms is safer
         }
+
         
         // Make functions globally available
         window.__googleTranslateApply = applyTranslation;
