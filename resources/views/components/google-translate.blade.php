@@ -53,6 +53,8 @@
             return v? (v.split('/')[2]||'en') : 'en';
         }
         function applyTranslation(code){
+            console.log("Changing language to:", code);
+
             // Store target language in cookie for Google Translate
             var val = '/en/' + code;
             setCookie('googtrans', val, 365);
@@ -64,9 +66,9 @@
             // Minimal, reliable behaviour: always reload page so Google applies
             // the new language based on the updated cookie.
             setTimeout(function () {
-                translationInProgress = false;
+                console.log("Timeout complete — reloading page now.");
                 location.reload();
-            }, 80);
+            }, 200);
         }
         
         // Make functions globally available
