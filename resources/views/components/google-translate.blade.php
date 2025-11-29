@@ -52,14 +52,7 @@
             var v=getCookie('googtrans');
             return v? (v.split('/')[2]||'en') : 'en';
         }
-        
-        var translationInProgress = false;
-        
         function applyTranslation(code){
-            // Prevent multiple simultaneous calls
-            if (translationInProgress) return;
-            translationInProgress = true;
-            
             // Store target language in cookie for Google Translate
             var val = '/en/' + code;
             setCookie('googtrans', val, 365);
@@ -68,14 +61,12 @@
                 setCookie('googtrans', val, 365, '.' + host);
             }
 
-            // Reset flag after a short delay to allow the next translation
-            setTimeout(function() {
-                translationInProgress = false;
-            }, 500);
-
             // Minimal, reliable behaviour: always reload page so Google applies
             // the new language based on the updated cookie.
-            location.reload();
+            setTimeout(function () {
+                translationInProgress = false;
+                location.reload();
+            }, 80);
         }
         
         // Make functions globally available
