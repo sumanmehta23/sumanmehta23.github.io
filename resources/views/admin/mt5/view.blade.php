@@ -8,6 +8,21 @@
         .pointer{
             cursor: pointer;
         }
+        .export-all-btn-header {
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 2px solid #dc3545;
+            color: #dc3545;
+            background-color: transparent;
+            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+        }
+        .export-all-btn-header:hover {
+            background-color: #dc3545;
+            color: #fff;
+            border-color: #dc3545;
+        }
     </style>
     <?php
 
@@ -765,6 +780,51 @@ if ($getUser) {
                                 </div>
                             </div>
                         @endcan
+                        @can('trade_withdrawals:viewAny')
+                            <div class="col-12">
+                                <div class="card custom-card">
+                                    <div class="card-header justify-content-between">
+                                        <div class="card-title">
+                                            TRADES
+                                            <div class="d-inline-flex gap-2 ms-3">
+                                                <a href="/admin/export-all-trades?id=<?= $account->id ?>" 
+                                                   class="export-all-btn-header btn btn-sm">
+                                                    EXPORT ALL
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        data-bs-toggle="modal" data-bs-target="#exportFilterModal">
+                                                    Export with filter
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="prism-toggle">
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table text-nowrap" id="tableTrades">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Order ID</th>
+                                                        <th>Symbol</th>
+                                                        <th>Type</th>
+                                                        <th>Volume</th>
+                                                        <th>Open Price</th>
+                                                        <th>Close Price</th>
+                                                        <th>Profit</th>
+                                                        <th>Status</th>
+                                                        <th>Open Time</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -778,6 +838,34 @@ if ($getUser) {
             </div>
         </div>
         <?php } ?>
+
+        <!-- Export Filter Modal -->
+        <div class="modal fade" id="exportFilterModal" tabindex="-1" aria-labelledby="exportFilterModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportFilterModalLabel">Export Trades with Filter</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="exportFilterForm">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="date_from" class="form-label">Date From <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="date_from" name="date_from" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="date_to" class="form-label">Date To <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="date_to" name="date_to" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Export</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
 
 
@@ -1121,6 +1209,72 @@ if ($getUser) {
                     window.open(url, '_blank');
                 }
             }
+
+            // Initialize Trades DataTable
+            $('#tableTrades').DataTable({
+                processing: true,
+                serverSide: true,
+                searching: false,
+                order: [[8, 'desc']], // Sort by Open Time descending
+                lengthChange: true,
+                pageLength: 10,
+                dom: '<"row" <"col"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
+                ajax: {
+                    url: '/admin/getTradeHistory',
+                    type: 'GET',
+                    data: {
+                        id: '<?= $account->id ?>'
+                    },
+                    dataSrc: function(json) {
+                        return json.data;
+                    }
+                },
+                columns: [
+                    { data: 'order_id_display', name: 'order_id', title: 'Order ID' },
+                    { data: 'symbol_display', name: 'symbol', title: 'Symbol' },
+                    { data: 'type_display', name: 'type', title: 'Type' },
+                    { data: 'volume_display', name: 'volume', title: 'Volume' },
+                    { data: 'open_price_display', name: 'open_price', title: 'Open Price' },
+                    { data: 'close_price_display', name: 'close_price', title: 'Close Price' },
+                    { data: 'profit_display', name: 'profit', title: 'Profit' },
+                    { data: 'status_display', name: 'status', title: 'Status' },
+                    { data: 'open_time_display', name: 'open_time', title: 'Open Time' },
+                    { data: 'action', name: 'action', title: 'Action', orderable: false, searchable: false }
+                ]
+            });
+
+            // Export Filter Form Handler
+            document.getElementById('exportFilterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const dateFrom = document.getElementById('date_from').value;
+                const dateTo = document.getElementById('date_to').value;
+                const accountId = '<?= $account->id ?>';
+                
+                // Validation
+                if (!dateFrom || !dateTo) {
+                    alert('Please select both start and end dates.');
+                    return;
+                }
+                
+                if (new Date(dateFrom) > new Date(dateTo)) {
+                    alert('Start date cannot be greater than end date.');
+                    return;
+                }
+                
+                // Build export URL
+                const exportUrl = `/admin/export-filtered-trades?id=${accountId}&date_from=${dateFrom}&date_to=${dateTo}`;
+                
+                // Close modal
+                const modalElement = document.getElementById('exportFilterModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Trigger download
+                window.location.href = exportUrl;
+            });
 
         </script>
     @endsection

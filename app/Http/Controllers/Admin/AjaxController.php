@@ -25,6 +25,7 @@ use App\Helpers\AccountHelper;
 use App\Models\WalletWithdraw;
 
 use App\Models\TradeWithdrawals;
+use App\Models\Trade;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
 use Illuminate\Support\Facades\Log;
@@ -1668,6 +1669,277 @@ class AjaxController extends Controller
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function getTradeHistory(Request $request)
+    {
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+        $userGroups = session('user_groups');
+        
+        $query = Trade::select('trades.*')
+            ->with(['account.user']);
+
+        // Filter by account ID if provided
+        if (isset($request->id)) {
+            $query->where('account_id', $request->id);
+        } else {
+            // Country-based filtering (if user_groups contains country codes)
+            if ($role !== "Super Admin" && $userGroups) {
+                $allowedCountries = explode(',', $userGroups);
+                if (!empty($allowedCountries)) {
+                    $query->whereHas('account.user', function ($q) use ($allowedCountries) {
+                        $q->whereIn('country', $allowedCountries);
+                    });
+                }
+            }
+
+            // Relationship Manager filtering
+            if ($role === "Relationship Manager" && $alogin) {
+                $query->whereHas('account.user.employee', function ($q) use ($alogin) {
+                    $q->where('relationship_manager.rm_id', $alogin);
+                });
+            }
+        }
+
+        if ($request->ajax()) {
+            return DataTables::of($query)
+                ->addColumn('order_id_display', function ($row) {
+                    return $row->order_id ?? $row->code ?? '-';
+                })
+                ->addColumn('symbol_display', function ($row) {
+                    return '<span class="fw-semibold">' . ($row->symbol ?? '-') . '</span>';
+                })
+                ->addColumn('type_display', function ($row) {
+                    $type = strtoupper($row->type ?? '');
+                    $badgeClass = $type === 'BUY' ? 'badge bg-success' : 'badge bg-danger';
+                    return '<span class="' . $badgeClass . '">' . $type . '</span>';
+                })
+                ->addColumn('volume_display', function ($row) {
+                    return number_format($row->volume ?? 0, 2);
+                })
+                ->addColumn('open_price_display', function ($row) {
+                    return number_format($row->open_price ?? 0, 5);
+                })
+                ->addColumn('close_price_display', function ($row) {
+                    return $row->close_price ? number_format($row->close_price, 5) : '-';
+                })
+                ->addColumn('profit_display', function ($row) {
+                    $profit = $row->profit ?? 0;
+                    $color = $profit >= 0 ? 'text-success' : 'text-danger';
+                    return '<span class="' . $color . '">$' . number_format($profit, 2) . '</span>';
+                })
+                ->addColumn('status_display', function ($row) {
+                    $status = strtolower($row->status ?? '');
+                    $badgeClass = 'badge bg-secondary';
+                    if ($status === 'closed') {
+                        $badgeClass = 'badge bg-success';
+                    } elseif ($status === 'open') {
+                        $badgeClass = 'badge bg-primary';
+                    } elseif ($status === 'cancelled') {
+                        $badgeClass = 'badge bg-danger';
+                    }
+                    return '<span class="' . $badgeClass . '">' . ucfirst($row->status ?? '') . '</span>';
+                })
+                ->addColumn('open_time_display', function ($row) {
+                    if (!$row->open_time) return '-';
+                    $date = Carbon::parse($row->open_time)->addHours(3);
+                    return '<div class="d-grid">
+                        <div class="date">' . $date->format('Y-m-d') . '</div>
+                        <div class="time text-muted">' . $date->format('H:i:s') . '</div>
+                    </div>';
+                })
+                ->addColumn('action', function ($row) {
+                    return "<a href='#' class='btn btn-sm btn-info' title='View Details'><i class='fe fe-eye'></i></a>";
+                })
+                ->orderColumn('open_time', function ($query, $order) {
+                    $query->orderBy('trades.open_time', $order);
+                })
+                ->orderColumn('order_id', function ($query, $order) {
+                    $query->orderBy('trades.order_id', $order);
+                })
+                ->orderColumn('symbol', function ($query, $order) {
+                    $query->orderBy('trades.symbol', $order);
+                })
+                ->orderColumn('profit', function ($query, $order) {
+                    $query->orderBy('trades.profit', $order);
+                })
+                ->rawColumns(['order_id_display', 'symbol_display', 'type_display', 'profit_display', 'status_display', 'open_time_display', 'action'])
+                ->make(true);
+        }
+
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    public function exportAllTrades(Request $request)
+    {
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+        $userGroups = session('user_groups');
+        $accountId = $request->get('id');
+        
+        // Build filename with account info if accountId provided
+        if ($accountId) {
+            $account = Account::with('user')->find($accountId);
+            if ($account && $account->user) {
+                // Format name: replace spaces with underscores
+                $accountName = str_replace(' ', '_', $account->user->fullname ?? 'Unknown');
+                $accountCode = $account->code ?? 'N/A';
+                $fileName = 'lqh_' . $accountName . '_' . $accountCode . '.csv';
+            } else {
+                $fileName = 'lqh_Trades_' . date('Y-m-d') . '.csv';
+            }
+        } else {
+            $fileName = 'lqh_Trades_All_' . date('Y-m-d') . '.csv';
+        }
+
+        return Response::streamDownload(function () use ($role, $alogin, $userGroups, $accountId) {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Order ID', 'Symbol', 'Type', 'Volume', 'Open Price', 'Close Price', 'Profit', 'Commission', 'Swap', 'Status', 'Open Time', 'Close Time']);
+
+            // Build query
+            $query = Trade::select('trades.*')
+                ->with(['account.user']);
+
+            if ($accountId) {
+                $query->where('account_id', $accountId);
+            } else {
+                // Country-based filtering
+                if ($role !== "Super Admin" && $userGroups) {
+                    $allowedCountries = explode(',', $userGroups);
+                    if (!empty($allowedCountries)) {
+                        $query->whereHas('account.user', function ($q) use ($allowedCountries) {
+                            $q->whereIn('country', $allowedCountries);
+                        });
+                    }
+                }
+
+                // Relationship Manager filtering
+                if ($role === "Relationship Manager" && $alogin) {
+                    $query->whereHas('account.user.employee', function ($q) use ($alogin) {
+                        $q->where('relationship_manager.rm_id', $alogin);
+                    });
+                }
+            }
+
+            // Fetch trades data in chunks
+            $query->orderBy('open_time', 'desc')
+                ->chunk(500, function ($trades) use ($handle) {
+                    foreach ($trades as $trade) {
+                        fputcsv($handle, [
+                            $trade->order_id ?? $trade->code ?? '',
+                            $trade->symbol ?? '',
+                            strtoupper($trade->type ?? ''),
+                            number_format($trade->volume ?? 0, 2),
+                            number_format($trade->open_price ?? 0, 5),
+                            $trade->close_price ? number_format($trade->close_price, 5) : '',
+                            number_format($trade->profit ?? 0, 2),
+                            number_format($trade->commission ?? 0, 2),
+                            number_format($trade->swap ?? 0, 2),
+                            ucfirst($trade->status ?? ''),
+                            $trade->open_time ? Carbon::parse($trade->open_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                            $trade->close_time ? Carbon::parse($trade->close_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
+    public function exportFilteredTrades(Request $request)
+    {
+        $request->validate([
+            'date_from' => 'required|date',
+            'date_to' => 'required|date|after_or_equal:date_from',
+        ]);
+
+        $role = session('userData')['userRole'] ?? null;
+        $alogin = session('userData')['id'] ?? null;
+        $userGroups = session('user_groups');
+        $accountId = $request->get('id');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        
+        // Build filename with account info and date range
+        if ($accountId) {
+            $account = Account::with('user')->find($accountId);
+            if ($account && $account->user) {
+                // Format name: replace spaces with underscores
+                $accountName = str_replace(' ', '_', $account->user->fullname ?? 'Unknown');
+                $accountCode = $account->code ?? 'N/A';
+                $fileName = 'lqh_' . $accountName . '_' . $accountCode . '_' . $dateFrom . '_to_' . $dateTo . '.csv';
+            } else {
+                $fileName = 'lqh_Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+            }
+        } else {
+            $fileName = 'lqh_Trades_Filtered_' . $dateFrom . '_to_' . $dateTo . '.csv';
+        }
+
+        return Response::streamDownload(function () use ($role, $alogin, $userGroups, $accountId, $dateFrom, $dateTo) {
+            $handle = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($handle, ['Order ID', 'Symbol', 'Type', 'Volume', 'Open Price', 'Close Price', 'Profit', 'Commission', 'Swap', 'Status', 'Open Time', 'Close Time']);
+
+            // Build query
+            $query = Trade::select('trades.*')
+                ->with(['account.user'])
+                ->whereDate('open_time', '>=', $dateFrom)
+                ->whereDate('open_time', '<=', $dateTo);
+
+            if ($accountId) {
+                $query->where('account_id', $accountId);
+            } else {
+                // Country-based filtering
+                if ($role !== "Super Admin" && $userGroups) {
+                    $allowedCountries = explode(',', $userGroups);
+                    if (!empty($allowedCountries)) {
+                        $query->whereHas('account.user', function ($q) use ($allowedCountries) {
+                            $q->whereIn('country', $allowedCountries);
+                        });
+                    }
+                }
+
+                // Relationship Manager filtering
+                if ($role === "Relationship Manager" && $alogin) {
+                    $query->whereHas('account.user.employee', function ($q) use ($alogin) {
+                        $q->where('relationship_manager.rm_id', $alogin);
+                    });
+                }
+            }
+
+            // Fetch trades data in chunks
+            $query->orderBy('open_time', 'desc')
+                ->chunk(500, function ($trades) use ($handle) {
+                    foreach ($trades as $trade) {
+                        fputcsv($handle, [
+                            $trade->order_id ?? $trade->code ?? '',
+                            $trade->symbol ?? '',
+                            strtoupper($trade->type ?? ''),
+                            number_format($trade->volume ?? 0, 2),
+                            number_format($trade->open_price ?? 0, 5),
+                            $trade->close_price ? number_format($trade->close_price, 5) : '',
+                            number_format($trade->profit ?? 0, 2),
+                            number_format($trade->commission ?? 0, 2),
+                            number_format($trade->swap ?? 0, 2),
+                            ucfirst($trade->status ?? ''),
+                            $trade->open_time ? Carbon::parse($trade->open_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                            $trade->close_time ? Carbon::parse($trade->close_time)->addHours(3)->format('Y-m-d H:i:s') : '',
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     public function getInternalTransfer2(Request $request)
