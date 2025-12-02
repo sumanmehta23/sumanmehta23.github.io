@@ -801,7 +801,7 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('status', 'WoW! Your Wallet Address is now Verified');
+                return redirect()->route('trade-withdrawal')->with('success', 'WoW! Your Wallet Address is now Verified');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
             }
