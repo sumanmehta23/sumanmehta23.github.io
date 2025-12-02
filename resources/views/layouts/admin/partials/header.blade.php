@@ -329,7 +329,8 @@ if (app()->environment('local')) {
                                 auth()->user()->can('wallet_withdrawal:viewAny') ||
                                 auth()->user()->can('trade_deposit:viewAny') ||
                                 auth()->user()->can('trade_withdrawals:viewAny') ||
-                                auth()->user()->can('internal_transfer:viewAny')
+                                auth()->user()->can('internal_transfer:viewAny') ||
+                                auth()->user()->can('trade:viewAny')
                             )
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">FINANCE</span>
@@ -419,6 +420,21 @@ if (app()->environment('local')) {
                                 </ul>
                             </li>
                         @endif
+
+                        @can('trade_deposit:viewAny')
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">TRADES</span>
+                            </li>
+
+                            <li class="slide menu-item-main ">
+                                <a href="{{ route('admin.trades.index') }}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-trending-up"></i>
+                                    <span class="side-menu__label">Trades</span>
+                                </a>
+                                <ul class="slide-menu child1"></ul>
+                            </li>
+                        @endcan
+
                         @if (auth()->user()->can('ib:viewAny') || auth()->user()->can('ib:manageSettings'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">INTRODUCING BROKER</span>

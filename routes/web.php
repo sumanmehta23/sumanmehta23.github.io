@@ -384,6 +384,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
             ->middleware('check.permissions:trade_withdrawals:viewAny');
 
+        // All Trades (server-side DataTable)
+        Route::get('/trades', [\App\Http\Controllers\Admin\TradeController::class, 'index'])
+            ->name('trades.index')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/data', [\App\Http\Controllers\Admin\TradeController::class, 'getTradesData'])
+            ->name('trades.data')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/{trade}', [\App\Http\Controllers\Admin\TradeController::class, 'show'])
+            ->name('trades.show')
+            ->middleware('check.permissions:trade_deposit:viewAny');
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
