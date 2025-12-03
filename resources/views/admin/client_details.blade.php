@@ -210,7 +210,6 @@
             </div>
         </div>
     </div>
-    
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -1478,6 +1477,33 @@
                                             </div>
                                             <div class="col-6">
                                                 <div class="card custom-card">
+                                                    <div class="card-header justify-content-between">
+                                                        <div class="card-title">Client Wallet Details</div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="table-responsive">
+                                                            <table class="table text-nowrap" id="tableClientWallets">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th scope="col">Created On</th>
+                                                                        <th scope="col">Wallet Name</th>
+                                                                        <th scope="col">Currency</th>
+                                                                        <th scope="col">Network</th>
+                                                                        <th scope="col">Address</th>
+                                                                        <th scope="col">Verified</th>
+                                                                        <th scope="col">Status</th>
+                                                                        <th scope="col">Action</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="card custom-card">
                                                     <div class="card-header">
                                                         <div class="card-title">Client Documents</div>
                                                     </div>
@@ -1765,6 +1791,58 @@
                         {
                             data: 'status',
                             name: 'status'
+                        }
+                    ]
+                });
+
+                $('#tableClientWallets').DataTable({
+                    "ajax": {
+                        "url": "/admin/ajax",
+                        "type": "GET",
+                        data: {
+                            action: 'getClientWallets',
+                            id: '{{ $user->id }}'
+                        },
+                    },
+                    "order": [
+                        [0, 'desc']
+                    ],
+                    columns: [{
+                            data: 'created_on',
+                            name: 'date'
+                        },
+                        {
+                            data: 'wallet_name',
+                            name: 'wallet_name'
+                        },
+                        {
+                            data: 'wallet_currency',
+                            name: 'wallet_currency'
+                        },
+                        {
+                            data: 'wallet_network',
+                            name: 'wallet_network'
+                        },
+                        {
+                            data: 'wallet_address',
+                            name: 'wallet_address',
+                            render: function(data) {
+                                if (!data) return '<span class="text-muted">N/A</span>';
+                                return '<code class="text-truncate" style="max-width: 150px; display: inline-block;">' + data + '</code>';
+                            }
+                        },
+                        {
+                            data: 'verified',
+                            name: 'verified'
+                        },
+                        {
+                            data: 'status',
+                            name: 'status'
+                        },
+                        {
+                            data: 'action',
+                            name: 'action',
+                            orderable: false
                         }
                     ]
                 });
@@ -2191,6 +2269,125 @@
                     });
                 });
 
+
+                // Wallet Verify Handler
+                $(document).on('click', '.verifyWallet', function(e) {
+                    e.preventDefault();
+                    var walletId = $(this).data('wallet-id');
+
+                    Swal.fire({
+                        title: "Verify Wallet?",
+                        text: "Are you sure you want to verify this wallet?",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, verify it!"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: "/admin/ajax",
+                                type: "POST",
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                data: {
+                                    action: 'verifyClientWallet',
+                                    wallet_id: walletId,
+                                    user_id: '{{ $user->id }}'
+                                },
+                                success: function(response) {
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: "Success",
+                                        text: response.message || "Wallet verified successfully"
+                                    }).then(() => {
+                                        $('#tableClientWallets').DataTable().ajax.reload();
+                                    });
+                                },
+                                error: function(xhr) {
+                                    const err = xhr.responseJSON;
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Error",
+                                        text: err?.message || "Failed to verify wallet"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Wallet Delete Handler
+                $(document).on('click', '.deleteWallet', function(e) {
+                    e.preventDefault();
+                    var walletId = $(this).data('wallet-id');
+                    var walletName = $(this).data('wallet-name');
+
+                    Swal.fire({
+                        title: "Delete Wallet?",
+                        text: "Are you sure you want to delete the wallet '" + walletName + "'? This action cannot be undone.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#dc3545",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, delete it!"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: "/admin/ajax",
+                                type: "POST",
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                data: {
+                                    action: 'deleteClientWallet',
+                                    wallet_id: walletId,
+                                    user_id: '{{ $user->id }}'
+                                },
+                                dataType: 'json',
+                                success: function(response) {
+                                    // Extract the actual data from the response
+                                    let data = response.original || response;
+                                    if (data.success) {
+                                        Swal.fire({
+                                            icon: "success",
+                                            title: "Success",
+                                            text: data.message || "Wallet deleted successfully"
+                                        }).then(() => {
+                                            $('#tableClientWallets').DataTable().ajax.reload();
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: "error",
+                                            title: "Error",
+                                            text: data.message || "Failed to delete wallet"
+                                        });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    console.log('Error response:', xhr);
+                                    let errorMessage = "Failed to delete wallet. It may have pending withdrawals.";
+
+                                    // Try to extract error message from response
+                                    if (xhr.responseJSON) {
+                                        if (xhr.responseJSON.message) {
+                                            errorMessage = xhr.responseJSON.message;
+                                        } else if (xhr.responseJSON.original && xhr.responseJSON.original.message) {
+                                            errorMessage = xhr.responseJSON.original.message;
+                                        }
+                                    }
+
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Error",
+                                        text: errorMessage
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
             });
         </script>
     @endsection
