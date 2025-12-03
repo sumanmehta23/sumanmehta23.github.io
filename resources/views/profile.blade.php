@@ -484,6 +484,7 @@
                                                             </table>
                                                         </div>
                                                         <div class="mt-3 d-flex justify-content-end">
+                                                            
                                                             {{ $bank_accounts->fragment('wallets')->links('pagination::bootstrap-5') }}
                                                         </div>
                                                     </div>
