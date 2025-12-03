@@ -114,6 +114,11 @@ if (app()->environment('local')) {
     @if (app()->environment('local'))
         <div
             style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
+            <b>LOCAL ENVIRONMENT</b>
+        </div>
+        @elseif (app()->environment('development'))
+        <div
+            style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
             <b>DEV ENVIRONMENT</b>
         </div>
     @endif
