@@ -158,6 +158,7 @@ class TradeWithdrawal extends Controller
                                 AND admin_remark NOT LIKE '%Promo Bonus%'
                                 AND admin_remark NOT LIKE '%Promo Deduction%'
                                 AND admin_remark NOT LIKE '%Promo Addition%'
+                                AND admin_remark NOT LIKE '%Bonus Pay Off%'
                                 THEN bonus_amount
                                 ELSE 0
                             END) AS total_bonus,
