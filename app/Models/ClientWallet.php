@@ -40,5 +40,15 @@ class ClientWallet extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+     public function withdrawals()
+    {
+        return $this->hasMany(TradeWithdrawals::class, 'client_wallet_id');
+    }
+
+    public function pendingWithdrawals()
+    {
+        return $this->hasMany(TradeWithdrawals::class, 'client_wallet_id')->where('status', 0);
+    }
+
 
 }
