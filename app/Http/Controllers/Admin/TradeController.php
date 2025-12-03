@@ -81,8 +81,15 @@ class TradeController extends Controller
             })
             ->addColumn('account_code', function ($row) {
                 $code = optional($row->account)->code;
+                $accountId = $row->account_id;
 
-                return $code && strtolower($code) !== 'null' ? $code : 'N/A';
+                if (!$code || strtolower($code) === 'null' || !$accountId) {
+                    return 'N/A';
+                }
+
+                // Use URL helper to match the pattern used in other admin views
+                $url = url("/admin/view_account_details/{$accountId}");
+                return "<a href=\"{$url}\" class=\"text-primary\" title=\"View Account Details\">{$code}</a>";
             })
 
             ->addColumn('order_id_display', fn ($row) => $row->order_id ?? $row->code)
@@ -155,6 +162,7 @@ class TradeController extends Controller
                 'profit_display',
                 'status_display',
                 'open_time_display',
+                'account_code',
                 'action',
             ])
             ->make(true);
