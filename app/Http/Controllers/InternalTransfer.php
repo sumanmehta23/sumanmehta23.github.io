@@ -7,15 +7,16 @@ use App\Models\Account;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use App\Models\TotalBalance;
-use App\Services\UniversalMT5Service;
-use Illuminate\Http\Request;
 use App\Models\TradeDeposit;
+use Illuminate\Http\Request;
 use App\Helpers\AccountHelper;
+use App\Models\BonusTransaction;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Services\UniversalMT5Service;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
 
 class InternalTransfer extends Controller
@@ -106,6 +107,12 @@ class InternalTransfer extends Controller
         }])->firstOrFail();
         // dump($fromAccount);
         //         dd($toAccount->accountType->ac_group);
+
+
+        Artisan::call('app:sync-account-balances', [
+            '--accounts' => $fromAccount->code,
+            '--force' => true
+        ]);
 
         $total_bonus = BonusTransaction::where('account_id', $fromAccount->id)
             ->where(function ($query) {

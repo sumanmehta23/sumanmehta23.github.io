@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Account;
-use App\Services\UniversalMT5Service;
-use App\MT5\MTRetCode;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\MT5\MTRetCode;
+use App\Models\Account;
+use App\Models\BonusTransaction;
+use Illuminate\Support\Facades\Log;
+use App\Services\UniversalMT5Service;
 
 class BalanceSyncService
 {
@@ -174,22 +175,13 @@ class BalanceSyncService
 
         $account->update($updateData);
 
-        // Log significant changes
-        if ($hasChanges) {
-            $balanceDiff = $previousBalance ? $currentBalance - $previousBalance : 0;
-            $equityDiff = $previousEquity ? $currentEquity - $previousEquity : 0;
-
-            Log::info("Balance change detected for account {$accountCode}: " .
-                "Balance: {$previousBalance} → {$currentBalance} (Δ{$balanceDiff}), " .
-                "Equity: {$previousEquity} → {$currentEquity} (Δ{$equityDiff})");
-
-            if ($currentBalance < 1 && $currentCredit >= 0) {
-                // Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
-                //     'account_id' => $account->id,
-                //     'code' => $account->code,
-                //     'current_balance' => $currentBalance,
-                //     'current_credit' => $currentCredit
-                // ]);
+        if ($currentCredit >= 0) {
+                Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
+                    'account_id' => $account->id,
+                    'code' => $account->code,
+                    'current_balance' => $currentBalance,
+                    'current_credit' => $currentCredit
+                ]);
 
                 $accountPromoBonus = $account->BonusTransaction()
                     ->where('bonus_type', 'Bonus In')
@@ -201,20 +193,20 @@ class BalanceSyncService
                 $accountBonusAmunt = $accountPromoBonus->sum('bonus_amount');
                 $accountUsedAmunt = $accountPromoBonus->sum('bonus_used');
 
-                // Log::debug("BatchBalanceSyncJob: Bonus amounts calculated", [
-                //     'account_id' => $account->id,
-                //     'total_bonus' => $accountBonusAmunt,
-                //     'used_bonus' => $accountUsedAmunt,
-                //     'last_payoff_sync' => $account->bonus_payoff_sync_at
-                // ]);
+                Log::debug("BatchBalanceSyncJob: Bonus amounts calculated", [
+                    'account_id' => $account->id,
+                    'total_bonus' => $accountBonusAmunt,
+                    'used_bonus' => $accountUsedAmunt,
+                    'last_payoff_sync' => $account->bonus_payoff_sync_at
+                ]);
 
                 $deduction = ((float)($accountBonusAmunt - $accountUsedAmunt));
                 if ($deduction > 0) {
-                    // Log::info("BatchBalanceSyncJob: Creating bonus payoff transaction", [
-                    //     'account_id' => $account->id,
-                    //     'deduction_amount' => $deduction,
-                    //     'email' => $account->email
-                    // ]);
+                    Log::info("BatchBalanceSyncJob: Creating bonus payoff transaction", [
+                        'account_id' => $account->id,
+                        'deduction_amount' => $deduction,
+                        'email' => $account->email
+                    ]);
 
                     BonusTransaction::create([
                         'email' => $account->email,
@@ -247,6 +239,15 @@ class BalanceSyncService
                     // ]);
                 }
             }
+
+        // Log significant changes
+        if ($hasChanges) {
+            $balanceDiff = $previousBalance ? $currentBalance - $previousBalance : 0;
+            $equityDiff = $previousEquity ? $currentEquity - $previousEquity : 0;
+
+            Log::info("Balance change detected for account {$accountCode}: " .
+                "Balance: {$previousBalance} → {$currentBalance} (Δ{$balanceDiff}), " .
+                "Equity: {$previousEquity} → {$currentEquity} (Δ{$equityDiff})");
 
             return 'updated';
         }

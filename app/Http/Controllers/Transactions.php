@@ -6,7 +6,6 @@ use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\MT5\MTEnDealAction;
 use App\Models\TradeDeposit;
-use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\WalletWithdraw;
@@ -15,11 +14,13 @@ use App\Models\InternalTransfer;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\TradeWithdrawal;
 
+use Illuminate\Support\Facades\Auth;
+use App\Services\UniversalMT5Service;
+use Illuminate\Support\Facades\Artisan;
+
+use App\Http\Controllers\TradeWithdrawal;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
 
@@ -278,6 +279,11 @@ class Transactions extends Controller
 
                     $remaining_deduction = $promo_deduction;
                     $account = Account::where('id', $transaction->account_id)->first();
+
+                    Artisan::call('app:sync-account-balances', [
+                        '--accounts' => $account->code,
+                        '--force' => true
+                    ]);
 
                     if (($error_codes = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $promo_deduction, 'Promo Addition', $tickets, true)) !== MTRetCode::MT_RET_OK) {
                         return redirect()->back()->with('error', MTRetCode::GetError($error_codes));

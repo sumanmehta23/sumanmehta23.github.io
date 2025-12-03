@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Account;
-use App\Models\BonusTransaction;
 use App\Models\User;
-use App\Models\ClientBankDetail;
+use App\MT5\MTRetCode;
+use App\Models\Account;
+use App\MT5\MTEnDealAction;
+use App\Models\ClientWallet;
 use App\Models\TotalBalance;
+use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
+use App\Helpers\AccountHelper;
+use App\Models\BonusTransaction;
+use App\Models\ClientBankDetail;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
-use App\MT5\MTRetCode;
-use App\MT5\MTEnDealAction;
-use App\Helpers\AccountHelper;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
-use App\Models\ClientWallet;
-use App\Services\MailService as MailService;
+use App\Http\Controllers\Controller;
 use App\Services\UniversalMT5Service;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\RateLimiter;
+use App\Services\MailService as MailService;
 
 class TradeWithdrawal extends Controller
 {
@@ -138,6 +139,12 @@ class TradeWithdrawal extends Controller
             ->where('user_id', $user_id)
             ->firstOrFail();
 
+        // Sync account balances before processing withdrawal
+        Artisan::call('app:sync-account-balances', [
+            '--accounts' => $account->code,
+            '--force' => true
+        ]);
+
         // dd($account->tradeDeposits[0]->deposit_amount );
         $bonus = BonusTransaction::where('account_id', $request->account_id)
             ->where(function ($query) {
@@ -151,6 +158,7 @@ class TradeWithdrawal extends Controller
                                 AND admin_remark NOT LIKE '%Promo Bonus%'
                                 AND admin_remark NOT LIKE '%Promo Deduction%'
                                 AND admin_remark NOT LIKE '%Promo Addition%'
+                                AND admin_remark NOT LIKE '%Bonus Pay Off%'
                                 THEN bonus_amount
                                 ELSE 0
                             END) AS total_bonus,
