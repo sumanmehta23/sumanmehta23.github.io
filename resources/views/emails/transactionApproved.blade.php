@@ -182,7 +182,7 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    {{-- <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
@@ -194,7 +194,7 @@ $settings = settings();
                                                         <tr>
                                                             <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/main_fix.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -206,7 +206,7 @@ $settings = settings();
                                 </td>
                             </tr>
                         </tbody>
-                    </table> --}}
+                    </table>
                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #00b98e;" width="100%">
                         <tbody>
                             <tr>
