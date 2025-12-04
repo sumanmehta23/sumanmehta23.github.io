@@ -182,7 +182,7 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
+                    {{-- <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
@@ -206,7 +206,7 @@ $settings = settings();
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table> --}}
                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #00b98e;" width="100%">
                         <tbody>
                             <tr>
