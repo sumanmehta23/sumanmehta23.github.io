@@ -175,7 +175,7 @@ class BalanceSyncService
 
         $account->update($updateData);
 
-        if ($currentCredit >= 0) {
+        if ($currentCredit >= 0 && $currentBalance == 0) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
                     'account_id' => $account->id,
                     'code' => $account->code,
