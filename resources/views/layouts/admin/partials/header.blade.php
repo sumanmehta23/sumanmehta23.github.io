@@ -54,7 +54,7 @@
 
     <?php
 $marginTopStyle = ''; // Default value
-if (app()->environment('local')) {
+if (app()->environment('local') || app()->environment('development')) {
     $marginTopStyle = 'style="margin-top: 40px;"';
 }
     ?>
