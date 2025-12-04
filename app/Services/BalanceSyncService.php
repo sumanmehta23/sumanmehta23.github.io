@@ -187,7 +187,7 @@ class BalanceSyncService
                     ->where('bonus_type', 'Bonus In')
                     ->where('admin_remark', 'Promo Bonus')
                     ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
-                        $query->where('created_at', '<=', $bonusPayoffSyncAt);
+                        $query->where('bonus_date', '>=', $bonusPayoffSyncAt);
                     });
 
                 $accountBonusAmunt = $accountPromoBonus->sum('bonus_amount');
