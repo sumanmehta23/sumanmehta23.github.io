@@ -425,6 +425,7 @@
                                                     </div>
                                                 </a>
                                             </div>
+                                            @if(!$account->demo)
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-withdrawal') }}"
                                                     class="card bg-secondary available-balance-card">
@@ -441,6 +442,7 @@
                                                     </div>
                                                 </a>
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endif
