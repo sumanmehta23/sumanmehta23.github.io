@@ -8,7 +8,8 @@ $settings = settings();
 <head>
     <title></title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" /><!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml><![endif]--><!--[if !mso]><!--><!--<![endif]-->
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml><![endif]--><!--[if !mso]><!--><!--<![endif]-->
     <style>
         * {
             box-sizing: border-box;
@@ -120,6 +121,7 @@ $settings = settings();
                 line-height: 20px !important;
             }
         }
+
         @media (min-width: 621px) {
             .email-main-image {
                 width: 40% !important;
@@ -132,23 +134,34 @@ $settings = settings();
                 width: 100% !important;
             }
         }
-    </style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]-->
+    </style>
+    <!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]-->
 </head>
 
-<body class="body email-main-image" style="background-color: #ffffff; margin: 0 auto; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
-    <table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+<body class="body email-main-image"
+    style="background-color: #ffffff; margin: 0 auto; padding: 0; -webkit-text-size-adjust: none; text-size-adjust: none;">
+    <table border="0" cellpadding="0" cellspacing="0" class="nl-container" role="presentation"
+        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
         <tbody>
             <tr>
                 <td>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-1"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
-                                                    <div class="spacer_block block-1" style="height:10px;line-height:10px;font-size:1px;"> </div>
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;"
+                                                    width="100%">
+                                                    <div class="spacer_block block-1"
+                                                        style="height:10px;line-height:10px;font-size:1px;"> </div>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -157,19 +170,37 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-2"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="image_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-top:15px;width:100%;padding-right:0px;padding-left:0px;">
-                                                                <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div style="max-width: 300px;"><a href="https://www.lqhmarkets.com/" style="outline:none" tabindex="-1" target="_blank"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/lqh.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="300" /></a></div>
+                                                            <td class="pad"
+                                                                style="padding-bottom:15px;padding-top:15px;width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment"
+                                                                    style="line-height:10px">
+                                                                    <div style="max-width: 300px;"><a
+                                                                            href="https://www.lqhmarkets.com/"
+                                                                            style="outline:none" tabindex="-1"
+                                                                            target="_blank"><img alt="" height="auto"
+                                                                                src="{{ $settings['copyright_site_name_text'] . '/assets/images/lqh.png' }}"
+                                                                                style="display: block; height: auto; border: 0; width: 100%;"
+                                                                                title="" width="300" /></a></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -182,19 +213,36 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-3"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #091729;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="image_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
-                                                            <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
-                                                                <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                            <td class="pad"
+                                                                style="width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment"
+                                                                    style="line-height:10px">
+                                                                    <div class="fullWidth" style="max-width: 600px;">
+                                                                        <img alt="" height="auto"
+                                                                            src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email_1.png' }}"
+                                                                            style="display: block; height: auto; border: 0; width: 100%;"
+                                                                            title="" width="600" />
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -207,19 +255,34 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #00b98e;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #00b98e;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #00b98e; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #00b98e; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="image_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
                                                             <td class="pad" style="width:100%;">
-                                                                <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div style="max-width: 600px;"><img alt="" height="auto" src="images/banner_green.png" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                <div align="center" class="alignment"
+                                                                    style="line-height:10px">
+                                                                    <div style="max-width: 600px;"><img alt=""
+                                                                            height="auto"
+                                                                            src="{{ $settings['copyright_site_name_text'] . '/assets/images/banner_green.png' }}"
+                                                                            style="display: block; height: auto; border: 0; width: 100%;"
+                                                                            title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -232,22 +295,31 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4" role="presentation" style="background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-4"
+                        role="presentation" style="background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td align="center">
-                                    <table border="0" cellpadding="0" cellspacing="0" class="row-content" role="presentation" style="background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto; text-align: center;" width="600">
+                                    <table border="0" cellpadding="0" cellspacing="0" class="row-content"
+                                        role="presentation"
+                                        style="background-color: #ffffff; color: #000000; width: 600px; margin: 0 auto; text-align: center;"
+                                        width="600">
                                         <tbody>
                                             <tr>
                                                 <td align="center" style="padding: 20px;">
                                                     <!-- Image Block -->
-                                                    <div style="display: inline-block; vertical-align: middle; margin-right: 15px;">
-                                                        <img src="{{ $settings['copyright_site_name_text'] . '/assets/images/quotes_1.png' }}" alt="" width="90" style="display: block; border: 0; width: 90px; height: auto;" />
+                                                    <div
+                                                        style="display: inline-block; vertical-align: middle; margin-right: 15px;">
+                                                        <img src="{{ $settings['copyright_site_name_text'] . '/assets/images/quotes_1.png' }}"
+                                                            alt="" width="90"
+                                                            style="display: block; border: 0; width: 90px; height: auto;" />
                                                     </div>
 
                                                     <!-- Text Block -->
-                                                    <div style="display: inline-block; vertical-align: middle; text-align: left;">
-                                                        <h1 style="margin: 0; color: #00b98e; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; line-height: 120%;">
+                                                    <div
+                                                        style="display: inline-block; vertical-align: middle; text-align: left;">
+                                                        <h1
+                                                            style="margin: 0; color: #00b98e; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; line-height: 120%;">
                                                             <span style="color: #000000;">Dear</span> {!! $name !!}
                                                         </h1>
                                                     </div>
@@ -259,18 +331,30 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="paragraph_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;"
+                                                        width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:25px;padding-left:25px;padding-right:25px;padding-top:15px;">
-                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                            <td class="pad"
+                                                                style="padding-bottom:25px;padding-left:25px;padding-right:25px;padding-top:15px;">
+                                                                <div
+                                                                    style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0;">{!! $content !!}</p>
                                                                 </div>
                                                             </td>
@@ -284,19 +368,34 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-7" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-7"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="image_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
                                                             <td class="pad" style="width:100%;">
-                                                                <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div style="max-width: 600px;"><img alt="" height="auto" src="images/header_fixed.png" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                <div align="center" class="alignment"
+                                                                    style="line-height:10px">
+                                                                    <div style="max-width: 600px;"><img alt=""
+                                                                            height="auto"
+                                                                            src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed.png' }}"
+                                                                            style="display: block; height: auto; border: 0; width: 100%;"
+                                                                            title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -309,30 +408,47 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-8" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-8"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content"
+                                        role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="50%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="table_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;"
+                                                    width="50%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="table_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-left:15px;">
-                                                                <table style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: left; letter-spacing: 0px;" width="100%">
-                                                                    <tbody style="vertical-align: top; font-size: 12px; line-height: 120%;">
+                                                                <table
+                                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: left; letter-spacing: 0px;"
+                                                                    width="100%">
+                                                                    <tbody
+                                                                        style="vertical-align: top; font-size: 12px; line-height: 120%;">
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Approved Amount:</td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">Approved Amount:</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Transaction ID:</td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">Transaction ID:</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Withdrawal Date:</td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">Withdrawal Date:</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Withdrawal Type:</td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">Withdrawal Type:</td>
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -340,23 +456,42 @@ $settings = settings();
                                                         </tr>
                                                     </table>
                                                 </td>
-                                                <td class="column column-2" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="50%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="table_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-2"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;"
+                                                    width="50%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="table_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-right:15px;">
-                                                                <table style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: right; letter-spacing: 0px;" width="100%">
-                                                                    <tbody style="vertical-align: top; font-size: 12px; line-height: 120%;">
+                                                                <table
+                                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: right; letter-spacing: 0px;"
+                                                                    width="100%">
+                                                                    <tbody
+                                                                        style="vertical-align: top; font-size: 12px; line-height: 120%;">
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>${{ $amount??0.00 }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">
+                                                                                <strong>${{ $amount ?? 0.00 }}</strong>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $id }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%"><strong>{{ $id }}</strong>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $date }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">
+                                                                                <strong>{{ $date }}</strong>
+                                                                            </td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $type }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;"
+                                                                                width="100%">
+                                                                                <strong>{{ $type }}</strong>
+                                                                            </td>
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -371,24 +506,41 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-9" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-9"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="10" cellspacing="0" class="button_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="10" cellspacing="0"
+                                                        class="button_block block-1" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;"
+                                                        width="100%">
                                                         <tr>
                                                             <td class="pad">
-                                                                <div align="center" class="alignment"><a href="https://my.lqhmarkets.com/dashboard" style="color:#ffffff;text-decoration:none;" target="_blank"><!--[if mso]>
+                                                                <div align="center" class="alignment"><a
+                                                                        href="https://my.lqhmarkets.com/dashboard"
+                                                                        style="color:#ffffff;text-decoration:none;"
+                                                                        target="_blank"><!--[if mso]>
 <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"  href="https://my.lqhmarkets.com/dashboard"  style="height:42px;width:265px;v-text-anchor:middle;" arcsize="72%" fillcolor="#00b98e">
 <v:stroke dashstyle="Solid" weight="0px" color="#00b98e"/>
 <w:anchorlock/>
 <v:textbox inset="0px,0px,0px,0px">
 <center dir="false" style="color:#ffffff;font-family:sans-serif;font-size:16px">
-<![endif]--><span class="button" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">Go To Dashboard →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
+<![endif]--><span class="button" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span
+                                                                                style="word-break: break-word; line-height: 32px;">Go
+                                                                                To Dashboard
+                                                                                →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -400,42 +552,86 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;"
+                                                    width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="paragraph_block block-3" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;"
+                                                        width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
-                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 16px;"><strong>Need help?</strong></p>
-                                                                    <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.
-                                                                    <a href="mailto:support@lqhmarkets.com" rel="noopener" style="text-decoration: underline; color: #00b98e;" target="_blank" title="support@lqhmarkets.com"><u><span style="word-break: break-word; color: #00b98e;"><strong>support@lqhmarkets.com</strong></span></u></a>
+                                                            <td class="pad"
+                                                                style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                                <div
+                                                                    style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;">
+                                                                        <strong>Need help?</strong>
+                                                                    </p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Our
+                                                                        customer support is here to help you 24/5. If
+                                                                        you have any questions or need assistance with
+                                                                        your account, please don't hesitate to contact
+                                                                        our support team.
+                                                                        <a href="mailto:support@lqhmarkets.com"
+                                                                            rel="noopener"
+                                                                            style="text-decoration: underline; color: #00b98e;"
+                                                                            target="_blank"
+                                                                            title="support@lqhmarkets.com"><u><span
+                                                                                    style="word-break: break-word; color: #00b98e;"><strong>support@lqhmarkets.com</strong></span></u></a>
                                                                     </p>
                                                                 </div>
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="paragraph_block block-3" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;"
+                                                        width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
-                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 16px;">All official communication from <span style="color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the <a href="https://my.lqhmarkets.com" style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a>.</p>
+                                                            <td class="pad"
+                                                                style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                                <div
+                                                                    style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;">All
+                                                                        official communication from <span
+                                                                            style="color: #00b98e;"><strong>LQH
+                                                                                Markets</strong></span> (LQH Integrated
+                                                                        LTD.) will be conducted solely through our
+                                                                        official email addresses, using the <a
+                                                                            href="https://my.lqhmarkets.com"
+                                                                            style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a>.
+                                                                    </p>
                                                                 </div>
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    {{-- <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                    {{-- <table border="0" cellpadding="0" cellspacing="0"
+                                                        class="paragraph_block block-2" role="presentation"
+                                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;"
+                                                        width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;">
-                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 0px;">LQH Integrated LTD</p>
-                                                                    <p style="margin: 0; margin-bottom: 0px;">A2-704A, Al Hamra Industrial Zone-FZ</p>
-                                                                    <p style="margin: 0; margin-bottom: 0px;">RAKEZ Business Centre</p>
+                                                            <td class="pad"
+                                                                style="padding-bottom:15px;padding-left:25px;padding-right:25px;">
+                                                                <div
+                                                                    style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 0px;">LQH
+                                                                        Integrated LTD</p>
+                                                                    <p style="margin: 0; margin-bottom: 0px;">A2-704A,
+                                                                        Al Hamra Industrial Zone-FZ</p>
+                                                                    <p style="margin: 0; margin-bottom: 0px;">RAKEZ
+                                                                        Business Centre</p>
                                                                     <p style="margin: 0;">Ras Al Khaimah, UAE</p>
                                                                 </div>
                                                             </td>
@@ -449,15 +645,23 @@ $settings = settings();
                             </tr>
                         </tbody>
                     </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-10" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-10"
+                        role="presentation"
+                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728;" width="100%">
                         <tbody>
                             <tr>
                                 <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                        class="row-content stack" role="presentation"
+                                        style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #0a1728; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;"
+                                        width="600">
                                         <tbody>
                                             <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
-                                                    <div class="spacer_block block-1" style="height:10px;line-height:10px;font-size:1px;"> </div>
+                                                <td class="column column-1"
+                                                    style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;"
+                                                    width="100%">
+                                                    <div class="spacer_block block-1"
+                                                        style="height:10px;line-height:10px;font-size:1px;"> </div>
                                                 </td>
                                             </tr>
                                         </tbody>
