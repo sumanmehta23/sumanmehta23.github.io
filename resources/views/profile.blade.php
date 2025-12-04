@@ -392,7 +392,7 @@
                                                 </div>
                                             </div>
                                             <div class="card-body table-card">
-                                                @if (count($bank_accounts) > 0)
+                                                @if ($bank_accounts->count() > 0)
                                                     <div class="card-body">
                                                         <div class="table-responsive">
                                                             <table class="table">
@@ -482,6 +482,10 @@
                                                                     @endforeach
                                                                 </tbody>
                                                             </table>
+                                                        </div>
+                                                        <div class="mt-3 d-flex justify-content-end">
+                                                            
+                                                            {{ $bank_accounts->fragment('wallets')->links('pagination::bootstrap-5') }}
                                                         </div>
                                                     </div>
 
