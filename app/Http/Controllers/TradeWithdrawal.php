@@ -107,7 +107,7 @@ class TradeWithdrawal extends Controller
         }
 
         if (!$this->ensureMT5Connection()) {
-            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+            return redirect()->back()->with('error', 'Unable to process withdrawal: Trading server connection failed. Please try again in a few moments.');
         }
 
         // Generate a unique rate-limiting key based on user or IP
@@ -271,12 +271,12 @@ class TradeWithdrawal extends Controller
                 // }
 
                 if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                    return redirect()->back()->with('error', 'Withdrawal failed: Unable to process bonus adjustment. ' . MTRetCode::GetError($error_code) . '. Please contact support if this persists.');
                 } else {
                     $trade_user = NULL;
                     $this->api->UserGet($account->code, $trade_user);
                     if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                        return redirect()->back()->with('error', 'Withdrawal processing error: Unable to retrieve account information. ' . MTRetCode::GetError($error_code) . '. Please contact support.');
                     }
                     $bonusTransaction = BonusTransaction::where('email', $account->email)
                         ->where('account_id', $account->id)
@@ -294,7 +294,7 @@ class TradeWithdrawal extends Controller
 
                     $updated_user = "";
                     if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                        return redirect()->back()->with("error", "Withdrawal processing error: Unable to update account leverage. " . MTRetCode::GetError($error_code) . ". Please contact support.");
                     }
 
                     $deposit_details = BonusTransaction::create([
@@ -323,7 +323,7 @@ class TradeWithdrawal extends Controller
             $error = MTRetCode::GetError($errorCode1);
             return response()->json([
                 'success' => false,
-                'message' => 'Something went wrong',
+                'message' => 'Withdrawal failed: ' . $error . '. Please verify your account balance and try again.',
                 'error' => $error,
             ], 400);
         } else {
@@ -362,7 +362,7 @@ class TradeWithdrawal extends Controller
 
                 if (($error_code2 = $this->api->UserAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
                     session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
-                    return redirect()->route('trade-withdrawal')->with('error', 'Unable to get account details.');
+                    return redirect()->route('trade-withdrawal')->with('error', 'Unable to process withdrawal: Could not retrieve account information. ' . MTRetCode::GetError($error_code2) . '. Please try again or contact support.');
                 }
                 //SPECIAL CASE TO TACKLE MULTIPLE PROMO CODES AND SECOND WITHDRAWAL :TODO
                 // if ($amount_to_deduct < 0) {
@@ -442,14 +442,14 @@ class TradeWithdrawal extends Controller
                             $trade_user = NULL;
                             $this->api->UserGet($account->code, $trade_user);
                             if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                return redirect()->back()->with('error', 'Withdrawal processing error: Unable to retrieve account information. ' . MTRetCode::GetError($error_code) . '. Please contact support.');
                             }
 
                             $trade_user->Leverage = $account->leverage;
 
                             $updated_user = "";
                             if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                return redirect()->back()->with("error", "Withdrawal processing error: Unable to update account leverage. " . MTRetCode::GetError($error_code) . ". Please contact support.");
                             }
                         }
                         Log::alert("promo_percentage_value " . $promo_percentage_value);
@@ -465,11 +465,11 @@ class TradeWithdrawal extends Controller
                                     $error = MTRetCode::GetError($errorCode1);
                                     return response()->json([
                                         'success' => false,
-                                        'message' => 'Something went wrong',
+                                        'message' => 'Withdrawal failed: Unable to process bonus deduction. ' . $error . '. Please try again or contact support.',
                                         'error' => $error,
                                     ], 400);
                                 }
-                                return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
+                                return redirect()->back()->with('error', 'Withdrawal failed: Unable to process bonus deduction. ' . MTRetCode::GetError($error_code3) . '. Please try again or contact support.');
                             }
 
                             $promo->bonus_used += $promo_deduction;
@@ -493,7 +493,7 @@ class TradeWithdrawal extends Controller
                                 $trade_user = NULL;
                                 $this->api->UserGet($account->code, $trade_user);
                                 if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                    return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
+                                    return redirect()->back()->with('error', 'Withdrawal processing error: Unable to retrieve account information. ' . MTRetCode::GetError($error_code) . '. Please contact support.');
                                 }
 
                                 Log::alert(" $account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit)) ) ");
@@ -504,7 +504,7 @@ class TradeWithdrawal extends Controller
 
                                 $updated_user = "";
                                 if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
+                                    return redirect()->back()->with("error", "Withdrawal processing error: Unable to update account leverage. " . MTRetCode::GetError($error_code) . ". Please contact support.");
                                 }
                             }
                         }
@@ -593,11 +593,15 @@ class TradeWithdrawal extends Controller
                 return redirect()->route('trade-withdrawal')->with('success', 'Verification email sent successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                echo "<pre>";
-                print_r($e->getMessage());
+                Log::error('Withdrawal exception: ' . $e->getMessage(), [
+                    'user_id' => $user_id,
+                    'account_id' => $account_id,
+                    'amount' => $amount,
+                    'trace' => $e->getTraceAsString()
+                ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something Went Wrong !!! Please Try Again'
+                    'message' => 'Withdrawal request failed due to an unexpected error. Our team has been notified. Please try again later or contact support if the issue persists.'
                 ], 400);
             }
         }

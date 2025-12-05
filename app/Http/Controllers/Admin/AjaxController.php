@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Support\Facades\DB;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Trade;
 use App\Models\Account;
 use App\Models\UserLog;
 use App\Models\IbWallet;
@@ -15,19 +15,20 @@ use App\Models\Promocode;
 use App\Models\ClientTask;
 use App\Models\Permission;
 use App\Models\RestrictIps;
+use App\Models\ClientWallet;
 use App\Models\EmployeeList;
 use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+
 use App\Models\WalletDeposit;
-
 use App\Helpers\AccountHelper;
-use App\Models\WalletWithdraw;
 
+use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
-use App\Models\Trade;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -36,8 +37,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AjaxController extends Controller
 {
@@ -153,6 +154,15 @@ class AjaxController extends Controller
                         break;
                     case 'getLatestTransfer':
                         $result = $this->getLatestTransfer($id);
+                        break;
+                    case 'getClientWallets':
+                        $result = $this->getClientWallets($id);
+                        break;
+                    case 'verifyClientWallet':
+                        $result = $this->verifyClientWallet($requestData);
+                        break;
+                    case 'deleteClientWallet':
+                        $result = $this->deleteClientWallet($requestData);
                         break;
                     case 'getIbUsers':
                         $result = $this->getIbUsers();
@@ -1676,7 +1686,7 @@ class AjaxController extends Controller
         $role = session('userData')['userRole'] ?? null;
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
-        
+
         $query = Trade::select('trades.*')
             ->with(['account.user']);
 
@@ -1777,7 +1787,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
         $accountId = $request->get('id');
-        
+
         // Build filename with account info if accountId provided
         if ($accountId) {
             $account = Account::with('user')->find($accountId);
@@ -1865,7 +1875,7 @@ class AjaxController extends Controller
         $accountId = $request->get('id');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
-        
+
         // Build filename with account info and date range
         if ($accountId) {
             $account = Account::with('user')->find($accountId);
@@ -5049,6 +5059,156 @@ class AjaxController extends Controller
                 'valid' => false,
                 'message' => 'Invalid promocode. Please try again.',
             ]);
+        }
+    }
+
+    /**
+     * Get client wallets for DataTable display
+     */
+    public function getClientWallets($id)
+    {
+        try {
+            $wallets = ClientWallet::where('user_id', $id)
+                ->with('user')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $data = [];
+            foreach ($wallets as $wallet) {
+                $verifiedBadge = $wallet->verified
+                    ? '<span class="badge bg-success"><i class="ri-check-line"></i> Verified</span>'
+                    : '<span class="badge bg-warning"><i class="ri-close-line"></i> Not Verified</span>';
+
+                $statusBadge = $wallet->status == 1
+                    ? '<span class="badge bg-outline-success">Active</span>'
+                    : '<span class="badge bg-outline-danger">Inactive</span>';
+
+                $actionButtons = '';
+
+                if (!$wallet->verified) {
+                    $actionButtons .= '<button class="btn btn-sm btn-success verifyWallet" data-wallet-id="' . $wallet->id . '" title="Verify Wallet"><i class="ri-check-line"></i> Verify</button>';
+                }
+
+                $actionButtons .= ' <button class="btn btn-sm btn-danger deleteWallet" data-wallet-id="' . $wallet->id . '" data-wallet-name="' . $wallet->wallet_name . '" title="Delete Wallet"><i class="ri-delete-bin-line"></i> Delete</button>';
+
+                $data[] = [
+                    'created_on' => Carbon::parse($wallet->created_at)->format('Y-m-d H:i:s'),
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_currency' => $wallet->wallet_currency,
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'verified' => $verifiedBadge,
+                    'status' => $statusBadge,
+                    'action' => $actionButtons,
+                ];
+            }
+
+            return ['data' => $data];
+        } catch (\Exception $e) {
+            Log::error('Error fetching client wallets: ' . $e->getMessage());
+            return ['data' => [], 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Verify a client wallet
+     */
+    public function verifyClientWallet($requestData)
+    {
+        try {
+            $walletId = $requestData['wallet_id'] ?? null;
+            $userId = $requestData['user_id'] ?? null;
+
+            if (!$walletId || !$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid wallet or user ID'
+                ], 422);
+            }
+
+            $wallet = ClientWallet::where('id', $walletId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Wallet not found'
+                ], 404);
+            }
+
+            $wallet->verified = true;
+            $wallet->admin_action_by = 'admin';
+            $wallet->save();
+
+            // Log the action
+            Log::info("Wallet {$walletId} verified by " . Auth::user()->email);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Wallet verified successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error verifying wallet: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify wallet: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a client wallet
+     * Checks for pending withdrawals before deletion
+     */
+    public function deleteClientWallet($requestData)
+    {
+        try {
+            $walletId = $requestData['wallet_id'] ?? null;
+            $userId = $requestData['user_id'] ?? null;
+
+            if (!$walletId || !$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid wallet or user ID'
+                ], 422);
+            }
+
+            $wallet = ClientWallet::where('id', $walletId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Wallet not found'
+                ], 404);
+            }
+
+            // Check for pending withdrawals
+            $pendingWithdrawals = TradeWithdrawals::where('client_wallet_id', $wallet->id)
+                ->where('status', 0)
+                ->count();
+            if ($pendingWithdrawals > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete wallet with pending withdrawals. Please resolve all pending withdrawals first.'
+                ], 422);
+            }
+
+            // Soft delete the wallet
+            $wallet->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Wallet deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting wallet: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete wallet: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

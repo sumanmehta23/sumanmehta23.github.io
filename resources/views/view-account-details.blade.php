@@ -149,6 +149,9 @@
                                                             <h2 class="mb-0 f-w-500">
                                                                 <span class="text-truncate">{{ $code }}</span>
                                                             </h2>
+                                                            @if($account->demo)
+                                                                <span class="badge bg-danger text-white rounded-pill mt-1">Demo Account</span>
+                                                            @endif
                                                             @if($account->platform === 'x9' && isset($x9GroupName))
                                                                 <p class="mb-0 text-muted f-12">{{ $x9GroupName }}</p>
                                                             @elseif($getUser && $getUser->accountType)
@@ -425,6 +428,7 @@
                                                     </div>
                                                 </a>
                                             </div>
+                                            @if(!$account->demo)
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-withdrawal') }}"
                                                     class="card bg-secondary available-balance-card">
@@ -441,6 +445,7 @@
                                                     </div>
                                                 </a>
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endif
