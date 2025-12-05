@@ -52,6 +52,35 @@ class TradeController extends Controller
         return DataTables::of($query)
             ->editColumn('id', fn ($row) => (string) $row->id)
 
+            // Global search filter - matches pattern used in other admin controllers
+            ->filter(function ($query) use ($request) {
+                if (!empty($request->search['value'])) {
+                    $searchValue = $request->search['value'];
+                    $query->where(function ($q) use ($searchValue) {
+                        // Search in trades table columns
+                        $q->where('trades.order_id', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('trades.code', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('trades.symbol', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('trades.type', 'LIKE', "%{$searchValue}%")
+                            ->orWhere('trades.status', 'LIKE', "%{$searchValue}%")
+                            ->orWhereRaw("CAST(trades.volume AS CHAR) LIKE ?", ["%{$searchValue}%"])
+                            ->orWhereRaw("CAST(trades.open_price AS CHAR) LIKE ?", ["%{$searchValue}%"])
+                            ->orWhereRaw("CAST(trades.close_price AS CHAR) LIKE ?", ["%{$searchValue}%"])
+                            ->orWhereRaw("CAST(trades.profit AS CHAR) LIKE ?", ["%{$searchValue}%"])
+                            ->orWhereRaw("DATE_FORMAT(trades.open_time, '%Y-%m-%d %H:%i:%s') LIKE ?", ["%{$searchValue}%"])
+                            // Search in account code
+                            ->orWhereHas('account', function ($accountQuery) use ($searchValue) {
+                                $accountQuery->where('code', 'LIKE', "%{$searchValue}%");
+                            })
+                            // Search in user fullname and email
+                            ->orWhereHas('account.user', function ($userQuery) use ($searchValue) {
+                                $userQuery->where('fullname', 'LIKE', "%{$searchValue}%")
+                                    ->orWhere('email', 'LIKE', "%{$searchValue}%");
+                            });
+                    });
+                }
+            })
+
             ->addColumn('client_name', function ($row) {
                 $user = optional(optional($row->account)->user);
 
