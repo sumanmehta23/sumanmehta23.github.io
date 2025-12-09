@@ -753,39 +753,41 @@ if ($getUser) {
                             </div>
                         @endcan
                         @can('trade_withdrawals:viewAny')
-                            <div class="col-12">
-                                <div class="card custom-card">
-                                    <div class="card-header justify-content-between">
-                                        <div class="card-title">
-                                            Withdrawal
+                            @if ($account->demo == 0)
+                                <div class="col-12">
+                                    <div class="card custom-card">
+                                        <div class="card-header justify-content-between">
+                                            <div class="card-title">
+                                                Withdrawal
+                                            </div>
+                                            <div class="prism-toggle">
+                                            </div>
                                         </div>
-                                        <div class="prism-toggle">
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table text-nowrap" id="tableWithdrawal">
-                                                <thead>
-                                                    <tr>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table text-nowrap" id="tableWithdrawal">
+                                                    <thead>
+                                                        <tr>
 
-                                                        <th>Account No</th>
-                                                        <th>Withdrawal Amount</th>
-                                                        <th>Withdrawal Type</th>
-                                                        <th>Withdraw To</th>
-                                                        <th>Withdrawal Date</th>
-                                                        <th>Status</th>
-                                                        @can('trade_withdrawals:view')
-                                                            <th>Actions</th>
-                                                        @endcan
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                </tbody>
-                                            </table>
+                                                            <th>Account No</th>
+                                                            <th>Withdrawal Amount</th>
+                                                            <th>Withdrawal Type</th>
+                                                            <th>Withdraw To</th>
+                                                            <th>Withdrawal Date</th>
+                                                            <th>Status</th>
+                                                            @can('trade_withdrawals:view')
+                                                                <th>Actions</th>
+                                                            @endcan
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @endcan
                         @can('trade_withdrawals:viewAny')
                             <div class="col-12">
