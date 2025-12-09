@@ -124,7 +124,7 @@ class BalanceSyncService
     private function syncSingleAccountBalance(Account $account): string
     {
         $accountCode = $account->code;
-
+        Log::info("account sync".$account->code);
         // Use the proper service method instead of direct API calls
         $accountData = $this->mt5Service->getAccountBalance((int)$accountCode);
 
@@ -175,7 +175,22 @@ class BalanceSyncService
 
         $account->update($updateData);
 
-        if ($currentCredit >= 0 && $currentBalance == 0) {
+        $bonusPayoffSyncAt = now();
+
+        $accountPromoBonus = $account->BonusTransaction()
+                    ->where('bonus_type', 'Bonus In')
+                    ->whereIn('admin_remark', ['Promo Bonus', '10x Trader Leverage'])
+                    ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
+                        $query->where('bonus_date', '<=', $bonusPayoffSyncAt);
+                    });
+
+        Log::info('Promo Bonus Query: '.$accountPromoBonus->toSql(), $accountPromoBonus->getBindings());
+        Log::info("account sync for payoff".$account->code);
+        Log::info("account promo bonus".$accountPromoBonus->sum('bonus_amount'));
+        Log::info("account currentCredit".$currentCredit);
+        Log::info("account code".$account->code);
+
+        if ($currentCredit == 0 &&  ($accountPromoBonus->sum('bonus_amount') > $currentCredit) ) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
                     'account_id' => $account->id,
                     'code' => $account->code,
@@ -183,12 +198,7 @@ class BalanceSyncService
                     'current_credit' => $currentCredit
                 ]);
 
-                $accountPromoBonus = $account->BonusTransaction()
-                    ->where('bonus_type', 'Bonus In')
-                    ->where('admin_remark', 'Promo Bonus')
-                    ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
-                        $query->where('bonus_date', '>=', $bonusPayoffSyncAt);
-                    });
+
 
                 $accountBonusAmunt = $accountPromoBonus->sum('bonus_amount');
                 $accountUsedAmunt = $accountPromoBonus->sum('bonus_used');
