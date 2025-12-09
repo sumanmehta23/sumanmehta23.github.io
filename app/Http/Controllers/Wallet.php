@@ -207,17 +207,17 @@ class Wallet extends Controller
         switch ($network) {
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
-                $startsWithValid = (strpos($address, '1') === 0) || 
-                                   (strpos($address, '3') === 0) || 
+                $startsWithValid = (strpos($address, '1') === 0) ||
+                                   (strpos($address, '3') === 0) ||
                                    (strpos($address, 'bc1') === 0);
-                
+
                 if (!$startsWithValid) {
                     return [
                         'valid' => false,
                         'message' => 'BTC address must start with 1, 3, or bc1.'
                     ];
                 }
-                
+
                 if ($length < 26 || $length > 62) {
                     return [
                         'valid' => false,
@@ -234,7 +234,7 @@ class Wallet extends Controller
                         'message' => 'USDT ERC20 address must start with 0x.'
                     ];
                 }
-                
+
                 if ($length !== 42) {
                     return [
                         'valid' => false,
@@ -251,7 +251,7 @@ class Wallet extends Controller
                         'message' => 'USDT TRC20 address must start with T.'
                     ];
                 }
-                
+
                 if ($length !== 34) {
                     return [
                         'valid' => false,
@@ -1359,6 +1359,47 @@ class Wallet extends Controller
                                 Cache::forget("user:{$customerID}:wallet_balance");
 
                                 Log::channel("cryptochillcallback")->info('Transaction confirmed successfully for account: ' . $account->code);
+
+
+                                $settings = settings();
+
+                                $toEmail = $user->email;
+                                $type = 'Transaction Successful';
+                                $from = $settings['email_from_address'];
+                                $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                                $headers = "MIME-Version: 1.0" . "\r\n";
+                                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+                                $content = '
+                                                <p style="font-size: 16px; color: #000000;">
+                                                    We are pleased to inform you that your transaction has been <b>successful</b>.
+                                                </p>
+                                                <p style="font-size: 16px; color: #000000;">
+                                                    The approved amount has been deposited into your account <b>' . $tradeDeposit->code . '</b>.
+                                                </p>
+
+                                                <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
+                                                <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
+                                                    <li><b>Approved Amount:</b> $' . $amount . '</li>
+                                                    <li><b>Reference ID:</b> ' . $tradeDeposit->id . '</li>
+                                                    <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $tradeDeposit->transaction_id . '</span></li>
+                                                    <li><b>Deposited Date:</b> ' . $tradeDeposit->deposted_date . '</li>
+                                                    <li><b>Payment Type:</b> ' . $tradeDeposit->deposit_type . '</li>
+                                                </ol>
+                                            ';
+
+                                $templateVars = [
+                                    'name' => $user->fullname,
+                                    'site_link' => $settings['copyright_site_name_text'],
+                                    'email' => $settings['email_from_address'],
+                                    "content" => $content,
+                                    "title_right" => "Transaction",
+                                    "subtitle_right" => "Successful",
+                                    "btn_text" => "Go To Dashboard",
+                                ];
+                                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
 
                                 return response()->json(['status' => 'true']);
                             } catch (\Throwable $th) {
