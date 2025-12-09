@@ -181,7 +181,7 @@ class BalanceSyncService
                     ->where('bonus_type', 'Bonus In')
                     ->where('admin_remark', 'Promo Bonus')
                     ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
-                        $query->where('bonus_date', '>=', $bonusPayoffSyncAt);
+                        $query->where('bonus_date', '<=', $bonusPayoffSyncAt);
                     });
 Log::info('Promo Bonus Query: '.$accountPromoBonus->toSql(), $accountPromoBonus->getBindings());
         Log::info("account sync for payoff".$account->code);
