@@ -175,17 +175,19 @@ class BalanceSyncService
 
         $account->update($updateData);
 
+        $bonusPayoffSyncAt = now();
+
         $accountPromoBonus = $account->BonusTransaction()
                     ->where('bonus_type', 'Bonus In')
                     ->where('admin_remark', 'Promo Bonus')
                     ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
-                        $query->where('bonus_date', '>=', $bonusPayoffSyncAt);
+                        $query->where('bonus_date', '<=', $bonusPayoffSyncAt);
                     });
 
         Log::info("account sync for payoff".$account->code);
         Log::info("account promo bonus".$accountPromoBonus->sum('bonus_amount'));
 
-        if ($currentCredit >= 0 && $accountPromoBonus->sum('bonus_amount') > $accountPromoBonus->sum('bonus_used') && $accountPromoBonus->sum('bonus_amount') > $currentCredit) {
+        if ($currentCredit = 0 &&  $accountPromoBonus->sum('bonus_amount') > $currentCredit) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
                     'account_id' => $account->id,
                     'code' => $account->code,
