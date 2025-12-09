@@ -187,8 +187,10 @@ class BalanceSyncService
         Log::info('Promo Bonus Query: '.$accountPromoBonus->toSql(), $accountPromoBonus->getBindings());
         Log::info("account sync for payoff".$account->code);
         Log::info("account promo bonus".$accountPromoBonus->sum('bonus_amount'));
+        Log::info("account currentCredit".$currentCredit);
+        Log::info("account code".$account->code);
 
-        if ($currentCredit = 0 &&  $accountPromoBonus->sum('bonus_amount') > $currentCredit && $account->code==439344) {
+        if ($currentCredit = 0 &&  ($accountPromoBonus->sum('bonus_amount') > $currentCredit) && $account->code==439344) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
                     'account_id' => $account->id,
                     'code' => $account->code,
