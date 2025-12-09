@@ -28,7 +28,7 @@
                                         <i class="ti ti-dots-vertical f-18"></i>
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-end">
-                                        <a class="dropdown-item" href="/liveAccounts#">Open New Account</a>
+                                        <a class="dropdown-item" href="/createCompetition">Open New Account</a>
                                     </div>
                                 </div>
                             </div>
