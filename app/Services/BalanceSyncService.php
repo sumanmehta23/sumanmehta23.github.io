@@ -190,7 +190,7 @@ class BalanceSyncService
         Log::info("account currentCredit".$currentCredit);
         Log::info("account code".$account->code);
 
-        if ($currentCredit = 0 &&  ($accountPromoBonus->sum('bonus_amount') > $currentCredit) && $account->code==439344) {
+        if ($currentCredit == 0 &&  ($accountPromoBonus->sum('bonus_amount') > $currentCredit) && $account->code == 439344) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
                     'account_id' => $account->id,
                     'code' => $account->code,
