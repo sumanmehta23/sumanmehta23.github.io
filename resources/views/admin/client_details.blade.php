@@ -655,6 +655,13 @@
                                                                                          {{ $acc->accountType->ac_group }}
                                                                                     </div>
                                                                                 </div>
+                                                                                <div class="mt-auto mb-auto">
+                                                                                    <a
+                                                                                        href="/admin/view_account_details/{{ $acc->id }}">
+                                                                                        <i class="fa fa-edit fw-bold"
+                                                                                            style="font-size: 1rem;color: var(--primary-color);"></i>
+                                                                                    </a>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>

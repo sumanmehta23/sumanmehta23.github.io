@@ -108,7 +108,7 @@ if ($getUser) {
                                                 </div>
                                             </div>
                                             @if (!$account->deleted_at)
-                                                <div class="mt-3 row justify-content-center">
+                                                <div class="mt-3 row {{ $account->demo == 0 ? 'justify-content-center' : 'justify-content-start' }}">
                                                     @can("trade_deposit:create")
                                                     <div class="mb-2 col-6">
                                                         <span class="badge btn btn-primary" data-bs-toggle="modal"
@@ -117,45 +117,47 @@ if ($getUser) {
                                                         </span>
                                                     </div>
                                                     @endcan
-                                                    @can("trade_withdrawals:create")
-                                                    <div class="mb-2 col-6">
-                                                        <span class="badge btn btn-info" data-bs-toggle="modal"
-                                                            data-bs-target="#withdrawalModal">Withdraw
-                                                            <i class="ti ti-square-rounded-arrow-down"></i>
-                                                        </span>
-                                                    </div>
-                                                    @endcan
-                                                    @can("trade_deposit:create")
-                                                    <div class="mb-2 col-6">
-                                                        <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                            data-bs-target="#depositModalCellExp">Deposit Tracking
-                                                            <i class="ti ti-database-import"></i>
-                                                        </span>
-                                                    </div>
-                                                    @endcan
-                                                    @can("trade_withdrawals:create")
-                                                    <div class="mb-2 col-6">
-                                                        <span class="badge btn btn-info" data-bs-toggle="modal"
-                                                            data-bs-target="#withdrawalModalCellExp">Withdraw Tracking
-                                                            <i class="ti ti-square-rounded-arrow-down"></i>
-                                                        </span>
-                                                    </div>
-                                                    @endcan
-                                                    @can("bonus_transaction:create")
+                                                    @if ($account->demo == 0)
+                                                        @can("trade_withdrawals:create")
                                                         <div class="mb-2 col-6">
-                                                            <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                                data-bs-target="#bonusModalCredit">Bonus Credit
-                                                                <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                            <span class="badge btn btn-info" data-bs-toggle="modal"
+                                                                data-bs-target="#withdrawalModal">Withdraw
+                                                                <i class="ti ti-square-rounded-arrow-down"></i>
                                                             </span>
                                                         </div>
+                                                        @endcan
+                                                        @can("trade_deposit:create")
+                                                        <div class="mb-2 col-6">
+                                                            <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                                data-bs-target="#depositModalCellExp">Deposit Tracking
+                                                                <i class="ti ti-database-import"></i>
+                                                            </span>
+                                                        </div>
+                                                        @endcan
+                                                        @can("trade_withdrawals:create")
+                                                        <div class="mb-2 col-6">
+                                                            <span class="badge btn btn-info" data-bs-toggle="modal"
+                                                                data-bs-target="#withdrawalModalCellExp">Withdraw Tracking
+                                                                <i class="ti ti-square-rounded-arrow-down"></i>
+                                                            </span>
+                                                        </div>
+                                                        @endcan
+                                                        @can("bonus_transaction:create")
+                                                            <div class="mb-2 col-6">
+                                                                <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                                    data-bs-target="#bonusModalCredit">Bonus Credit
+                                                                    <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                                </span>
+                                                            </div>
 
-                                                        <div class="mb-2 col-6">
-                                                            <span class="badge btn btn-secondary" data-bs-toggle="modal"
-                                                                data-bs-target="#bonusModal">Bonus Deposit
-                                                                <i class="ti ti-plus" style="font-weight: bold"></i>
-                                                            </span>
-                                                        </div>
-                                                    @endcan
+                                                            <div class="mb-2 col-6">
+                                                                <span class="badge btn btn-secondary" data-bs-toggle="modal"
+                                                                    data-bs-target="#bonusModal">Bonus Deposit
+                                                                    <i class="ti ti-plus" style="font-weight: bold"></i>
+                                                                </span>
+                                                            </div>
+                                                        @endcan
+                                                    @endif
                                                 </div>
                                             @endif
                                         </div>
@@ -519,47 +521,48 @@ if ($getUser) {
                     </div>
 
                     @can('bonus_transaction:viewAny')
-
-                        <div class="mt-2 card custom-card">
-                            <div class="card-header justify-content-between">
-                                <div class="card-title">Bonus</div>
-                                <div class="prism-toggle">
+                        @if ($account->demo == 0)
+                            <div class="mt-2 card custom-card">
+                                <div class="card-header justify-content-between">
+                                    <div class="card-title">Bonus</div>
+                                    <div class="prism-toggle">
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table text-nowrap" id="tableBonus">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Type</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                foreach ($bonus_trans as $bns) {
+                                                ?>
+                                                <tr>
+                                                    <td>
+                                                        {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('Y-m-d') }}<br>
+                                                        <small>
+                                                            {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('H:i:s') }}
+                                                        </small>
+                                                    </td>
+                                                    <td><?php echo  strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
+                                                    <td><?= $bns->bonus_amount ?></td>
+                                                    <td><?= $bns->bonus_type ?></td>
+                                                </tr>
+                                                <?php
+                                                }
+                                                ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table text-nowrap" id="tableBonus">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Type</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            foreach ($bonus_trans as $bns) {
-                                            ?>
-                                            <tr>
-                                                <td>
-                                                    {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('Y-m-d') }}<br>
-                                                    <small>
-                                                        {{ Carbon::parse($bns->bonus_date)->addHours(3)->format('H:i:s') }}
-                                                    </small>
-                                                </td>
-                                                <td><?php echo  strpos($bns->admin_remark, 'Credit') != false ? 'Credit': 'Deposit' ?></td>
-                                                <td><?= $bns->bonus_amount ?></td>
-                                                <td><?= $bns->bonus_type ?></td>
-                                            </tr>
-                                            <?php
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     @endcan
                 </div>
                 <div class="col-xl-8">
@@ -567,43 +570,47 @@ if ($getUser) {
                         <div class="p-0 card-body">
                             <div class="row">
                                 @can('trade_deposit:viewAny')
-                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="text-center card-body">
-                                        <h6 class="mb-0">Total Deposit</h6>
-                                        <h2 class="mt-2 mb-1 number-font text-primary">$<span
-                                                class="counter"><?= $total_deposit ? number_format($total_deposit , 2) : '0' ?></span>
-                                        </h2>
-                                        <!-- <p class="mb-0 text-muted"> Completed</p> -->
+                                    <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                        <div class="text-center card-body">
+                                            <h6 class="mb-0">Total Deposit</h6>
+                                            <h2 class="mt-2 mb-1 number-font text-primary">$<span
+                                                    class="counter"><?= $total_deposit ? number_format($total_deposit , 2) : '0' ?></span>
+                                            </h2>
+                                            <!-- <p class="mb-0 text-muted"> Completed</p> -->
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="text-center card-body">
-                                        <h6 class="mb-0">Unapproved Deposit</h6>
-                                        <h2 class="mt-2 mb-1 number-font text-secondary">$<span
-                                                class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 2) : '0' ?></span>
-                                        </h2>
-                                    </div>
-                                </div>
+                                    @if ($account->demo == 0)
+                                        <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                            <div class="text-center card-body">
+                                                <h6 class="mb-0">Unapproved Deposit</h6>
+                                                <h2 class="mt-2 mb-1 number-font text-secondary">$<span
+                                                        class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 2) : '0' ?></span>
+                                                </h2>
+                                            </div>
+                                        </div>
+                                    @endcan
                                 @endcan
-                                @can('trade_withdrawals:viewAny')
-                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="text-center card-body">
-                                        <h6 class="mb-0">Total Withdrawl</h6>
-                                        <h2 class="mt-2 mb-1 number-font text-primary">$<span
-                                                class="counter"><?= $total_withdrawl ? number_format($total_withdrawl , 2) : '0' ?></span>
-                                        </h2>
-                                        <!-- <p class="mb-0 text-muted"> Completed</p> -->
-                                    </div>
-                                </div>
-                                <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                    <div class="text-center card-body">
-                                        <h6 class="mb-0">Unapproved Withdrawl</h6>
-                                        <h2 class="mt-2 mb-1 number-font text-secondary">$<span
-                                                class="counter"><?= $unapprove_withdrawl ? number_format($unapprove_withdrawl , 2) : '0' ?></span>
-                                        </h2>
-                                    </div>
-                                </div>
-                                @endcan
+                                @if ($account->demo == 0)
+                                    @can('trade_withdrawals:viewAny')
+                                        <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                            <div class="text-center card-body">
+                                                <h6 class="mb-0">Total Withdrawl</h6>
+                                                <h2 class="mt-2 mb-1 number-font text-primary">$<span
+                                                        class="counter"><?= $total_withdrawl ? number_format($total_withdrawl , 2) : '0' ?></span>
+                                                </h2>
+                                                <!-- <p class="mb-0 text-muted"> Completed</p> -->
+                                            </div>
+                                        </div>
+                                        <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                            <div class="text-center card-body">
+                                                <h6 class="mb-0">Unapproved Withdrawl</h6>
+                                                <h2 class="mt-2 mb-1 number-font text-secondary">$<span
+                                                        class="counter"><?= $unapprove_withdrawl ? number_format($unapprove_withdrawl , 2) : '0' ?></span>
+                                                </h2>
+                                            </div>
+                                        </div>
+                                    @endcan
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -746,39 +753,41 @@ if ($getUser) {
                             </div>
                         @endcan
                         @can('trade_withdrawals:viewAny')
-                            <div class="col-12">
-                                <div class="card custom-card">
-                                    <div class="card-header justify-content-between">
-                                        <div class="card-title">
-                                            Withdrawal
+                            @if ($account->demo == 0)
+                                <div class="col-12">
+                                    <div class="card custom-card">
+                                        <div class="card-header justify-content-between">
+                                            <div class="card-title">
+                                                Withdrawal
+                                            </div>
+                                            <div class="prism-toggle">
+                                            </div>
                                         </div>
-                                        <div class="prism-toggle">
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table text-nowrap" id="tableWithdrawal">
-                                                <thead>
-                                                    <tr>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table text-nowrap" id="tableWithdrawal">
+                                                    <thead>
+                                                        <tr>
 
-                                                        <th>Account No</th>
-                                                        <th>Withdrawal Amount</th>
-                                                        <th>Withdrawal Type</th>
-                                                        <th>Withdraw To</th>
-                                                        <th>Withdrawal Date</th>
-                                                        <th>Status</th>
-                                                        @can('trade_withdrawals:view')
-                                                            <th>Actions</th>
-                                                        @endcan
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                </tbody>
-                                            </table>
+                                                            <th>Account No</th>
+                                                            <th>Withdrawal Amount</th>
+                                                            <th>Withdrawal Type</th>
+                                                            <th>Withdraw To</th>
+                                                            <th>Withdrawal Date</th>
+                                                            <th>Status</th>
+                                                            @can('trade_withdrawals:view')
+                                                                <th>Actions</th>
+                                                            @endcan
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @endcan
                         @can('trade_withdrawals:viewAny')
                             <div class="col-12">
@@ -787,11 +796,11 @@ if ($getUser) {
                                         <div class="card-title">
                                             TRADES
                                             <div class="d-inline-flex gap-2 ms-3">
-                                                <a href="/admin/export-all-trades?id=<?= $account->id ?>" 
+                                                <a href="/admin/export-all-trades?id=<?= $account->id ?>"
                                                    class="export-all-btn-header btn btn-sm">
                                                     EXPORT ALL
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                <button type="button" class="btn btn-sm btn-danger"
                                                         data-bs-toggle="modal" data-bs-target="#exportFilterModal">
                                                     Export with filter
                                                 </button>
@@ -1246,32 +1255,32 @@ if ($getUser) {
             // Export Filter Form Handler
             document.getElementById('exportFilterForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                
+
                 const dateFrom = document.getElementById('date_from').value;
                 const dateTo = document.getElementById('date_to').value;
                 const accountId = '<?= $account->id ?>';
-                
+
                 // Validation
                 if (!dateFrom || !dateTo) {
                     alert('Please select both start and end dates.');
                     return;
                 }
-                
+
                 if (new Date(dateFrom) > new Date(dateTo)) {
                     alert('Start date cannot be greater than end date.');
                     return;
                 }
-                
+
                 // Build export URL
                 const exportUrl = `/admin/export-filtered-trades?id=${accountId}&date_from=${dateFrom}&date_to=${dateTo}`;
-                
+
                 // Close modal
                 const modalElement = document.getElementById('exportFilterModal');
                 const modal = bootstrap.Modal.getInstance(modalElement);
                 if (modal) {
                     modal.hide();
                 }
-                
+
                 // Trigger download
                 window.location.href = exportUrl;
             });
