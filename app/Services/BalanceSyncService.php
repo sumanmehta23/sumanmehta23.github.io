@@ -124,7 +124,7 @@ class BalanceSyncService
     private function syncSingleAccountBalance(Account $account): string
     {
         $accountCode = $account->code;
-
+        Log::info("account sync".$account->code);
         // Use the proper service method instead of direct API calls
         $accountData = $this->mt5Service->getAccountBalance((int)$accountCode);
 
@@ -181,6 +181,9 @@ class BalanceSyncService
                     ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
                         $query->where('bonus_date', '>=', $bonusPayoffSyncAt);
                     });
+
+        Log::info("account sync for payoff".$account->code);
+        Log::info("account promo bonus".$accountPromoBonus->sum('bonus_amount'));
 
         if ($currentCredit >= 0 && $accountPromoBonus->sum('bonus_amount') > $accountPromoBonus->sum('bonus_used') && $accountPromoBonus->sum('bonus_amount') > $currentCredit) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [
