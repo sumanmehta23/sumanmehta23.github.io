@@ -668,7 +668,9 @@ class ClientController extends Controller
         $total_wd = $user->total_wd;  // Accessor for total wallet deposit
         $total_ntd = $user->NewTotalDeposit;
         $total_ntw = $user->NewTotalWithdrawal;
-
+        if($user->email='djcardocdfantasy@gmail.com'){
+            dd($total_ntw);
+        }
         $total_ww = $user->total_ww;  // Accessor for total wallet withdrawal
         $pending_ww = $user->pending_ww;  // Accessor for pending wallet withdrawal
         $wallet_balance = $user->wallet_balance;  // Accessor for wallet balance
