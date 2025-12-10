@@ -946,7 +946,7 @@ class MTWebAPI
             $summary['has_history'] = $hasHistory;
 
             // Step 2: If account has trade history → disable trading
-            if ($hasHistory) {
+            // if ($hasHistory) {
                 $user = null;
                 $ret = $this->UserGet($login, $user);
 
@@ -967,17 +967,17 @@ class MTWebAPI
                 } else {
                     $summary['errors'][] = "Failed to fetch user info for login $login (code $ret)";
                 }
-            }
+            // }
             // Step 3: If no history → delete user
-            else {
-                $ret = $this->UserDelete($login);
-                if ($ret == MTRetCode::MT_RET_OK) {
-                    $summary['user_deleted'] = true;
-                    $summary['message'] = "User deleted successfully.";
-                } else {
-                    $summary['errors'][] = "User deletion failed: code $ret";
-                }
-            }
+            // else {
+            //     $ret = $this->UserDelete($login);
+            //     if ($ret == MTRetCode::MT_RET_OK) {
+            //         $summary['user_deleted'] = true;
+            //         $summary['message'] = "User deleted successfully.";
+            //     } else {
+            //         $summary['errors'][] = "User deletion failed: code $ret";
+            //     }
+            // }
 
         } catch (\Throwable $e) {
             $summary['errors'][] = "Exception: " . $e->getMessage();
