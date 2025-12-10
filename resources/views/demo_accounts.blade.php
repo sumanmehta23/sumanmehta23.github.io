@@ -29,7 +29,7 @@
                                         href="/DemoAccounts#" data-bs-toggle="dropdown" aria-haspopup="true"
                                         aria-expanded="false"><i class="ti ti-dots-vertical f-18"></i></a>
                                     <div class="dropdown-menu dropdown-menu-end">
-                                        <a class="dropdown-item" href="/DemoAccounts#">Open New Account</a>
+                                        <a class="dropdown-item" href="/createDemoAccount">Open New Account</a>
                                     </div>
                                 </div>
                             </div>

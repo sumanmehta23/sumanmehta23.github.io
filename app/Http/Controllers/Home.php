@@ -112,7 +112,7 @@ class Home extends Controller
     {
         $demoaccount_details = auth()->user()->demoAccounts()
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'platform', 'registered_date']);
         return $demoaccount_details;
     }
     public function getIb1Details($userId)
