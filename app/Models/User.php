@@ -215,7 +215,8 @@ class User extends Authenticatable
 
     public function getNewTotalDepositAttribute()
     {
-        return TradeDeposit::where('user_id', $this->id)
+        return TradeDeposit::withTrashed()
+            ->where('user_id', $this->id)
             ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->where('status', 1)
             ->sum('deposit_amount');
@@ -223,7 +224,8 @@ class User extends Authenticatable
 
     public function getNewTotalWithdrawalAttribute()
     {
-        return TradeWithdrawals::where('user_id', $this->id)
+        return TradeWithdrawals::withTrashed()
+            ->where('user_id', $this->id)
             ->where('withdraw_type', 'Trade Withdrawal')
             ->where('status', 1)
             ->whereNull('deleted_at')
@@ -233,7 +235,8 @@ class User extends Authenticatable
 
     public function getPendingWwAttribute()
     {
-        return WalletWithdraw::where('user_id', $this->id)
+        return WalletWithdraw::withTrashed()
+            ->where('user_id', $this->id)
             ->where('status', 0)
             ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
             ->value('total');
@@ -241,7 +244,8 @@ class User extends Authenticatable
 
     public function getTotalBalanceAttribute()
     {
-        return TotalBalance::where('user_id', $this->id)
+        return TotalBalance::withTrashed()
+            ->where('user_id', $this->id)
             ->selectRaw('
                 SUM(deposit_amount) as deposit_amount,
                 SUM(trading_deposited) as trading_deposited,
@@ -299,11 +303,11 @@ class User extends Authenticatable
     public function affiliateParent()
     {
         if (!$this->cxd) return null;
-        
-        $cxdValue = strpos($this->cxd, '_') !== false 
-            ? substr($this->cxd, 0, strpos($this->cxd, '_')) 
+
+        $cxdValue = strpos($this->cxd, '_') !== false
+            ? substr($this->cxd, 0, strpos($this->cxd, '_'))
             : $this->cxd;
-        
+
         return Affiliate::where('custom_id', $cxdValue)->first();
     }
 
@@ -314,7 +318,7 @@ class User extends Authenticatable
     public function affiliateChildren()
     {
         if (!$this->affiliate_id) return collect();
-        
+
         return User::where('cxd', $this->affiliate_id)
             ->orWhere('cxd', 'LIKE', $this->affiliate_id . '_%')
             ->get();
