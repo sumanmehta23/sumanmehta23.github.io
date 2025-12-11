@@ -1676,7 +1676,7 @@ class AjaxController extends Controller
         $role = session('userData')['userRole'] ?? null;
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
-        
+
         $query = Trade::select('trades.*')
             ->with(['account.user']);
 
@@ -1777,7 +1777,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
         $accountId = $request->get('id');
-        
+
         // Build filename with account info if accountId provided
         if ($accountId) {
             $account = Account::with('user')->find($accountId);
@@ -1865,7 +1865,7 @@ class AjaxController extends Controller
         $accountId = $request->get('id');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
-        
+
         // Build filename with account info and date range
         if ($accountId) {
             $account = Account::with('user')->find($accountId);
@@ -5034,11 +5034,11 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Promo code is valid. You’ll get a ' . $promocode->promo_percentage . '% discount on your deposit.';
+            $message = 'Promo code is valid. Deposit between '.'('.$promocode->min_deposit.')'.' and '.'('.$promocode->max_deposit.')' .' and receive ('. $promocode->promo_percentage . '% ) extra.';
 
-            if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
-                $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
-            }
+            // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
+            //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
+            // }
 
             return response()->json([
                 'valid' => true,
