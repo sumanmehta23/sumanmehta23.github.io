@@ -119,7 +119,7 @@ class InternalTransfer extends Controller
                 $query->where('bonus_type', 'Bonus In')
                     ->orWhere('bonus_type', 'Bonus Out');
             })
-            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage'])
+            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage','Bonus Pay Off','Promo Bonus','Promo Deduction','Promo Addition'])
             ->sum('bonus_amount');
 
         $transferable_amount = $request->input('transferable_amount');
@@ -180,22 +180,33 @@ class InternalTransfer extends Controller
                         //     dump($bonusamount);
                         // }
 
-                        if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                        } else {
-                            $deposit_details = BonusTransaction::create([
-                                'email' => $fromAccount->email,
-                                'user_id' => $customerID,
-                                'account_id' => $fromAccount->id,
-                                'code' => $fromAccount->code,
-                                'bonus_amount' => $bonusamount,
-                                'bonus_type' => 'Bonus Out',
-                                'status' => 1,
-                                'admin_remark' => '10x Trader Leverage',
-                                'bonus_currency' => 'USD',
-                                // 'created_by' => session('alogin')
-                            ]);
+                        $bonus_left = BonusTransaction::where('account_id', $fromAccount->id)
+                                ->where(function ($query) {
+                                    $query->where('bonus_type', 'Bonus In')
+                                        ->orWhere('bonus_type', 'Bonus Out');
+                                })
+                                ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage','Bonus Pay Off','Promo Bonus','Promo Deduction','Promo Addition'])
+                                ->sum('bonus_amount');
+
+                        if(isset($bonus_left) && $bonus_left > 1){
+                            if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
+                                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
+                            } else {
+                                $deposit_details = BonusTransaction::create([
+                                    'email' => $fromAccount->email,
+                                    'user_id' => $customerID,
+                                    'account_id' => $fromAccount->id,
+                                    'code' => $fromAccount->code,
+                                    'bonus_amount' => $bonusamount,
+                                    'bonus_type' => 'Bonus Out',
+                                    'status' => 1,
+                                    'admin_remark' => '10x Trader Leverage',
+                                    'bonus_currency' => 'USD',
+                                    // 'created_by' => session('alogin')
+                                ]);
+                            }
                         }
+
                     }
                     if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
 
