@@ -434,13 +434,7 @@
                                                                             </td>
 
                                                                             <td class="text-center">
-                                                                                @if($acc->deleted_at != null)
-                                                                                    @if ($acc->admin_action_by == 'Admin')
-                                                                                        <span class="text-danger">Wallet deleted by Admin</span>
-                                                                                    @else
-                                                                                        <span class="text-danger">Wallet deleted by Client</span>
-                                                                                    @endif
-                                                                                @elseif ($acc->wallet_delete_verification == 0)
+                                                                                @if ($acc->wallet_delete_verification == 0)
                                                                                     <div class="d-flex justify-content-center
                                                                                         {{ $acc->status == 0 ? 'text-warning' : ($acc->status == 1 ? 'text-success' : ($acc->status == 2 ? 'text-danger' : '')) }}">
 

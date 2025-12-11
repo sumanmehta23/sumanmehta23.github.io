@@ -5068,7 +5068,8 @@ class AjaxController extends Controller
     public function getClientWallets($id)
     {
         try {
-            $wallets = ClientWallet::where('user_id', $id)
+            $wallets = ClientWallet::withTrashed()
+                ->where('user_id', $id)
                 ->with('user')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -5079,17 +5080,32 @@ class AjaxController extends Controller
                     ? '<span class="badge bg-success"><i class="ri-check-line"></i> Verified</span>'
                     : '<span class="badge bg-warning"><i class="ri-close-line"></i> Not Verified</span>';
 
-                $statusBadge = $wallet->status == 1
-                    ? '<span class="badge bg-outline-success">Active</span>'
-                    : '<span class="badge bg-outline-danger">Inactive</span>';
+                // STATUS BADGE
+                if ($wallet->deleted_at) {
+                    if ($wallet->admin_action_by == 'Admin') {
+                        $statusBadge = '<span class="badge bg-danger">Deleted by Admin</span>';
+                    } else {
+                        $statusBadge = '<span class="badge bg-danger">Deleted by User</span>';
+                    }
 
-                $actionButtons = '';
+                    $actionButtons = ''; // keep empty when deleted
 
-                if (!$wallet->verified) {
-                    $actionButtons .= '<button class="btn btn-sm btn-success verifyWallet" data-wallet-id="' . $wallet->id . '" title="Verify Wallet"><i class="ri-check-line"></i> Verify</button>';
+                } else {
+
+                    // Normal active / inactive badge
+                    $statusBadge = $wallet->status == 1
+                        ? '<span class="badge bg-outline-success">Active</span>'
+                        : '<span class="badge bg-outline-danger">Inactive</span>';
+
+                    // Normal action buttons
+                    $actionButtons = '';
+
+                    if (!$wallet->verified) {
+                        $actionButtons .= '<button class="btn btn-sm btn-success verifyWallet" data-wallet-id="' . $wallet->id . '" title="Verify Wallet"><i class="ri-check-line"></i> Verify</button>';
+                    }
+
+                    $actionButtons .= ' <button class="btn btn-sm btn-danger deleteWallet" data-wallet-id="' . $wallet->id . '" data-wallet-name="' . $wallet->wallet_name . '" title="Delete Wallet"><i class="ri-delete-bin-line"></i> Delete</button>';
                 }
-
-                $actionButtons .= ' <button class="btn btn-sm btn-danger deleteWallet" data-wallet-id="' . $wallet->id . '" data-wallet-name="' . $wallet->wallet_name . '" title="Delete Wallet"><i class="ri-delete-bin-line"></i> Delete</button>';
 
                 $data[] = [
                     'created_on' => Carbon::parse($wallet->created_at)->format('Y-m-d H:i:s'),
