@@ -135,8 +135,15 @@
                                                             <td>
                                                                 <div class="row align-items-center">
                                                                     <div class="col-auto pe-0">
-                                                                        <img src="/assets/images/mt5.png" alt="user-image"
-                                                                            class="rounded wid-50 hei-50">
+                                                                        {{-- <img src="/assets/images/mt5.png" alt="user-image"
+                                                                            class="rounded wid-50 hei-50"> --}}
+                                                                        @if($liveAccount->platform === 'x9')
+                                                                            <img src="/images/x92.png" alt="X9 Platform"
+                                                                                class="rounded wid-50 hei-50">
+                                                                        @else
+                                                                            <img src="/assets/images/mt5.png" alt="MT5 Platform"
+                                                                                class="rounded wid-50 hei-50">
+                                                                        @endif
                                                                     </div>
                                                                     <div class="col">
                                                                         {{-- <h4 class="mb-2 ms-2">
