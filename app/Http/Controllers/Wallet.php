@@ -694,7 +694,7 @@ class Wallet extends Controller
                 "btn_text" => "Login"
             ];
             $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
-            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Details succesfully updated');
+            return redirect()->route('user-profile')->with('status', 'Your Wallet Details succesfully updated');
         }
         return redirect()->route('user-profile')->with('error', 'Something went wrong');
     }
@@ -744,7 +744,7 @@ class Wallet extends Controller
         ];
         $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
         if ($deleted) {
-            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Address succesfully deleted');
+            return redirect()->route('user-profile')->with('status', 'Your Wallet Address succesfully deleted');
         } else {
             return redirect()->route('user-profile')->with('error', 'Something went wrong');
         }
@@ -801,7 +801,7 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('success', 'WoW! Your Wallet Address is now Verified');
+                return redirect()->route('trade-withdrawal')->with('success', 'Your Wallet Address is now Verified');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
             }
@@ -1694,7 +1694,7 @@ class Wallet extends Controller
                     "subtitle_right" => "Successful",
                 ];
                 $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Withdrawal is now Verified');
+                return redirect()->route('wallet_withdrawal')->with('status', 'Your Wallet Withdrawal is now Verified');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Withdrawal is already Verified');
             }
