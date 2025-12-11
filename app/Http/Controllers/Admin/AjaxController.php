@@ -5196,6 +5196,8 @@ class AjaxController extends Controller
                 ], 422);
             }
 
+            $wallet->admin_action_by = 'Admin';
+            $wallet->wallet_delete_verification = 1;
             // Soft delete the wallet
             $wallet->delete();
 
