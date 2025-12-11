@@ -108,16 +108,16 @@ if ($getUser) {
                                                 </div>
                                             </div>
                                             @if (!$account->deleted_at)
-                                                <div class="mt-3 row {{ $account->demo == 0 ? 'justify-content-center' : 'justify-content-start' }}">
-                                                    @can("trade_deposit:create")
-                                                    <div class="mb-2 col-6">
-                                                        <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                            data-bs-target="#depositModal">Deposit
-                                                            <i class="ti ti-database-import"></i>
-                                                        </span>
-                                                    </div>
-                                                    @endcan
+                                                <div class="mt-3 row justify-content-center">
                                                     @if ($account->demo == 0)
+                                                        @can("trade_deposit:create")
+                                                        <div class="mb-2 col-6">
+                                                            <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                                data-bs-target="#depositModal">Deposit
+                                                                <i class="ti ti-database-import"></i>
+                                                            </span>
+                                                        </div>
+                                                        @endcan
                                                         @can("trade_withdrawals:create")
                                                         <div class="mb-2 col-6">
                                                             <span class="badge btn btn-info" data-bs-toggle="modal"
@@ -566,31 +566,31 @@ if ($getUser) {
                     @endcan
                 </div>
                 <div class="col-xl-8">
-                    <div class="card">
-                        <div class="p-0 card-body">
-                            <div class="row">
-                                @can('trade_deposit:viewAny')
-                                    <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
-                                        <div class="text-center card-body">
-                                            <h6 class="mb-0">Total Deposit</h6>
-                                            <h2 class="mt-2 mb-1 number-font text-primary">$<span
-                                                    class="counter"><?= $total_deposit ? number_format($total_deposit , 2) : '0' ?></span>
-                                            </h2>
-                                            <!-- <p class="mb-0 text-muted"> Completed</p> -->
-                                        </div>
-                                    </div>
-                                    @if ($account->demo == 0)
+                    @if ($account->demo == 0)
+                        <div class="card">
+                            <div class="p-0 card-body">
+                                <div class="row">
+                                    @can('trade_deposit:viewAny')
                                         <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
                                             <div class="text-center card-body">
-                                                <h6 class="mb-0">Unapproved Deposit</h6>
-                                                <h2 class="mt-2 mb-1 number-font text-secondary">$<span
-                                                        class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 2) : '0' ?></span>
+                                                <h6 class="mb-0">Total Deposit</h6>
+                                                <h2 class="mt-2 mb-1 number-font text-primary">$<span
+                                                        class="counter"><?= $total_deposit ? number_format($total_deposit , 2) : '0' ?></span>
                                                 </h2>
+                                                <!-- <p class="mb-0 text-muted"> Completed</p> -->
                                             </div>
                                         </div>
+                                        @if ($account->demo == 0)
+                                            <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
+                                                <div class="text-center card-body">
+                                                    <h6 class="mb-0">Unapproved Deposit</h6>
+                                                    <h2 class="mt-2 mb-1 number-font text-secondary">$<span
+                                                            class="counter"><?= $unapprove_deposit ? number_format($unapprove_deposit , 2) : '0' ?></span>
+                                                    </h2>
+                                                </div>
+                                            </div>
+                                        @endcan
                                     @endcan
-                                @endcan
-                                @if ($account->demo == 0)
                                     @can('trade_withdrawals:viewAny')
                                         <div class="col-xl-3 col-lg-6 col-sm-6 pe-0 ps-0 border-end">
                                             <div class="text-center card-body">
@@ -610,10 +610,10 @@ if ($getUser) {
                                             </div>
                                         </div>
                                     @endcan
-                                @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
                     @can('account:viewCredentials')
                         <div class="row">
                             <div class="col-lg-12">
@@ -719,38 +719,40 @@ if ($getUser) {
                     @endcan
                     <div class="row">
                         @can('trade_deposit:viewAny')
-                            <div class="col-12">
-                                <div class="card custom-card">
-                                    <div class="card-header justify-content-between">
-                                        <div class="card-title">
-                                            Deposits
+                            @if ($account->demo == 0)
+                                <div class="col-12">
+                                    <div class="card custom-card">
+                                        <div class="card-header justify-content-between">
+                                            <div class="card-title">
+                                                Deposits
+                                            </div>
+                                            <div class="prism-toggle">
+                                            </div>
                                         </div>
-                                        <div class="prism-toggle">
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table text-nowrap" id="tableDeposit">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Account No</th>
-                                                        <th>Deposit Amount</th>
-                                                        <th>Deposit Type</th>
-                                                        <th>Deposit From</th>
-                                                        <th>Deposited Date</th>
-                                                        <th>Status</th>
-                                                        @can('trade_deposit:view')
-                                                            <th>Actions</th>
-                                                        @endcan
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                </tbody>
-                                            </table>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table text-nowrap" id="tableDeposit">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Account No</th>
+                                                            <th>Deposit Amount</th>
+                                                            <th>Deposit Type</th>
+                                                            <th>Deposit From</th>
+                                                            <th>Deposited Date</th>
+                                                            <th>Status</th>
+                                                            @can('trade_deposit:view')
+                                                                <th>Actions</th>
+                                                            @endcan
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @endcan
                         @can('trade_withdrawals:viewAny')
                             @if ($account->demo == 0)
