@@ -965,24 +965,24 @@ class MT5Accounts extends Controller
         try {
             $login = (int)$account->code;
 
-            if( $platform === 'x9' ) {
+            if ($platform === 'x9') {
                 $response = $this->x9Service->getUserDetails($login);
                 if ($response['data']['trading_account']['trading_account_balance']['balance'] > 0) {
-                    if($response['data']['trading_account']['client_group_type'] != 'DEMO'){
+                    if ($response['data']['trading_account']['client_group_type'] != 'DEMO') {
                         return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
                     }
                 }
                 // X9 deletion logic
-                $response = $this->x9Service->accountSetting($account,'is_enable',false);
+                $response = $this->x9Service->accountSetting($account, 'is_enable', false);
                 if (!$response['status']) {
                     return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
                 }
                 // Delete from local database
                 $account->delete();
-            } elseif( $platform === 'mt5' ) {
+            } elseif ($platform === 'mt5') {
 
                 $trade_user = null;
-                if (($error_code =$this->api->UserGet($login,$trade_user)!= MTRetCode::MT_RET_OK)) {
+                if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
                     return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
                 }
 
@@ -1057,7 +1057,6 @@ class MT5Accounts extends Controller
             $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
 
             return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
-
         } catch (\Exception $e) {
             Log::error('Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Exception: ' . $e->getMessage());
@@ -1240,11 +1239,16 @@ class MT5Accounts extends Controller
 
         if ($response['status']) {
             $x9AccountData = $response['data'];
-            $loginId = $x9AccountData['trading_account']['account_number'] ?? null;
-            $tradingAccountId = $x9AccountData['trading_account']['trading_account_id'] ?? null;
+
+            // Handle both V1 and V2 response structures
+            // V2: {"success": true, "data": {"account_number": "12345678", "trading_account_id": 123, ...}}
+            // V1: {"trading_account": {"account_number": "12345678", ...}}
+            $loginId = $x9AccountData['data']['account_number'] ?? $x9AccountData['account_number'] ?? $x9AccountData['trading_account']['account_number'] ?? null;
+            $tradingAccountId = $x9AccountData['data']['trading_account_id'] ?? $x9AccountData['trading_account_id'] ?? $x9AccountData['trading_account']['trading_account_id'] ?? null;
 
             if (!$loginId) {
-                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned');
+                Log::error('X9 Demo Account Creation - No account number in response: ' . json_encode($x9AccountData));
+                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned. Please check logs.');
             }
 
             // Log activity
@@ -1283,11 +1287,14 @@ class MT5Accounts extends Controller
             // Deposit demo balance in X9
             $balanceResponse = $this->x9Service->manageBalance(
                 $loginId,
-                'balance',
+                'Deposit',
                 'deposit',
                 $validatedData['demo_deposit'],
                 'Demo Account Initial Deposit'
             );
+
+            Log::info('X9 Demo Balance Deposit Response: ' . json_encode($balanceResponse));
+
             $new_user = json_decode(json_encode([
                 "Email" => $user->email,
                 "Name" => $user->fullname,
