@@ -53,7 +53,7 @@ class Users extends Controller
     public function profile()
     {
         $user_id = auth()->user()->id;
-        $bank_accounts = ClientWallet::where('user_id', $user_id)->orderBy('id', 'desc')->paginate(5);
+        $bank_accounts = ClientWallet::withTrashed()->where('user_id', $user_id)->orderBy('id', 'desc')->paginate(5);
         $user = User::where('id', $user_id)->first();
 
         // $verf_docs = KycUpdate::where('user_id', $user_id)->orderBy('id', 'desc')->get();
