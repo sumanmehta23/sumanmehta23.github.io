@@ -67,7 +67,7 @@ class X9Service
         try {
             // V2 API payload structure
             $payload = [
-                'account_number' => $userData['preferred_login'] ?? 'default',
+                'preferred_login' => $userData['preferred_login'] ?? 'default',
                 'client_id' => $userData['client_id'] ?? null,
                 'client_group_type_id' => $userData['client_group_type_id'] ?? 1, // 1 for Demo, 2 for Real
                 'client_group_id' => $userData['client_group_id'] ?? 1,
@@ -79,7 +79,8 @@ class X9Service
                 'phone' => $userData['phone'] ?? null,
                 'master_password' => $userData['master_password'],
                 'investor_password' => $userData['investor_password'],
-                'country_id' => $userData['country_id'] ?? 5
+                'country_id' => $userData['country_id'] ?? 5,
+                'account_number' => $userData['preferred_login'] ?? 'default',
             ];
 
             // Use V2 endpoint and X-API-Key header
