@@ -67,7 +67,7 @@ class X9Service
         try {
             // V2 API payload structure
             $payload = [
-                'preferred_login' => $userData['preferred_login'] ?? 'default',
+                'account_number' => $userData['preferred_login'] ?? 'default',
                 'client_id' => $userData['client_id'] ?? null,
                 'client_group_type_id' => $userData['client_group_type_id'] ?? 1, // 1 for Demo, 2 for Real
                 'client_group_id' => $userData['client_group_id'] ?? 1,
@@ -481,7 +481,7 @@ class X9Service
 
     /**
      * Reset user password in X9 using V2 API
-     * 
+     *
      * Note: V2 API currently only supports master password updates via PATCH endpoint.
      * Investor password updates may need to use V1 CRM API or a different V2 endpoint.
      */
@@ -572,7 +572,7 @@ class X9Service
 
     /**
      * Get closed trades by client group ID using V2 API
-     * 
+     *
      * @param int $clientGroupId The client group ID
      * @param string $dateFrom Start date (Y-m-d format)
      * @param string $dateTo End date (Y-m-d format)
