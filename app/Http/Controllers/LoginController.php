@@ -37,6 +37,11 @@ class LoginController extends Controller
     {
         // Redirect authenticated users to dashboard
         if (Auth::check()) {
+            $user = Auth::user();
+            // Check if 2FA is enabled and not yet verified
+            if ($user->two_factor_secret && $user->two_factor_confirmed_at && !Session::has('2fa:verified')) {
+                return redirect()->route('two_factor_auth');
+            }
             return redirect()->route('dashboard');
         }
         return view('auth.login');
@@ -54,12 +59,28 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        $admin = Auth::guard('admin')->user(); // Assuming you're using 'admin' guard
+        // Check admin guard first (for admin users)
+        $admin = Auth::guard('admin')->user();
+        if ($admin) {
+            if (!Hash::check($request->password, $admin->password)) {
+                return response()->json([
+                    'message' => 'The password is incorrect.'
+                ], 422);
+            }
+        } else {
+            // Check web guard (for regular users)
+            $user = Auth::guard('web')->user();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'You must be authenticated to confirm your password.'
+                ], 401);
+            }
 
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
-            return response()->json([
-                'message' => 'The password is incorrect.'
-            ], 422); // 422 Unprocessable Entity for validation-like errors
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'message' => 'The password is incorrect.'
+                ], 422);
+            }
         }
 
         // Store the timestamp in session to mark password confirmation
@@ -248,7 +269,10 @@ class LoginController extends Controller
             );
         }
 
-        // ✅ Success: 2FA verified
+        // ✅ Success: 2FA verified - Set session flag
+        Session::put('2fa:verified', true);
+        Session::forget('2fa:user_id'); // Clean up temporary session
+
         return redirect()->intended(route('dashboard'));
     }
 
