@@ -215,7 +215,8 @@ class User extends Authenticatable
 
     public function getNewTotalDepositAttribute()
     {
-        return TradeDeposit::where('user_id', $this->id)
+        return TradeDeposit::withTrashed()
+            ->where('user_id', $this->id)
             ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->where('status', 1)
             ->sum('deposit_amount');
@@ -223,17 +224,18 @@ class User extends Authenticatable
 
     public function getNewTotalWithdrawalAttribute()
     {
-        return TradeWithdrawals::where('user_id', $this->id)
+        return TradeWithdrawals::withTrashed()
+            ->where('user_id', $this->id)
             ->where('withdraw_type', 'Trade Withdrawal')
             ->where('status', 1)
-            ->whereNull('deleted_at')
             ->selectRaw('SUM(withdrawal_amount + COALESCE(transaction_fee, 0)) as total')
             ->value('total');
     }
 
     public function getPendingWwAttribute()
     {
-        return WalletWithdraw::where('user_id', $this->id)
+        return WalletWithdraw::withTrashed()
+            ->where('user_id', $this->id)
             ->where('status', 0)
             ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
             ->value('total');
@@ -241,7 +243,8 @@ class User extends Authenticatable
 
     public function getTotalBalanceAttribute()
     {
-        return TotalBalance::where('user_id', $this->id)
+        return TotalBalance::withTrashed()
+            ->where('user_id', $this->id)
             ->selectRaw('
                 SUM(deposit_amount) as deposit_amount,
                 SUM(trading_deposited) as trading_deposited,
@@ -299,11 +302,11 @@ class User extends Authenticatable
     public function affiliateParent()
     {
         if (!$this->cxd) return null;
-        
-        $cxdValue = strpos($this->cxd, '_') !== false 
-            ? substr($this->cxd, 0, strpos($this->cxd, '_')) 
+
+        $cxdValue = strpos($this->cxd, '_') !== false
+            ? substr($this->cxd, 0, strpos($this->cxd, '_'))
             : $this->cxd;
-        
+
         return Affiliate::where('custom_id', $cxdValue)->first();
     }
 
@@ -314,7 +317,7 @@ class User extends Authenticatable
     public function affiliateChildren()
     {
         if (!$this->affiliate_id) return collect();
-        
+
         return User::where('cxd', $this->affiliate_id)
             ->orWhere('cxd', 'LIKE', $this->affiliate_id . '_%')
             ->get();
@@ -413,9 +416,9 @@ class User extends Authenticatable
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
             '<p></p>'.
-            '<p>You are receiving this email because you have registered for a Trading Account.</p>' .
+            '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
             '<p></p>'.
-            '<p>Click the link below to activate your Trading Account</p>';
+            '<p>Click the link below to activate your Account</p>';
         $code = $this->emailToken;
         $templateVars = [
             'name' => $this->fullname,

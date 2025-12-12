@@ -629,9 +629,9 @@ class LoginController extends Controller
             $content =
                 '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
                 '<p></p>' .
-                '<p>You are receiving this email because you have registered for a Trading Account.</p>' .
+                '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
                 '<p></p>' .
-                '<p>Click the link below to activate your Trading Account</p>';
+                '<p>Click the link below to activate your Account</p>';
 
             $templateVars = [
                 'name' => $request->fullname,

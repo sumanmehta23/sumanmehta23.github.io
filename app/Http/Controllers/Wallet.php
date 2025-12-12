@@ -207,17 +207,17 @@ class Wallet extends Controller
         switch ($network) {
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
-                $startsWithValid = (strpos($address, '1') === 0) || 
-                                   (strpos($address, '3') === 0) || 
+                $startsWithValid = (strpos($address, '1') === 0) ||
+                                   (strpos($address, '3') === 0) ||
                                    (strpos($address, 'bc1') === 0);
-                
+
                 if (!$startsWithValid) {
                     return [
                         'valid' => false,
                         'message' => 'BTC address must start with 1, 3, or bc1.'
                     ];
                 }
-                
+
                 if ($length < 26 || $length > 62) {
                     return [
                         'valid' => false,
@@ -234,7 +234,7 @@ class Wallet extends Controller
                         'message' => 'USDT ERC20 address must start with 0x.'
                     ];
                 }
-                
+
                 if ($length !== 42) {
                     return [
                         'valid' => false,
@@ -251,7 +251,7 @@ class Wallet extends Controller
                         'message' => 'USDT TRC20 address must start with T.'
                     ];
                 }
-                
+
                 if ($length !== 34) {
                     return [
                         'valid' => false,
@@ -801,7 +801,7 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('status', 'WoW! Your Wallet Address is now Verified');
+                return redirect()->route('trade-withdrawal')->with('success', 'WoW! Your Wallet Address is now Verified');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
             }

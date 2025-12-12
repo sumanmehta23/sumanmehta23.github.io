@@ -84,7 +84,7 @@ class Account extends Model
         $bonusDeposit = $this->BonusTransaction
             ? $this->BonusTransaction
             ->filter(function ($transaction) {
-                return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage' && $transaction->admin_remark !== 'Promo Bonus' && $transaction->admin_remark !== 'Promo Deduction' && $transaction->admin_remark !== 'Promo Addition');
+                return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage' && $transaction->admin_remark !== 'Promo Bonus' && $transaction->admin_remark !== 'Promo Deduction' && $transaction->admin_remark !== 'Promo Addition' && $transaction->admin_remark !== 'Bonus Pay Off');
             })
             ->sum(function ($transaction) {
                 return (float) $transaction->bonus_amount; // Cast to float to avoid string issues
