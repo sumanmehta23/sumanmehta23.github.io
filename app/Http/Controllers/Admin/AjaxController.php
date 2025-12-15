@@ -5233,4 +5233,55 @@ class AjaxController extends Controller
             ], 500);
         }
     }
+
+    public function resendCredentials(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|exists:accounts,code'
+        ]);
+        $account = Account::where('code', $request->code)
+                    ->with('user')
+                    ->firstOrFail();
+
+        // Determine Master Password
+        $masterPassword = $account->trader_password;
+        $platform = $account->trade_platform ?? config('platforms.default');
+
+         // Send notification email
+        try {
+            $settings = settings();
+            $toEmail = $account->user->Email;
+            $from = $settings['email_from_address'];
+            $emailSubject = $settings['admin_title'] . ' - Account Details';
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $content = '
+                            <p>You have requested your trading account credentials.</p>
+                            <p>Below are your accounts details for full access to your trading account.</p>
+                        ';
+            $templateVars = [
+                'account' => $account,
+                'server_name' => $settings['mt5_company_name'],
+                'email' => $settings['email_from_address'],
+                "title_right" => "",
+                // "subtitle_right" => "Your " . $type . " Account is Ready!",
+                "content" => $content,
+                "platform" => $platform,
+            ];
+            $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Credentials sent successfully to ' . $account->user->email
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to resend credentials for account ' . $account->code . ': ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email. Please try again later.'
+            ], 500);
+        }
+    }
 }
