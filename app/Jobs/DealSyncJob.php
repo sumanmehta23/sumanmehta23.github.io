@@ -427,14 +427,14 @@ class DealSyncJob implements ShouldQueue
             // Update the account's deal sync status with the actual time range
             $account->updateDealSyncStatus($from, $to, true);
 
-            Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) from {$from} to {$to}");
+            // Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) from {$from} to {$to}");
         } else {
             // For errors, update fetch time but mark sync as incomplete
             $account->update([
                 'deals_last_fetch_at' => now(),
                 'deals_sync_complete' => false
             ]);
-            Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) - marked as incomplete");
+            // Log::info("Updated deal sync status for account {$account->code}: {$status} (deals: {$dealsCount}) - marked as incomplete");
         }
     }
 
