@@ -37,10 +37,10 @@ class MT5RestAPIService
             return [];
         }
 
-        Log::info('MT5RestAPI: Starting batch balance sync', [
-            'login_count' => count($logins),
-            'logins' => $logins
-        ]);
+        // Log::info('MT5RestAPI: Starting batch balance sync', [
+        //     'login_count' => count($logins),
+        //     'logins' => $logins
+        // ]);
 
         // Try batch REST API endpoint first
         $balances = $this->getBatchBalancesViaRestAPI($logins);
