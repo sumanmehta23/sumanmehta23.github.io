@@ -224,11 +224,11 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 'account_breakdown' => $accountTimings
             ];
 
-            Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
-                "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
-                "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
-                "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
-                "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
+            // Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
+            //     "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
+            //     "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
+            //     "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
+            //     "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
 
             Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
 
