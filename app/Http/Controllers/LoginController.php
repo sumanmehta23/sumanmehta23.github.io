@@ -486,9 +486,16 @@ class LoginController extends Controller
             'fullname' => [
                 'required',
                 'string',
-                'max:255',
-
-                'regex:/^(?!.*<script).*$/i' // Prevents `<script>` tags
+                'min:2',
+                'max:80',
+                // Allow only letters, spaces and a few common name characters
+                'regex:/^[\pL\s\.\'-]+$/u',
+                // Block obvious spam / scripted content in the name field
+                'not_regex:/http/i',
+                'not_regex:/www\./i',
+                'not_regex:/@/i',
+                'not_regex:/\d{3,}/',
+                'not_regex:/<script/i', // Prevents `<script>` tags or similar injections
             ],
             'email' => 'required|string|email|max:255|unique:aspnetusers',
             // 'password' => 'required|string|confirmed',
@@ -506,7 +513,7 @@ class LoginController extends Controller
             'country_code' => 'required',
             'telephone' => 'required',
         ], [
-            'fullname.regex' => 'The name cannot contain script tags.',
+            'fullname.regex' => 'Please enter a valid full name (letters and basic punctuation only, no links, emails or codes).',
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'password.min' => 'The password must be at least 8 characters long.',
             'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.',
