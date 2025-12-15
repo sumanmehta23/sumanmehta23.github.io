@@ -257,7 +257,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
-    Route::post('/resend-credentials', [AjaxController::class, 'resendCredentials'])->name('resend-credentials');
+    Route::post('/resend-credentials', [MT5Accounts::class, 'resendCredentials'])->name('resend-credentials');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
