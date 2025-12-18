@@ -126,7 +126,7 @@ class KycController extends Controller
     {
         $payload = $request->getContent();
         $signatureHeader = $request->header('x-hmac-signature');
-        $secret = (string) Config::get('services.veriff.webhook_secret', '');
+        $secret = (string) Config::get('services.veriff.api_secret', '');
 
         if ($secret === '' || $signatureHeader === null) {
             Log::warning('Veriff webhook received without proper configuration or signature header.');
