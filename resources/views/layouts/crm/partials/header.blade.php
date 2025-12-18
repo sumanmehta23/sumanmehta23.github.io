@@ -87,6 +87,11 @@ if (app()->environment('local') || config('services.sales.promotion') || app()->
         body .swal2-container {
             z-index: 999999999999999999 !important;
         }
+        
+        body .swal2-backdrop-show {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(2px);
+        }
 
         a.btn.btn-outline-light {
             color: var(--bs-primary);

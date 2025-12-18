@@ -71,6 +71,7 @@ Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::cl
 Route::get('/competitions-overview/trader-data/{accountNo}/{startDate}/{endDate}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
+Route::post('/user/kyc/veriff-listener', [KycController::class, 'veriffListener'])->name('kyc.veriff.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 // Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
@@ -191,9 +192,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
+    Route::get('/veriff', [Users::class, 'veriff'])->name('veriff');
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/veriff_event', [Users::class, 'veriff_event'])->name('veriff_event');
     Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     // KYC Sync Routes
@@ -464,6 +467,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('/toggle_ib_approve_request', [SettingsController::class, 'toggleIbApproveRequest'])
             ->name('toggle_ib_approve_request')
+            ->middleware('check.permissions:setting:update');
+
+        Route::post('/kyc-provider/update', [SettingsController::class, 'updateKycProvider'])
+            ->name('kyc-provider.update')
             ->middleware('check.permissions:setting:update');
 
         Route::prefix('/logs')->group(function () {

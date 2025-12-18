@@ -59,11 +59,19 @@ return [
         'promotion' => env('SALES_PROMOTION', false),
         'promotiontext' => env('SALES_PROMOTION_TEXT'),
     ],
+
     'sumsub' => [
         'api_token' => env('SUMSUB_API_TOKEN', ''),
         'api_secret' => env('SUMSUB_API_SECRET', ''),
         'webhook_secret' => env('SUMSUB_WEBHOOK_SECRET', ''),
         'clientId' => env('SUMSUB_CLIENT_ID', ''),
+    ],
+
+    'veriff' => [
+        'api_key' => env('VERIFF_API_KEY', ''),
+        'api_secret' => env('VERIFF_API_SECRET', ''),
+        'webhook_secret' => env('VERIFF_WEBHOOK_SECRET', ''),
+        'base_url' => env('VERIFF_BASE_URL', 'https://stationapi.veriff.com/v1'),
     ],
     'omnisend' => [
         'api_url' => env('OMNISEND_API_URL', 'https://api.omnisend.com/v5'),
