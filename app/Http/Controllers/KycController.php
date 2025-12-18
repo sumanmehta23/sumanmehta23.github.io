@@ -125,7 +125,7 @@ class KycController extends Controller
     public function veriffListener(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         $payload = $request->getContent();
-        $signatureHeader = $request->header('X-Veriff-Signature');
+        $signatureHeader = $request->header('x-hmac-signature');
         $secret = (string) Config::get('services.veriff.webhook_secret', '');
 
         if ($secret === '' || $signatureHeader === null) {
