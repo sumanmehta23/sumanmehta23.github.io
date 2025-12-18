@@ -338,7 +338,6 @@ class Wallet extends Controller
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
             '<p><strong>Wallet Address:</strong><br>' .
             '<span style="
-                font-family: monospace;
                 word-break: break-all;
                 overflow-wrap: break-word;
                 white-space: normal;
@@ -392,7 +391,6 @@ class Wallet extends Controller
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
             '<p><strong>Wallet Address:</strong><br>' .
             '<span style="
-                font-family: monospace;
                 word-break: break-all;
                 overflow-wrap: break-word;
                 white-space: normal;
