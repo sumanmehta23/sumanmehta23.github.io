@@ -155,7 +155,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 return;
             }
 
-            Log::info('Syncing account trades for account: ' . $this->account->code);
+            // Log::info('Syncing account trades for account: ' . $this->account->code);
             $login = $this->account->code;
             $from = 'September 01,2024';
             $to = 'March 31,2080';
@@ -172,7 +172,7 @@ class SyncAccountTradesJob implements ShouldQueue
             }
 
             if ($total == 0) {
-                Log::info("No trades found for account {$login}");
+                // Log::info("No trades found for account {$login}");
                 return;
             }
 
@@ -251,7 +251,7 @@ class SyncAccountTradesJob implements ShouldQueue
 
             // Dispatch the IB commission job if we had new trades
             if ($this->newTrades) {
-                Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
+                // Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
                 DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
             }
         } catch (\Exception $e) {

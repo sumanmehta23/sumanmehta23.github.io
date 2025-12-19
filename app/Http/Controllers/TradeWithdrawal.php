@@ -644,7 +644,8 @@ class TradeWithdrawal extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>Your Account withdrawal has been successfully confirmed.</div>';
+                    '<div>Your withdrawal has been confirmed, your funds will be processed shortly.</div>'.
+                    '<div>If you have any questions, our support team is ready to assist.</div>';
                 $templateVars = [
                     'name' => $new_wallet_Withdrawal->user->fullname,
                     'server_name' => $settings['mt5_company_name'],
