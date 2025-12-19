@@ -1574,7 +1574,7 @@ class MT5Accounts extends Controller
                 'message' => 'Credentials sent successfully to ' . $account->user->email
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to resend credentials for account ' . $account->code . ': ' . $e->getMessage());
+            Log::error('Failed to resend credentials for account ' . $account->code . ': ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
