@@ -208,8 +208,8 @@ class Wallet extends Controller
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
                 $startsWithValid = (strpos($address, '1') === 0) ||
-                                   (strpos($address, '3') === 0) ||
-                                   (strpos($address, 'bc1') === 0);
+                    (strpos($address, '3') === 0) ||
+                    (strpos($address, 'bc1') === 0);
 
                 if (!$startsWithValid) {
                     return [
@@ -1059,6 +1059,7 @@ class Wallet extends Controller
         $payload = $request->json()->all();
 
         Log::channel("cryptochillcallback")->info(json_encode($payload));
+        response()->json(['status' => 'received'], 200)->send();
         try {
             // Get signature and callback_id fields from provided data
             $signature = $payload['signature'] ?? null;
