@@ -22,6 +22,7 @@ use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use App\Http\Controllers\Controller;
 use App\Services\MailService as MailService;
 
@@ -302,7 +303,7 @@ class MT5Accounts extends Controller
                 $profit = 0;
                 $marginlevel = $account->margin_level ?? 0;
 
-                session()->flash('warning', 'Unable to fetch live data from X9 server. Showing last known values.');
+                // session()->flash('warning', 'Unable to fetch live data from X9 server. Showing last known values.');
             }
 
             $getUser = Account::with('accountType', 'BonusTransaction')
@@ -1069,6 +1070,17 @@ class MT5Accounts extends Controller
 
         $settings = settings();
 
+        // Rate limiting to prevent duplicate account creation
+        $key = 'create-demo-account:' . (auth()->id() ?: $request->ip());
+        
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before creating another demo account.");
+        }
+        
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         // Validate platform selection
         $request->validate([
             'platform' => 'required|in:mt5,x9',
@@ -1085,6 +1097,17 @@ class MT5Accounts extends Controller
 
     private function createMT5DemoAccount(Request $request)
     {
+        // Additional rate limiting specific to MT5 demo account creation
+        $key = 'create-mt5-demo-account:' . (auth()->id() ?: $request->ip());
+        
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before creating another MT5 demo account.");
+        }
+        
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -1190,6 +1213,17 @@ class MT5Accounts extends Controller
 
     private function createX9DemoAccount(Request $request)
     {
+        // Additional rate limiting specific to X9 demo account creation
+        $key = 'create-x9-demo-account:' . (auth()->id() ?: $request->ip());
+        
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before creating another X9 demo account.");
+        }
+        
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $validatedData = $request->validate([
             'x9_options' => 'required|string',
             'leverage' => 'required|string',
