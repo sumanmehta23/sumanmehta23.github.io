@@ -492,7 +492,7 @@ class X9Service
         }
     }
 
-    public function accountSetting($account,$field, $type)
+    public function accountSetting($account, $field, $type)
     {
 
         try {
