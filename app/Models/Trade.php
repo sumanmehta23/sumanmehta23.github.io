@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Trade extends Model
 {
-    use HasFactory, HasUuids,SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'trades';
 
