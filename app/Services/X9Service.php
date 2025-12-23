@@ -24,10 +24,10 @@ class X9Service
     {
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->get($this->baseUrl . '/api/crm/connection');
+            ])->get($this->baseUrl . '/api/v1/system/status');
 
             if ($response->successful()) {
                 return [
@@ -75,13 +75,13 @@ class X9Service
             ];
 
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/create_user', $payload);
+            ])->post($this->baseUrl . '/api/v1/accounts/create', $payload);
 
             if ($response->successful()) {
-                $data = $response->json();
+                $data = $response->json()['data'];
                 return [
                     'status' => true,
                     'message' => 'User created successfully',
@@ -111,19 +111,18 @@ class X9Service
     {
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->get($this->baseUrl . '/api/crm/user/' . $loginId);
+            ])->get($this->baseUrl . '/api/v1/accounts/' . $loginId);
 
             if ($response->successful()) {
                 return [
                     'status' => true,
                     'message' => 'User details retrieved successfully',
-                    'data' => $response->json()
+                    'data' => $response->json()['data']
                 ];
             }
-
             return [
                 'status' => false,
                 'message' => 'Failed to get user details: ' . $response->body(),
@@ -147,18 +146,18 @@ class X9Service
         try {
             $payload = [
                 'login_id' => $loginId,
-                'operation_type' => $operationType, // balance, credit etc
-                'transaction_type' => $transactionType, // deposit, withdrawal etc
+                'operation_type' => $transactionType, // deposit, withdrawal etc
                 'amount' => $amount,
                 'comment' => $comment,
+                'transaction_type' => $operationType, // Credit or Debit
                 'operate_without_checking' => $operateWithoutChecking
             ];
 
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/user/balance', $payload);
+            ])->post($this->baseUrl . "/api/v1/accounts/{$loginId}/balance", $payload);
 
             if ($response->successful()) {
                 return [
@@ -190,7 +189,7 @@ class X9Service
     {
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->get($this->baseUrl . '/api/crm/client_group_types');
@@ -225,7 +224,7 @@ class X9Service
     {
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->get($this->baseUrl . '/api/crm/client_groups_by_type/' . $typeId);
@@ -307,7 +306,7 @@ class X9Service
     {
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->put($this->baseUrl . '/api/crm/account_group', [
@@ -370,7 +369,7 @@ class X9Service
             $leverageProfileId = $leverageProfileMapping[$leverageValue];
 
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->put($this->baseUrl . '/api/crm/account_leverage', [
@@ -425,7 +424,7 @@ class X9Service
             ];
 
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->post($this->baseUrl . '/api/crm/user/balance', $payload);
@@ -460,13 +459,13 @@ class X9Service
     {
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/reset/password', [
-                'login_id' => intval($loginId),
-                'password_type' => $passwordType, // 'master', 'investor', or 'api'
-                'password' => $newPassword
+            ])->patch($this->baseUrl . "/api/v1/accounts/{$loginId}/password", [
+                // 'login_id' => intval($loginId),
+                // 'password_type' => $passwordType, // 'master', 'investor', or 'api'
+                'master_password' => $newPassword
             ]);
 
             if ($response->successful()) {
@@ -497,13 +496,79 @@ class X9Service
 
         try {
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->put($this->baseUrl . '/api/crm/account_settings', [
                 'login_id' => intval($account->code),
                 'field_to_update' => $field, // 'master', 'investor', or 'api'
                 'field_setting' => $type
+            ]);
+            if ($response->successful()) {
+                return [
+                    'status' => true,
+                    'message' => 'Account setting successful updated',
+                    'data' => $response->json()
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to update account setting: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Account setting updation failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Account setting updation failed: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+    public function enableAccount($accountCode)
+    {
+
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->put($this->baseUrl . "/api/v1/accounts/{$accountCode}/trading", [
+                'trading' => true
+            ]);
+            if ($response->successful()) {
+                return [
+                    'status' => true,
+                    'message' => 'Account setting successful updated',
+                    'data' => $response->json()
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to update account setting: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Account setting updation failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Account setting updation failed: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+    public function disableAccount($accountCode)
+    {
+
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->put($this->baseUrl . "/api/v1/accounts/{$accountCode}/trading", [
+                'trading' => false
             ]);
             if ($response->successful()) {
                 return [

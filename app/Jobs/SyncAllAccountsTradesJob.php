@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use Carbon\Carbon;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Models\Account;
@@ -203,15 +204,17 @@ class SyncAllAccountsTradesJob implements ShouldQueue
             'close_time' => null,
             'code' => $account->code,
             'comment' => $order->Comment ?? '',
+            'commission' => 0,
             'created_at' => now(),
             'open_price' => $order->PriceCurrent,
-            'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
+            'open_time' => Carbon::createFromTimestamp($order->TimeDone)->toDateTimeString(),
             'order_id' => $order->Order,
             'position_id' => $positionId,
             'profit' => 0,
             'sl' => $order->PriceSL,
             'state' => $order->State,
             'status' => 'open',
+            'swap' => 0,
             'symbol' => $order->Symbol,
             'tp' => $order->PriceTP,
             'type' => $order->Type,
@@ -235,10 +238,12 @@ class SyncAllAccountsTradesJob implements ShouldQueue
             'close_price' => $closeOrder->PriceCurrent,
             'sl' => $openOrder->PriceSL,
             'tp' => $openOrder->PriceTP,
-            'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
-            'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
+            'open_time' => Carbon::createFromTimestamp($openOrder->TimeDone)->toDateTimeString(),
+            'close_time' => Carbon::createFromTimestamp($closeOrder->TimeDone)->toDateTimeString(),
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
+            'commission' => 0,
+            'swap' => 0,
             'profit' => round((($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitialExt / 100000000) * $openOrder->ContractSize) * $rateProfit, 2),
             'status' => 'closed',
             'code' => $account->code,

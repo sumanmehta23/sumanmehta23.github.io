@@ -50,7 +50,6 @@ class X9Controller extends Controller
         ]);
 
         $response = $this->x9Service->createUser($validatedData);
-
         return response()->json([
             'success' => $response['status'],
             'message' => $response['message'],

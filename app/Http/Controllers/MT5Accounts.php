@@ -973,7 +973,7 @@ class MT5Accounts extends Controller
                     }
                 }
                 // X9 deletion logic
-                $response = $this->x9Service->accountSetting($account, 'is_enable', false);
+                $response = $this->x9Service->disableAccount($account);
                 if (!$response['status']) {
                     return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
                 }
@@ -1239,8 +1239,8 @@ class MT5Accounts extends Controller
 
         if ($response['status']) {
             $x9AccountData = $response['data'];
-            $loginId = $x9AccountData['trading_account']['account_number'] ?? null;
-            $tradingAccountId = $x9AccountData['trading_account']['trading_account_id'] ?? null;
+            $loginId = $x9AccountData['account_number'] ?? null;
+            $tradingAccountId = $x9AccountData['trading_account_id'] ?? null;
 
             if (!$loginId) {
                 return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned');
@@ -1283,7 +1283,7 @@ class MT5Accounts extends Controller
             $balanceResponse = $this->x9Service->manageBalance(
                 $loginId,
                 'balance',
-                'deposit',
+                'Deposit',
                 $validatedData['demo_deposit'],
                 'Demo Account Initial Deposit'
             );

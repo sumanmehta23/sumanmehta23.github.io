@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Trade;
 use App\Models\Account;
+use App\Models\AccountType;
 use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Promocode;
@@ -111,7 +112,7 @@ class AjaxController extends Controller
                         $result = $this->getMT5Groups($type);
                         break;
                     case 'getCompetitionGroups':
-                        $result = $this->getCompetitionGroups($type);
+                        $result = $this->getCompetitionGroups($request);
                         break;
                     case 'getIbGroups':
                         $result = $this->getIbGroups($type);
@@ -925,7 +926,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail','account_status', 'actions'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
                 ->make(true);
         }
 
@@ -1505,7 +1506,7 @@ class AjaxController extends Controller
         $query = TradeWithdrawals::select('trade_withdrawal.*')
             ->with(['user', 'withdrawTo', 'account'])
             ->withTrashed()
-            ->where('trade_withdrawal.email_verified',1)
+            ->where('trade_withdrawal.email_verified', 1)
             ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
         if (!isset($_GET['id'])) {
@@ -3130,20 +3131,81 @@ class AjaxController extends Controller
         return ['data' => $data];
     }
 
-    public function getCompetitionGroups($type = NULL)
+    public function getCompetitionGroups(Request $request)
     {
+        $type = $request->input('type');
+        $status = $request->input('status', 'active'); // active, ended, or all
 
-        header('Content-Type: application/json');
-        if ($type == NULL) {
-            $sql = "SELECT * from account_types where (ac_name) like '%Competition%' order by display_priority desc";
-        } else {
-            $sql = "SELECT * from account_types where (ac_category) = '$type' AND (ac_name) like '%Competition%' order by display_priority asc";
+        // Build query using Eloquent to get competitions (account_types with competition_start_date)
+        $query = AccountType::whereNotNull('competition_start_date');
+
+        // Apply type filter if provided
+        if ($type != NULL) {
+            $query->where('ac_category', $type);
         }
-        $query = DB::select($sql);
-        $results = $query;
+
+        // Filter by competition status (active or ended)
+        $now = now('UTC');
+        if ($status === 'active') {
+            // Active competitions: end date is in the future
+            $query->where('competition_end_date', '>=', $now);
+        } elseif ($status === 'ended') {
+            // Ended competitions: end date is in the past
+            $query->where('competition_end_date', '<', $now);
+        }
+        // If status is 'all', don't apply date filter
+
+        // Get DataTables parameters
+        $draw = $request->input('draw');
+        $start = $request->input('start', 0);
+        $length = $request->input('length', 10);
+        $searchValue = $request->input('search.value');
+        $orderColumnIndex = $request->input('order.0.column', 0);
+        $orderDirection = $request->input('order.0.dir', 'desc');
+
+        // Apply search filter
+        if (!empty($searchValue)) {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('ac_name', 'like', "%{$searchValue}%")
+                    ->orWhere('ac_group', 'like', "%{$searchValue}%")
+                    ->orWhere('ac_min_deposit', 'like', "%{$searchValue}%");
+            });
+        }
+
+        // Count total records before pagination
+        $totalRecords = AccountType::whereNotNull('competition_start_date')->count();
+        $filteredRecords = $query->count();
+
+        // Define columns for ordering
+        $columns = [
+            'ac_name',
+            'display_priority',
+            'competition_start_date',
+            'competition_end_date',
+            'total_participants', // Can't order by this (computed)
+            'prize',
+            'leaderboard', // Can't order by this (action)
+            'ac_group',
+            'ac_min_deposit',
+            'ac_spread',
+            'status',
+            'is_client_group',
+            'enc_id' // Can't order by this (action)
+        ];
+
+        // Apply ordering if valid column
+        if (isset($columns[$orderColumnIndex]) && !in_array($columns[$orderColumnIndex], ['total_participants', 'leaderboard', 'enc_id'])) {
+            $query->orderBy($columns[$orderColumnIndex], $orderDirection);
+        } else {
+            // Default ordering
+            $query->orderBy('display_priority', 'desc');
+        }
+
+        // Apply pagination
+        $results = $query->skip($start)->take($length)->get();
+
         $data = [];
         foreach ($results as $row) {
-            // dd($row);
             $dat = $row;
             $url = route('admin.competition.leaderboard', [
                 'competition_id' => $row->id,
@@ -3161,8 +3223,13 @@ class AjaxController extends Controller
             $dat->acc_status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $data[] = $dat;
         }
-        // dd($data);
-        return ['data' => $data];
+
+        return [
+            'draw' => intval($draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ];
     }
 
     public function getIbGroups($type = NULL)
@@ -3419,7 +3486,7 @@ class AjaxController extends Controller
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type. '</a>',
+                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
@@ -4223,7 +4290,7 @@ class AjaxController extends Controller
                     ->editColumn('client_email', function ($row) {
                         return $row->email;
                     })
-                    ->rawColumns(['email','total_accounts', 'profile_status', 'client_name', 'client_email'])
+                    ->rawColumns(['email', 'total_accounts', 'profile_status', 'client_name', 'client_email'])
                     ->make(true);
             }
 
@@ -5044,7 +5111,7 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Promo code is valid. Deposit between '.$promocode->min_deposit.' and '.$promocode->max_deposit.' and receive '. $promocode->promo_percentage . '% extra.';
+            $message = 'Promo code is valid. Deposit between ' . $promocode->min_deposit . ' and ' . $promocode->max_deposit . ' and receive ' . $promocode->promo_percentage . '% extra.';
 
             // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
             //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
@@ -5212,7 +5279,7 @@ class AjaxController extends Controller
                 ], 422);
             }
 
-             // Update before soft delete
+            // Update before soft delete
             $wallet->update([
                 'admin_action_by'            => 'Admin',
                 'wallet_delete_verification' => 1,
