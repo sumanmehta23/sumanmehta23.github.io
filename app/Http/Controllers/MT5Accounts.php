@@ -1238,7 +1238,7 @@ class MT5Accounts extends Controller
         $response = $this->x9Service->createUser($x9UserData);
 
         if ($response['status']) {
-            $x9AccountData = $response['data'];
+            $x9AccountData = $response['data']['trading_account'] ?? $response['data'];
             $loginId = $x9AccountData['account_number'] ?? null;
             $tradingAccountId = $x9AccountData['trading_account_id'] ?? null;
 
