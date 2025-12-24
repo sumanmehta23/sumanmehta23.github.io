@@ -1543,7 +1543,7 @@ class MT5Accounts extends Controller
 
         // Determine Master Password
         $masterPassword = $account->trader_password;
-        $platform = $account->trade_platform ?? config('platforms.default');
+        $platform = $account->platform ?? config('platforms.default');
 
          // Send notification email
         try {
