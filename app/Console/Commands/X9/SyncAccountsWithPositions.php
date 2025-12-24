@@ -101,7 +101,7 @@ class SyncAccountsWithPositions extends Command
                 if (!$account) {
                     $notFound++;
                     if ($enableLogging) {
-                        Log::warning("X9 Account not found locally: {$accountNumber}");
+                        // Log::warning("X9 Account not found locally: {$accountNumber}");
                     }
                     $bar->advance();
                     continue;
@@ -119,9 +119,6 @@ class SyncAccountsWithPositions extends Command
                     }
                     if (isset($accountData['equity'])) {
                         $updateData['equity'] = $accountData['equity'];
-                    }
-                    if (isset($accountData['margin'])) {
-                        $updateData['margin'] = $accountData['margin'];
                     }
                     if (isset($accountData['free_margin'])) {
                         $updateData['margin_free'] = $accountData['free_margin'];

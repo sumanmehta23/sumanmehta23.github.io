@@ -133,7 +133,6 @@ class SyncAccountBalances extends Command
                 // Extract balance information
                 $newBalance = $balanceData['balance'] ?? null;
                 $newEquity = $balanceData['equity'] ?? null;
-                $newMargin = $balanceData['margin'] ?? null;
                 $newFreeMargin = $balanceData['free_margin'] ?? null;
 
                 // Check if balance changed
@@ -154,9 +153,6 @@ class SyncAccountBalances extends Command
                 }
                 if ($newEquity !== null) {
                     $updateData['equity'] = $newEquity;
-                }
-                if ($newMargin !== null) {
-                    $updateData['margin'] = $newMargin;
                 }
                 if ($newFreeMargin !== null) {
                     $updateData['margin_free'] = $newFreeMargin;
