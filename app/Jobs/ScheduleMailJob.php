@@ -39,8 +39,10 @@ class ScheduleMailJob implements ShouldQueue
     {
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
+        // dd($this->subject);
         Log::alert('Email subject: ' . $this->subject);
         try {
+
 
             if (strpos($this->subject, 'Competition Registration') !== false) {
                 $template = 'emails.competition_registration';

@@ -1584,7 +1584,7 @@ class MT5Accounts extends Controller
 
         // Determine Master Password
         $masterPassword = $account->trader_password;
-        $platform = $account->trade_platform ?? config('platforms.default');
+        $platform = $account->platform ?? config('platforms.default');
 
          // Send notification email
         try {
@@ -1615,7 +1615,7 @@ class MT5Accounts extends Controller
                 'message' => 'Credentials sent successfully to ' . $account->user->email
             ]);
         } catch (\Exception $e) {
-            \Log::error('Failed to resend credentials for account ' . $account->code . ': ' . $e->getMessage());
+            Log::error('Failed to resend credentials for account ' . $account->code . ': ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
