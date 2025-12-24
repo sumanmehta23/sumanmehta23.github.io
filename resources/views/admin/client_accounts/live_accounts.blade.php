@@ -104,6 +104,10 @@
 @section("scripts")
 <!-- End::app-content -->
 <script>
+    window.canUpdateAccount = @json(auth()->user()->can('account:update'));
+</script>
+
+<script>
     $(document).ready(function() {
         var modalElement = document.getElementById('accountUpdatemodal');
         if (modalElement) {
@@ -256,7 +260,9 @@
                 {
                     data: 'actions',
                     name: 'actions',
-
+                    orderable: false,
+                    searchable: false,
+                    visible: window.canUpdateAccount
                 }
 
             ],
