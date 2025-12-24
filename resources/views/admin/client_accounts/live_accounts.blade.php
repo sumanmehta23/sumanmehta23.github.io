@@ -45,7 +45,7 @@
                                             <td>Date</td>
                                             <td>Time</td>
                                             <td>Status</td>
-                                            @can('account:viewLiveAccounts')
+                                            @can('account:update')
                                                 <td>Actions</td>
                                             @endcan
                                         </tr>
