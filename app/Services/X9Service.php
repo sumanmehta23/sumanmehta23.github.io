@@ -10,11 +10,18 @@ class X9Service
 {
     protected $baseUrl;
     protected $accessToken;
+    protected $v2BaseUrl;
+    protected $v2AccessToken;
 
     public function __construct()
     {
+        // V1 CRM API (legacy)
         $this->baseUrl = config('services.x9.base_url', env('X9_BASE_URL'));
         $this->accessToken = config('services.x9.access_token', env('X9_ACCESS_TOKEN'));
+
+        // V2 API (new)
+        $this->v2BaseUrl = config('services.x9.v2_base_url', env('X9_V2_BASE_URL'));
+        $this->v2AccessToken = config('services.x9.v2_access_token', env('X9_V2_ACCESS_TOKEN'));
     }
 
     /**
@@ -53,11 +60,12 @@ class X9Service
     }
 
     /**
-     * Create a new user account in X9
+     * Create a new user account in X9 using V2 API
      */
     public function createUser($userData)
     {
         try {
+            // V2 API payload structure
             $payload = [
                 'preferred_login' => $userData['preferred_login'] ?? 'default',
                 'client_id' => $userData['client_id'] ?? null,
@@ -71,17 +79,20 @@ class X9Service
                 'phone' => $userData['phone'] ?? null,
                 'master_password' => $userData['master_password'],
                 'investor_password' => $userData['investor_password'],
-                'country_id' => $userData['country_id'] ?? 5
+                'country_id' => $userData['country_id'] ?? 5,
+                'account_number' => $userData['preferred_login'] ?? 'default',
             ];
 
+            // Use V2 endpoint and X-API-Key header
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->v2AccessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/create_user', $payload);
+            ])->post($this->v2BaseUrl . '/api/v1/accounts/create', $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
+                Log::info('X9 V2 Create User Response: ' . json_encode($data));
                 return [
                     'status' => true,
                     'message' => 'User created successfully',
@@ -89,6 +100,7 @@ class X9Service
                 ];
             }
 
+            Log::error('X9 V2 Create User Failed: ' . $response->status() . ' - ' . $response->body());
             return [
                 'status' => false,
                 'message' => 'Failed to create user: ' . $response->body(),
@@ -140,25 +152,41 @@ class X9Service
     }
 
     /**
-     * Deposit/Withdraw balance
+     * Deposit/Withdraw balance using V2 API
      */
     public function manageBalance($loginId, $operationType, $transactionType, $amount, $comment = '', $operateWithoutChecking = true)
     {
         try {
+            // V2 API uses capitalized operation types: Deposit, Withdrawal, Credit, Bonus
+            // Map based on transaction type if operation type is generic 'balance'
+            if (strtolower($operationType) === 'balance') {
+                $v2OperationType = ucfirst(strtolower($transactionType)); // deposit -> Deposit, withdrawal -> Withdrawal
+                $v2TransactionType = ucfirst(strtolower($transactionType)); // deposit -> Deposit
+            } else {
+                // Map common operation types to V2 format
+                $operationTypeMap = [
+                    'deposit' => 'Deposit',
+                    'withdrawal' => 'Withdrawal',
+                    'credit' => 'Credit',
+                    'bonus' => 'Bonus'
+                ];
+                $v2OperationType = $operationTypeMap[strtolower($operationType)] ?? ucfirst($operationType);
+                $v2TransactionType = $operationTypeMap[strtolower($transactionType)] ?? ucfirst($transactionType);
+            }
+
             $payload = [
-                'login_id' => $loginId,
-                'operation_type' => $operationType, // balance, credit etc
-                'transaction_type' => $transactionType, // deposit, withdrawal etc
+                'operation_type' => $v2OperationType,
+                'transaction_type' => $v2TransactionType,
                 'amount' => $amount,
-                'comment' => $comment,
-                'operate_without_checking' => $operateWithoutChecking
+                'comment' => $comment
             ];
 
+            // V2 endpoint: /api/v1/accounts/{account_number}/balance
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->v2AccessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/user/balance', $payload);
+            ])->post($this->v2BaseUrl . '/api/v1/accounts/' . $loginId . '/balance', $payload);
 
             if ($response->successful()) {
                 return [
@@ -406,7 +434,7 @@ class X9Service
     }
 
     /**
-     * Handle bonus operations (Bonus In/Out)
+     * Handle bonus operations (Bonus In/Out) using V2 API
      */
     public function manageBonus($loginId, $bonusType, $amount, $comment = '', $operateWithoutChecking = true)
     {
@@ -416,19 +444,18 @@ class X9Service
             $transactionType = $bonusType === 'in' ? 'Bonus In' : 'Bonus Out';
 
             $payload = [
-                'login_id' => $loginId,
                 'operation_type' => $operationType,
                 'transaction_type' => $transactionType,
                 'amount' => abs($amount), // Always send positive amount
-                'comment' => $comment,
-                'operate_without_checking' => $operateWithoutChecking
+                'comment' => $comment
             ];
 
+            // V2 endpoint: /api/v1/accounts/{account_number}/balance
             $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
+                'X-API-Key' => $this->v2AccessToken,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/user/balance', $payload);
+            ])->post($this->v2BaseUrl . '/api/v1/accounts/' . $loginId . '/balance', $payload);
 
             if ($response->successful()) {
                 return [
@@ -454,26 +481,42 @@ class X9Service
     }
 
     /**
-     * Reset user password in X9
+     * Reset user password in X9 using V2 API
+     *
+     * Note: V2 API currently only supports master password updates via PATCH endpoint.
+     * Investor password updates may need to use V1 CRM API or a different V2 endpoint.
      */
     public function resetUserPassword($loginId, $passwordType, $newPassword)
     {
         try {
-            $response = Http::withHeaders([
-                'x-access-token' => $this->accessToken,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->post($this->baseUrl . '/api/crm/reset/password', [
-                'login_id' => intval($loginId),
-                'password_type' => $passwordType, // 'master', 'investor', or 'api'
-                'password' => $newPassword
-            ]);
+            // V2 API only supports master password via PATCH /api/v1/accounts/{account_number}/password
+            if ($passwordType === 'master') {
+                $response = Http::withHeaders([
+                    'X-API-Key' => $this->v2AccessToken,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])->patch($this->v2BaseUrl . '/api/v1/accounts/' . $loginId . '/password', [
+                    'master_password' => $newPassword
+                ]);
+            } else {
+                // For investor and other password types, fall back to V1 CRM API
+                $response = Http::withHeaders([
+                    'x-access-token' => $this->accessToken,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])->post($this->baseUrl . '/api/crm/reset/password', [
+                    'login_id' => intval($loginId),
+                    'password_type' => $passwordType,
+                    'password' => $newPassword
+                ]);
+            }
 
             if ($response->successful()) {
+                $data = $response->json();
                 return [
                     'status' => true,
-                    'message' => 'Password updated successfully',
-                    'data' => $response->json()
+                    'message' => $data['message'] ?? 'Password updated successfully',
+                    'data' => $data
                 ];
             }
 
@@ -523,6 +566,58 @@ class X9Service
             return [
                 'status' => false,
                 'message' => 'Account setting updation failed: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Get closed trades by client group ID using V2 API
+     *
+     * @param int $clientGroupId The client group ID
+     * @param string $dateFrom Start date (Y-m-d format)
+     * @param string $dateTo End date (Y-m-d format)
+     * @param int $limit Number of records per page
+     * @param int $offset Offset for pagination
+     * @return array Response with status, message, and data
+     */
+    public function getClosedTradesByGroup($clientGroupId, $dateFrom, $dateTo, $limit = 100, $offset = 0)
+    {
+        try {
+            $queryParams = [
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'limit' => $limit,
+                'offset' => $offset
+            ];
+
+            $url = $this->v2BaseUrl . '/api/v1/closed-trades/group/' . $clientGroupId . '?' . http_build_query($queryParams);
+
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->v2AccessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->get($url);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'status' => true,
+                    'message' => 'Closed trades retrieved successfully',
+                    'data' => $data
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to get closed trades: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Get Closed Trades By Group Failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Failed to get closed trades: ' . $e->getMessage(),
                 'data' => null
             ];
         }

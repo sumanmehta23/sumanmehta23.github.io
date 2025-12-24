@@ -22,6 +22,7 @@ use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use App\Http\Controllers\Controller;
 use App\Services\MailService as MailService;
 
@@ -1069,6 +1070,17 @@ class MT5Accounts extends Controller
 
         $settings = settings();
 
+        // Rate limiting to prevent duplicate account creation
+        $key = 'create-demo-account:' . (auth()->id() ?: $request->ip());
+        
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before creating another demo account.");
+        }
+        
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         // Validate platform selection
         $request->validate([
             'platform' => 'required|in:mt5,x9',
@@ -1085,6 +1097,17 @@ class MT5Accounts extends Controller
 
     private function createMT5DemoAccount(Request $request)
     {
+        // Additional rate limiting specific to MT5 demo account creation
+        $key = 'create-mt5-demo-account:' . (auth()->id() ?: $request->ip());
+        
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before creating another MT5 demo account.");
+        }
+        
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $settings = settings();
         $validatedData = $request->validate([
             'options' => 'required|string',
@@ -1190,6 +1213,17 @@ class MT5Accounts extends Controller
 
     private function createX9DemoAccount(Request $request)
     {
+        // Additional rate limiting specific to X9 demo account creation
+        $key = 'create-x9-demo-account:' . (auth()->id() ?: $request->ip());
+        
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            return redirect()->back()
+                ->with('error', "Please wait {$retryAfter} seconds before creating another X9 demo account.");
+        }
+        
+        RateLimiter::hit($key, 10); // Lock for 10 seconds
+
         $validatedData = $request->validate([
             'x9_options' => 'required|string',
             'leverage' => 'required|string',
@@ -1239,11 +1273,16 @@ class MT5Accounts extends Controller
 
         if ($response['status']) {
             $x9AccountData = $response['data'];
-            $loginId = $x9AccountData['trading_account']['account_number'] ?? null;
-            $tradingAccountId = $x9AccountData['trading_account']['trading_account_id'] ?? null;
+
+            // Handle both V1 and V2 response structures
+            // V2: {"success": true, "data": {"account_number": "12345678", "trading_account_id": 123, ...}}
+            // V1: {"trading_account": {"account_number": "12345678", ...}}
+            $loginId = $x9AccountData['data']['account_number'] ?? $x9AccountData['account_number'] ?? $x9AccountData['trading_account']['account_number'] ?? null;
+            $tradingAccountId = $x9AccountData['data']['trading_account_id'] ?? $x9AccountData['trading_account_id'] ?? $x9AccountData['trading_account']['trading_account_id'] ?? null;
 
             if (!$loginId) {
-                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned');
+                Log::error('X9 Demo Account Creation - No account number in response: ' . json_encode($x9AccountData));
+                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned. Please check logs.');
             }
 
             // Log activity
@@ -1282,11 +1321,14 @@ class MT5Accounts extends Controller
             // Deposit demo balance in X9
             $balanceResponse = $this->x9Service->manageBalance(
                 $loginId,
-                'balance',
+                'Deposit',
                 'deposit',
                 $validatedData['demo_deposit'],
                 'Demo Account Initial Deposit'
             );
+
+            Log::info('X9 Demo Balance Deposit Response: ' . json_encode($balanceResponse));
+
             $new_user = json_decode(json_encode([
                 "Email" => $user->email,
                 "Name" => $user->fullname,
@@ -1529,5 +1571,56 @@ class MT5Accounts extends Controller
         $account->save(); // Save the updated account nickname
 
         return response()->json(['message' => 'Nickname updated successfully!']);
+    }
+
+    public function resendCredentials(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|exists:accounts,code'
+        ]);
+        $account = Account::where('code', $request->code)
+                    ->with('user')
+                    ->firstOrFail();
+
+        // Determine Master Password
+        $masterPassword = $account->trader_password;
+        $platform = $account->platform ?? config('platforms.default');
+
+         // Send notification email
+        try {
+            $settings = settings();
+            $toEmail = $account->user->email;
+            $from = $settings['email_from_address'];
+            $emailSubject = $settings['admin_title'] . ' - Account Details';
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $content = '
+                            <p>You have requested your trading account credentials.</p>
+                            <p>Below are your accounts details for full access to your trading account.</p>
+                        ';
+            $templateVars = [
+                'account' => $account,
+                'server_name' => $settings['mt5_company_name'],
+                'email' => $settings['email_from_address'],
+                // "title_right" => "",
+                // "subtitle_right" => "Your " . $type . " Account is Ready!",
+                "content" => $content,
+                "platform" => $platform,
+            ];
+            $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Credentials sent successfully to ' . $account->user->email
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to resend credentials for account ' . $account->code . ': ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email. Please try again later.'
+            ], 500);
+        }
     }
 }

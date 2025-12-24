@@ -37,6 +37,11 @@ class LoginController extends Controller
     {
         // Redirect authenticated users to dashboard
         if (Auth::check()) {
+            $user = Auth::user();
+            // Check if 2FA is enabled and not yet verified
+            if ($user->two_factor_secret && $user->two_factor_confirmed_at && !Session::has('2fa:verified')) {
+                return redirect()->route('two_factor_auth');
+            }
             return redirect()->route('dashboard');
         }
         return view('auth.login');
@@ -54,12 +59,28 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        $admin = Auth::guard('admin')->user(); // Assuming you're using 'admin' guard
+        // Check admin guard first (for admin users)
+        $admin = Auth::guard('admin')->user();
+        if ($admin) {
+            if (!Hash::check($request->password, $admin->password)) {
+                return response()->json([
+                    'message' => 'The password is incorrect.'
+                ], 422);
+            }
+        } else {
+            // Check web guard (for regular users)
+            $user = Auth::guard('web')->user();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'You must be authenticated to confirm your password.'
+                ], 401);
+            }
 
-        if (!$admin || !Hash::check($request->password, $admin->password)) {
-            return response()->json([
-                'message' => 'The password is incorrect.'
-            ], 422); // 422 Unprocessable Entity for validation-like errors
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'message' => 'The password is incorrect.'
+                ], 422);
+            }
         }
 
         // Store the timestamp in session to mark password confirmation
@@ -164,6 +185,12 @@ class LoginController extends Controller
             ->whereNull('client_ip')
             ->update(['client_ip' => $request->ip()]);
 
+        // Reactivate user if they were marked as inactive
+        if ($user->is_inactive) {
+            $user->is_inactive = false;
+            $user->save();
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
         // Set session variables
@@ -191,6 +218,18 @@ class LoginController extends Controller
 
     public function two_factor_auth()
     {
+        $user = auth()->user();
+        
+        // If 2FA is already verified, redirect to dashboard
+        if ($user && Session::has('2fa:verified')) {
+            return redirect()->route('dashboard');
+        }
+        
+        // If user doesn't have 2FA enabled, redirect to dashboard
+        if (!$user || !$user->two_factor_secret || !$user->two_factor_confirmed_at) {
+            return redirect()->route('dashboard');
+        }
+        
         return view('auth.verify-2fa');
     }
 
@@ -242,7 +281,10 @@ class LoginController extends Controller
             );
         }
 
-        // ✅ Success: 2FA verified
+        // ✅ Success: 2FA verified - Set session flag
+        Session::put('2fa:verified', true);
+        Session::forget('2fa:user_id'); // Clean up temporary session
+
         return redirect()->intended(route('dashboard'));
     }
 
@@ -486,9 +528,16 @@ class LoginController extends Controller
             'fullname' => [
                 'required',
                 'string',
-                'max:255',
-
-                'regex:/^(?!.*<script).*$/i' // Prevents `<script>` tags
+                'min:2',
+                'max:80',
+                // Allow only letters, spaces and a few common name characters
+                'regex:/^[\pL\s\.\'-]+$/u',
+                // Block obvious spam / scripted content in the name field
+                'not_regex:/http/i',
+                'not_regex:/www\./i',
+                'not_regex:/@/i',
+                'not_regex:/\d{3,}/',
+                'not_regex:/<script/i', // Prevents `<script>` tags or similar injections
             ],
             'email' => 'required|string|email|max:255|unique:aspnetusers',
             // 'password' => 'required|string|confirmed',
@@ -506,7 +555,7 @@ class LoginController extends Controller
             'country_code' => 'required',
             'telephone' => 'required',
         ], [
-            'fullname.regex' => 'The name cannot contain script tags.',
+            'fullname.regex' => 'Please enter a valid full name (letters and basic punctuation only, no links, emails or codes).',
             'email.unique' => 'The email you entered is already in use and exists in our system. If you believe this is incorrect, please contact support at support@lqhmarkets.com.',
             'password.min' => 'The password must be at least 8 characters long.',
             'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.',
@@ -677,17 +726,19 @@ class LoginController extends Controller
     }
     private function recordLoginHistory($user, $ip)
     {
-
         $geoData = Http::get(config('services.ip_geolocation.url'), [
             'apikey' => config('services.ip_geolocation.key'),
             'ip' => $ip
         ])->json();
 
+        // Use country from user's profile, fallback to geolocation API, then 'Unknown'
+        $country = $user->country ?? ($geoData['country_name'] ?? 'Unknown');
+
         LoginHistory::create([
             'user_id' => $user->id,
             'email' => $user->email,
             'ip' => $geoData['ip'] ?? $ip,
-            'country' => $geoData['country_name'] ?? 'Unknown',
+            'country' => $country,
             'action' => 'login',
             'created_date_js' => now(),
             'status' => 1

@@ -39,8 +39,10 @@ class ScheduleMailJob implements ShouldQueue
     {
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
+        // dd($this->subject);
         Log::alert('Email subject: ' . $this->subject);
         try {
+
 
             if (strpos($this->subject, 'Competition Registration') !== false) {
                 $template = 'emails.competition_registration';
@@ -62,6 +64,8 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.issueLiveAccount';
             } elseif ((strpos($this->subject, 'Demo Account Details') !== false)) {
                 $template = 'emails.issueDemoAccount';
+            }elseif ((strpos($this->subject, 'Account Details') !== false)) {
+                $template = 'emails.resendAccountDetails';
             } elseif ((strpos($this->subject, 'Competition Account Details') !== false)) {
                 $template = 'emails.issueCompetitionAccount';
             } elseif (strpos($this->subject, 'Password Reset') !== false) {
@@ -76,7 +80,9 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
-
+            Log::info("maildriver".$maildriver);
+            Log::info("api key".$this->apiKey);
+            Log::info("emailsubject".$this->subject);
             // Always use Brevo API for export emails or if configured
             if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $this->apiKey) {
                 $htmlContent = view($template, $this->data)->render();

@@ -46,7 +46,7 @@
                             {{-- Toggle link --}}
                             <div class="d-flex justify-content-between mb-3">
                                 <div>
-                                    <a href="/" id="back_link" class="text-primary small">Go Back</a>
+                                    <a href="{{ route('logout') }}" id="back_link" class="text-primary small">Go Back</a>
                                 </div>
                                 <div>
                                     <a href="#" id="toggle_mode_link" class="text-primary small">Use Recovery Code</a>

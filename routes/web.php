@@ -71,6 +71,7 @@ Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::cl
 Route::get('/competitions-overview/trader-data/{accountNo}/{startDate}/{endDate}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
+Route::post('/user/kyc/veriff-listener', [KycController::class, 'veriffListener'])->name('kyc.veriff.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 // Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
@@ -191,9 +192,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
+    Route::get('/veriff', [Users::class, 'veriff'])->name('veriff');
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/veriff_event', [Users::class, 'veriff_event'])->name('veriff_event');
     Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     // KYC Sync Routes
@@ -241,6 +244,10 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -257,11 +264,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
-
-
-
-
-
+    Route::post('/resend-credentials', [MT5Accounts::class, 'resendCredentials'])->name('resend-credentials');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -276,6 +279,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/g86t8', function () {
+            return config('services.omnisend.api_key');
+        });
         Route::get('/ajax', [AjaxController::class, 'index']);
 
         Route::post('/ajax', [AjaxController::class, 'index']);
@@ -377,6 +383,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
             ->middleware('check.permissions:trade_withdrawals:viewAny');
 
+        // All Trades (server-side DataTable)
+        Route::get('/trades', [\App\Http\Controllers\Admin\TradeController::class, 'index'])
+            ->name('trades.index')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/data', [\App\Http\Controllers\Admin\TradeController::class, 'getTradesData'])
+            ->name('trades.data')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/{trade}', [\App\Http\Controllers\Admin\TradeController::class, 'show'])
+            ->name('trades.show')
+            ->middleware('check.permissions:trade_deposit:viewAny');
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
@@ -451,6 +467,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('/toggle_ib_approve_request', [SettingsController::class, 'toggleIbApproveRequest'])
             ->name('toggle_ib_approve_request')
+            ->middleware('check.permissions:setting:update');
+
+        Route::post('/kyc-provider/update', [SettingsController::class, 'updateKycProvider'])
+            ->name('kyc-provider.update')
             ->middleware('check.permissions:setting:update');
 
         Route::prefix('/logs')->group(function () {
@@ -542,6 +562,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
         });
 
+        // Admin Blog Routes
+        Route::resource('blog', \App\Http\Controllers\Admin\BlogPostController::class)->names([
+            'index' => 'blog.index',
+            'create' => 'blog.create',
+            'store' => 'blog.store',
+            'show' => 'blog.show',
+            'edit' => 'blog.edit',
+            'update' => 'blog.update',
+            'destroy' => 'blog.destroy',
+        ]);
         // Affiliate Management Routes
         Route::prefix('affiliates')->name('affiliates.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('index');
@@ -553,6 +583,19 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
+        });
+
+        // Login History Routes
+        Route::prefix('login-history')->name('login-history.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+        });
+
+        // Inactive Users Routes
+        Route::prefix('inactive-users')->name('inactive-users.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
         });
     });
 });

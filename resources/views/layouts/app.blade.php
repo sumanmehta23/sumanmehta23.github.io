@@ -44,6 +44,11 @@
         body .swal2-container {
             z-index: 1090 !important;
         }
+        
+        body .swal2-backdrop-show {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+            backdrop-filter: blur(2px);
+        }
 
         button.close {
             background: none;
@@ -117,13 +122,26 @@
         </script>
     @endif
     @if (session('error'))
+        @php
+            $errorTitle = session('error_title') ?? 'Something went wrong';
+        @endphp
         <script>
             Swal.fire({
                 icon: 'warning',
-                title: 'Something went wrong',
-                // text: '{{ session('error') }}',
+                title: '{{ $errorTitle }}',
                 html: '{{ session('error') }}',
-                showConfirmButton: true
+                showConfirmButton: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                backdrop: true,
+                didOpen: () => {
+                    // Ensure body is not scrollable when modal is open
+                    document.body.style.overflow = 'hidden';
+                },
+                willClose: () => {
+                    // Restore body scroll when modal closes
+                    document.body.style.overflow = 'auto';
+                }
             });
         </script>
     @endif

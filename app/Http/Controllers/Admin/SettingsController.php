@@ -832,4 +832,23 @@ class SettingsController extends Controller
         }
         return redirect()->back()->with('success', 'IB Request toggle set to ' . (($ibApprovalType == 'manually') ? 'Manual' : 'Automatic')  . ' successfully.');
     }
+
+    /**
+     * Update KYC provider setting (Sumsub or Veriff).
+     */
+    public function updateKycProvider(Request $request)
+    {
+        $provider = $request->input('kyc_provider', 'sumsub');
+
+        if (!in_array($provider, ['sumsub', 'veriff'], true)) {
+            return redirect()->back()->with('error', 'Invalid KYC provider selected.');
+        }
+
+        Setting::updateOrCreate(
+            ['name' => 'kyc_provider'],
+            ['value' => $provider, 'updated_at' => now()]
+        );
+
+        return redirect()->back()->with('success', 'KYC provider updated to ' . ucfirst($provider) . ' successfully.');
+    }
 }

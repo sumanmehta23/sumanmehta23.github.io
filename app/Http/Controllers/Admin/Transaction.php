@@ -350,7 +350,7 @@ class Transaction extends Controller
             if (!$this->ensureMT5Connection()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'MT5 connection failed',
+                    'message' => 'Unable to adjust withdrawal: Trading server connection failed. Please try again in a few moments.',
                     'error' => 'Unable to connect to trading server',
                 ], 500);
             }
@@ -362,7 +362,7 @@ class Transaction extends Controller
                 // Return a JSON response with the error
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something went wrong',
+                    'message' => 'Unable to adjust withdrawal amount: ' . $error . '. Please verify the account balance and try again.',
                     'error' => $error,
                 ], 400); // 400 Bad Request
             } else {
@@ -531,10 +531,7 @@ class Transaction extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
             $content = '<p>We are pleased to inform you that your transaction has been successfully approved manually.</p>
-                        <p>The approved amount has been withdrawn from your wallet.</p>
-                        <p></p>
-                        <p></p>
-                        <p><b>Transaction Details</b></p>';
+                        <p>The approved amount has been withdrawn from your wallet.</p>';
             $templateVars = [
                 'name' => $deposit_details->user->fullname,
                 'site_link' => $settings['copyright_site_name_text'],
@@ -636,7 +633,7 @@ class Transaction extends Controller
 
                     // Check if there was an error decoding the JSON
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
+                        return redirect()->back()->with('error', "Withdrawal processing error: Invalid response from payment processor. Please contact support.");
                     }
                     $responseData = json_decode($response);
                     // Process the result from the API
@@ -676,7 +673,8 @@ class Transaction extends Controller
                         });
                         Log::error("Error Processing Request: " . json_encode([$responseData]));
                         // Throw an exception with the error message from the response
-                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                        $errorMessage = isset($responseData->message) ? $responseData->message : 'Unknown error occurred';
+                        return redirect()->back()->with('error', "Withdrawal processing failed: " . $errorMessage . ". Please verify the wallet address and try again.");
                     }
                 }
 
@@ -707,8 +705,7 @@ class Transaction extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
                 $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
-                            <div>The approved amount has been withdrawn from your wallet.<br></div>
-                            <div><b>Transaction Details</b></div>';
+                            <div>The approved amount has been withdrawn from your wallet.</div>';
                 $templateVars = [
                     'name' => $deposit_details->user->fullname,
                     'site_link' => $settings['copyright_site_name_text'],
@@ -927,7 +924,7 @@ class Transaction extends Controller
 
                     // Check if there was an error decoding the JSON
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
+                        return redirect()->back()->with('error', "Withdrawal processing error: Invalid response from payment processor. Please contact support.");
                     }
                     $responseData = json_decode($response);
                     // Process the result from the API
@@ -967,7 +964,8 @@ class Transaction extends Controller
                         });
                         Log::error("Error Processing Request: " . json_encode([$responseData]));
                         // Throw an exception with the error message from the response
-                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                        $errorMessage = isset($responseData->message) ? $responseData->message : 'Unknown error occurred';
+                        return redirect()->back()->with('error', "Withdrawal processing failed: " . $errorMessage . ". Please verify the wallet address and try again.");
                     }
                 }
 
@@ -1002,7 +1000,6 @@ class Transaction extends Controller
                 $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
                 $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
                             <div>The approved amount has been withdrawn from your account.</div>
-                            <div><b>Transaction Details</b></div>
                             <div><b>Approved Amount: </b>$' . $amount . '</div>
                             <div><b>Transaction ID: </b>' . $transid . '</div>
                             <div><b>Withdrawal Date: </b>' . $withdrawal_details->withdraw_date . '</div>
