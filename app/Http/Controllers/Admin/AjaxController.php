@@ -18,7 +18,6 @@ use App\Models\Permission;
 use App\Models\RestrictIps;
 use App\Models\ClientWallet;
 use App\Models\EmployeeList;
-use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 
@@ -4246,9 +4245,24 @@ class AjaxController extends Controller
                 return response()->json(['error' => 'User or IB profile not found'], 404);
             }
 
-            $query = IbClientList::where(function ($query) use ($user, $level) {
-                $query->orWhere("ib$level", $user->ib->referral_code);
-            });
+            $query = DB::table('aspnetusers as au')
+                ->leftJoin('accounts as acc', function ($join) {
+                    $join->on('acc.user_id', '=', 'au.id')
+                        ->where('acc.demo', '=', 0);
+                })
+                ->leftJoin('trade_deposits as td', function ($join) {
+                    $join->on('td.user_id', '=', 'au.id')
+                        ->where('td.status', '=', 1);
+                })
+                ->where(function ($q) use ($user, $level) {
+                    $q->orWhere("au.ib{$level}", $user->ib->referral_code);
+                })
+                ->select(
+                    DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                    DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
+                    'au.*'
+                )
+                ->groupBy('au.id');
 
             if ($request->ajax()) {
                 return DataTables::of($query)

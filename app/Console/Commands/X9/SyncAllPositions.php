@@ -111,7 +111,6 @@ class SyncAllPositions extends Command
                     // Save positions to trades table
                     if ($savePositions) {
                         foreach ($positions as $position) {
-                            $this->info('position data' . print_r($position, true));
                             try {
                                 $positionId = $position['id'] ?? null;
 
