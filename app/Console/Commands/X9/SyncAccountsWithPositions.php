@@ -101,7 +101,7 @@ class SyncAccountsWithPositions extends Command
                 if (!$account) {
                     $notFound++;
                     if ($enableLogging) {
-                        // Log::warning("X9 Account not found locally: {$accountNumber}");
+                        Log::warning("X9 Account not found locally: {$accountNumber}");
                     }
                     $bar->advance();
                     continue;
