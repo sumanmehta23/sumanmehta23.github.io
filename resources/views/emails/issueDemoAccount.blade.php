@@ -310,9 +310,9 @@
                                                                         <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Leverage:</td>
                                                                         </tr>
-                                                                        {{-- <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">MT5 Server:</td>
-                                                                        </tr> --}}
+                                                                        <tr>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Server:</td>
+                                                                        </tr>
                                                                     </tbody>
                                                                 </table>
                                                             </td>
@@ -337,9 +337,14 @@
                                                                         <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $leverage }}</strong></td>
                                                                         </tr>
-                                                                        {{-- <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $server_name }}</strong></td>
-                                                                        </tr> --}}
+                                                                        <tr>
+                                                                            @if ($platform == 'mt5')
+                                                                                <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $server_name }}</strong></td>
+                                                                            @else
+                                                                                <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>X9-Trade-Server</strong></td>
+                                                                            @endif
+ 
+                                                                        </tr>
                                                                     </tbody>
                                                                 </table>
                                                             </td>
