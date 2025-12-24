@@ -361,7 +361,7 @@ return [
                 'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 1), // Single process for local development
             ],
         ],
-        'developemnt' => [
+        'development' => [
             'supervisor-1' => [
                 // 'maxProcesses' => 1,
             ],
