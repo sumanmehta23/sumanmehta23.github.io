@@ -80,7 +80,9 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
-
+            dump($this->apiKey);
+            dump($this->subject);
+            dd($maildriver);
             // Always use Brevo API for export emails or if configured
             if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $this->apiKey) {
                 $htmlContent = view($template, $this->data)->render();
