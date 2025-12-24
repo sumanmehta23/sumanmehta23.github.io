@@ -361,5 +361,28 @@ return [
                 'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 1), // Single process for local development
             ],
         ],
+        'developemnt' => [
+            'supervisor-1' => [
+                // 'maxProcesses' => 1,
+            ],
+            'supervisor-2' => [
+                'maxProcesses' => 2,
+            ],
+            'supervisor-3' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-4' => [
+                'maxProcesses' => 2,
+            ],
+            'supervisor-optimized-sync' => [
+                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Reduced for connection management
+            ],
+            'supervisor-demo-sync' => [
+                'maxProcesses' => 1, // Only 1 process for demos in local too
+            ],
+            'supervisor-deal-sync' => [
+                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 1), // Single process for local development
+            ],
+        ],
     ],
 ];
