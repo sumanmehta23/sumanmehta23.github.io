@@ -45,7 +45,9 @@
                                             <td>Date</td>
                                             <td>Time</td>
                                             <td>Status</td>
-                                            <td>Actions</td>
+                                            @can('account:update')
+                                                <td>Actions</td>
+                                            @endcan
                                         </tr>
                                     </thead>
                                     <tbody>
