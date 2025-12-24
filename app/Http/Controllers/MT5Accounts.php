@@ -253,7 +253,8 @@ class MT5Accounts extends Controller
 
 
                 // Extract account information from X9 response using correct nested structure
-                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
+                $balanceData = $x9AccountData['balance'] ?? [];
+
                 if (isset($balanceData['balance'])) {
                     $balanceData['balance'] = str_replace(',', '', $balanceData['balance']);
                 }

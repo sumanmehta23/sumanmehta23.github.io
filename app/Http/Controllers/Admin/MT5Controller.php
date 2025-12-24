@@ -631,13 +631,17 @@ class MT5Controller extends Controller
 
         if ($platform === 'x9') {
             $response = $this->x9Service->getUserDetails($login);
-            if ($response['data']['trading_account']['trading_account_balance']['balance'] > 0) {
-                if ($response['data']['trading_account']['client_group_type'] != 'DEMO') {
+
+            if ($response['data']['trading_account']['client_group_type_id'] != 1) {
+                if ($response['data']['balance']['balance'] > 0) {
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
                 }
+            }else{
+                return redirect()->back()->with('error', 'Demo accounts cannot be deleted.');
             }
-            // X9 deletion logic
-            $response = $this->x9Service->accountSetting($account, 'is_enable', false);
+
+            // X9 deletion logic disableAccount
+            $response = $this->x9Service->disableAccount($account);
             if (!$response['status']) {
                 return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
             }
