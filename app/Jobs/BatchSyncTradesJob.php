@@ -271,7 +271,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $apiCalls[] = ['UserGet', $timings['mt5_user_check']];
 
         if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::warning("MT5 user not found for account {$account->code}");
+            Log::warning("MT5 user not found for account1 {$account->code}");
             $this->updateSyncStatus($account, 'not_found');
             return 'not_found';
         }

@@ -129,7 +129,7 @@ class SyncAccountsWithPositions extends Command
                 if (!empty($positions)) {
                     foreach ($positions as $position) {
                         try {
-                            $positionId = $position['id'] ?? null;
+                            $positionId = $position['ticket_number'] ?? null;
 
                             if (!$positionId || $positionId == 0) {
                                 continue; // Skip invalid position IDs

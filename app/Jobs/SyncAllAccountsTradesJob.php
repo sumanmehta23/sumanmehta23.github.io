@@ -75,7 +75,7 @@ class SyncAllAccountsTradesJob implements ShouldQueue
             $error_code = $api->UserGet($account->code, $mt5_user);
 
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::warning("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                Log::warning("MT5 user not found for account5 {$account->code}: " . MTRetCode::GetError($error_code));
 
                 // Log this as a warning, but don't flag the account since we can't modify the schema
                 Log::warning("Account {$account->code} not found on MT5 server and will be skipped in future syncs");

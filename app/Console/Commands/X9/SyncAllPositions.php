@@ -112,7 +112,7 @@ class SyncAllPositions extends Command
                     if ($savePositions) {
                         foreach ($positions as $position) {
                             try {
-                                $positionId = $position['id'] ?? null;
+                                $positionId = $position['ticket_number'] ?? null;
 
                                 if (!$positionId || $positionId == 0) {
                                     continue; // Skip invalid position IDs
