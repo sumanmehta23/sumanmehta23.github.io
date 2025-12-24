@@ -73,6 +73,8 @@ class SyncAllPositions extends Command
         }
 
         $totalPositions = 0;
+        $accountsUpdated = 0;
+        $positionsSaved = 0;
         $positionsCreated = 0;
         $positionsUpdated = 0;
         $errors = 0;
@@ -109,9 +111,10 @@ class SyncAllPositions extends Command
                     // Save positions to trades table
                     if ($savePositions) {
                         foreach ($positions as $position) {
+                            $this->info('position data' . print_r($position, true));
                             try {
-                                $positionId = $position['position_id'] ?? null;
-                                
+                                $positionId = $position['id'] ?? null;
+
                                 if (!$positionId || $positionId == 0) {
                                     continue; // Skip invalid position IDs
                                 }
@@ -124,20 +127,20 @@ class SyncAllPositions extends Command
                                 $tradeData = [
                                     'account_id' => $account->id,
                                     'code' => $accountNumber,
-                                    'order_id' => $position['order_id'] ?? $positionId,
+                                    'order_id' => $position['ticket_number'] ?? $positionId,
                                     'symbol' => $position['symbol'] ?? null,
                                     'position_id' => $positionId,
-                                    'type' => $this->mapPositionType($position['direction'] ?? null),
-                                    'volume' => $position['volume'] ?? 0,
-                                    'volume_ext' => $position['volume_ext'] ?? 0,
+                                    'type' => $this->mapPositionType($position['ticket_open_as'] ?? null),
+                                    'volume' => $position['order_volume'] ?? 0,
+                                    'volume_ext' => $position['remaining_volume'] ?? 0,
                                     'open_price' => $position['open_price'] ?? 0,
                                     'close_price' => null,
-                                    'profit' => $position['profit'] ?? 0,
-                                    'sl' => $position['sl'] ?? null,
-                                    'tp' => $position['tp'] ?? null,
+                                    'profit' => $position['profit_loss'] ?? 0,
+                                    'sl' => $position['stop_loss'] ?? null,
+                                    'tp' => $position['take_profit'] ?? null,
                                     'comment' => $position['comment'] ?? null,
                                     'status' => 'open',
-                                    'open_time' => isset($position['open_time']) ? Carbon::parse($position['open_time']) : now(),
+                                    'open_time' => isset($position['date_time']) ? Carbon::parse($position['date_time']) : now(),
                                     'close_time' => null,
                                 ];
 
@@ -194,8 +197,6 @@ class SyncAllPositions extends Command
      */
     private function mapPositionType($direction)
     {
-        return strtolower($direction) === 'buy' ? 'buy' : 'sell'
-
-        return 0;
+        return strtolower($direction) === 'buy' ? 'buy' : 'sell';
     }
 }

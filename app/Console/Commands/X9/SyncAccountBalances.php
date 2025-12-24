@@ -4,10 +4,8 @@ namespace App\Console\Commands\X9;
 
 use App\Services\X9Service;
 use App\Models\Account;
-use App\Models\Trade;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class SyncAccountBalances extends Command
 {
@@ -17,7 +15,6 @@ class SyncAccountBalances extends Command
      * @var string
      */
     protected $signature = 'x9:sync-account-balances
-                            {--sync-positions : Also sync open positions/trades}
                             {--accounts= : Comma-separated list of account codes to sync}
                             {--force : Force sync even if recently synced}
                             {--log : Enable detailed logging}';
@@ -43,7 +40,7 @@ class SyncAccountBalances extends Command
     public function handle()
     {
         $accountCodes = $this->option('accounts');
-        $syncPositions = $this->option('sync-positions');
+        $force = $this->option('force');
         $enableLogging = $this->option('log');
 
         $this->info('🔄 Starting X9 Account Balance Sync');
@@ -101,18 +98,12 @@ class SyncAccountBalances extends Command
         }
 
         $this->info("Found {$totalAccounts} local accounts to sync");
-        if ($syncPositions) {
-            $this->info("Will also sync open positions/trades");
-        }
         $this->newLine();
 
         $updated = 0;
         $noChange = 0;
         $errors = 0;
         $notFound = 0;
-        $positionsSynced = 0;
-        $positionsCreated = 0;
-        $positionsUpdated = 0;
 
         // Create progress bar
         $bar = $this->output->createProgressBar($totalAccounts);
@@ -176,68 +167,6 @@ class SyncAccountBalances extends Command
                     $updateData['has_balance_activity'] = true;
                 }
 
-                // Sync positions/trades if option is enabled
-                if ($syncPositions) {
-                    $positions = $balanceData['positions'] ?? [];
-                    if (!empty($positions)) {
-                        foreach ($positions as $position) {
-                            try {
-                                $positionId = $position['position_id'] ?? null;
-
-                                if (!$positionId || $positionId == 0) {
-                                    continue; // Skip invalid position IDs
-                                }
-
-                                // Check if trade already exists
-                                $existingTrade = Trade::where('account_id', $account->id)
-                                    ->where('position_id', $positionId)
-                                    ->first();
-
-                                $tradeData = [
-                                    'account_id' => $account->id,
-                                    'code' => $accountCode,
-                                    'order_id' => $position['order_id'] ?? $positionId,
-                                    'symbol' => $position['symbol'] ?? null,
-                                    'position_id' => $positionId,
-                                    'type' => $this->mapPositionType($position['direction'] ?? null),
-                                    'volume' => $position['volume'] ?? 0,
-                                    'volume_ext' => $position['volume_ext'] ?? 0,
-                                    'open_price' => $position['open_price'] ?? 0,
-                                    'close_price' => null,
-                                    'profit' => $position['profit'] ?? 0,
-                                    'sl' => $position['sl'] ?? null,
-                                    'tp' => $position['tp'] ?? null,
-                                    'comment' => $position['comment'] ?? null,
-                                    'status' => 'open',
-                                    'open_time' => isset($position['open_time']) ? Carbon::parse($position['open_time']) : now(),
-                                    'close_time' => null,
-                                ];
-
-                                if ($existingTrade) {
-                                    // Update existing trade
-                                    $existingTrade->update($tradeData);
-                                    $positionsUpdated++;
-                                } else {
-                                    // Create new trade
-                                    Trade::create($tradeData);
-                                    $positionsCreated++;
-                                }
-
-                                $positionsSynced++;
-                            } catch (\Exception $e) {
-                                if ($enableLogging) {
-                                    Log::error("X9 Position sync error for account {$accountCode}", [
-                                        'position_id' => $position['position_id'] ?? 'unknown',
-                                        'error' => $e->getMessage()
-                                    ]);
-                                }
-                            }
-                        }
-
-                        $updateData['last_position_sync_at'] = now();
-                    }
-                }
-
                 $account->update($updateData);
 
                 if ($balanceChanged) {
@@ -272,21 +201,10 @@ class SyncAccountBalances extends Command
         $this->info("Updated: {$updated}");
         $this->info("No Change: {$noChange}");
         $this->warn("Not Found in X9: {$notFound}");
-        if ($syncPositions) {
-            $this->info("Positions Synced: {$positionsSynced} (Created: {$positionsCreated}, Updated: {$positionsUpdated})");
-        }
         if ($errors > 0) {
             $this->error("Errors: {$errors}");
         }
 
         return 0;
-    }
-
-    /**
-     * Map X9 position direction to trade type
-     */
-    private function mapPositionType($direction)
-    {
-        return strtolower($direction) === 'buy' ? 'buy' : 'sell';
     }
 }

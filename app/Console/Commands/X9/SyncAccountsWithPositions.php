@@ -85,6 +85,7 @@ class SyncAccountsWithPositions extends Command
 
                 $accountNumber = $accountData['account_number'] ?? null;
                 $openPositions = $accountData['open_positions'] ?? 0;
+                $positions = $accountData['positions'] ?? [];
 
                 if (!$accountNumber) {
                     $errors++;
@@ -126,14 +127,70 @@ class SyncAccountsWithPositions extends Command
                         $updateData['margin_free'] = $accountData['free_margin'];
                     }
                 }
-                $this->info('positions data' . print_r($accountData, true));
 
+                // Sync positions/trades
+                if (!empty($positions)) {
+                    foreach ($positions as $position) {
+                        try {
+                            $positionId = $position['id'] ?? null;
+
+                            if (!$positionId || $positionId == 0) {
+                                continue; // Skip invalid position IDs
+                            }
+
+                            // Check if trade already exists
+                            $existingTrade = Trade::where('account_id', $account->id)
+                                ->where('position_id', $positionId)
+                                ->first();
+
+                            $tradeData = [
+                                'account_id' => $account->id,
+                                'code' => $accountNumber,
+                                'order_id' => $position['ticket_number'] ?? $positionId,
+                                'symbol' => $position['symbol'] ?? null,
+                                'position_id' => $positionId,
+                                'type' => $this->mapPositionType($position['ticket_open_as'] ?? null),
+                                'volume' => $position['order_volume'] ?? 0,
+                                'volume_ext' => $position['remaining_volume'] ?? 0,
+                                'open_price' => $position['open_price'] ?? 0,
+                                'close_price' => null,
+                                'profit' => $position['profit_loss'] ?? 0,
+                                'sl' => $position['stop_loss'] ?? null,
+                                'tp' => $position['take_profit'] ?? null,
+                                'comment' => $position['comment'] ?? null,
+                                'status' => 'open',
+                                'open_time' => isset($position['date_time']) ? Carbon::parse($position['date_time']) : now(),
+                                'close_time' => null,
+                            ];
+
+                            if ($existingTrade) {
+                                // Update existing trade
+                                $existingTrade->update($tradeData);
+                                $positionsUpdated++;
+                            } else {
+                                // Create new trade
+                                Trade::create($tradeData);
+                                $positionsCreated++;
+                            }
+
+                            $positionsSynced++;
+                        } catch (\Exception $e) {
+                            if ($enableLogging) {
+                                Log::error("X9 Position sync error for account {$accountNumber}", [
+                                    'position_id' => $position['id'] ?? 'unknown',
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
+                        }
+                    }
+                }
 
                 $account->update($updateData);
 
                 if ($enableLogging) {
                     Log::info("X9 Account synced: {$accountNumber}", [
                         'open_positions' => $openPositions,
+                        'positions_synced' => count($positions),
                         'balance' => $accountData['balance'] ?? null
                     ]);
                 }

@@ -1233,7 +1233,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
         foreach ($positionGroups as $positionId => $positionDeals) {
             if (empty($positionId)) {
-                Log::warning("DEBUG[{$account->code}]: Skipping deals with empty position_id");
+                // Log::warning("DEBUG[{$account->code}]: Skipping deals with empty position_id");
                 continue;
             }
 
@@ -1244,7 +1244,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $positionData = $this->reconstructPositionFromDeals($sortedDeals);
 
             if (!$positionData) {
-                Log::warning("DEBUG[{$account->code}]: Could not reconstruct position {$positionId}");
+                // Log::warning("DEBUG[{$account->code}]: Could not reconstruct position {$positionId}");
                 continue;
             }
 
