@@ -125,6 +125,11 @@ class User extends Authenticatable
             ->withPivot('added_by');
     }
 
+    public function relationshipManager()
+    {
+        return $this->hasOne(RelationshipManager::class, 'user_id');
+    }
+
     // public function getCountry()
     // {
     //     return Country::where('country_name', '=', $this->country)
@@ -295,7 +300,7 @@ class User extends Authenticatable
         return $this->countryDetail;
     }
 
-       /**
+    /**
      * Get affiliate parent user
      * Usage: $user->affiliateParent()
      */
@@ -415,9 +420,9 @@ class User extends Authenticatable
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>Click the link below to activate your Account</p>';
         $code = $this->emailToken;
         $templateVars = [
@@ -442,5 +447,4 @@ class User extends Authenticatable
             }) : 0;
         });
     }
-
 }
