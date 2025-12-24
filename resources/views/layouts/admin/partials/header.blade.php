@@ -491,10 +491,10 @@ if (app()->environment('local')) {
                             </li>
                         @endcan
 
+                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
                         <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
-                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.index') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
