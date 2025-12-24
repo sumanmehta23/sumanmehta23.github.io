@@ -1499,7 +1499,9 @@
                                                                         <th scope="col">Address</th>
                                                                         <th scope="col">Verified</th>
                                                                         <th scope="col">Status</th>
-                                                                        <th scope="col">Action</th>
+                                                                        @can("client_wallet:update")
+                                                                            <th scope="col">Action</th>
+                                                                        @endcan
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -1814,6 +1816,13 @@
                     "order": [
                         [0, 'desc']
                     ],
+                    "columnDefs": [
+                        {
+                            // Hide the Action column if user doesn't have permission
+                            "targets": -1, // Last column (Action)
+                            "visible": window.canUpdateClientWallet
+                        }
+                    ],
                     columns: [{
                             data: 'created_on',
                             name: 'date'
@@ -1849,7 +1858,8 @@
                         {
                             data: 'action',
                             name: 'action',
-                            orderable: false
+                            orderable: false,
+                            searchable: false
                         }
                     ]
                 });
@@ -1980,6 +1990,8 @@
                     }
                 });
             });
+
+            window.canUpdateClientWallet = @json(auth()->user()->can('client_wallet:update'));
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
         <script>

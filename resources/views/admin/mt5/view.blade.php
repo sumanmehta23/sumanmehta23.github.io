@@ -96,16 +96,18 @@ if ($getUser) {
                                                         </h6>
                                                     </div>
                                                 </div>
-                                                <div class="mb-2 col-6" style="padding-left: 12px">
-                                                    @if ($account->deleted_at)
-                                                        <label class="fs-18 text-danger fw-bold mt-1" for="">Deleted</label>
-                                                    @else
-                                                        <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                            data-bs-target="#accountDeleteModal">Delete Account
-                                                            <i class="ti ti-database-import"></i>
-                                                        </span>
-                                                    @endif
-                                                </div>
+                                                @can('account:update')
+                                                    <div class="mb-2 col-6" style="padding-left: 12px">
+                                                        @if ($account->deleted_at)
+                                                            <label class="fs-18 text-danger fw-bold mt-1" for="">Deleted</label>
+                                                        @else
+                                                            <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                                data-bs-target="#accountDeleteModal">Delete Account
+                                                                <i class="ti ti-database-import"></i>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                @endcan
                                             </div>
                                             @if (!$account->deleted_at)
                                                 <div class="mt-3 row justify-content-center">
