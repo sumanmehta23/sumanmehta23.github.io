@@ -1272,17 +1272,25 @@ class MT5Accounts extends Controller
         $response = $this->x9Service->createUser($x9UserData);
 
         if ($response['status']) {
-            $x9AccountData = $response['data'];
-            Log::info('X9 Demo Account Creation Response: ' . json_encode($x9AccountData));
-            // Handle both V1 and V2 response structures
-            // V2: {"success": true, "data": {"account_number": "12345678", "trading_account_id": 123, ...}}
-            // V1: {"trading_account": {"account_number": "12345678", ...}}
-            $loginId = $x9AccountData['data']['account_number'] ?? $x9AccountData['account_number'] ?? $x9AccountData['trading_account']['account_number'] ?? null;
-            $tradingAccountId = $x9AccountData['data']['trading_account_id'] ?? $x9AccountData['trading_account_id'] ?? $x9AccountData['trading_account']['trading_account_id'] ?? null;
+            // $x9AccountData = $response['data'];
+            // Log::info('X9 Demo Account Creation Response: ' . json_encode($x9AccountData));
+            // // Handle both V1 and V2 response structures
+            // // V2: {"success": true, "data": {"account_number": "12345678", "trading_account_id": 123, ...}}
+            // // V1: {"trading_account": {"account_number": "12345678", ...}}
+            // $loginId = $x9AccountData['data']['account_number'] ?? $x9AccountData['account_number'] ?? $x9AccountData['trading_account']['account_number'] ?? null;
+            // $tradingAccountId = $x9AccountData['data']['trading_account_id'] ?? $x9AccountData['trading_account_id'] ?? $x9AccountData['trading_account']['trading_account_id'] ?? null;
+
+            // if (!$loginId) {
+            //     Log::error('X9 Demo Account Creation - No account number in response: ' . json_encode($x9AccountData));
+            //     return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned. Please check logs.');
+            // }
+
+            $x9AccountData = $response['data']['trading_account'] ?? $response['data'];
+            $loginId = $x9AccountData['account_number'] ?? null;
+            $tradingAccountId = $x9AccountData['trading_account_id'] ?? null;
 
             if (!$loginId) {
-                Log::error('X9 Demo Account Creation - No account number in response: ' . json_encode($x9AccountData));
-                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned. Please check logs.');
+                return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned');
             }
 
             // Log activity
