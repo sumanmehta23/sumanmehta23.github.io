@@ -1072,13 +1072,13 @@ class MT5Accounts extends Controller
 
         // Rate limiting to prevent duplicate account creation
         $key = 'create-demo-account:' . (auth()->id() ?: $request->ip());
-        
+
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
             return redirect()->back()
                 ->with('error', "Please wait {$retryAfter} seconds before creating another demo account.");
         }
-        
+
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         // Validate platform selection
@@ -1099,13 +1099,13 @@ class MT5Accounts extends Controller
     {
         // Additional rate limiting specific to MT5 demo account creation
         $key = 'create-mt5-demo-account:' . (auth()->id() ?: $request->ip());
-        
+
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
             return redirect()->back()
                 ->with('error', "Please wait {$retryAfter} seconds before creating another MT5 demo account.");
         }
-        
+
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         $settings = settings();
@@ -1215,13 +1215,13 @@ class MT5Accounts extends Controller
     {
         // Additional rate limiting specific to X9 demo account creation
         $key = 'create-x9-demo-account:' . (auth()->id() ?: $request->ip());
-        
+
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
             return redirect()->back()
                 ->with('error', "Please wait {$retryAfter} seconds before creating another X9 demo account.");
         }
-        
+
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         $validatedData = $request->validate([
@@ -1273,7 +1273,7 @@ class MT5Accounts extends Controller
 
         if ($response['status']) {
             $x9AccountData = $response['data'];
-
+            Log::info('X9 Demo Account Creation Response: ' . json_encode($x9AccountData));
             // Handle both V1 and V2 response structures
             // V2: {"success": true, "data": {"account_number": "12345678", "trading_account_id": 123, ...}}
             // V1: {"trading_account": {"account_number": "12345678", ...}}
