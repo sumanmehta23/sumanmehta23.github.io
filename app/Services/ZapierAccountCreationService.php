@@ -380,22 +380,25 @@ class ZapierAccountCreationService
             
             $bonusTransaction = BonusTransaction::create($bonusData);
 
-            $depositData = [
-                'user_id' => $user->id,
-                'account_id' => $account->id,
-                'email' => $user->email,
-                'code' => $account->code,
-                'deposit_amount' => $amount,
-                'deposit_currency' => self::BONUS_CURRENCY,
-                'deposit_type' => self::BONUS_TYPE,
-                'status' => 1,
-                'callback_code' => 'success',
-                'admin_remark' => 'Zapier Bonus Deposit',
-                'deposited_date' => now(),
-                'created_by' => 'zapier_webhook',
-            ];
-
-            TradeDeposit::create($depositData);
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $bonusData['email'],
+                    'bonus_amount' => $amount,
+                    'bonus_type' => self::BONUS_TYPE,
+                    'code' => $account->code,
+                    'account_id' => $account->id,
+                    'platform' => $account->platform,
+                    'remark' => 'CRM Zapier Deposit Bonus'
+                ])
+                ->event('create')
+                ->log('CRM Zapier Bonus');
 
             return $bonusTransaction;
         } catch (Exception $e) {
