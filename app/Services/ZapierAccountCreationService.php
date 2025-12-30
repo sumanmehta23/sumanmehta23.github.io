@@ -178,24 +178,12 @@ class ZapierAccountCreationService
     protected function getDefaultLiveAccountType(): ?AccountType
     {
         try {
-            // Prefer explicit 'Standard' account type
-            $standard = AccountType::with('mt5Group')
-                ->whereRaw('LOWER(ac_name) = ?', [strtolower('Standard')])
-                ->where('is_client_group', 1)
-                ->first();
-
-            if ($standard) {
-                return $standard;
-            }
-
-            // Fallback to account types whose mt5 group is live
             $accountType = AccountType::with('mt5Group')
                 ->whereHas('mt5Group', function ($query) {
                     $query->where('mt5_group_type', 'live');
                 })
                 ->where('is_client_group', 1)
-                ->where('competition_start_date', null)
-                ->where('competition_end_date', null)
+                ->where('ac_group', 'LM\B-Book\STD\DF-B')
                 ->orderBy('display_priority', 'desc')
                 ->first();
 
