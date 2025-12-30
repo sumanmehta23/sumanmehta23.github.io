@@ -33,7 +33,7 @@ class ZapierAccountCreationService
     protected $api;
     protected const BONUS_AMOUNT = 50;
     protected const BONUS_CURRENCY = 'USD';
-    protected const BONUS_TYPE = 'zapier_bonus_deposit';
+    protected const BONUS_TYPE = 'Bonus In';
     protected const CREATED_FROM = 'zapier';
 
     public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
@@ -377,11 +377,11 @@ class ZapierAccountCreationService
             // In admin bonusToAccount they sometimes choose operation based on known login lists;
             // replicate that behavior (empty list -> default to DEAL_BALANCE as in controller)
             $loginss = [];
-            if (in_array($login, $loginss)) {
-                $operation = MTEnDealAction::DEAL_BONUS;
-            } else {
+            // if (in_array($login, haystack: $loginss)) {
+            //     $operation = MTEnDealAction::DEAL_BONUS;
+            // } else {
                 $operation = MTEnDealAction::DEAL_BALANCE;
-            }
+            // }
 
             // Use descriptive comment for deposit flow
             $comment = 'Bonus Deposit';
