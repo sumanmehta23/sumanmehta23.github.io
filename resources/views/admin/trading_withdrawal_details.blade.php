@@ -14,7 +14,7 @@
         @if (isset($details) && !empty($details))
 
             <div class="row">
-                <div class="col-10 mx-auto">
+                <div class="mx-auto col-10">
                     <div class="card custom-card">
                         <div class="card-body">
                             <h6 class="card-title fw-medium">WITHDRAW TICKET #{{ $details->id }}</h6>
@@ -60,24 +60,24 @@
                                         </div>
 
                                         <div class="user-wrap">
-                                            <h4 class="fw-normal d-flex align-items-center cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">
+                                            <h4 class="cursor-pointer fw-normal d-flex align-items-center" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">
                                                 {{ $clientFullname }}
-                                                <span class="badge bg-success text-white ms-2">
+                                                <span class="text-white badge bg-success ms-2">
                                                     Wallet balance: ${{ number_format($details->user->wallet_balance?$details->user->wallet_balance:0, 2) }}
                                                 </span>
                                                 @if($details->user->total_bonus)
-                                                    <span class="badge bg-success text-white ms-2">
+                                                    <span class="text-white badge bg-success ms-2">
                                                         Bonus: ${{ number_format($details->user->total_bonus, 2) }}
                                                     </span>
                                                 @endif
                                             </h4>
 
-                                            <h6 class="mb-3 text-muted fw-normal cursor-pointer" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">{{ $clientEmail }}</h6>
+                                            <h6 class="mb-3 cursor-pointer text-muted fw-normal" onmousedown="handleClick(event, '{{ route('admin.admin-view-client-details', $clientId) }}')">{{ $clientEmail }}</h6>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-12 rmToggle cursor-pointer" data-rm="{{ $details->rm_id }}"
+                                <div class="cursor-pointer col-lg-3 col-md-12 rmToggle" data-rm="{{ $details->rm_id }}"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
 
@@ -96,11 +96,11 @@
                                         <div class="user-wrap">
                                             <h4 class="fw-medium fs-11">{{ $details->rm_name ?? 'NoRM' }}</h4>
                                             <!-- <h4 class="fw-medium fs-11 text-muted">{{ $details->rm_name ?? '' }}</h4> -->
-                                            <h6 class="text-muted mb-3 fw-normal fs-11">Relationship Manager</h6>
+                                            <h6 class="mb-3 text-muted fw-normal fs-11">Relationship Manager</h6>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-md-12 updateIb cursor-pointer"
+                                <div class="cursor-pointer col-lg-3 col-md-12 updateIb"
                                     data-enc="{{ ($details->email) }}" data-email="{{ $details->email }}"
                                     data-fullname="{{ $details->fullname }}">
                                     <div class="wideget-user-desc d-flex align-items-center">
@@ -118,7 +118,7 @@
                                         <div class="user-wrap">
                                             <h4 class="fw-medium fs-11">{{ $details->parent_ib ?? 'NoIB' }}</h4>
                                             <!-- <h4 class="fw-medium fs-11 text-muted">{{ $details->parent_ib_email ?? '' }}</h4> -->
-                                            <h6 class="text-muted mb-3 fw-normal fs-11">Parent IB</h6>
+                                            <h6 class="mb-3 text-muted fw-normal fs-11">Parent IB</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -134,9 +134,9 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Contact</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span><i
-                                                                    class="fa fa-phone text-primary px-2"></i>{{ $details->number }}</span>
+                                                                    class="px-2 fa fa-phone text-primary"></i>{{ $details->number }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -147,7 +147,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Created On</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->withdraw_date }}</span>
                                                         </div>
                                                     </div>
@@ -159,7 +159,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Total Deposit</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span class="badge bg-success-transparent">+</span>
                                                             <span>${{ @($details->account->tradeDeposits ? $details->account->tradeDeposits->sum('deposit_amount') : 0) }}</span>
                                                         </div>
@@ -172,7 +172,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">Total Withdraw</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span class="badge bg-danger-transparent">-</span>
                                                             {{-- <span>${{ $details->total_trading_wd + $details->total_wallet_wd }}</span> --}}
                                                             <span>${{@($details->account->tradeWithdrawals ? $details->account->tradeWithdrawals->where('email_verified', 1)->where('status', 1)->sum('withdrawal_amount') : 0)}}</span>
@@ -188,13 +188,13 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">PAYMENT METHOD</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             {{ $details->withdraw_type }}</span>
                                                         </div>
                                                         <?php if (isset($details->account_holder_name)) { ?>
-                                                        <div class="lh-1 mt-3">
+                                                        <div class="mt-3 lh-1">
                                                             <strong>Bank Details</strong></br>
-                                                            <div class="mb-2 mt-2"><b>Bank:
+                                                            <div class="mt-2 mb-2"><b>Bank:
                                                                 </b><span>{{ $details->bank_name }}</span></div>
                                                             <div class="mb-2"><b>Acc Name:
                                                                 </b><span>{{ $details->account_holder_name }}</span></div>
@@ -214,7 +214,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">TRANSACTION ID</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             {{-- {{dd($details)}} --}}
                                                             {{-- <span>{{ $details->withdraw_to != null ? $details->withdraw_to : $details->withdraw_type}}</span> --}}
                                                             <span>{{ $details->transaction_id }}</span>
@@ -228,7 +228,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">WITHDRAWAL AMOUNT</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             {{-- <span>${{ $details->withdrawal_amount - $details->promo_deduction }}</span> --}}
                                                             <span>${{ $details->withdrawal_amount }}</span>
                                                         </div>
@@ -241,7 +241,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">WITHDRAWAL FEE</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>${{ $details->transaction_fee }}</span>
                                                         </div>
                                                     </div>
@@ -253,7 +253,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">PAYMENT STATUS</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <?php if ($details->status == 1) { ?>
                                                             <span class="badge bg-success">APPROVED</span>
                                                             <?php } elseif ($details->status == 2) { ?>
@@ -296,46 +296,47 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                {{-- <div class="btn-list ms-auto my-auto">
+                                                {{-- <div class="my-auto btn-list ms-auto">
                                                     @php
                                                         $userData = json_encode(session('userData'));
                                                     @endphp
                                                     <button
                                                         onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',1,{{ $details->code }})"
                                                         type="button"
-                                                        class="btn btn-success btn-space m-1">Approve</button>
+                                                        class="m-1 btn btn-success btn-space">Approve</button>
                                                     <button
                                                         onclick="takeAction('{{ json_encode($details->id) }}', '{{ $details->email }}','{{ $details->withdrawal_amount }}',2,{{ $details->code }})"
                                                         type="submit"
-                                                        class="btn btn-danger btn-space m-1">Reject</button>
+                                                        class="m-1 btn btn-danger btn-space">Reject</button>
                                                 </div> --}}
-
-                                                <div class="my-auto btn-list ms-auto">
-                                                    @php
-                                                        $userData = json_encode(session('userData'));
-                                                    @endphp
-                                                    <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
-                                                        type="button" class="m-1 btn btn-success btn-space">
-                                                    Approve
-                                                    </button>
-                                                        {{-- <button
-                                                        onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
-                                                        type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
-                                                    @if (($details->status == 0) || ($details->payout_res != null))
-                                                        <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
-                                                        Reject
+                                                @can("trade_withdrawals:update")
+                                                    <div class="my-auto btn-list ms-auto">
+                                                        @php
+                                                            $userData = json_encode(session('userData'));
+                                                        @endphp
+                                                        <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                            Edit
                                                         </button>
-                                                        {{-- {{ dd($details) }} --}}
-                                                        <div class="form-check d-inline-block me-2">
-                                                            <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ (int)$details->withdrawal_amount }}','{{ (int)$details->transaction_fee }}',1)">
-                                                            <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
-                                                        </div>
-                                                    @endif
-                                                </div>
+                                                        <button
+                                                            onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
+                                                            type="button" class="m-1 btn btn-success btn-space">
+                                                        Approve
+                                                        </button>
+                                                            {{-- <button
+                                                            onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
+                                                            type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
+                                                        @if (($details->status == 0) || ($details->payout_res != null))
+                                                            <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
+                                                            Reject
+                                                            </button>
+                                                            {{-- {{ dd($details) }} --}}
+                                                            <div class="form-check d-inline-block me-2">
+                                                                <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ (int)$details->withdrawal_amount }}','{{ (int)$details->transaction_fee }}',1)">
+                                                                <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endcan
 
 
                                             </td>
@@ -346,7 +347,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
@@ -358,7 +359,7 @@
                                                         <div class="lh-1">
                                                             <span class="fs-11 text-muted">ADMIN ACTION TAKEN</span>
                                                         </div>
-                                                        <div class="lh-1 mt-2">
+                                                        <div class="mt-2 lh-1">
                                                             <span>{{ $details->approved_date }}</span>
                                                         </div>
                                                     </div>
@@ -375,7 +376,7 @@
             </div>
         @else
             <div class="row">
-                <div class="col-12 mx-3">
+                <div class="mx-3 col-12">
                     <h4>No details found or you are not authorized to access this page</h4>
                 </div>
             </div>
@@ -397,7 +398,7 @@
                     <div class="modal-body">
                         <p>
                             <strong>Amount:</strong>
-                            <input class="form-control d-inline-block w-auto align-middle ms-2" type="number" name="amount" value="{{ $details->withdraw_amount }}">
+                            <input class="w-auto align-middle form-control d-inline-block ms-2" type="number" name="amount" value="{{ $details->withdraw_amount }}">
                         </p>
                     </div>
                     <div class="modal-footer">
