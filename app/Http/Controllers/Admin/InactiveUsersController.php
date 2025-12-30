@@ -55,6 +55,7 @@ class InactiveUsersController extends Controller
                 $orderColumn = $request->columns[$request->order[0]['column']]['data'];
                 $orderDir = $request->order[0]['dir'];
                 
+                // Map DataTable column names to database column names
                 if ($orderColumn === 'last_login' || $orderColumn === 'last_login_formatted') {
                     // For last_login, we need a subquery
                     $query->orderByRaw("(
@@ -66,7 +67,24 @@ class InactiveUsersController extends Controller
                     ) " . $orderDir);
                 } elseif ($orderColumn === 'reg_date_formatted') {
                     $query->orderBy('reg_date', $orderDir);
+                } elseif ($orderColumn === 'user_name') {
+                    // Map user_name to fullname database column
+                    $query->orderBy('fullname', $orderDir);
+                } elseif ($orderColumn === 'user_email') {
+                    // Map user_email to email database column
+                    $query->orderBy('email', $orderDir);
+                } elseif ($orderColumn === 'days_inactive') {
+                    // For days_inactive, we need to calculate it in the query
+                    // Order by last login date (most recent = least inactive)
+                    $query->orderByRaw("(
+                        SELECT MAX(created_date_js) 
+                        FROM login_history 
+                        WHERE login_history.user_id = aspnetusers.id 
+                        AND action = 'login' 
+                        AND status = 1
+                    ) " . ($orderDir === 'asc' ? 'desc' : 'asc'));
                 } else {
+                    // For other columns, try to order directly
                     $query->orderBy($orderColumn, $orderDir);
                 }
             } else {
