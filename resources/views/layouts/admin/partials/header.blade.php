@@ -546,7 +546,7 @@ if (app()->environment('local') || app()->environment('development')) {
                                         style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
                                         data-popper-placement="bottom">
                                         <li class="slide menu-item-sub ">
-                                            <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
+                                            <a href="{{ route('admin.competitions.index') }}" class="side-menu__item">
                                                 <span class="side-menu__label">Competition List</span>
                                             </a>
                                             <ul class="slide-menu child1">

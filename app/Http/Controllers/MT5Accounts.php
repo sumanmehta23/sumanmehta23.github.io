@@ -254,7 +254,8 @@ class MT5Accounts extends Controller
 
 
                 // Extract account information from X9 response using correct nested structure
-                $balanceData = $x9AccountData['trading_account']['trading_account_balance'] ?? [];
+                $balanceData = $x9AccountData['balance'] ?? [];
+
                 if (isset($balanceData['balance'])) {
                     $balanceData['balance'] = str_replace(',', '', $balanceData['balance']);
                 }
@@ -974,7 +975,7 @@ class MT5Accounts extends Controller
                     }
                 }
                 // X9 deletion logic
-                $response = $this->x9Service->accountSetting($account, 'is_enable', false);
+                $response = $this->x9Service->disableAccount($account);
                 if (!$response['status']) {
                     return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
                 }
@@ -1272,19 +1273,6 @@ class MT5Accounts extends Controller
         $response = $this->x9Service->createUser($x9UserData);
 
         if ($response['status']) {
-            // $x9AccountData = $response['data'];
-            // Log::info('X9 Demo Account Creation Response: ' . json_encode($x9AccountData));
-            // // Handle both V1 and V2 response structures
-            // // V2: {"success": true, "data": {"account_number": "12345678", "trading_account_id": 123, ...}}
-            // // V1: {"trading_account": {"account_number": "12345678", ...}}
-            // $loginId = $x9AccountData['data']['account_number'] ?? $x9AccountData['account_number'] ?? $x9AccountData['trading_account']['account_number'] ?? null;
-            // $tradingAccountId = $x9AccountData['data']['trading_account_id'] ?? $x9AccountData['trading_account_id'] ?? $x9AccountData['trading_account']['trading_account_id'] ?? null;
-
-            // if (!$loginId) {
-            //     Log::error('X9 Demo Account Creation - No account number in response: ' . json_encode($x9AccountData));
-            //     return redirect()->back()->with('error', 'Failed to create X9 account: No account number returned. Please check logs.');
-            // }
-
             $x9AccountData = $response['data']['trading_account'] ?? $response['data'];
             $loginId = $x9AccountData['account_number'] ?? null;
             $tradingAccountId = $x9AccountData['trading_account_id'] ?? null;
@@ -1329,14 +1317,11 @@ class MT5Accounts extends Controller
             // Deposit demo balance in X9
             $balanceResponse = $this->x9Service->manageBalance(
                 $loginId,
+                'balance',
                 'Deposit',
-                'deposit',
                 $validatedData['demo_deposit'],
                 'Demo Account Initial Deposit'
             );
-
-            Log::info('X9 Demo Balance Deposit Response: ' . json_encode($balanceResponse));
-
             $new_user = json_decode(json_encode([
                 "Email" => $user->email,
                 "Name" => $user->fullname,
