@@ -19,7 +19,6 @@ use App\Models\IbCategory;
 use App\Models\TicketType;
 use App\Models\AccountType;
 use App\Models\EmployeeList;
-use App\Models\IbClientList;
 use App\Models\TicketStatus;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
@@ -531,7 +530,6 @@ class ClientController extends Controller
                                 ]);
                             }
                         }
-
                     }
 
                     $user->fullname = $fullname;

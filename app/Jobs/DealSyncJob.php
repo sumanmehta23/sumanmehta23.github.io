@@ -97,7 +97,7 @@ class DealSyncJob implements ShouldQueue
                         continue;
                     }
                     $fromTime = $this->determineFromTime($account, $index);
-                    Log::info("fromTime abhay". $fromTime);
+                    Log::info("fromTime abhay" . $fromTime);
                     $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
 
                     $results[$result['status']]++;
@@ -206,7 +206,7 @@ class DealSyncJob implements ShouldQueue
         $timings['mt5_user_check'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
         if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::warning("MT5 user not found for account {$account->code}");
+            Log::warning("MT5 user not found for account2 {$account->code}");
             $this->updateAccountDealSyncStatus($account, 'error');
             return ['status' => 'errors', 'deals_count' => 0];
         }

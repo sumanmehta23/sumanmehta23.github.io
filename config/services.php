@@ -59,11 +59,19 @@ return [
         'promotion' => env('SALES_PROMOTION', false),
         'promotiontext' => env('SALES_PROMOTION_TEXT'),
     ],
+
     'sumsub' => [
         'api_token' => env('SUMSUB_API_TOKEN', ''),
         'api_secret' => env('SUMSUB_API_SECRET', ''),
         'webhook_secret' => env('SUMSUB_WEBHOOK_SECRET', ''),
         'clientId' => env('SUMSUB_CLIENT_ID', ''),
+    ],
+
+    'veriff' => [
+        'api_key' => env('VERIFF_API_KEY', ''),
+        'api_secret' => env('VERIFF_API_SECRET', ''),
+        'webhook_secret' => env('VERIFF_WEBHOOK_SECRET', ''),
+        'base_url' => env('VERIFF_BASE_URL', 'https://stationapi.veriff.com/v1'),
     ],
     'omnisend' => [
         'api_url' => env('OMNISEND_API_URL', 'https://api.omnisend.com/v5'),
@@ -73,8 +81,10 @@ return [
         'api_key' => env('FORGE_API_KEY', ''),
     ],
     'x9' => [
-        'base_url' => env('X9_BASE_URL', ''),
+        'base_url' => env('X9_BASE_URL', 'https://webapi.x9trader.com'),
         'access_token' => env('X9_ACCESS_TOKEN', ''),
+        'v2_base_url' => env('X9_V2_BASE_URL', ''),
+        'v2_access_token' => env('X9_V2_ACCESS_TOKEN', ''),
     ],
 
     'raga_pay' => [

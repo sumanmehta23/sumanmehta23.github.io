@@ -54,7 +54,7 @@
 
     <?php
 $marginTopStyle = ''; // Default value
-if (app()->environment('local')) {
+if (app()->environment('local') || app()->environment('development')) {
     $marginTopStyle = 'style="margin-top: 40px;"';
 }
     ?>
@@ -112,6 +112,11 @@ if (app()->environment('local')) {
         </script>
     @endif
     @if (app()->environment('local'))
+        <div
+            style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
+            <b>LOCAL ENVIRONMENT</b>
+        </div>
+        @elseif (app()->environment('development'))
         <div
             style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
             <b>DEV ENVIRONMENT</b>
@@ -329,7 +334,8 @@ if (app()->environment('local')) {
                                 auth()->user()->can('wallet_withdrawal:viewAny') ||
                                 auth()->user()->can('trade_deposit:viewAny') ||
                                 auth()->user()->can('trade_withdrawals:viewAny') ||
-                                auth()->user()->can('internal_transfer:viewAny')
+                                auth()->user()->can('internal_transfer:viewAny') ||
+                                auth()->user()->can('trade:viewAny')
                             )
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">FINANCE</span>
@@ -419,6 +425,21 @@ if (app()->environment('local')) {
                                 </ul>
                             </li>
                         @endif
+
+                        @can('trade_deposit:viewAny')
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">TRADES</span>
+                            </li>
+
+                            <li class="slide menu-item-main ">
+                                <a href="{{ route('admin.trades.index') }}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-trending-up"></i>
+                                    <span class="side-menu__label">Trades</span>
+                                </a>
+                                <ul class="slide-menu child1"></ul>
+                            </li>
+                        @endcan
+
                         @if (auth()->user()->can('ib:viewAny') || auth()->user()->can('ib:manageSettings'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">INTRODUCING BROKER</span>
@@ -525,7 +546,7 @@ if (app()->environment('local')) {
                                         style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
                                         data-popper-placement="bottom">
                                         <li class="slide menu-item-sub ">
-                                            <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
+                                            <a href="{{ route('admin.competitions.index') }}" class="side-menu__item">
                                                 <span class="side-menu__label">Competition List</span>
                                             </a>
                                             <ul class="slide-menu child1">
@@ -652,6 +673,19 @@ if (app()->environment('local')) {
 
                             </ul>
                         </li> --}}
+
+                        <li class="slide__category menu-item-category">
+                            <span class="category-name">BLOG</span>
+                        </li>
+
+                        <li class="slide menu-item-main">
+                            <a href="{{ route('admin.blog.index') }}" class="side-menu__item">
+                                <i class="side-menu__icon fe fe-file-text"></i>
+                                <span class="side-menu__label">Blog Posts</span>
+                            </a>
+                            <ul class="slide-menu child1">
+                            </ul>
+                        </li>
 
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
