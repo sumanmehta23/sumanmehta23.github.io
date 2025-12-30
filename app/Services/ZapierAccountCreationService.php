@@ -146,6 +146,7 @@ class ZapierAccountCreationService
             // Build user data same way as LoginController::addUser
             $userData = [];
             $number = ($data['country_code'] ?? '+1') . ($data['phone'] ?? '');
+            $code = Str::random(60);
 
             $userData['email'] = strtolower($data['email']);
             $userData['fullname'] = $data['name'];
@@ -154,14 +155,47 @@ class ZapierAccountCreationService
             $userData['number'] = $number;
             $userData['username'] = strtolower($data['email']);
             $userData['country'] = $data['country'] ?? 'Unknown';
-            $userData['emailToken'] = Str::random(60);
-            $userData['email_confirmed'] = 1; // Auto-confirm Zapier users
+            $userData['emailToken'] = $code;
             $userData['created_from'] = self::CREATED_FROM;
             $userData['created_at'] = now();
             $userData['updated_at'] = now();
             $userData['client_ip'] = request()->ip() ?? '0.0.0.0';
 
-            return User::create($userData);
+            $user = User::create($userData); 
+        
+            if ($user) {
+            event(new \Illuminate\Auth\Events\Registered($user));
+
+                $settings = settings();
+                $from = $settings['email_from_address'];
+                $toEmail = $user->email;
+                $uid = uniqid();
+                $emailSubject = $settings['admin_title'] . ' - Email Address Verification';
+                $htmlContent = "";
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                $content =
+                    '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+                    '<p></p>' .
+                    '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
+                    '<p></p>' .
+                    '<p>Click the link below to activate your Account</p>';
+
+                $templateVars = [
+                    'name' => $user->fullname,
+                    'server_name' => $settings['mt5_company_name'],
+                    'site_link' => $settings['copyright_site_name_text'] . "/email_verify?id={$user->id}&code=$code",
+                    'email' => $settings['email_from_address'],
+                    "content" => $content,
+                    "title_right" => "Activate",
+                    "subtitle_right" => "Your Account",
+                    "btn_text" => "Activate",
+                ];
+                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+            }    
+
+            return $user;
         } catch (Exception $e) {
             Log::error("Zapier: Failed to create user account", [
                 'email' => $data['email'],
