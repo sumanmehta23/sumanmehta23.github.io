@@ -573,7 +573,7 @@ $settings = settings();
                                                         width="100%">
                                                         <tr>
                                                             <td class="pad"
-                                                                style="padding-bottom:10px;padding-left:25px;padding-right:25px;padding-top:15px;">
+                                                                style="padding-bottom:5px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div
                                                                     style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:150%;text-align:justify;mso-line-height-alt:22px;">
                                                                     <p style="margin: 0; margin-bottom: 12px;">
@@ -601,7 +601,7 @@ $settings = settings();
                                                         width="100%">
                                                         <tr>
                                                             <td class="pad"
-                                                                style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                                style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:0px;">
                                                                 <div
                                                                     style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:150%;text-align:justify;mso-line-height-alt:22px;">
                                                                     <p style="margin: 0;">All
