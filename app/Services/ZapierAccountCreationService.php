@@ -202,22 +202,19 @@ class ZapierAccountCreationService
     protected function createMT5LiveAccount(User $user, AccountType $accountType, array $data): ?Account
     {
         try {
-            // Prepare MT5 user object (same as project)
             $new_user_data = [];
             $new_user_data['MainPassword'] = $this->generatePassword();
-            // Use account type's ac_group if present, else fallback
-            $group = $accountType->ac_group ?? 'LM\\B-Book\\STD\\DF-B';
-            $new_user_data['Group'] = $group;
+            $new_user_data['Group'] = $accountType->ac_group;
             $new_user_data['type'] = $accountType->ac_name;
-            $new_user_data['Leverage'] = $accountType->ac_leverage ?? 1;
+            $new_user_data['Leverage'] = $accountType->ac_max_leverage;
             $new_user_data['ZipCode'] = $user->zipcode ?? '';
-            $new_user_data['Country'] = $user->country ?? 'US';
+            $new_user_data['Country'] = $user->country ?? '';
             $new_user_data['State'] = $user->state ?? '';
             $new_user_data['City'] = $user->city ?? '';
             $new_user_data['Address'] = $user->address ?? '';
             $new_user_data['Phone'] = $user->number ?? '';
             $new_user_data['Currency'] = self::BONUS_CURRENCY; // USD
-            $new_user_data['Company'] = $this->settings['mt5_company_name'] ?? 'LQH Markets';
+            $new_user_data['Company'] = $this->settings['mt5_company_name'];
             $new_user_data['Name'] = $user->fullname ?? $user->email;
             $new_user_data['Email'] = $user->email;
             $new_user_data['LeadSource'] = $user->ib1 ?? "";
@@ -225,27 +222,14 @@ class ZapierAccountCreationService
             $new_user_data['InvestPassword'] = $this->generatePassword();
             $new_user_data['Login'] = $this->generateRandomNumber();
 
-            // Force STANDARD live account group for Zapier-created accounts
-            $groupCode = 'LM\\B-Book\\STD\\DF-B';
-            $accountType = AccountType::where('ac_group', $groupCode)->first() ?? $accountType;
 
-            // Agent (IB) mapping
-            $ib = $user->ib1 ?? '';
-            $agentId = null;
-            if (!empty($ib)) {
-                $ibdata = Ib1::where('referral_code', $ib)->first();
-                $agentId = $ibdata->indexId ?? null;
-            }
-
-            // Try to create on MT5 server using the same controller flow as createLiveAccount()
-            // We'll reuse our mt5Service to build the user object, then call MT5Accounts::CreateAccount()
             $mt5Success = false;
             $serverAssignedLogin = $new_user_data['Login'];
             try {
                 // Build the MT5 user object (same fields as in MT5Accounts::createLiveAccount)
                 $new_user = $this->mt5Service->userCreate();
                 $new_user->MainPassword = $new_user_data['MainPassword'];
-                $new_user->Group = $groupCode;
+                $new_user->Group =  $new_user_data['Group'];
                 $new_user->type = $accountType->ac_name ?? $new_user_data['type'];
                 $new_user->Leverage = $new_user_data['Leverage'];
                 $new_user->ZipCode = $new_user_data['ZipCode'];
@@ -262,11 +246,8 @@ class ZapierAccountCreationService
                 $new_user->PhonePassword = $new_user_data['PhonePassword'];
                 $new_user->InvestPassword = $new_user_data['InvestPassword'];
                 $new_user->Login = $new_user_data['Login'];
-                if ($agentId) {
-                    $new_user->Agent = $agentId;
-                }
 
-                // Call the controller helper to create the account on MT5 and send mail exactly like web flow
+                
                 $mt5Controller = app(\App\Http\Controllers\MT5Accounts::class);
                 $created_server_user = null;
                 $response = $mt5Controller->CreateAccount($new_user, $created_server_user, 'Live');
@@ -282,13 +263,13 @@ class ZapierAccountCreationService
                     Log::info('Zapier: MT5 live account created via MT5Accounts::CreateAccount', [
                         'login' => $serverAssignedLogin,
                         'email' => $user->email,
-                        'group' => $groupCode,
+                        'group' => $new_user_data['Group'],
                     ]);
                 } else {
                     Log::warning('Zapier: MT5Accounts::CreateAccount returned failure, creating local records', [
                         'response' => $response,
                         'email' => $user->email,
-                        'group' => $groupCode
+                        'group' => $new_user_data['Group']
                     ]);
                 }
             } catch (\Exception $mtEx) {
@@ -298,7 +279,6 @@ class ZapierAccountCreationService
                 ]);
             }
 
-            // Create database account record regardless of MT5 status
             $account = Account::create([
                 'user_id' => $user->id,
                 'name' => $new_user_data['Name'],
@@ -306,7 +286,6 @@ class ZapierAccountCreationService
                 'platform' => Account::PLATFORM_MT5,
                 'email' => $new_user_data['Email'],
                 'account_nick_name' => 'Zapier Live Account',
-                // Use server-assigned login when MT5 created the account, else use our generated login
                 'code' => $serverAssignedLogin,
                 'account_type_id' => $accountType->id,
                 'leverage' => $new_user_data['Leverage'],
@@ -315,19 +294,16 @@ class ZapierAccountCreationService
                 'invester_password' => $new_user_data['InvestPassword'],
                 'phone_password' => $new_user_data['PhonePassword'],
                 'ib1' => $user->ib1 ?? null,
-                // If MT5 creation failed mark request status accordingly (1=created, 0=pending)
+
                 'account_request_status' => ($mt5Success ? 1 : 0),
                 'created_from' => self::CREATED_FROM,
                 'balance' => 0,
-                // ensure ac_group matches required MT5 group for these accounts
-                'ac_group' => $groupCode,
+                'ac_group' =>  $new_user_data['Group'],
             ]);
 
-            // Send account email with credentials if MT5 creation succeeded
             if ($mt5Success) {
                 try {
                     $mt5Controller = app(\App\Http\Controllers\MT5Accounts::class);
-                    // Use the same call as web flow for symmetry
                     $mt5Controller->sendMail($new_user, 'Live', $account->platform);
                 } catch (\Exception $mailEx) {
                     Log::warning('Zapier: Failed to send MT5 account email via MT5Accounts::sendMail', [
@@ -359,22 +335,10 @@ class ZapierAccountCreationService
             $login = (int)$account->code;
             $amount = self::BONUS_AMOUNT;
             $comment = 'Zapier Bonus Deposit';
-
-            // Try to add bonus to MT5 account using the same flow as bonusToAccount
             $ticket = null;
-            // In admin bonusToAccount they sometimes choose operation based on known login lists;
-            // replicate that behavior (empty list -> default to DEAL_BALANCE as in controller)
-            $loginss = [];
-            // if (in_array($login, haystack: $loginss)) {
-            //     $operation = MTEnDealAction::DEAL_BONUS;
-            // } else {
-                $operation = MTEnDealAction::DEAL_BALANCE;
-            // }
-
-            // Use descriptive comment for deposit flow
+            $operation = MTEnDealAction::DEAL_BALANCE;
             $comment = 'Bonus Deposit';
 
-            // Attempt MT5 deposit, but don't fail if MT5 isn't available
             if ($this->ensureMT5Connection()) {
                 try {
                     $errorCode = $this->mt5Service->tradeBalance(
@@ -401,8 +365,6 @@ class ZapierAccountCreationService
                 Log::info('Zapier: MT5 not available, creating bonus records without MT5 sync');
             }
 
-            // Create BonusTransaction record (same as project)
-            // Always include required fields
             $bonusData = [
                 'email' => $user->email,
                 'user_id' => $user->id,
@@ -418,7 +380,6 @@ class ZapierAccountCreationService
             
             $bonusTransaction = BonusTransaction::create($bonusData);
 
-            // Also create TradeDeposit record for consistency
             $depositData = [
                 'user_id' => $user->id,
                 'account_id' => $account->id,
@@ -450,7 +411,7 @@ class ZapierAccountCreationService
 
     /**
      * Send welcome email to newly created user
-     */
+    */
     protected function sendWelcomeEmail(User $user, Account $account): void
     {
         try {
@@ -542,6 +503,6 @@ class ZapierAccountCreationService
      */
     protected function generateRandomNumber(): int
     {
-        return rand(100000000, 999999999);
+        return rand(100000, 999999);
     }
 }
