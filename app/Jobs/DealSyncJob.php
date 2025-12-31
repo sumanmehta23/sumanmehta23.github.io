@@ -97,15 +97,13 @@ class DealSyncJob implements ShouldQueue
                         continue;
                     }
                     $fromTime = $this->determineFromTime($account, $index);
-                    Log::info("fromTime abhay" . $fromTime);
+
                     $result = $this->syncAccountDeals($api, $account, $fromTime, $cacheService);
 
                     $results[$result['status']]++;
                     $results['deals_synced'] += $result['deals_count'];
                     $results['processed']++;
 
-                    $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
-                    Log::info("Account {$account->code}: {$result['status']} - {$result['deals_count']} deals ({$accountTime}ms)");
                 } catch (\Exception $e) {
                     $results['errors']++;
                     $results['processed']++;
