@@ -152,10 +152,10 @@ class DealSyncJob implements ShouldQueue
         $endMemory = memory_get_usage(true);
         $memoryUsed = round(($endMemory - $startMemory) / 1024 / 1024, 2);
 
-        Log::info("DealSyncJob COMPLETE: {$results['processed']} accounts in {$totalJobTime}ms. " .
-            "Success: {$results['success']}, Errors: {$results['errors']}, " .
-            "No changes: {$results['no_changes']}, Total deals: {$results['deals_synced']}. " .
-            "Memory: {$memoryUsed}MB");
+        // Log::info("DealSyncJob COMPLETE: {$results['processed']} accounts in {$totalJobTime}ms. " .
+        //     "Success: {$results['success']}, Errors: {$results['errors']}, " .
+        //     "No changes: {$results['no_changes']}, Total deals: {$results['deals_synced']}. " .
+        //     "Memory: {$memoryUsed}MB");
 
         // Update trade profits for positions that had new deals synced
         if ($results['deals_synced'] > 0) {
