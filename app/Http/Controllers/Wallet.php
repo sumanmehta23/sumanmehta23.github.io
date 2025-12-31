@@ -1073,6 +1073,16 @@ class Wallet extends Controller
             // Log callback data (you can change log storage if needed)
             $logData = "IP: " . $request->ip() . "\nPayload: " . json_encode($payload, JSON_PRETTY_PRINT) . "\n";
 
+            if (isset($payload['transaction'])) {
+                Log::channel('cryptochillcallback')->error('Transaction data missing in payload: ' . json_encode($payload));
+            } elseif (isset($payload['callback_status']) && in_array($payload['callback_status'], ['payout_pending', 'payout_confirmed', 'payout_complete'])) {
+                Log::channel('cryptochillcallback')->info('Payout callback received, no action taken: ' . json_encode($payload));
+                $this->handlePayoutCallback($payload);
+                return response()->json(['status' => 'payout callback processed'], 200);
+            } else {
+                return response()->json(['error' => 'Transaction data missing in payload'], 200);
+            }
+
             // Check if the callback status is transaction confirmed or complete
             if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
                 $passedData = json_decode($payload['transaction']['invoice']['passthrough'], true);
@@ -1410,6 +1420,56 @@ class Wallet extends Controller
         }
         Log::channel("cryptochillcallback")->info('Invalid callback status: ' . json_encode($payload));
         return response()->json(['error' => 'Invalid callback status'], 200);
+    }
+
+    private function handlePayoutCallback(array $payload)
+    {
+        $payoutData = $payload['payout'] ?? null;
+        $callbackStatus = $payload['callback_status'] ?? null;
+
+        if (!$payoutData || !$callbackStatus) {
+            return;
+        }
+
+        if (!in_array($callbackStatus, [
+            'payout_pending',
+            'payout_confirmed',
+            'payout_complete'
+        ])) {
+            return;
+        }
+
+        // passthrough comes as JSON string
+        $passthrough = [];
+
+        if (!empty($payoutData['passthrough'])) {
+            $passthrough = json_decode($payoutData['passthrough'], true);
+        }
+
+        if (!isset($passthrough['trans_id'])) {
+            Log::warning('Payout callback received without trans_id', $payload);
+            return;
+        }
+
+        $transactionId = $passthrough['trans_id'];
+        $payoutStatus = $payoutData['status'] ?? 'unknown';
+        $payoutTxId = $payoutData['txid'] ?? null;
+
+        $transaction = TradeWithdrawals::where('id', $transactionId)->first();
+
+        if (!$transaction) {
+            Log::warning("Trade withdrawal not found for trans_id: {$transactionId}");
+            return;
+        }
+
+        $transaction->payout_callback_status = $payoutStatus;
+        $transaction->transaction_id = $payoutTxId;
+        $transaction->save();
+
+        Log::info(
+            "Payout callback updated | Withdrawal ID: {$transactionId} | " .
+            "TxID: {$payoutTxId} | Status: {$payoutStatus}"
+        );
     }
 
     // Function to generate HMAC signature
