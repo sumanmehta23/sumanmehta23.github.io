@@ -319,7 +319,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $syncFromTime = $syncRange['from'];
                 $syncToTime = $syncRange['to'];
 
-                Log::info("DEBUG[{$account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
+                // Log::info("DEBUG[{$account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
 
                 // Dispatch deal sync job and wait for it to complete
 

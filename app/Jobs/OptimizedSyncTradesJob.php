@@ -199,7 +199,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $syncFromTime = $syncRange['from'];
             $syncToTime = $syncRange['to'];
 
-            Log::info("OptimizedSync[{$this->account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
+            // Log::info("OptimizedSync[{$this->account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
 
             // Dispatch deal sync job and wait for it to complete
             $dealSyncJob = new DealSyncJob([$this->account], [$syncFromTime]);
