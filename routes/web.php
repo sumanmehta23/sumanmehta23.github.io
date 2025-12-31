@@ -164,8 +164,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
-    Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
-    Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
+    Route::get('/joinCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
+    Route::post('/joinCompetition', [CompetitionController::class, 'createCompetition'])->name('joinCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
     Route::get('/competition/trader/{accountNo}/{start_date}/{end_date}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
     Route::get('/competition/export', [CompetitionController::class, 'exportLeaderboard'])->name('user.competition.export');
@@ -345,7 +345,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/competition/leaderboard', [Leaderboard::class, 'leaderboard'])->name('competition.leaderboard');
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
-        Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');
+        // Route::get('/competitions', [Leaderboard::class, 'index'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
         Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
 

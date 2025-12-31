@@ -108,7 +108,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $error_code = $api->UserGet($this->account->code, $mt5_user);
 
                 if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::warning("MT5 user not found for account {$this->account->code}: " . MTRetCode::GetError($error_code));
+                    Log::warning("MT5 user not found for account3 {$this->account->code}: " . MTRetCode::GetError($error_code));
                     $this->updateSyncStatus('not_found');
                     return;
                 }

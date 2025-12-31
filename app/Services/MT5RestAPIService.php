@@ -229,11 +229,11 @@ class MT5RestAPIService
 
         // Check for API error
         if (isset($response['retcode']) && ($response['retcode'] !== "0 Done")) {
-            Log::warning('MT5RestAPI: User API error', [
-                'login' => $login,
-                'retcode' => $response['retcode'],
-                'retmsg' => $response['retmsg'] ?? 'Unknown error'
-            ]);
+            // Log::warning('MT5RestAPI: User API error', [
+            //     'login' => $login,
+            //     'retcode' => $response['retcode'],
+            //     'retmsg' => $response['retmsg'] ?? 'Unknown error'
+            // ]);
             return null;
         }
 

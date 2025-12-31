@@ -125,6 +125,11 @@ class User extends Authenticatable
             ->withPivot('added_by');
     }
 
+    public function relationshipManager()
+    {
+        return $this->hasOne(RelationshipManager::class, 'user_id');
+    }
+
     // public function getCountry()
     // {
     //     return Country::where('country_name', '=', $this->country)
@@ -295,7 +300,7 @@ class User extends Authenticatable
         return $this->countryDetail;
     }
 
-       /**
+    /**
      * Get affiliate parent user
      * Usage: $user->affiliateParent()
      */
@@ -331,17 +336,33 @@ class User extends Authenticatable
 
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
 
-        // Dynamically build the query for all 15 levels using a single query.
-        $clients = IbClientList::where(function ($query) use ($referralCode) {
-            for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib$i", $referralCode);
-            }
-        })->get();
+        // Query aspnetusers with aggregated data from accounts and trade_deposits
+        $clients = DB::table('aspnetusers as au')
+            ->leftJoin('accounts as acc', function ($join) {
+                $join->on('acc.user_id', '=', 'au.id')
+                    ->where('acc.demo', '=', 0);
+            })
+            ->leftJoin('trade_deposits as td', function ($join) {
+                $join->on('td.user_id', '=', 'au.id')
+                    ->where('td.status', '=', 1);
+            })
+            ->where(function ($query) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $query->orWhere("au.ib$i", $referralCode);
+                }
+            })
+            ->select(
+                DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
+                'au.*'
+            )
+            ->groupBy('au.id')
+            ->get();
 
         // Group clients by level (ib1, ib2, ..., ib15)
         $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
             foreach (range(1, 15) as $level) {
-                if ($client["ib$level"] === $referralCode) {
+                if ($client->{"ib{$level}"} === $referralCode) {
                     return [$level => $client];
                 }
             }
@@ -360,11 +381,17 @@ class User extends Authenticatable
         $referralCode = $this->ib->referral_code ?: $this->ib->getAttribute('referral_code');
 
         // Perform a single query to calculate the total deposit
-        $totalDeposit = IbClientList::where(function ($query) use ($referralCode) {
-            for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib{$i}", $referralCode);
-            }
-        })->sum('total_deposit'); // Directly sum in SQL, avoids loading all models into memory
+        $totalDeposit = DB::table('aspnetusers as au')
+            ->leftJoin('trade_deposits as td', function ($join) {
+                $join->on('td.user_id', '=', 'au.id')
+                    ->where('td.status', '=', 1);
+            })
+            ->where(function ($query) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $query->orWhere("au.ib{$i}", $referralCode);
+                }
+            })
+            ->sum(DB::raw('DISTINCT td.deposit_amount'));
 
         return $totalDeposit ?? 0;
     }
@@ -377,15 +404,16 @@ class User extends Authenticatable
 
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
         // Dynamically build the query for all 15 levels using a single query.
-        $totalWithdrawal = IbClientList::where(function ($query) use ($referralCode) {
-            for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib$i", $referralCode);
-            }
-        })->sum('total_withdrawal');
+        $totalWithdrawal = DB::table('aspnetusers as au')
+            ->where(function ($query) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $query->orWhere("au.ib$i", $referralCode);
+                }
+            })
+            ->count();
 
-        // Calculate the total sum of 'total_deposit'
-        // $totalWithdrawal = $clients->sum('total_withdrawal');
-        return $totalWithdrawal ?? 0;
+        // No withdrawal field available, returning count as placeholder
+        return 0;
     }
 
     public function getTicketStatusAttribute()
@@ -415,9 +443,9 @@ class User extends Authenticatable
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>Click the link below to activate your Account</p>';
         $code = $this->emailToken;
         $templateVars = [
@@ -442,5 +470,4 @@ class User extends Authenticatable
             }) : 0;
         });
     }
-
 }
