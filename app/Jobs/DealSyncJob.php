@@ -445,7 +445,7 @@ class DealSyncJob implements ShouldQueue
     protected function updateTradeProfilesAfterDealSync(): void
     {
         $updatedCount = 0;
-        Log::info("updateTradeProfilesAfterDealSync: Starting trade profit updates for " . count($this->accounts) . " accounts");
+        // Log::info("updateTradeProfilesAfterDealSync: Starting trade profit updates for " . count($this->accounts) . " accounts");
 
         foreach ($this->accounts as $accountData) {
             $account = Account::find($accountData['id']);
@@ -461,12 +461,12 @@ class DealSyncJob implements ShouldQueue
                 })
                 ->get();
 
-            Log::info("updateTradeProfilesAfterDealSync: Account {$account->code} has {$trades->count()} closed trades to check");
+            // Log::info("updateTradeProfilesAfterDealSync: Account {$account->code} has {$trades->count()} closed trades to check");
 
             // Also log the status values we found for debugging
             if ($trades->count() > 0) {
                 $statusValues = $trades->pluck('status')->unique()->toArray();
-                Log::info("updateTradeProfilesAfterDealSync: Status values found for {$account->code}: " . json_encode($statusValues));
+                // Log::info("updateTradeProfilesAfterDealSync: Status values found for {$account->code}: " . json_encode($statusValues));
             }
 
             foreach ($trades as $trade) {
@@ -497,7 +497,7 @@ class DealSyncJob implements ShouldQueue
         if ($updatedCount > 0) {
             Log::info("Updated {$updatedCount} trade profits after deal sync");
         } else {
-            Log::info("updateTradeProfilesAfterDealSync: No trade profits needed updating");
+            // Log::info("updateTradeProfilesAfterDealSync: No trade profits needed updating");
         }
     }
     public function failed(\Throwable $exception)

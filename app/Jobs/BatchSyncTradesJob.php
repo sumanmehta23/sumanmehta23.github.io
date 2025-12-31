@@ -523,7 +523,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             // Skip if no recent orders
             if ($total == 0) {
                 $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
-                Log::info("PERF[{$account->code}]: {$totalTime}ms total (no orders) - " . json_encode($timings));
+                // Log::info("PERF[{$account->code}]: {$totalTime}ms total (no orders) - " . json_encode($timings));
                 $this->updateSyncStatus($account, 'no_changes');
                 return 'no_changes';
             }

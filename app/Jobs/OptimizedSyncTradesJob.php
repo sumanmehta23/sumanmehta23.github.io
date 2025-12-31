@@ -136,7 +136,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     return;
                 }
 
-                Log::info("Found {$total} recent orders for account {$this->account->code}");
+                // Log::info("Found {$total} recent orders for account {$this->account->code}");
 
                 // OPTIMIZATION 5: Get recent orders only (1 request)
                 $orders = [];
