@@ -113,7 +113,7 @@ class TradeCacheService
         }
 
         $warmupTime = round((microtime(true) - $startTime) * 1000, 2);
-        Log::info("Cache WARMUP: {$loadedCount}/{" . count($accounts) . "} accounts pre-loaded in {$warmupTime}ms");
+        // Log::info("Cache WARMUP: {$loadedCount}/{" . count($accounts) . "} accounts pre-loaded in {$warmupTime}ms");
     }
 
     /**

@@ -437,7 +437,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 ];
             })->toArray();
 
-            Log::info("OptimizedSync[{$this->account->code}]: Fetched {$totalDeals} deals from database");
+            // Log::info("OptimizedSync[{$this->account->code}]: Fetched {$totalDeals} deals from database");
         }
 
         // Index deals by order for quick lookup

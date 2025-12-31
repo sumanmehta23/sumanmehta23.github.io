@@ -230,7 +230,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             //     "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
             //     "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
 
-            Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+            // Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
 
             // Clear sync-in-progress cache for all accounts in this batch
             $this->clearBatchSyncInProgressCache();
@@ -290,8 +290,8 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 // Get earliest trade with profit = 0
                 $earliestZeroProfitTrade = $zeroProfitTrades->first();
                 $syncFromTime = Carbon::parse($earliestZeroProfitTrade->open_time)->subHours(5);
-                Log::info("DEBUG[{$account->code}]: Found {$zeroProfitTrades->count()} trades with zero profit. " .
-                    "Triggering DealSyncJob from {$syncFromTime} (2 hours before earliest zero-profit trade at {$earliestZeroProfitTrade->created_at})");
+                // Log::info("DEBUG[{$account->code}]: Found {$zeroProfitTrades->count()} trades with zero profit. " .
+                //     "Triggering DealSyncJob from {$syncFromTime} (2 hours before earliest zero-profit trade at {$earliestZeroProfitTrade->created_at})");
 
                 // Dispatch deal sync job starting from 2 hours before earliest zero-profit trade
                 $dealSyncJob = new DealSyncJob([$account], [$syncFromTime]);
@@ -1222,7 +1222,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
      */
     protected function processDealsBatch(Account $account, $deals, Carbon $fromTime, TradeCacheService $cacheService): string
     {
-        Log::info("DEBUG[{$account->code}]: Processing {$deals->count()} deals from database (position reconstruction)");
+        // Log::info("DEBUG[{$account->code}]: Processing {$deals->count()} deals from database (position reconstruction)");
 
         $processedTrades = 0;
         $newTrades = 0;
@@ -1299,7 +1299,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         // Invalidate cache
         $cacheService->invalidateAccount($account);
 
-        Log::info("DEBUG[{$account->code}]: Position reconstruction completed: {$processedTrades} positions processed, {$newTrades} new, {$updatedTrades} updated from {$positionGroups->count()} position groups");
+        // Log::info("DEBUG[{$account->code}]: Position reconstruction completed: {$processedTrades} positions processed, {$newTrades} new, {$updatedTrades} updated from {$positionGroups->count()} position groups");
 
         return $newTrades > 0 ? 'success' : 'no_changes';
     }

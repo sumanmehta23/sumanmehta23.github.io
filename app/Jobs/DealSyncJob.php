@@ -107,7 +107,7 @@ class DealSyncJob implements ShouldQueue
                 } catch (\Exception $e) {
                     $results['errors']++;
                     $results['processed']++;
-                    Log::error("Error syncing deals for account {$accountData['code']}: " . $e->getMessage());
+                    // Log::error("Error syncing deals for account {$accountData['code']}: " . $e->getMessage());
 
                     // Update account sync status to reflect the error
                     if (isset($account) && $account instanceof Account) {
@@ -119,15 +119,15 @@ class DealSyncJob implements ShouldQueue
                         strpos($e->getMessage(), 'Broken pipe') !== false ||
                         strpos($e->getMessage(), 'socket') !== false
                     ) {
-                        Log::warning("Connection issue detected, reporting error to MT5 service");
+                        // Log::warning("Connection issue detected, reporting error to MT5 service");
                         $mt5Service->reportError();
 
                         // Try to reconnect for remaining accounts
                         if ($index < count($this->accounts) - 1) {
-                            Log::info("Attempting reconnection for remaining accounts...");
+                            // Log::info("Attempting reconnection for remaining accounts...");
                             usleep(2000000); // 2 second delay before reconnect attempt
                             if (!$mt5Service->connect()) {
-                                Log::error("Failed to reconnect MT5 service, aborting remaining accounts");
+                                // Log::error("Failed to reconnect MT5 service, aborting remaining accounts");
                                 break;
                             }
                             $api = $mt5Service->getApi();
@@ -142,7 +142,7 @@ class DealSyncJob implements ShouldQueue
                 }
             }
         } catch (\Exception $e) {
-            Log::error("DealSyncJob failed: " . $e->getMessage());
+            // Log::error("DealSyncJob failed: " . $e->getMessage());
             // Ensure we report the error to release any held connections
             $mt5Service->reportError();
             throw $e;
@@ -204,7 +204,7 @@ class DealSyncJob implements ShouldQueue
         $timings['mt5_user_check'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
         if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::warning("MT5 user not found for account2 {$account->code}");
+            // Log::warning("MT5 user not found for account2 {$account->code}");
             $this->updateAccountDealSyncStatus($account, 'error');
             return ['status' => 'errors', 'deals_count' => 0];
         }
@@ -226,7 +226,7 @@ class DealSyncJob implements ShouldQueue
             $timings['mt5_deal_total'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
+                // Log::error("Failed to get total deals for account {$account->code}: " . MTRetCode::GetError($error_code));
                 $this->updateAccountDealSyncStatus($account, 'error');
                 return ['status' => 'errors', 'deals_count' => 0];
             }
@@ -268,7 +268,7 @@ class DealSyncJob implements ShouldQueue
                 ->toArray();
             $timings['db_existing_deals'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
-            Log::info("Account {$account->code}: Found {$totalDeals} new deals, " . count($existingDealIds) . " existing deals in database");
+            // Log::info("Account {$account->code}: Found {$totalDeals} new deals, " . count($existingDealIds) . " existing deals in database");
 
             // Phase 4: MT5 DealGetPage with Adaptive Pagination
             $phaseStart = microtime(true);
@@ -290,7 +290,7 @@ class DealSyncJob implements ShouldQueue
                 $pageCount++;
 
                 if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("MT5 DealGetPage error for account {$account->code} page {$pageCount}: " . MTRetCode::GetError($error_code));
+                    // Log::error("MT5 DealGetPage error for account {$account->code} page {$pageCount}: " . MTRetCode::GetError($error_code));
                     $this->updateAccountDealSyncStatus($account, 'error');
                     return ['status' => 'errors', 'deals_count' => 0];
                 }
@@ -359,14 +359,14 @@ class DealSyncJob implements ShouldQueue
             $this->updateAccountDealSyncStatus($account, 'success', $newDealsCount);
 
             $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
-            Log::info("DEAL_SYNC[{$account->code}]: {$totalTime}ms total | " .
-                "New deals: {$newDealsCount}/{$totalDeals} | " .
-                "Existing: " . count($existingDealIds) . " | " .
-                "Breakdown: " . json_encode($timings));
+            // Log::info("DEAL_SYNC[{$account->code}]: {$totalTime}ms total | " .
+            //     "New deals: {$newDealsCount}/{$totalDeals} | " .
+            //     "Existing: " . count($existingDealIds) . " | " .
+            //     "Breakdown: " . json_encode($timings));
 
             return ['status' => 'success', 'deals_count' => $newDealsCount];
         } catch (\Exception $e) {
-            Log::error("Error syncing deals for account {$account->code}: " . $e->getMessage());
+            // Log::error("Error syncing deals for account {$account->code}: " . $e->getMessage());
             $this->updateAccountDealSyncStatus($account, 'error');
             return ['status' => 'errors', 'deals_count' => 0];
         }
@@ -375,7 +375,7 @@ class DealSyncJob implements ShouldQueue
     protected function prepareDealData(Account $account, $dealData): ?array
     {
         if (empty($dealData->Deal) || $dealData->Deal <= 0) {
-            Log::warning("Invalid deal ID for account {$account->code}: " . ($dealData->Deal ?? 'null'));
+            // Log::warning("Invalid deal ID for account {$account->code}: " . ($dealData->Deal ?? 'null'));
             return null;
         }
 
@@ -487,13 +487,13 @@ class DealSyncJob implements ShouldQueue
                     ]);
 
                     $updatedCount++;
-                    Log::info("Updated trade {$trade->position_id} profit: {$oldProfit} → {$newProfit} (account: {$account->code})");
+                    // Log::info("Updated trade {$trade->position_id} profit: {$oldProfit} → {$newProfit} (account: {$account->code})");
                 }
             }
         }
 
         if ($updatedCount > 0) {
-            Log::info("Updated {$updatedCount} trade profits after deal sync");
+            // Log::info("Updated {$updatedCount} trade profits after deal sync");
         } else {
             // Log::info("updateTradeProfilesAfterDealSync: No trade profits needed updating");
         }
