@@ -136,7 +136,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     return;
                 }
 
-                Log::info("Found {$total} recent orders for account {$this->account->code}");
+                // Log::info("Found {$total} recent orders for account {$this->account->code}");
 
                 // OPTIMIZATION 5: Get recent orders only (1 request)
                 $orders = [];
@@ -199,7 +199,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $syncFromTime = $syncRange['from'];
             $syncToTime = $syncRange['to'];
 
-            Log::info("OptimizedSync[{$this->account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
+            // Log::info("OptimizedSync[{$this->account->code}]: Deal data not recently synced, syncing deals from {$syncFromTime} to {$syncToTime}");
 
             // Dispatch deal sync job and wait for it to complete
             $dealSyncJob = new DealSyncJob([$this->account], [$syncFromTime]);
