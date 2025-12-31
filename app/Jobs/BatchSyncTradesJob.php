@@ -354,7 +354,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     ->whereBetween('time_done', [$fromDateDb, $toDateDb])
                     ->count();
 
-                Log::info("DEBUG[{$account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (range: {$fromDateDb} to {$toDateDb}, check took {$dealTotalTime}ms)");
+                // Log::info("DEBUG[{$account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (range: {$fromDateDb} to {$toDateDb}, check took {$dealTotalTime}ms)");
 
                 if ($mt5DealTotal == $dbDealCount) {
                     if ($mt5DealTotal > 0) {
