@@ -68,7 +68,7 @@ class DealSyncJob implements ShouldQueue
         $accountCount = count($this->accounts);
         $startMemory = memory_get_usage(true);
 
-        Log::info("Starting DealSyncJob for {$accountCount} accounts: {$accountCodes} (Full Sync: " . ($this->fullSync ? 'Yes' : 'No') . ")");
+        // Log::info("Starting DealSyncJob for {$accountCount} accounts: {$accountCodes} (Full Sync: " . ($this->fullSync ? 'Yes' : 'No') . ")");
 
         $results = [
             'processed' => 0,
