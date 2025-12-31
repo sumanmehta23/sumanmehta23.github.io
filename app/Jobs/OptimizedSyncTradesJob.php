@@ -229,7 +229,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     ->whereBetween('time_done', [$fromDateForDB, $toDateForDB])
                     ->count();
 
-                Log::info("OptimizedSync[{$this->account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (range: {$fromDateForDB} to {$toDateForDB}, check took {$dealTotalTime}ms)");
+                // Log::info("OptimizedSync[{$this->account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (range: {$fromDateForDB} to {$toDateForDB}, check took {$dealTotalTime}ms)");
 
                 if ($mt5DealTotal == $dbDealCount) {
                     if ($mt5DealTotal > 0) {
@@ -335,7 +335,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                     Log::info("OptimizedSync[{$this->account->code}]: OPTIMIZATION: Reduced MT5 API query range from {$daysSinceLastDeal} days to incremental sync since last deal");
 
                     // CRITICAL OPTIMIZATION: Check MT5 deal total count vs database count BEFORE expensive pagination
-                    Log::info("OptimizedSync[{$this->account->code}]: Checking MT5 deal total count vs database count to avoid unnecessary pagination...");
+                    // Log::info("OptimizedSync[{$this->account->code}]: Checking MT5 deal total count vs database count to avoid unnecessary pagination...");
                     $dealTotalStart = microtime(true);
                     $mt5DealTotal = 0;
 
@@ -350,7 +350,7 @@ class OptimizedSyncTradesJob implements ShouldQueue, ShouldBeUnique
                                 ->whereBetween('time_done', [$fromDate, $toDate])
                                 ->count();
 
-                            Log::info("OptimizedSync[{$this->account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (check took {$dealTotalTime}ms)");
+                            // Log::info("OptimizedSync[{$this->account->code}]: MT5 deal total: {$mt5DealTotal}, DB deal count: {$dbDealCount} (check took {$dealTotalTime}ms)");
 
                             if ($mt5DealTotal == $dbDealCount && $mt5DealTotal > 0) {
                                 // Database is perfectly in sync with MT5 - no new deals to fetch!
