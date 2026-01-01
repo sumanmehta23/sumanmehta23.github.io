@@ -39,8 +39,8 @@ class ScheduleMailJob implements ShouldQueue
     {
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
-        Log::alert('Email subject: ' . $this->subject);
         try {
+
 
             if (strpos($this->subject, 'Competition Registration') !== false) {
                 $template = 'emails.competition_registration';
@@ -62,6 +62,8 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.issueLiveAccount';
             } elseif ((strpos($this->subject, 'Demo Account Details') !== false)) {
                 $template = 'emails.issueDemoAccount';
+            }elseif ((strpos($this->subject, 'Account Details') !== false)) {
+                $template = 'emails.resendAccountDetails';
             } elseif ((strpos($this->subject, 'Competition Account Details') !== false)) {
                 $template = 'emails.issueCompetitionAccount';
             } elseif (strpos($this->subject, 'Password Reset') !== false) {

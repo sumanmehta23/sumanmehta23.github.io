@@ -14,18 +14,18 @@
             <div class="pc-content">
     @endif
         <!-- Page header -->
-        <div class="page-header border-0 rounded-3 shadow-sm mb-4 d-block">
-            <div class="page-block py-4">
+        <div class="mb-4 border-0 shadow-sm page-header rounded-3 d-block">
+            <div class="py-4 page-block">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <div class="page-header-title px-4">
+                        <div class="px-4 page-header-title">
                             <h3 class="mb-2 fw-bold">{{ $competition->ac_name }}</h3>
                             <h4 class="mb-2 fw-bold">
                                 {{ $competition->competition_start_date }} to
                                 {{ $competition->competition_end_date }}
                             </h4>
 
-                            <ul class="breadcrumb bg-transparent mb-0 p-0">
+                            <ul class="p-0 mb-0 bg-transparent breadcrumb">
                                 <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="">Dashboard</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Competition Leaderboard</li>
                             </ul>
@@ -33,8 +33,8 @@
                     </div>
                     <div class="col-md-6 text-md-end">
                         <!-- Competition Period Selector -->
-                        <form id="periodSelector" class="d-flex justify-content-md-end align-items-center gap-2">
-                            <div class="form-group mb-0">
+                        <form id="periodSelector" class="gap-2 d-flex justify-content-md-end align-items-center">
+                            <div class="mb-0 form-group">
                                 <select name="competition_id" class="form-select form-select-sm">
                                     @foreach($availableCompetitions as $competitionId => $accounts)
                                         @php
@@ -67,13 +67,13 @@
                 <!-- Stats Cards Row -->
                 <div class="row">
                     <div class="col-sm-6 col-xl-4">
-                        <div class="card w-100 overflow-hidden">
-                            <div class="card-body p-0">
+                        <div class="overflow-hidden card w-100">
+                            <div class="p-0 card-body">
                                 <div class="bg-primary px-3 pt-3 pb-2 rounded-top {{ !isset(auth()->user()->role) ? 'pt-4' : '' }}">
                                     <div class="d-flex align-items-center">
                                         <div class="flex-shrink-0">
-                                            <div class="avatar bg-opacity-25">
-                                                <span class="avatar-title rounded">
+                                            <div class="bg-opacity-25 avatar">
+                                                <span class="rounded avatar-title">
                                                     <i class="fe fe-trending-up {{ isset(auth()->user()->role) ? 'text-white' : 'text-muted' }}"></i>
                                                 </span>
                                             </div>
@@ -88,19 +88,19 @@
                                 <div class="px-4 py-2 ">
                                     <div id="competitionTimer" class="d-flex justify-content-between">
                                         <div class="text-center">
-                                            <span id="days" class="h4 mb-0 fw-bold text-primary">00</span>
+                                            <span id="days" class="mb-0 h4 fw-bold text-primary">00</span>
                                             <div class="small text-muted">Days</div>
                                         </div>
                                         <div class="text-center">
-                                            <span id="hours" class="h4 mb-0 fw-bold text-primary">00</span>
+                                            <span id="hours" class="mb-0 h4 fw-bold text-primary">00</span>
                                             <div class="small text-muted">Hours</div>
                                         </div>
                                         <div class="text-center">
-                                            <span id="minutes" class="h4 mb-0 fw-bold text-primary">00</span>
+                                            <span id="minutes" class="mb-0 h4 fw-bold text-primary">00</span>
                                             <div class="small text-muted">Minutes</div>
                                         </div>
                                         <div class="text-center">
-                                            <span id="seconds" class="h4 mb-0 fw-bold text-primary">00</span>
+                                            <span id="seconds" class="mb-0 h4 fw-bold text-primary">00</span>
                                             <div class="small text-muted">Seconds</div>
                                         </div>
                                     </div>
@@ -144,7 +144,7 @@
                                     icon="bar-chart-2"
                                 >
                                     {{-- Slot content gets rendered inside the card --}}
-                                    <button type="button" class="btn btn-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#prizeModal">
+                                    <button type="button" class="mt-2 btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#prizeModal">
                                         More Info
                                     </button>
                                 </x-competition.stats-card>
@@ -186,10 +186,10 @@
                 <!-- Main Content Area -->
                 <div class="row">
                     <!-- Rankings List -->
-                    <div class="col-lg-4 col-md-12 mb-4">
+                    <div class="mb-4 col-lg-4 col-md-12">
                         <div class="card rankings-card">
                             <div class="card-header bg-gradient-dark">
-                                <h5 class="card-title mb-0 d-flex align-items-center">
+                                <h5 class="mb-0 card-title d-flex align-items-center">
                                     <i class="fe fe-award me-2"></i>
                                     Top 10 Performers
                                 </h5>
@@ -201,23 +201,23 @@
                                         : 'user.competition.export';
                                 @endphp
 
-                                <div class="ms-auto d-flex gap-2">
+                                <div class="gap-2 ms-auto d-flex">
                                     <a href="{{ route($exportRouteName, ['competition_id' => $competition->id, 'type' => 'top10']) }}"
-                                        class="btn btn-primary px-3"
+                                        class="px-3 btn btn-primary"
                                         title="Export Top 10 Performers">
                                         <i class="fe fe-download me-1"></i>Top 10
                                     </a>
                                     <a href="{{ route($exportRouteName, ['competition_id' => $competition->id, 'type' => 'all']) }}"
-                                        class="btn btn-primary px-3"
+                                        class="px-3 btn btn-primary"
                                         title="Export All Participants">
                                         <i class="fe fe-download me-1"></i>All Data
                                     </a>
                                 </div>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="p-0 card-body">
                                 <div class="list-group list-group-flush">
                                     @forelse($performers as $rank)
-                                        <a href="#" class="list-group-item list-group-item-action trader-select py-3"
+                                        <a href="#" class="py-3 list-group-item list-group-item-action trader-select"
                                            data-account="{{ $rank['account_code'] }}" data-rank="{{ $rank['rank'] }}">
                                             <div class="d-flex align-items-center">
                                                 <!-- Rank Badge -->
@@ -242,13 +242,13 @@
                                                             <div class="equity-amount">${{ number_format($rank['equity'], 2) }}</div>
                                                         </div>
                                                     </div>
-                                                    {{-- <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    {{-- <div class="mb-1 d-flex justify-content-between align-items-center">
                                                         <medium class=" trader-text">{{ $rank['name'] }}</medium>
-                                                        <span class="trader-text px-2 py-1">
+                                                        <span class="px-2 py-1 trader-text">
                                                             ${{ number_format($rank['equity'], 2) }}
                                                         </span>
                                                     </div> --}}
-                                                    {{-- <div class="d-flex align-items-center mb-1">
+                                                    {{-- <div class="mb-1 d-flex align-items-center">
                                                         <small class="trader-text me-3">
                                                             <i class="fe fe-mail me-1"></i>
                                                             {{ $rank['email'] }}
@@ -279,7 +279,7 @@
                                             </div>
                                         </a>
                                     @empty
-                                        <div class="text-center py-5">
+                                        <div class="py-5 text-center">
                                             <div class="mb-3">
                                                 <i class="fe fe-users text-muted" style="font-size: 48px;"></i>
                                             </div>
@@ -287,7 +287,7 @@
                                         </div>
                                     @endforelse
                                 </div>
-                                {{-- <div class="d-flex justify-content-between align-items-center px-3 py-2">
+                                {{-- <div class="px-3 py-2 d-flex justify-content-between align-items-center">
                                     <button id="prevTraderPage" class="btn btn-sm btn-outline-secondary" disabled>
                                         <i class="fe fe-chevron-left me-1"></i> Previous
                                     </button>
@@ -302,12 +302,12 @@
                     <!-- Chart and Trading Logs -->
                     <div class="col-lg-8 col-md-12">
                         <!-- Performance Chart -->
-                        <div class="card mb-4">
+                        <div class="mb-4 card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                  <div class="d-flex align-items-start">
-                                    <h5 class="card-title mb-0">Performance Chart</h5>
+                                    <h5 class="mb-0 card-title">Performance Chart</h5>
                                     <div id="selectedTraderInfo" class="d-flex align-items-center ms-3 selected-trader-info">
-                                        <div class="avatar avatar-sm bg-secondary text-white me-2" id="selectedTraderAvatar"><span id="selectedTraderInitials">?</span></div>
+                                        <div class="text-white avatar avatar-sm bg-secondary me-2" id="selectedTraderAvatar"><span id="selectedTraderInitials">?</span></div>
                                         <div>
                                             <div class="fw-bold" id="selectedTraderName">Select a trader</div>
                                             <div class="fs-14 text-muted" id="selectedTraderAccount"></div>
@@ -331,8 +331,8 @@
                         <!-- Trading Logs -->
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Trading History</h5>
-                                <div class="d-flex gap-2">
+                                <h5 class="mb-0 card-title">Trading History</h5>
+                                <div class="gap-2 d-flex">
                                     <button class="btn btn-sm btn-outline-primary" id="prevPage" disabled>
                                         <i class="fe fe-chevron-left"></i>
                                     </button>
@@ -341,9 +341,9 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="p-0 card-body">
                                 <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
+                                    <table class="table mb-0 table-hover">
                                         <thead>
                                             <tr>
                                                 <th>Position Id</th>
@@ -356,7 +356,7 @@
                                         </thead>
                                         <tbody id="tradingLogs">
                                             <tr>
-                                                <td colspan="6" class="text-center py-4">
+                                                <td colspan="6" class="py-4 text-center">
                                                     <div class="text-muted">
                                                         <i class="fe fe-info me-1"></i>
                                                         Select a trader to view their trading history
@@ -789,7 +789,6 @@
                 const startDate = competition.competition_start_date;
                 const endDate = competition.competition_end_date;
 
-                console.log(competition);
 
                 // Use the appropriate endpoint based on user role
                 const endpoint = isAdmin
@@ -805,7 +804,7 @@
                 const data = await response.json();
 
                 // console.log(data.chart_data);
-                // Update chart
+                // Update chart₹
                 chart.data.labels = data.chart_data.labels;
                 chart.data.datasets[0].data = data.chart_data.equity;
                 chart.update();
@@ -823,7 +822,7 @@
                 const tbody = document.getElementById('tradingLogs');
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center py-4">
+                        <td colspan="6" class="py-4 text-center">
                             <div class="text-danger">
                                 <i class="fe fe-alert-triangle me-1"></i>
                                 Error loading trading data. Please try again.
@@ -845,7 +844,7 @@
             if (pageData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center py-4">
+                        <td colspan="6" class="py-4 text-center">
                             <div class="text-muted">
                                 <i class="fe fe-inbox me-1"></i>
                                 No trading history available
@@ -863,8 +862,8 @@
 
                 row.innerHTML = `
                     <td>${trade.position}</td>
-                    <td>${new Date(trade.open_time).toLocaleString()}</td>
-                    <td>${trade.close_time ? new Date(trade.close_time).toLocaleString() : 'N/A'}</td>
+                    <td>${trade.open_time}</td>
+                    <td>${trade.close_time ?? 'N/A'}</td>
                     <td>${trade.symbol}</td>
                     <td>${trade.volume}</td>
                     <td class="text-end ${profitClass}">

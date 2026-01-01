@@ -71,6 +71,7 @@ Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::cl
 Route::get('/competitions-overview/trader-data/{accountNo}/{startDate}/{endDate}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
+Route::post('/user/kyc/veriff-listener', [KycController::class, 'veriffListener'])->name('kyc.veriff.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 // Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
@@ -164,8 +165,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
-    Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
-    Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
+    Route::get('/joinCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
+    Route::post('/joinCompetition', [CompetitionController::class, 'createCompetition'])->name('joinCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
     Route::get('/competition/trader/{accountNo}/{start_date}/{end_date}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
     Route::get('/competition/export', [CompetitionController::class, 'exportLeaderboard'])->name('user.competition.export');
@@ -191,9 +192,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
+    Route::get('/veriff', [Users::class, 'veriff'])->name('veriff');
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/veriff_event', [Users::class, 'veriff_event'])->name('veriff_event');
     Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     // KYC Sync Routes
@@ -257,11 +260,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
-
-
-
-
-
+    Route::post('/resend-credentials', [MT5Accounts::class, 'resendCredentials'])->name('resend-credentials');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -345,7 +344,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/competition/leaderboard', [Leaderboard::class, 'leaderboard'])->name('competition.leaderboard');
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
-        Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');
+        // Route::get('/competitions', [Leaderboard::class, 'index'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
         Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
 
@@ -451,6 +450,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('/toggle_ib_approve_request', [SettingsController::class, 'toggleIbApproveRequest'])
             ->name('toggle_ib_approve_request')
+            ->middleware('check.permissions:setting:update');
+
+        Route::post('/kyc-provider/update', [SettingsController::class, 'updateKycProvider'])
+            ->name('kyc-provider.update')
             ->middleware('check.permissions:setting:update');
 
         Route::prefix('/logs')->group(function () {

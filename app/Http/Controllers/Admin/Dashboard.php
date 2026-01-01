@@ -10,6 +10,7 @@ use App\Models\WalletDeposit;
 use App\Services\MailService;
 use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
+use App\Models\RelationshipManager;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
@@ -18,92 +19,161 @@ class Dashboard extends Controller
 {
     public function index()
     {
-        $rmCondition = '';
         $role = session('userData')['userRole'];
-        $alogin = session('userData')['id'];
-        // dd($alogin);
-        if ($role != "Super Admin") {
-            $rmCondition .= " left join aspnetusers user on(user.email=trs.email) WHERE ";
-        } else {
-            $rmCondition .= " where (1) and ";
-        }
+        $adminId = session('userData')['id'];
+
+        // Build base queries with relationship manager filtering
+        $tradeDepositQuery = $this->buildBaseQuery(TradeDeposit::query(), $role, $adminId);
+        $walletDepositQuery = $this->buildBaseQuery(WalletDeposit::query(), $role, $adminId);
+        $tradeWithdrawalQuery = $this->buildBaseQuery(TradeWithdrawals::query(), $role, $adminId);
+        $walletWithdrawQuery = $this->buildBaseQuery(WalletWithdraw::query(), $role, $adminId);
+        $ibQuery = $this->buildBaseQuery(Ib1::query(), $role, $adminId);
+
+        // Calculate trade deposits (excluding specific types)
+        $trade_deposit = (object)[
+            'deposit' => (clone $tradeDepositQuery)
+                ->where('status', 1)
+                ->whereNotIn('deposit_type', ['Wallet Transfer', 'CryptoChill', 'CreditCardPayissa'])
+                ->sum('deposit_amount') ?? 0
+        ];
+
+        // Calculate new trade deposits (specific types only)
+        $new_trade_deposit = (object)[
+            'deposit' => (clone $tradeDepositQuery)
+                ->where('status', 1)
+                ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
+                ->sum('deposit_amount') ?? 0
+        ];
+
+        // Calculate wallet deposits
+        $wallet_deposit = (object)[
+            'deposit' => (clone $walletDepositQuery)
+                ->where('status', 1)
+                ->sum('deposit_amount') ?? 0
+        ];
+
+        // Calculate trade withdrawals (Wallet Withdrawal and CRM)
+        $trade_withdrawal = (object)[
+            'withdraw' => (clone $tradeWithdrawalQuery)
+                ->where('status', 1)
+                ->whereIn('withdraw_type', ['Wallet Withdrawal', 'CRM'])
+                ->sum('withdrawal_amount') ?? 0
+        ];
+
+        // Calculate new trade withdrawals (Trade Withdrawal only)
+        $new_trade_withdrawal = (object)[
+            'withdraw' => (clone $tradeWithdrawalQuery)
+                ->where('status', 1)
+                ->where('withdraw_type', 'Trade Withdrawal')
+                ->sum('withdrawal_amount') ?? 0
+        ];
+
+        // Calculate wallet withdrawals
+        $wallet_withdrawal = (object)[
+            'withdraw' => (clone $walletWithdrawQuery)
+                ->where('status', 1)
+                ->where('withdraw_type', 'Wallet Withdrawal')
+                ->sum('withdraw_amount') ?? 0
+        ];
+
+        // Calculate pending counts
+        $pending_wd = (object)['counts' => (clone $walletDepositQuery)->where('status', 0)->count()];
+        $pending_td = (object)['counts' => (clone $tradeDepositQuery)->where('status', 0)->count()];
+        $pending_tw = (object)['counts' => (clone $tradeWithdrawalQuery)->where('status', 0)->count()];
+        $pending_ww = (object)['counts' => (clone $walletWithdrawQuery)->where('status', 0)->where('verified', 0)->count()];
+        $pending_ib = (object)['counts' => (clone $ibQuery)->where('status', 0)->count()];
+
+        // Calculate wallet users
+        $walletUsersQuery = User::where('wallet_enabled', 1);
         if ($role == "Relationship Manager") {
-            $rmCondition .= "  left join relationship_manager rm on(rm.user_id=trs.user_id) where rm.rm_id='" . $alogin . "' and ";
+            $walletUsersQuery->whereHas('relationshipManager', function ($query) use ($adminId) {
+                $query->where('rm_id', $adminId);
+            });
         }
+        $wallet_users = (object)['counts' => $walletUsersQuery->count()];
 
-        $userCondition = " ";
-        if ($role != "Super Admin") {
-            if ($role == "Relationship Manager") {
-                $userCondition = "  left join relationship_manager rm on(rm.user_id=asp.id) where rm.rm_id='" . $alogin . "'";
-            }
-        }
-        // dd($rmCondition);
-
-        $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from trade_deposits trs" . $rmCondition . " trs.status=1 and trs.deposit_type NOT IN('Wallet Transfer', 'CryptoChill', 'CreditCardPayissa')";
-        // dd($sql);
-
-        $trade_deposit = DB::select($sql)[0];
-
-        $sql = "SELECT COALESCE(SUM(trs.deposit_amount), 0) AS deposit FROM trade_deposits trs " . $rmCondition . " trs.status = 1 AND trs.deposit_type IN ('CryptoChill', 'CreditCardPayissa')";
-
-        $new_trade_deposit = DB::select($sql)[0];
-
-        $sql = "select COALESCE(SUM(trs.deposit_amount), 0) as deposit from wallet_deposit trs " . $rmCondition . " trs. status=1";
-        $wallet_deposit = DB::select($sql)[0];
-
-        $sql = "select COALESCE(SUM(trs.withdrawal_amount), 0) as withdraw from trade_withdrawal trs" . $rmCondition . " trs.status=1 and trs.withdraw_type IN('Wallet Withdrawal','CRM')";
-        $trade_withdrawal = DB::select($sql)[0];
-
-        $sql = "select COALESCE(SUM(trs.withdrawal_amount), 0) as withdraw from trade_withdrawal trs" . $rmCondition . " trs.status=1 and trs.withdraw_type IN('Trade Withdrawal')";
-        $new_trade_withdrawal = DB::select($sql)[0];
-
-        $sql = "select COALESCE(SUM(trs.withdraw_amount), 0) as withdraw from wallet_withdraw  trs" . $rmCondition . " trs.status=1 and trs.withdraw_type IN('Wallet Withdrawal')";
-        $wallet_withdrawal = DB::select($sql)[0];
-
-        $sql = "SELECT count(*) as counts from wallet_deposits trs " . $rmCondition . " trs.Status = 0";
-        $pending_wd = DB::select($sql)[0];
-
-        $sql = "SELECT count(*) as counts from trade_deposits trs " . $rmCondition . " trs.Status = 0";
-        $pending_td = DB::select($sql)[0];
-
-        $sql = "SELECT count(*) as counts from trade_withdrawal trs " . $rmCondition . " trs.Status = 0";
-        $pending_tw = DB::select($sql)[0];
-
-        $sql = "SELECT count(*) as counts from wallet_withdraw  trs " . $rmCondition . " trs.Status = 0 and trs.verified = 0";
-        $pending_ww = DB::select($sql)[0];
-
-        $sql = "SELECT count(*) as counts from ib1 trs " . $rmCondition . " trs.status = 0";
-        $pending_ib = DB::select($sql)[0];
+        // Calculate total clients (active/inactive)
+        $clientsQuery = User::select(
+            DB::raw('SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as inactive_users'),
+            DB::raw('SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as active_users')
+        );
 
         if ($role == "Relationship Manager") {
-            $sql = "SELECT count(*) as counts from aspnetusers trs left join aspnetusers user on(user.email=trs.email)  left join relationship_manager rm on(rm.user_id=trs.id) where rm.rm_id='" . $alogin . "' and trs.wallet_enabled = 1";
-        }else{
-            $sql = "SELECT count(*) as counts from aspnetusers trs " . $rmCondition . " trs.wallet_enabled = 1";
+            $clientsQuery->whereHas('relationshipManager', function ($query) use ($adminId) {
+                $query->where('rm_id', $adminId);
+            });
+        }
+        $total_clients = $clientsQuery->first();
+
+        // Get pending wallet deposits
+        $results = (clone $walletDepositQuery)
+            ->where('status', 0)
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Get pending wallet withdrawals with user info
+        $wallet_withdraws = (clone $walletWithdrawQuery)
+            ->with('user:id,email,fullname')
+            ->where('status', 0)
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($withdrawal) {
+                $withdrawal->user_id = $withdrawal->user?->id;
+                return $withdrawal;
+            });
+
+        // Get pending trade withdrawals with user info
+        $trade_withdrawals = (clone $tradeWithdrawalQuery)
+            ->with('user:id,email,fullname')
+            ->where('status', 0)
+            ->where('email_verified', 1)
+            ->where('withdraw_type', 'Trade Withdrawal')
+            ->orderBy('id', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($withdrawal) {
+                $withdrawal->user_id = $withdrawal->user?->id;
+                return $withdrawal;
+            });
+
+        // Keep rmCondition for legacy view compatibility (if needed)
+        $rmCondition = '';
+
+        return view('admin.dashboard', compact(
+            'trade_deposit',
+            'trade_withdrawal',
+            'wallet_deposit',
+            'wallet_withdrawal',
+            'pending_wd',
+            'pending_td',
+            'pending_tw',
+            'pending_ww',
+            'pending_ib',
+            'wallet_users',
+            'total_clients',
+            'rmCondition',
+            'results',
+            'wallet_withdraws',
+            'new_trade_deposit',
+            'new_trade_withdrawal',
+            'trade_withdrawals'
+        ));
+    }
+
+    /**
+     * Build base query with relationship manager filtering
+     */
+    private function buildBaseQuery($query, $role, $adminId)
+    {
+        if ($role == "Relationship Manager") {
+            return $query->whereHas('user.relationshipManager', function ($q) use ($adminId) {
+                $q->where('rm_id', $adminId);
+            });
         }
 
-        $wallet_users = DB::select($sql)[0];
-
-        $sql = "SELECT
-            SUM(CASE WHEN asp.status = 0 THEN 1 ELSE 0 END) AS inactive_users,
-            SUM(CASE WHEN asp.status = 1 THEN 1 ELSE 0 END) AS active_users
-        FROM aspnetusers asp" . $userCondition;
-        $total_clients = DB::select($sql)[0];
-
-
-        $eid = session('alogin');
-        $sql = "SELECT trs.* from wallet_deposits trs " . $rmCondition . " (trs.status=0) order by trs.raw_id desc limit 10";
-        // echo "<!-- ".$sql." --->";
-        $results = DB::select($sql);
-
-        // $sql = "SELECT trs.* from wallet_withdraws trs " . $rmCondition . " (trs.status=0) order by trs.raw_id desc limit 10";
-        // $sql = "SELECT trs.*, au.id AS user_id FROM wallet_withdraws trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 AND trs.verified = 1 ORDER BY trs.raw_id DESC LIMIT 10";
-        $sql = "SELECT trs.*, au.id AS user_id FROM wallet_withdraws trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 ORDER BY trs.raw_id DESC LIMIT 10";
-        $wallet_withdraws = DB::select($sql);
-
-        $sql = "SELECT trs.*, au.id AS user_id, au.fullname FROM trade_withdrawal trs LEFT JOIN aspnetusers au ON trs.email = au.email " . $rmCondition . " trs.status = 0 AND trs.email_verified = 1 AND withdraw_type = 'Trade Withdrawal' ORDER BY trs.id DESC LIMIT 10";
-        $trade_withdrawals = DB::select($sql);
-
-        return view('admin.dashboard', compact('trade_deposit', 'trade_withdrawal', 'wallet_deposit', 'wallet_withdrawal', 'pending_wd', 'pending_td', 'pending_tw', 'pending_ww', 'pending_ib', 'wallet_users', 'total_clients', 'rmCondition', 'results', 'wallet_withdraws','new_trade_deposit','new_trade_withdrawal','trade_withdrawals'));
+        return $query;
     }
     public function sendMarketingEmail(MailService $mailService)
     {
@@ -114,8 +184,11 @@ class Dashboard extends Controller
 
         // Process users in chunks to save memory
         User::select('email')
-            ->whereIn('email',['abhay@lqhmarkets.com'
-            ,'Jalelwabou@gmail.com','tech2@lqhmarkets.com','lqhmarkets@gmail.com'
+            ->whereIn('email', [
+                'abhay@lqhmarkets.com',
+                'Jalelwabou@gmail.com',
+                'tech2@lqhmarkets.com',
+                'lqhmarkets@gmail.com'
             ])
             // ->where('id','<','9dc8c7dd-3a0d-4b4f-a226-b4000fab7fe2')
             ->where('status', 1)
@@ -123,12 +196,12 @@ class Dashboard extends Controller
             ->chunk(100, function ($users) use ($mailService) {
                 foreach ($users as $user) {
                     // if(in_array($user->email,['abhay@lqhmarkets.com'])){
-                        $this->sendmail($user->email, $mailService);
+                    $this->sendmail($user->email, $mailService);
                     // }
                 }
             });
     }
-    private function sendmail($userEmail,MailService $mailService)
+    private function sendmail($userEmail, MailService $mailService)
     {
         $settings = settings();
         $from = $settings['email_from_address'];

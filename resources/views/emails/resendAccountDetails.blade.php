@@ -220,7 +220,7 @@
                                                     <!-- Text Block -->
                                                     <div style="display: inline-block; vertical-align: middle; text-align: left;">
                                                         <h1 style="margin: 0; color: #00b98e; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; line-height: 120%;">
-                                                            <span style="color: #000000;">Dear</span> {!! $name !!}
+                                                            <span style="color: #000000;">Dear</span> {!! $account->name !!}
                                                         </h1>
                                                     </div>
                                                 </td>
@@ -326,16 +326,16 @@
                                                                 <table style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: right; letter-spacing: 0px;" width="100%">
                                                                     <tbody style="vertical-align: top; font-size: 12px; line-height: 120%;">
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $code }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->code }}</strong></td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $trader_password }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->trader_password }}</strong></td>
                                                                         </tr>
                                                                         {{-- <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $investor_password }}</strong></td>
                                                                         </tr> --}}
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $leverage }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->leverage }}</strong></td>
                                                                         </tr>
                                                                         <tr>
                                                                             @if ($platform == 'mt5')
@@ -343,7 +343,7 @@
                                                                             @else
                                                                                 <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>X9-Trade-Server</strong></td>
                                                                             @endif
- 
+
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
