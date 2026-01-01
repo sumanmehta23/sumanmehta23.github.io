@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use App\Actions\SubscribeToKlaviyoList;
+use App\Services\VeriffService;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 class Users extends Controller
 {
     protected $mailService;
+
     public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
@@ -249,6 +251,110 @@ class Users extends Controller
         $token = $auth->token ?? null;
         return view('sumsub', compact('token'));
     }
+
+    /**
+     * Start Veriff KYC verification for the authenticated user.
+     * Redirects directly to Veriff verification page.
+     */
+    public function veriff(VeriffService $veriffService)
+    {
+        try {
+            $user = auth()->user();
+
+            if (! $user) {
+                return redirect()->route('login');
+            }
+
+            $session = $veriffService->createSession([
+                'email' => $user->email,
+                'first_name' => $user->fullname ?? $user->first_name ?? null,
+                'last_name' => $user->last_name ?? null,
+            ]);
+
+            $sessionUrl = $session['verification']['url'];
+
+            // Redirect directly to Veriff
+            return redirect()->away($sessionUrl);
+
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Veriff connection error', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->route('user-profile')
+                ->with('error', 'Unable to connect to verification service. Please try again later.');
+
+        } catch (\Exception $e) {
+            Log::error('Veriff verification error', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            $userFriendlyMessage = 'An error occurred while starting verification. Please try again later.';
+            
+            if (str_contains($e->getMessage(), 'credentials are not configured')) {
+                $userFriendlyMessage = 'Verification service is not properly configured. Please contact support.';
+            }
+
+            return redirect()->route('user-profile')
+                ->with('error', $userFriendlyMessage);
+        }
+    }
+
+    /**
+     * Handle Veriff frontend events (similar to sumsub_verify).
+     * This logs events from the verification iframe.
+     * Actual KYC status is updated via Veriff webhooks.
+     */
+    public function veriff_event(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        }
+
+        $user = auth()->user();
+        $type = $request->input('type', 'unknown');
+        $payload = $request->input('payload', []);
+
+        Log::info('Veriff frontend event', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'type' => $type,
+            'payload' => $payload,
+        ]);
+
+        // Log the event
+        KycLog::create([
+            'client_id' => $user->email,
+            'user_id' => $user->id,
+            'callback_code' => 'VERIFF_FRONTEND_' . strtoupper($type),
+            'callback_payload' => $payload,
+        ]);
+
+        // Check if user is already verified
+        if ($user->kyc_verify) {
+            return response()->json([
+                'status' => 'verified',
+                'message' => 'Your KYC is already verified'
+            ]);
+        }
+
+        // If event indicates completion, check user status
+        // (Actual verification happens via webhook, this is just for UI feedback)
+        if (in_array(strtoupper($type), ['FINISHED', 'SUBMITTED'])) {
+            return response()->json([
+                'status' => 'submitted',
+                'message' => 'Verification submitted. We will review your documents shortly.'
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'received',
+            'message' => 'Event received'
+        ]);
+    }
+
     public function sumsub_verify(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
     {
         if (auth()->check() && $request->has(['sumsub', 'type', 'payload'])) {

@@ -220,7 +220,7 @@
                                                     <!-- Text Block -->
                                                     <div style="display: inline-block; vertical-align: middle; text-align: left;">
                                                         <h1 style="margin: 0; color: #00b98e; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; line-height: 120%;">
-                                                            <span style="color: #000000;">Dear</span> {!! $name !!}
+                                                            <span style="color: #000000;">Dear</span> {!! $account->name !!}
                                                         </h1>
                                                     </div>
                                                 </td>
@@ -326,16 +326,16 @@
                                                                 <table style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: right; letter-spacing: 0px;" width="100%">
                                                                     <tbody style="vertical-align: top; font-size: 12px; line-height: 120%;">
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $code }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->code }}</strong></td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $trader_password }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->trader_password }}</strong></td>
                                                                         </tr>
                                                                         {{-- <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $investor_password }}</strong></td>
                                                                         </tr> --}}
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $leverage }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->leverage }}</strong></td>
                                                                         </tr>
                                                                         <tr>
                                                                             @if ($platform == 'mt5')
@@ -343,7 +343,7 @@
                                                                             @else
                                                                                 <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>X9-Trade-Server</strong></td>
                                                                             @endif
- 
+
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -414,7 +414,7 @@
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:5px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;"><strong>Need help?</strong></p>
                                                                     <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.
@@ -426,7 +426,7 @@
                                                     </table>
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:0px;">
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;">All official communication from <span style="color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the <a href="https://my.lqhmarkets.com" style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a>.</p>
                                                                 </div>

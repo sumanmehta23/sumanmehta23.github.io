@@ -138,7 +138,7 @@ class PositionSyncJob implements ShouldQueue
         $timings['mt5_user_check'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
         if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::warning("MT5 user not found for account {$account->code}");
+            Log::warning("MT5 user not found for account4 {$account->code}");
             return ['status' => 'errors', 'positions_count' => 0, 'open_count' => 0, 'closed_count' => 0];
         }
 
