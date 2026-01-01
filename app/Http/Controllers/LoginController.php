@@ -650,7 +650,7 @@ class LoginController extends Controller
                 '<p></p>' .
                 '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
                 '<p></p>' .
-                '<p>Click the link below to activate your Account</p>';
+                '<p>Click the button below to activate your Account</p>';
 
             $templateVars = [
                 'name' => $request->fullname,
