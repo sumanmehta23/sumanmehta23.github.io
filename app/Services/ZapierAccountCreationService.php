@@ -35,6 +35,7 @@ class ZapierAccountCreationService
     protected const BONUS_CURRENCY = 'USD';
     protected const BONUS_TYPE = 'Bonus In';
     protected const CREATED_FROM = 'zapier';
+    protected const ACCOUNT_GROUP = 'LM\B-Book\STD\DF-B';
 
     public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
     {
@@ -143,7 +144,6 @@ class ZapierAccountCreationService
     protected function createUserAccount(array $data): ?User
     {
         try {
-            // Build user data same way as LoginController::addUser
             $userData = [];
             $number = ($data['country_code'] ?? '+1') . ($data['phone'] ?? '');
             $code = Str::random(60);
@@ -155,7 +155,7 @@ class ZapierAccountCreationService
             $userData['number'] = $number;
             $userData['username'] = strtolower($data['email']);
             $userData['country'] = $data['country'] ?? 'Unknown';
-            $userData['emailToken'] = $code;
+            $userData['email_verify_token'] = $code;
             $userData['created_from'] = self::CREATED_FROM;
             $userData['created_at'] = now();
             $userData['updated_at'] = now();
@@ -217,7 +217,7 @@ class ZapierAccountCreationService
                     $query->where('mt5_group_type', 'live');
                 })
                 ->where('is_client_group', 1)
-                ->where('ac_group', 'LM\B-Book\STD\DF-B')
+                ->where('ac_group', self::ACCOUNT_GROUP)
                 ->orderBy('display_priority', 'desc')
                 ->first();
 
@@ -338,7 +338,7 @@ class ZapierAccountCreationService
             if ($mt5Success) {
                 try {
                     $mt5Controller = app(\App\Http\Controllers\MT5Accounts::class);
-                    $mt5Controller->sendMail($new_user, 'Live', $account->platform);
+                    $this->sendZapierAccountCreationMail($new_user, 'Live', $account->platform);
                 } catch (\Exception $mailEx) {
                     Log::warning('Zapier: Failed to send MT5 account email via MT5Accounts::sendMail', [
                         'error' => $mailEx->getMessage(),
@@ -444,6 +444,49 @@ class ZapierAccountCreationService
             ]);
             return null;
         }
+    }
+
+     public function sendZapierAccountCreationMail($new_user, $type, $platform)
+    {
+
+        $settings = settings();
+        $toEmail = $new_user->Email;
+        $from = $settings['email_from_address'];
+        $emailSubject = $settings['admin_title'] . ' - ' . $type . ' Account Details (Zapier Created)';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+        $content = '
+            <p>Hey ' . e($new_user->Name) . ',</p>
+
+            <p>
+                Thanks for filling out the form from our ad. As promised, here’s your
+                <strong>$50 trading account</strong> below. Any profits you make are
+                <strong>100% yours</strong>, though the $50 deposit itself is
+                <strong>not withdrawable</strong>.
+            </p>
+
+            <p>Your ' . strtoupper($platform) . ' account is ready! You are all set to dive into the exciting world of trading.</p>
+
+            <p>Here are your ' . strtoupper($platform) . ' account details:</p>
+        ';
+
+        $templateVars = [
+            'name' => $new_user->Name,
+            'type' => $type,
+            'code' => $new_user->Login,
+            'trader_password' => $new_user->MainPassword,
+            'investor_password' => $new_user->InvestPassword,
+            'leverage' => "1:" . $new_user->Leverage,
+            'server_name' => $settings['mt5_company_name'],
+            'email' => $settings['email_from_address'],
+            "title_right" => "",
+            "subtitle_right" => "Your " . $type . " Account is Ready!",
+            "acc_type" => $new_user->type,
+            "content" => $content,
+            "platform" => $platform,
+        ];
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
     }
 
     /**
