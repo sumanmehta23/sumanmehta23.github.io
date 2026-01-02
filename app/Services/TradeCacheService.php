@@ -50,7 +50,7 @@ class TradeCacheService
     public function invalidateAccount(Account $account): void
     {
         $this->invalidateAccountTrades($account);
-        Log::debug("Cache INVALIDATED for account {$account->code}");
+        // Log::debug("Cache INVALIDATED for account {$account->code}");
     }
 
     /**
@@ -73,7 +73,7 @@ class TradeCacheService
         $statsKey = self::CACHE_PREFIX . "account:{$accountId}:stats";
         Cache::forget($statsKey);
 
-        Log::debug("Cache INVALIDATED (trades, positions, stats) for account {$account->code}");
+        // Log::debug("Cache INVALIDATED (trades, positions, stats) for account {$account->code}");
     }
 
     /**
@@ -113,7 +113,7 @@ class TradeCacheService
         }
 
         $warmupTime = round((microtime(true) - $startTime) * 1000, 2);
-        Log::info("Cache WARMUP: {$loadedCount}/{" . count($accounts) . "} accounts pre-loaded in {$warmupTime}ms");
+        // Log::info("Cache WARMUP: {$loadedCount}/{" . count($accounts) . "} accounts pre-loaded in {$warmupTime}ms");
     }
 
     /**
