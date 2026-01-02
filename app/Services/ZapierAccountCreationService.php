@@ -414,23 +414,22 @@ class ZapierAccountCreationService
             
             $bonusTransaction = BonusTransaction::create($bonusData);
 
+            // Activity log for Zapier bonus (no admin user in webhook context)
+            $activityProperties = [
+                'ip' => request()->ip(),
+                'client_id' => $user->id,
+                'client_email' => $bonusData['email'],
+                'bonus_amount' => $amount,
+                'bonus_type' => self::BONUS_TYPE,
+                'code' => $account->code,
+                'account_id' => $account->id,
+                'platform' => $account->platform,
+                'remark' => 'CRM Zapier Deposit Bonus (Automated)',
+                'source' => 'zapier_webhook'
+            ];
+
             activity()
-                ->causedBy(auth()->guard('admin')->user())
-                ->withProperties([
-                    'ip' => request()->ip(),
-                    'admin_email' => auth()->guard('admin')->user()->email,
-                    'userRole' => auth()->guard('admin')->user()->userRole,
-                    'username' => auth()->guard('admin')->user()->username,
-                    'admin_id' => auth()->guard('admin')->user()->id,
-                    'client_id' => $user->id,
-                    'client_email' => $bonusData['email'],
-                    'bonus_amount' => $amount,
-                    'bonus_type' => self::BONUS_TYPE,
-                    'code' => $account->code,
-                    'account_id' => $account->id,
-                    'platform' => $account->platform,
-                    'remark' => 'CRM Zapier Deposit Bonus'
-                ])
+                ->withProperties($activityProperties)
                 ->event('create')
                 ->log('CRM Zapier Bonus');
 
