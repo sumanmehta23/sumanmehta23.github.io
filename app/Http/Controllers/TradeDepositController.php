@@ -77,6 +77,10 @@ class TradeDepositController extends Controller
             ->where('user_id', $user->id)
             ->where('account_request_status', 1)
             ->where('demo', false)
+            ->where(function($query) {
+                $query->whereNull('created_from')
+                      ->orWhere('created_from', '!=', 'zapier');
+            })
             ->get()
             ->reject(function ($account) {
                 // return $account->accountType->ac_group === 'LM\\B-Book\\10x\\DF-B' && $account->successful_trade_deposits_count > 0;

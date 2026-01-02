@@ -63,6 +63,10 @@ class InternalTransfer extends Controller
             $query->where('status', 1);
         }])
             ->where('account_request_status', "!=", "0")
+            ->where(function($query) {
+                $query->whereNull('created_from')
+                      ->orWhere('created_from', '!=', 'zapier');
+            })
             ->get();
         // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
         return view('internal-transfer', compact('liveaccount_details'));
@@ -105,6 +109,11 @@ class InternalTransfer extends Controller
         $toAccount = Account::where(['id' => $toAccountId, 'user_id' => $userId])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
             $query->where('status', 1);
         }])->firstOrFail();
+        
+        // Block Zapier accounts from internal transfer
+        if ($fromAccount->isZapierAccount() || $toAccount->isZapierAccount()) {
+            return redirect()->back()->with('error', 'Internal transfer is not available for Zapier-created accounts.');
+        }
         // dump($fromAccount);
         //         dd($toAccount->accountType->ac_group);
 

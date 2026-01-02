@@ -621,7 +621,7 @@ class LoginController extends Controller
         $userData['username'] = $request->email;
         $userData['gender'] = $request->gender;
 
-        $userData['emailToken'] = $code;
+        $userData['email_verify_token'] = $code;
         $userData['country'] = $request->country;
         $userData['created_at'] = now();
         $userData['updated_at'] = now();
@@ -683,7 +683,7 @@ class LoginController extends Controller
         $code = $request->query('code');
 
         $user = User::where('id', $id)
-            ->where('emailToken', $code)
+            ->where('email_verify_token', $code)
             ->first();
 
         if ($user) {

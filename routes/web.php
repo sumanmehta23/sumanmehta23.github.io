@@ -64,6 +64,8 @@ use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
+use App\Http\Controllers\Api\ZapierWebhookController;
+use App\Http\Controllers\Admin\ZapierAccountsController;
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
@@ -644,4 +646,20 @@ Route::prefix('mt5-redis-demo')->group(function () {
             'message' => "Dispatched {$count} queue jobs that will coordinate through Redis with HTTP requests"
         ]);
     })->name('mt5.redis.demo.jobs');
+});
+
+// Zapier Webhook Routes (API)
+Route::prefix('api/zapier')->name('api.zapier.')->group(function () {
+    Route::post('/create-account', [ZapierWebhookController::class, 'createAccount'])->name('create-account');
+    Route::get('/health', [ZapierWebhookController::class, 'healthCheck'])->name('health-check');
+});
+
+// Admin Zapier Accounts Routes
+Route::prefix('/admin/zapier-accounts')->name('admin.zapier-accounts.')->middleware(['is_admin', 'check.permissions:client:viewAny'])->group(function () {
+    Route::get('/', [ZapierAccountsController::class, 'index'])->name('index');
+    Route::get('/data', [ZapierAccountsController::class, 'getData'])->name('data');
+    Route::get('/export', [ZapierAccountsController::class, 'export'])->name('export');
+    Route::get('/stats', [ZapierAccountsController::class, 'getStats'])->name('stats');
+    Route::post('/resend', [ZapierAccountsController::class, 'resendEmail'])->name('resend');
+    Route::post('/delete', [ZapierAccountsController::class, 'deleteUser'])->name('delete');
 });

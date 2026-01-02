@@ -113,12 +113,14 @@ if ($getUser) {
                                                 <div class="mt-3 row justify-content-center">
                                                     @if ($account->demo == 0)
                                                         @can("trade_deposit:create")
-                                                        <div class="mb-2 col-6">
-                                                            <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                                data-bs-target="#depositModal">Deposit
-                                                                <i class="ti ti-database-import"></i>
-                                                            </span>
-                                                        </div>
+                                                            @if(!$account->isZapierAccount())
+                                                                <div class="mb-2 col-6">
+                                                                    <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                                        data-bs-target="#depositModal">Deposit
+                                                                        <i class="ti ti-database-import"></i>
+                                                                    </span>
+                                                                </div>
+                                                            @endif
                                                         @endcan
                                                         @can("trade_withdrawals:create")
                                                         <div class="mb-2 col-6">
@@ -129,12 +131,14 @@ if ($getUser) {
                                                         </div>
                                                         @endcan
                                                         @can("trade_deposit:create")
-                                                        <div class="mb-2 col-6">
-                                                            <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                                data-bs-target="#depositModalCellExp">Deposit Tracking
-                                                                <i class="ti ti-database-import"></i>
-                                                            </span>
-                                                        </div>
+                                                         @if(!$account->isZapierAccount())
+                                                            <div class="mb-2 col-6">
+                                                                <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                                    data-bs-target="#depositModalCellExp">Deposit Tracking
+                                                                    <i class="ti ti-database-import"></i>
+                                                                </span>
+                                                            </div>
+                                                            @endif
                                                         @endcan
                                                         @can("trade_withdrawals:create")
                                                         <div class="mb-2 col-6">
@@ -145,6 +149,7 @@ if ($getUser) {
                                                         </div>
                                                         @endcan
                                                         @can("bonus_transaction:create")
+                                                         @if(!$account->isZapierAccount())
                                                             <div class="mb-2 col-6">
                                                                 <span class="badge btn btn-secondary" data-bs-toggle="modal"
                                                                     data-bs-target="#bonusModalCredit">Bonus Credit
@@ -158,6 +163,7 @@ if ($getUser) {
                                                                     <i class="ti ti-plus" style="font-weight: bold"></i>
                                                                 </span>
                                                             </div>
+                                                            @endif
                                                         @endcan
                                                     @endif
                                                 </div>
