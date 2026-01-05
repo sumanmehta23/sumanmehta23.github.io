@@ -407,7 +407,7 @@ class User extends Authenticatable
         $totalWithdrawal = DB::table('aspnetusers as au')
             ->leftJoin('trade_withdrawal as tw', function ($join) {
                 $join->on('tw.user_id', '=', 'au.id')
-                    ->where('tw.status', '=', 1);
+                    ->where('tw.status', '=', 1)->where('tw.withdraw_type', '=', 'Trade Withdrawal');
             })
             ->where(function ($query) use ($referralCode) {
                 for ($i = 1; $i <= 15; $i++) {
