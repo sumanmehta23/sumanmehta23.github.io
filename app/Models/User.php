@@ -405,15 +405,19 @@ class User extends Authenticatable
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
         // Dynamically build the query for all 15 levels using a single query.
         $totalWithdrawal = DB::table('aspnetusers as au')
+            ->leftJoin('trade_withdrawal as tw', function ($join) {
+                $join->on('tw.user_id', '=', 'au.id')
+                    ->where('tw.status', '=', 1)->where('tw.withdraw_type', '=', 'Trade Withdrawal');
+            })
             ->where(function ($query) use ($referralCode) {
                 for ($i = 1; $i <= 15; $i++) {
                     $query->orWhere("au.ib$i", $referralCode);
                 }
             })
-            ->count();
+            ->sum(DB::raw('DISTINCT (tw.withdrawal_amount + COALESCE(tw.transaction_fee, 0))'));
 
         // No withdrawal field available, returning count as placeholder
-        return 0;
+        return $totalWithdrawal;
     }
 
     public function getTicketStatusAttribute()

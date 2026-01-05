@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TradeResource;
+use App\Http\Resources\CorrectionResource;
 
 /**
  * Trades API Controller for Cellexpert Integration
@@ -59,7 +60,7 @@ class TradeController extends Controller
         ]);
 
         // Initialize query with account relationship for user_id and currency, and filter for live accounts only
-        $query = Trade::query()->with('account:id,user_id,currency,account_type_id')
+        $query = Trade::query()->with('account:id,user_id,currency,account_type_id','corrections')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
             })
@@ -145,10 +146,26 @@ class TradeController extends Controller
         // Paginate the results
         $perPage = min($request->input('per_page', 15), 500); // Limit max per page to 100
         $trades = $query->paginate($perPage);
-
         try {
+            // Merge trades and corrections data
+            $data = [];
+            $uniqueCorrections = collect();
+            foreach ($trades->items() as $trade) {
+                // Add the trade resource
+                $data[] = new TradeResource($trade);
+
+                // Add unique corrections for this trade if they exist (deduplicate by deal_id)
+                if ($trade->corrections && $trade->corrections->count() > 0) {
+                    $uniqueCorrections = $uniqueCorrections->merge($trade->corrections);
+                }
+            }
+            // Remove duplicates by deal_id and add to data
+            $uniqueCorrections = $uniqueCorrections->unique('deal_id');
+            foreach ($uniqueCorrections as $correction) {
+                $data[] = new CorrectionResource($correction);
+            }
             return response()->json([
-                'data' => TradeResource::collection($trades->items()),
+                'data' => $data,
                 'meta' => [
                     'from' => $trades->firstItem(),
                     'to' => $trades->lastItem(),
