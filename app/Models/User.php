@@ -405,7 +405,7 @@ class User extends Authenticatable
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
         // Dynamically build the query for all 15 levels using a single query.
         $totalWithdrawal = DB::table('aspnetusers as au')
-            ->leftJoin('trade_withdrawals as tw', function ($join) {
+            ->leftJoin('trade_withdrawal as tw', function ($join) {
                 $join->on('tw.user_id', '=', 'au.id')
                     ->where('tw.status', '=', 1);
             })
