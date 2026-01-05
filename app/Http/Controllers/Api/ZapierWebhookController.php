@@ -51,11 +51,14 @@ class ZapierWebhookController extends Controller
                 }
             }
             // Get sanitized validated data
-            $data = $request->sanitize();
+            $data = $request->sanitized();
 
             Log::info("Zapier webhook received", [
                 'email' => $data['email'],
                 'name' => $data['name'],
+                'country' => $data['country'],
+                'country_code' => $data['country_code'],
+                'phone' => $data['phone'],
                 'account_type' => $data['account_type']
             ]);
 

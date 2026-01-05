@@ -145,14 +145,13 @@ class ZapierAccountCreationService
     {
         try {
             $userData = [];
-            $number = ($data['country_code'] ?? '+1') . ($data['phone'] ?? '');
             $code = Str::random(60);
 
             $userData['email'] = strtolower($data['email']);
             $userData['fullname'] = $data['name'];
             $userData['password'] = Hash::make($this->generateSecurePassword());
-            $userData['country_code'] = $data['country_code'] ?? '+1';
-            $userData['number'] = $number;
+            $userData['country_code'] = $data['country_code'] ?? '+1'; // e.g., +91
+            $userData['number'] = $data['phone'] ?? ''; // e.g., 9812309999 (without country code)
             $userData['username'] = strtolower($data['email']);
             $userData['country'] = $data['country'] ?? 'Unknown';
             $userData['email_verify_token'] = $code;
