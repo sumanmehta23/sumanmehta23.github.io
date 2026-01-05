@@ -417,7 +417,7 @@ class User extends Authenticatable
             ->sum(DB::raw('DISTINCT (tw.withdrawal_amount + COALESCE(tw.transaction_fee, 0))'));
 
         // No withdrawal field available, returning count as placeholder
-        return 0;
+        return $totalWithdrawal;
     }
 
     public function getTicketStatusAttribute()
