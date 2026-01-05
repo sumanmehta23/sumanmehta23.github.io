@@ -2410,5 +2410,6 @@
                     });
                 });
             });
+
         </script>
     @endsection

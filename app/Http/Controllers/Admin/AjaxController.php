@@ -384,6 +384,8 @@ class AjaxController extends Controller
                 'aspnetusers.country',
                 'aspnetusers.kyc_verify',
                 'aspnetusers.country_code',
+                'aspnetusers.two_factor_secret',
+                'aspnetusers.two_factor_confirmed_at',
             ])
             ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
                 // Ensure that only users linked to the admin's rm_id are retrieved
@@ -606,6 +608,16 @@ class AjaxController extends Controller
                                     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
                                 </span>
                               </span>";
+                    
+                    // 2FA Remove Shield Icon - Only show if 2FA is enabled
+                    $has2FA = !empty($row->two_factor_secret) && !empty($row->two_factor_confirmed_at);
+                    if ($has2FA) {
+                        $html .= "<span class='remove2FAIcon' data-user-id='{$row->id}'>
+                                    <span class='badge text-danger' data-bs-toggle='tooltip' title='Remove 2FA'>
+                                        <i class='ri-shield-cross-line' style='font-size: 20px;'></i>
+                                    </span>
+                                  </span>";
+                    }
 
                     if (Auth::guard('admin')->user()->can('client:update', $row)) {
                         $html .= "<span class='editClient' data-enc='{$row->id}'>

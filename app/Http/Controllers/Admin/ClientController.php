@@ -38,6 +38,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 
 class ClientController extends Controller
 {
@@ -792,5 +793,53 @@ class ClientController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Note added successfully.');
+    }
+
+    public function removeTwoFactor(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:aspnetusers,id'
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        // Check if 2FA is enabled
+        if (!$user->two_factor_secret || !$user->two_factor_confirmed_at) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Two-factor authentication is not enabled for this client.'
+            ], 400);
+        }
+
+        try {
+            // Disable 2FA using Laravel Fortify's action
+            app(DisableTwoFactorAuthentication::class)($user);
+
+            // Log the activity
+            activity()
+                ->causedBy(auth()->guard('admin')->user())
+                ->withProperties([
+                    'ip' => request()->ip(),
+                    'admin_email' => auth()->guard('admin')->user()->email,
+                    'userRole' => auth()->guard('admin')->user()->userRole,
+                    'username' => auth()->guard('admin')->user()->username,
+                    'admin_id' => auth()->guard('admin')->user()->id,
+                    'client_id' => $user->id,
+                    'client_email' => $user->email,
+                    'remark' => 'Remove 2FA'
+                ])
+                ->event('update')
+                ->log('Remove Client 2FA');
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Two-factor authentication has been successfully removed for this client.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while removing two-factor authentication: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
