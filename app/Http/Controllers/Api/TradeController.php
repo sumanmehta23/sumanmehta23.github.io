@@ -149,16 +149,18 @@ class TradeController extends Controller
         try {
             // Merge trades and corrections data
             $data = [];
+            $uniqueCorrections = collect();
             foreach ($trades->items() as $trade) {
                 // Add the trade resource
                 $data[] = new TradeResource($trade);
 
                 // Add unique corrections for this trade if they exist (deduplicate by deal_id)
                 if ($trade->corrections && $trade->corrections->count() > 0) {
-                    $uniqueCorrections = $trade->corrections->unique('deal_id');
-
+                    $uniqueCorrections = $uniqueCorrections->merge($trade->corrections);
                 }
             }
+            // Remove duplicates by deal_id and add to data
+            $uniqueCorrections = $uniqueCorrections->unique('deal_id');
             foreach ($uniqueCorrections as $correction) {
                 $data[] = new CorrectionResource($correction);
             }
