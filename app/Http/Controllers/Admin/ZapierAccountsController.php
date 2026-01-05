@@ -80,31 +80,35 @@ class ZapierAccountsController extends Controller
             // Use DataTables for server-side processing
             return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('user_id', function ($user) {
-                    return $user->id;
-                })
-                ->addColumn('name', function ($user) {
-                    return $user->fullname ?? 'N/A';
-                })
-                ->addColumn('email', function ($user) {
-                    return $user->email;
+                ->addColumn('client_info', function ($user) {
+                    // Create avatar with first letters of name
+                    $nameParts = explode(' ', trim($user->fullname ?? 'U'));
+                    $initials = strtoupper(
+                        substr($nameParts[0], 0, 1) . 
+                        (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '')
+                    );
+                    
+                    return '
+                        <div class="client-info">
+                            <div class="client-avatar">' . $initials . '</div>
+                            <div class="client-details">
+                                <a href="/admin/client_details/' . $user->id . '" class="client-name">' . htmlspecialchars($user->fullname ?? 'N/A') . '</a>
+                                <span class="client-email">' . htmlspecialchars($user->email) . '</span>
+                            </div>
+                        </div>
+                    ';
                 })
                 ->addColumn('phone', function ($user) {
                     return $user->number ?? 'N/A';
                 })
-                ->addColumn('accounts_count', function ($user) {
-                    try {
-                        $liveCount = $user->liveAccounts()->count();
-                        $demoCount = $user->demoAccounts()->count();
-                        return "Live: {$liveCount}, Demo: {$demoCount}";
-                    } catch (\Exception $e) {
-                        return "0";
-                    }
-                })
                 ->addColumn('account_codes', function ($user) {
                     try {
-                        $codes = $user->liveAccounts()->pluck('code')
-                            ->merge($user->demoAccounts()->pluck('code'))
+                        $codes = $user->liveAccounts()->pluck('id')
+                            ->merge($user->demoAccounts()->pluck('id'))
+                            ->map(function($id) {
+                                $account = \App\Models\Account::find($id);
+                                return '<a href="/admin/view_account_details/' . $id . '" class="account-link" title="View Account Details">' . ($account->code ?? 'N/A') . '</a>';
+                            })
                             ->implode(', ');
                         return $codes ?: 'None';
                     } catch (\Exception $e) {
@@ -119,18 +123,7 @@ class ZapierAccountsController extends Controller
                 ->addColumn('created_at', function ($user) {
                     return $user->created_at ? $user->created_at->format('M d, Y H:i') : 'N/A';
                 })
-                ->addColumn('actions', function ($user) {
-                    // Show resend welcome email and delete buttons
-                    $buttons = '<button class="btn btn-sm btn-primary resend-welcome-email mr-1" data-id="' . $user->id . '" title="Resend Welcome Email">';
-                    $buttons .= '<i class="fas fa-envelope"></i> Resend';
-                    $buttons .= '</button>';
-
-                    $buttons .= '<button class="btn btn-sm btn-danger delete-zapier-user" data-id="' . $user->id . '" title="Delete User">';
-                    $buttons .= '<i class="fas fa-trash"></i> Delete';
-                    $buttons .= '</button>';
-                    return $buttons;
-                })
-                ->rawColumns(['status', 'actions'])
+                ->rawColumns(['client_info', 'account_codes', 'status'])
                 ->make(true);
         } catch (Exception $e) {
             Log::error('Error fetching Zapier accounts', [

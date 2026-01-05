@@ -64,6 +64,57 @@
             height: 20px;
             margin-right: 5px;
         }
+
+        .client-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .client-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .client-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .client-name {
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .client-name:hover {
+            color: #00b98e;
+        }
+
+        .client-email {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .account-link {
+            color: #00b98e;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .account-link:hover {
+            text-decoration: underline;
+        }
     </style>
 
     <div class="main-content app-content">
@@ -143,13 +194,13 @@
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <button class="btn btn-primary" id="btn-filter">
-                                <i class="fas fa-filter"></i> Apply Filters
+                                Apply Filters
                             </button>
                             <button class="btn btn-secondary" id="btn-reset">
-                                <i class="fas fa-redo"></i> Reset
+                                Reset
                             </button>
                             <a href="{{ route('admin.zapier-accounts.export') }}" class="btn btn-success" id="btn-export">
-                                <i class="fas fa-download"></i> Export CSV
+                                Export CSV
                             </a>
                         </div>
                     </div>
@@ -161,15 +212,11 @@
                         <thead>
                             <tr>
                                 <th width="5%">#</th>
-                                <th width="10%">User ID</th>
-                                <th width="15%">Name</th>
-                                <th width="20%">Email</th>
-                                <th width="12%">Phone</th>
-                                <th width="12%">Accounts</th>
+                                <th width="35%">Client Info</th>
+                                <th width="15%">Phone</th>
                                 <th width="15%">Account Codes</th>
-                                <th width="8%">Status</th>
-                                <th width="15%">Created At</th>
-                                <th width="12%">Actions</th>
+                                <th width="12%">Status</th>
+                                <th width="18%">Created At</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -233,19 +280,15 @@
                     }
                 },
                 columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex' },
-                    { data: 'user_id', name: 'user_id' },
-                    { data: 'name', name: 'name' },
-                    { data: 'email', name: 'email' },
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false },
+                    { data: 'client_info', name: 'name', orderable: false, searchable: false },
                     { data: 'phone', name: 'phone' },
-                    { data: 'accounts_count', name: 'accounts_count' },
-                    { data: 'account_codes', name: 'account_codes' },
+                    { data: 'account_codes', name: 'account_codes', orderable: false, searchable: false },
                     { data: 'status', name: 'status', orderable: false, searchable: false },
-                    { data: 'created_at', name: 'created_at' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                    { data: 'created_at', name: 'created_at' }
                 ],
                 pageLength: 25,
-                order: [[8, 'desc']],
+                order: [[5, 'desc']],
                 language: {
                     emptyTable: 'No Zapier accounts found',
                     processing: 'Loading...'
