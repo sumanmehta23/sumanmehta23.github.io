@@ -57,7 +57,9 @@
                                                                                 </span>
                                                                                 <span class="col-6 text-end">
                                                                                     <span
-                                                                                        class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->whereNotIn('admin_remark', ['10x Trader Leverage', 'Credit','Promo Bonus','Promo Deduction','Promo Addition','Bonus Pay Off'])->sum('bonus_amount') : 0)  }}</span>
+                                                                                        class="mb-0 h4 d-block f-w-500">
+                                                                                          ${{ number_format(max(0, $acc->balance - $acc->totalBonusDeposit), 2) }}
+                                                                                    </span>
                                                                                     <span class="mb-0 text-muted">Transferable
                                                                                         Balance</span>
                                                                                 </span>
@@ -97,7 +99,9 @@
                                                                                     </span>
                                                                                     <span class="col-6 text-end">
                                                                                         <span
-                                                                                            class="mb-0 h4 d-block f-w-500">${{ $acc->balance - ($acc->BonusTransaction ? $acc->BonusTransaction->sum('bonus_amount') : 0) }}</span>
+                                                                                            class="mb-0 h4 d-block f-w-500">
+                                                                                            ${{ number_format(max(0, $acc->balance - $acc->totalBonusDeposit), 2) }}
+                                                                                        </span>
                                                                                         <span class="mb-0 text-muted">Transferable
                                                                                             Balance</span>
                                                                                     </span>

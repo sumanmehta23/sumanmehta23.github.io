@@ -185,6 +185,12 @@ class LoginController extends Controller
             ->whereNull('client_ip')
             ->update(['client_ip' => $request->ip()]);
 
+        // Reactivate user if they were marked as inactive
+        if ($user->is_inactive) {
+            $user->is_inactive = false;
+            $user->save();
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
         // Set session variables
@@ -615,7 +621,7 @@ class LoginController extends Controller
         $userData['username'] = $request->email;
         $userData['gender'] = $request->gender;
 
-        $userData['emailToken'] = $code;
+        $userData['email_verify_token'] = $code;
         $userData['country'] = $request->country;
         $userData['created_at'] = now();
         $userData['updated_at'] = now();
@@ -677,7 +683,7 @@ class LoginController extends Controller
         $code = $request->query('code');
 
         $user = User::where('id', $id)
-            ->where('emailToken', $code)
+            ->where('email_verify_token', $code)
             ->first();
 
         if ($user) {
@@ -720,17 +726,19 @@ class LoginController extends Controller
     }
     private function recordLoginHistory($user, $ip)
     {
-
         $geoData = Http::get(config('services.ip_geolocation.url'), [
             'apikey' => config('services.ip_geolocation.key'),
             'ip' => $ip
         ])->json();
 
+        // Use country from user's profile, fallback to geolocation API, then 'Unknown'
+        $country = $user->country ?? ($geoData['country_name'] ?? 'Unknown');
+
         LoginHistory::create([
             'user_id' => $user->id,
             'email' => $user->email,
             'ip' => $geoData['ip'] ?? $ip,
-            'country' => $geoData['country_name'] ?? 'Unknown',
+            'country' => $country,
             'action' => 'login',
             'created_date_js' => now(),
             'status' => 1

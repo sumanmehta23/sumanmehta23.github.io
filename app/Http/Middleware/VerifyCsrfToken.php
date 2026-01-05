@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         '/cryptochill/callback',
         '/user/kyc/listener',
         '/user/kyc/veriff-listener',
+        '/api/zapier/*',
     ];
 }

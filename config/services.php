@@ -83,6 +83,8 @@ return [
     'x9' => [
         'base_url' => env('X9_BASE_URL', 'https://webapi.x9trader.com'),
         'access_token' => env('X9_ACCESS_TOKEN', ''),
+        'v2_base_url' => env('X9_V2_BASE_URL', ''),
+        'v2_access_token' => env('X9_V2_ACCESS_TOKEN', ''),
     ],
 
     'raga_pay' => [

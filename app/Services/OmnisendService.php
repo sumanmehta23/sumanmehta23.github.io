@@ -42,6 +42,8 @@ class OmnisendService
                 '[' . now()->toDateTimeString() . '] Omnisend credentials NOT configured!' . PHP_EOL
             );
             Log::warning('Omnisend credentials not configured. Skipping contact creation/update.', [
+                'apikey' => $this->apiKey,
+                'config_api_key' => config('services.omnisend.api_key'),
                 'contact_email' => is_array($contactData) ? ($contactData['email'] ?? 'unknown') : 'unknown'
             ]);
             return false;

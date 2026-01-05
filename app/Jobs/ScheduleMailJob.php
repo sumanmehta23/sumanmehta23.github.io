@@ -58,6 +58,8 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.transactionApproved';
             } elseif (strpos($this->subject, 'Fund Deposit') !== false) {
                 $template = 'emails.fundsAdd';
+            } elseif ((strpos($this->subject, 'Live Account Details (Zapier Created)') !== false)) {
+                $template = 'emails.issueZapierLiveAccount';
             } elseif ((strpos($this->subject, 'Live Account Details') !== false)) {
                 $template = 'emails.issueLiveAccount';
             } elseif ((strpos($this->subject, 'Demo Account Details') !== false)) {
@@ -78,7 +80,9 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
-
+            Log::info("maildriver".$maildriver);
+            Log::info("api key".$this->apiKey);
+            Log::info("emailsubject".$this->subject);
             // Always use Brevo API for export emails or if configured
             if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $this->apiKey) {
                 $htmlContent = view($template, $this->data)->render();

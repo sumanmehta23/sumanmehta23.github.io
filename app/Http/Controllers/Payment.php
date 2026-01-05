@@ -961,6 +961,7 @@ class Payment extends Controller
                     'email' => $email,
                     'code' => $account->code,
                     'deposit_amount' => $amount,
+                    'promocode_code' => $promocode,
                     'deposit_type' => 'CreditCardPayissa',
                     'deposit_from' => 'CreditCardPayissa',
                     'status' => 1,

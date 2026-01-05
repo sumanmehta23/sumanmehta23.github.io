@@ -64,6 +64,8 @@ use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
+use App\Http\Controllers\Api\ZapierWebhookController;
+use App\Http\Controllers\Admin\ZapierAccountsController;
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
@@ -244,6 +246,10 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -275,6 +281,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/g86t8', function () {
+            return config('services.omnisend.api_key');
+        });
         Route::get('/ajax', [AjaxController::class, 'index']);
 
         Route::post('/ajax', [AjaxController::class, 'index']);
@@ -376,6 +385,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
             ->middleware('check.permissions:trade_withdrawals:viewAny');
 
+        // All Trades (server-side DataTable)
+        Route::get('/trades', [\App\Http\Controllers\Admin\TradeController::class, 'index'])
+            ->name('trades.index')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/data', [\App\Http\Controllers\Admin\TradeController::class, 'getTradesData'])
+            ->name('trades.data')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/{trade}', [\App\Http\Controllers\Admin\TradeController::class, 'show'])
+            ->name('trades.show')
+            ->middleware('check.permissions:trade_deposit:viewAny');
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
@@ -546,6 +565,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
         });
 
+        // Admin Blog Routes
+        Route::resource('blog', \App\Http\Controllers\Admin\BlogPostController::class)->names([
+            'index' => 'blog.index',
+            'create' => 'blog.create',
+            'store' => 'blog.store',
+            'show' => 'blog.show',
+            'edit' => 'blog.edit',
+            'update' => 'blog.update',
+            'destroy' => 'blog.destroy',
+        ]);
         // Affiliate Management Routes
         Route::prefix('affiliates')->name('affiliates.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('index');
@@ -557,6 +586,19 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
+        });
+
+        // Login History Routes
+        Route::prefix('login-history')->name('login-history.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+        });
+
+        // Inactive Users Routes
+        Route::prefix('inactive-users')->name('inactive-users.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
         });
     });
 });
@@ -605,4 +647,20 @@ Route::prefix('mt5-redis-demo')->group(function () {
             'message' => "Dispatched {$count} queue jobs that will coordinate through Redis with HTTP requests"
         ]);
     })->name('mt5.redis.demo.jobs');
+});
+
+// Zapier Webhook Routes (API)
+Route::prefix('api/zapier')->name('api.zapier.')->group(function () {
+    Route::post('/create-account', [ZapierWebhookController::class, 'createAccount'])->name('create-account');
+    Route::get('/health', [ZapierWebhookController::class, 'healthCheck'])->name('health-check');
+});
+
+// Admin Zapier Accounts Routes
+Route::prefix('/admin/zapier-accounts')->name('admin.zapier-accounts.')->middleware(['is_admin', 'check.permissions:client:viewAny'])->group(function () {
+    Route::get('/', [ZapierAccountsController::class, 'index'])->name('index');
+    Route::get('/data', [ZapierAccountsController::class, 'getData'])->name('data');
+    Route::get('/export', [ZapierAccountsController::class, 'export'])->name('export');
+    Route::get('/stats', [ZapierAccountsController::class, 'getStats'])->name('stats');
+    Route::post('/resend', [ZapierAccountsController::class, 'resendEmail'])->name('resend');
+    Route::post('/delete', [ZapierAccountsController::class, 'deleteUser'])->name('delete');
 });

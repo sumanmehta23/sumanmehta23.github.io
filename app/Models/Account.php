@@ -188,4 +188,13 @@ class Account extends Model
         });
     }
 
+    /**
+     * Check if this account was created via Zapier
+     * @return bool
+     */
+    public function isZapierAccount(): bool
+    {   
+        return $this->created_from === 'zapier';
+    }
+
 }

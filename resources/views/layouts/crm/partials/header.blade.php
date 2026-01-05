@@ -74,7 +74,7 @@
     @yield('styles')
     <?php
 $marginTopStyle = ''; // Default value
-if (app()->environment('local') || config('services.sales.promotion')) {
+if (app()->environment('local') || config('services.sales.promotion') || app()->environment('development')) {
     $marginTopStyle = 'style="margin-top: 40px;"';
 }
     ?>
@@ -336,7 +336,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
     <div id="app" data-v-app="">
         <div>
             <h1></h1>
-            <nav class="pc-sidebar" <?php echo app()->environment('local') ? $marginTopStyle : ''; ?>>
+            <nav class="pc-sidebar" <?php echo $marginTopStyle; ?>>
                 <div class="navbar-wrapper">
                     <div class="m-header">
                         <a href="/dashboard" class="b-brand text-primary">
@@ -595,6 +595,11 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
             @if (app()->environment('local'))
                 <div
                     style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
+                    <b>Local ENVIRONMENT</b>
+                </div>
+                @elseif (app()->environment('development'))
+                <div
+                    style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1030;">
                     <b>DEV ENVIRONMENT</b>
                 </div>
             @endif
@@ -608,7 +613,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                 </div> --}}
             @endif
 
-            <header class="pc-header" <?php echo app()->environment('local') ? $marginTopStyle : ''; ?>>
+            <header class="pc-header" <?php echo $marginTopStyle; ?>>
                 <div class="header-wrapper">
                     <div class="me-auto pc-mob-drp">
                         <ul class="list-unstyled">
