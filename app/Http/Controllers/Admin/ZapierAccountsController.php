@@ -103,8 +103,11 @@ class ZapierAccountsController extends Controller
                 })
                 ->addColumn('account_codes', function ($user) {
                     try {
-                        $codes = $user->liveAccounts()->pluck('id')
-                            ->merge($user->demoAccounts()->pluck('id'))
+                        // Only show accounts created from Zapier
+                        $codes = $user->liveAccounts()
+                            ->where('created_from', 'zapier')
+                            ->pluck('id')
+                            ->merge($user->demoAccounts()->where('created_from', 'zapier')->pluck('id'))
                             ->map(function($id) {
                                 $account = \App\Models\Account::find($id);
                                 return '<a href="/admin/view_account_details/' . $id . '" class="account-link" title="View Account Details">' . ($account->code ?? 'N/A') . '</a>';
