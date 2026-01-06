@@ -71,9 +71,10 @@ class ZapierWebhookController extends Controller
                 'email' => $result['user']->email
             ]);
 
-            // Return success response
+            // Return success response with status for Zapier
             return response()->json([
                 'success' => true,
+                'status' => 'Success',
                 'message' => $result['message'],
                 'data' => [
                     'user_id' => $result['user']->id,
@@ -92,6 +93,7 @@ class ZapierWebhookController extends Controller
 
             return response()->json([
                 'success' => false,
+                'status' => 'Failed: ' . $e->getMessage(),
                 'message' => 'Failed to create account: ' . $e->getMessage(),
                 'error_code' => 'ACCOUNT_CREATION_FAILED',
             ], 400);
