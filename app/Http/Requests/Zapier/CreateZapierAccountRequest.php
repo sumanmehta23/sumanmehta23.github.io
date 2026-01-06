@@ -18,16 +18,31 @@ class CreateZapierAccountRequest extends FormRequest
     }
 
     /**
-     * Handle a failed validation attempt (return JSON for API)
+     * Handle a failed validation attempt (return JSON for API with status for Zapier)
      */
     protected function failedValidation(Validator $validator)
     {
+        $errors = $validator->errors();
+        
+        // Check if email already exists error
+        $status = 'Validation Failed';
+        if ($errors->has('email')) {
+            $emailErrors = $errors->get('email');
+            foreach ($emailErrors as $error) {
+                if (str_contains($error, 'already registered') || str_contains($error, 'taken')) {
+                    $status = 'Email already exists';
+                    break;
+                }
+            }
+        }
+        
         throw new HttpResponseException(
             response()->json([
                 'success' => false,
+                'status' => $status,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422)
+                'errors' => $errors,
+            ], 200)  // Return 200 instead of 422 so Zapier continues to next step!
         );
     }
 
