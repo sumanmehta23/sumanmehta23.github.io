@@ -1423,7 +1423,7 @@ class MT5Accounts extends Controller
             return ["status" => false, "message" => "Failed to connect to MT5 server"];
         }
 
-        if ($user->Country == "United Arab Emirates" || $user->Country == "USA" || $user->Country == "United States" || $user->Country == "UAE") {
+        if ($user->Country == "United Arab Emirates" || $user->Country == "UAE") {
             $user->Country = "India";
         }
         if (($error_code = $this->mt5Service->userAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
