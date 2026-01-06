@@ -1073,13 +1073,13 @@ class MT5Accounts extends Controller
 
         // Rate limiting to prevent duplicate account creation
         $key = 'create-demo-account:' . (auth()->id() ?: $request->ip());
-        
+
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
             return redirect()->back()
                 ->with('error', "Please wait {$retryAfter} seconds before creating another demo account.");
         }
-        
+
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         // Validate platform selection
@@ -1100,13 +1100,13 @@ class MT5Accounts extends Controller
     {
         // Additional rate limiting specific to MT5 demo account creation
         $key = 'create-mt5-demo-account:' . (auth()->id() ?: $request->ip());
-        
+
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
             return redirect()->back()
                 ->with('error', "Please wait {$retryAfter} seconds before creating another MT5 demo account.");
         }
-        
+
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         $settings = settings();
@@ -1216,13 +1216,13 @@ class MT5Accounts extends Controller
     {
         // Additional rate limiting specific to X9 demo account creation
         $key = 'create-x9-demo-account:' . (auth()->id() ?: $request->ip());
-        
+
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
             return redirect()->back()
                 ->with('error', "Please wait {$retryAfter} seconds before creating another X9 demo account.");
         }
-        
+
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         $validatedData = $request->validate([
@@ -1423,6 +1423,9 @@ class MT5Accounts extends Controller
             return ["status" => false, "message" => "Failed to connect to MT5 server"];
         }
 
+        if ($user->Country == "United Arab Emirates" || $user->Country == "UAE") {
+            $user->Country = "India";
+        }
         if (($error_code = $this->mt5Service->userAdd($user, $user_server)) != MTRetCode::MT_RET_OK) {
             $error = MTRetCode::GetError($error_code);
             Log::error('MT5 live account create error : ' . $error . ' for user ' . json_encode($user));
