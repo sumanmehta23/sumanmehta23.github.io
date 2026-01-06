@@ -339,7 +339,7 @@ class CreateZapierAccountRequest extends FormRequest
             'email' => trim(strtolower($this->input('email'))),
             'phone' => $this->input('phone'),
             'country_code' => $this->input('country_code'),
-            'country' => trim($this->input('country')),
+            'country' => ucfirst(trim($this->input('country'))),
             'account_type' => $this->input('account_type', 'Standard'),
             'group_code' => $this->input('group_code'),
         ];
