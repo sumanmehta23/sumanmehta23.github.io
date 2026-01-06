@@ -118,7 +118,7 @@ class ZapierAccountCreationService
             }
 
             // Step 4: Send welcome email
-            $this->sendWelcomeEmail($user, $account);
+            // $this->sendWelcomeEmail($user, $account);
 
             return [
                 'success' => true,
@@ -370,7 +370,7 @@ class ZapierAccountCreationService
             $comment = 'Zapier Bonus Deposit';
             $ticket = null;
             $operation = MTEnDealAction::DEAL_BALANCE;
-            $comment = 'Bonus Deposit';
+            $comment = 'Welcome Deposit';
 
             if ($this->ensureMT5Connection()) {
                 try {
@@ -450,7 +450,7 @@ class ZapierAccountCreationService
         $settings = settings();
         $toEmail = $new_user->Email;
         $from = $settings['email_from_address'];
-        $emailSubject = $settings['admin_title'] . ' - ' . $type . ' Account Details (Zapier Created)';
+        $emailSubject = $settings['admin_title'] . ' - ' . $type . ' Account Details With Welcome Deposit';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
