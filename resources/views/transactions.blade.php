@@ -216,7 +216,7 @@
                                 </a>
                             @endif
                           </td> --}}
-                          <td class="px-4 py-3 text-sm font-medium {{ $history->status == 0 ? 'text-yellow-500' : ($history->status == 1 ? 'text-color-green' : 'text-red-500') }}">
+                          <td class="px-4 py-3 text-sm font-medium {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-red-500') }}">
                                 @if($history->payout_callback_status)
                                     <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? $history->payout_callback_status : 'Cancelled') }}</p>
                                 @else
