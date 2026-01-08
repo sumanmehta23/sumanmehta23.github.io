@@ -612,7 +612,7 @@ Route::prefix('api/zapier')->name('api.zapier.')->group(function () {
 });
 
 // Admin Zapier Accounts Routes
-Route::prefix('/admin/zapier-accounts')->name('admin.zapier-accounts.')->middleware(['is_admin', 'check.permissions:client:viewAny'])->group(function () {
+Route::prefix('/admin/zapier-accounts')->name('admin.zapier-accounts.')->middleware(['is_admin'])->group(function () {
     Route::get('/', [ZapierAccountsController::class, 'index'])->name('index');
     Route::get('/data', [ZapierAccountsController::class, 'getData'])->name('data');
     Route::get('/export', [ZapierAccountsController::class, 'export'])->name('export');
