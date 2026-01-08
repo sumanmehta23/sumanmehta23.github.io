@@ -605,6 +605,10 @@ class MT5Controller extends Controller
                 "btn_text" => "Go To Dashboard",
                 'email' => settings()['email_from_address'],
                 "content" => $content,
+                'amount' => $amount,
+                'code' => $code,
+                'date' => now()->format('Y-m-d H:i:s'),
+                'type' => $deposit_type,
                 "title_right" => "Fund",
                 "subtitle_right" => "Deposit"
             ];
