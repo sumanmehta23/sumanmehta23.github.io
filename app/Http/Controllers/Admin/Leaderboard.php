@@ -532,8 +532,8 @@ class Leaderboard extends Controller
         $trades = $account->trades->map(function ($trade) {
             return [
                 'position' => $trade->position_id,
-                'open_time' => $trade->open_time,
-                'close_time' => $trade->close_time ?? null,
+                'open_time' => $trade->open_time->toDateTimeString(),
+                'close_time' => $trade->close_time ? $trade->close_time->toDateTimeString() : null,
                 'symbol' => $trade->symbol,
                 'volume' => $trade->volume,
                 'profit' => $trade->profit

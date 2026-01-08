@@ -96,15 +96,6 @@
                 margin: 0 auto 0 0 !important;
             }
 
-            .row-5 .column-1 .block-1.paragraph_block td.pad>div,
-            .row-8 .column-1 .block-3.paragraph_block td.pad>div {
-                font-size: 13px !important;
-            }
-
-            .row-5 .column-1 .block-1.paragraph_block td.pad {
-                padding: 0 25px 25px !important;
-            }
-
             .row-4 .column-2 .block-1.heading_block td.pad {
                 padding: 30px 10px 20px !important;
             }
@@ -113,17 +104,19 @@
                 font-size: 23px !important;
             }
 
-            .row-8 .column-1 .block-3.paragraph_block td.pad {
+            .row-5 .column-1 .block-1.paragraph_block td.pad>div,
+            .row-8 .column-1 .block-2.paragraph_block td.pad>div {
+                font-size: 13px !important;
+            }
+
+            .row-5 .column-1 .block-1.paragraph_block td.pad {
+                padding: 0 25px 25px !important;
+            }
+
+            .row-8 .column-1 .block-2.paragraph_block td.pad {
                 padding: 0 25px 15px !important;
             }
-
-            .row-8 .column-1 .block-1.button_block span {
-                font-size: 10px !important;
-                line-height: 20px !important;
-            }
-
         }
-
         @media (min-width: 621px) {
             .email-main-image {
                 width: 40% !important;
@@ -198,7 +191,7 @@
                                                         <tr>
                                                             <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/email_banner3.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/email_banner_demo.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -227,7 +220,7 @@
                                                     <!-- Text Block -->
                                                     <div style="display: inline-block; vertical-align: middle; text-align: left;">
                                                         <h1 style="margin: 0; color: #00b98e; font-family: Arial, Helvetica, sans-serif; font-size: 35px; font-weight: 700; line-height: 120%;">
-                                                            <span style="color: #000000;">Dear</span> {!! $name !!}
+                                                            <span style="color: #000000;">Dear</span> {!! $account->name !!}
                                                         </h1>
                                                     </div>
                                                 </td>
@@ -275,7 +268,11 @@
                                                         <tr>
                                                             <td class="pad" style="width:100%;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    @if ($platform == 'mt5')
+                                                                        <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/header_fixed_2.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    @else
+                                                                        <div style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/x9.jpg' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    @endif
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -302,16 +299,19 @@
                                                                 <table style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: left; letter-spacing: 0px;" width="100%">
                                                                     <tbody style="vertical-align: top; font-size: 12px; line-height: 120%;">
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Amount:</td>
-                                                                        </tr>
-                                                                        <tr>
                                                                             <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Account ID:</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Deposit Date:</td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Master Password:</td>
+                                                                        </tr>
+                                                                        {{-- <tr>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Investor Password:</td>
+                                                                        </tr> --}}
+                                                                        <tr>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Leverage:</td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Deposit Type:</td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%">Server:</td>
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -326,16 +326,24 @@
                                                                 <table style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; width: 100%; table-layout: fixed; direction: ltr; background-color: transparent; font-family: Arial, Helvetica, sans-serif; font-weight: 400; color: #101112; text-align: right; letter-spacing: 0px;" width="100%">
                                                                     <tbody style="vertical-align: top; font-size: 12px; line-height: 120%;">
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>${{ $amount??0.00 }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->code }}</strong></td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $code }}</strong></td>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->trader_password }}</strong></td>
+                                                                        </tr>
+                                                                        {{-- <tr>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $investor_password }}</strong></td>
+                                                                        </tr> --}}
+                                                                        <tr>
+                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $account->leverage }}</strong></td>
                                                                         </tr>
                                                                         <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $date }}</strong></td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $type }}</strong></td>
+                                                                            @if ($platform == 'mt5')
+                                                                                <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>{{ $server_name }}</strong></td>
+                                                                            @else
+                                                                                <td style="padding: 10px; word-break: break-word; border-top: 1px dashed #dddddd; border-right: 1px dashed #dddddd; border-bottom: 1px dashed #dddddd; border-left: 1px dashed #dddddd;" width="100%"><strong>X9-Trade-Server</strong></td>
+                                                                            @endif
+
                                                                         </tr>
                                                                     </tbody>
                                                                 </table>
@@ -358,20 +366,7 @@
                                         <tbody>
                                             <tr>
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="10" cellspacing="0" class="button_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-                                                        <tr>
-                                                            <td class="pad">
-                                                                <div align="center" class="alignment"><a href="https://my.lqhmarkets.com/dashboard" style="color:#ffffff;text-decoration:none;" target="_blank"><!--[if mso]>
-<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"  href="https://my.lqhmarkets.com/dashboard"  style="height:42px;width:265px;v-text-anchor:middle;" arcsize="72%" fillcolor="#00b98e">
-<v:stroke dashstyle="Solid" weight="0px" color="#00b98e"/>
-<w:anchorlock/>
-<v:textbox inset="0px,0px,0px,0px">
-<center dir="false" style="color:#ffffff;font-family:sans-serif;font-size:16px">
-<![endif]--><span class="button" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">Go To Dashboard →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                    <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                    <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad">
                                                                 <div align="center" class="alignment">
@@ -380,6 +375,23 @@
                                                                             <td class="divider_inner" style="font-size: 1px; line-height: 1px; border-top: 1px solid #dddddd;"><span style="word-break: break-word;"> </span></td>
                                                                         </tr>
                                                                     </table>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:5px;">
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0; margin-bottom: 16px;">You're now ready to begin your trading journey! If you have any questions, our team is here to help.</p>
+                                                                    @if ($platform == 'mt5')
+                                                                        <p style="margin: 0; margin-bottom: 16px;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://download.metatrader.com/cdn/mobile/mt5/ios?server=LQHIntegrated-Live" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>Download MetaTrader iOS</strong></u></span></a></strong></u></span></p>
+                                                                        <p style="margin: 0; margin-bottom: 16px;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://download.metatrader.com/cdn/mobile/mt5/android?server=LQHIntegrated-Live" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>Download MetaTrader Android</strong></u></span></a></strong></u></span></p>
+                                                                        <p style="margin: 0;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://download.metatrader.com/cdn/web/lqh.integrated.ltd/mt5/lqhintegrated5setup.exe" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>Download Desktop</strong></u><u></u></span></a></strong></u><u></u></span></p>
+                                                                    @else
+                                                                        <p style="margin: 0; margin-bottom: 16px;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://web.x9trader.com/login" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>X9 Web Terminal</strong></u></span></a></strong></u></span></p>
+                                                                        <p style="margin: 0; margin-bottom: 16px;"><span style="word-break: break-word; color: #00b98e;"><u><strong><a href="https://app.x9trader.com/" rel="noopener" style="text-decoration: underline; color: #7747FF;" target="_blank"><span style="word-break: break-word; color: #00b98e;"><u><strong>X9 Mobile Trader</strong></u></span></a></strong></u></span></p>
+                                                                    @endif
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -402,7 +414,7 @@
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:5px;padding-left:25px;padding-right:25px;padding-top:10px;">
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;"><strong>Need help?</strong></p>
                                                                     <p style="margin: 0; margin-bottom: 16px;">Our customer support is here to help you 24/5. If you have any questions or need assistance with your account, please don't hesitate to contact our support team.
@@ -414,7 +426,7 @@
                                                     </table>
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:0px;">
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:10px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;">All official communication from <span style="color: #00b98e;"><strong>LQH Markets</strong></span> (LQH Integrated LTD.) will be conducted solely through our official email addresses, using the <a href="https://my.lqhmarkets.com" style="color: #00b98e; text-decoration: underline;"><strong>@LQHMarkets.com</strong></a>.</p>
                                                                 </div>
