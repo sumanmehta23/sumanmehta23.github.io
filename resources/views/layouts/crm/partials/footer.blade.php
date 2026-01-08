@@ -201,10 +201,42 @@
         Swal.fire({
             title: '{{ session('warning') }}',
             html: `{!! $errorMessage !!}`,
-            icon: 'warning'
+            icon: 'warning',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            backdrop: true,
+            didOpen: () => {
+                document.body.style.overflow = 'hidden';
+            },
+            willClose: () => {
+                document.body.style.overflow = 'auto';
+            }
         }).then(() => {
             // Optionally, you can reload the page after showing the alert
             location.reload();
+        });
+    </script>
+@endif
+
+@if(session('error'))
+    @php
+        $errorTitle = session('error_title') ?? 'Something went wrong';
+    @endphp
+    <script>
+        Swal.fire({
+            icon: 'warning',
+            title: '{{ $errorTitle }}',
+            html: '{{ session('error') }}',
+            showConfirmButton: true,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            backdrop: true,
+            didOpen: () => {
+                document.body.style.overflow = 'hidden';
+            },
+            willClose: () => {
+                document.body.style.overflow = 'auto';
+            }
         });
     </script>
 @endif
@@ -474,9 +506,35 @@
     })
     $("#verify-user-kyc").click(function(e) {
         e.preventDefault();
-        var iframe =
-            "<iframe id='kyc_verification_frame' src='/sumsub' class='w-100' style='height: 100vh;'></iframe>";
-        $(this).closest(".card-body").html(iframe);
+
+        // Decide which KYC provider to use based on settings shared to views
+        var provider = "{{ $settings['kyc_provider'] ?? 'sumsub' }}";
+        var cardBody = $(this).closest(".card-body");
+        
+        if (provider === 'veriff') {
+            // Show loader inside KYC section
+            var loader = `
+                <div class="text-center py-5" id="veriff-loader">
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="spinner-border" style="width: 50px; height: 50px; color: #00b2a9;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <h5 class="mb-2">Redirecting to verification...</h5>
+                    <p class="text-muted">Please wait while we connect you to Veriff</p>
+                </div>
+            `;
+            cardBody.html(loader);
+            
+            // Small delay to show loader, then redirect to Veriff
+            setTimeout(function() {
+                window.location.href = '/veriff';
+            }, 500);
+        } else {
+            // Sumsub supports iframe embedding
+            var iframe = "<iframe id='kyc_verification_frame' src='/sumsub' class='w-100' style='height: 100vh;'></iframe>";
+            cardBody.html(iframe);
+        }
     });
 </script>
 <script type="module" src="/assets/js/popper.min.js"></script>

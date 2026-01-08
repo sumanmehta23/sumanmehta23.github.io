@@ -54,7 +54,7 @@ class SyncTrades implements ShouldQueue
             });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("MT5 user not found for account {$account->code}: " . MTRetCode::GetError($error_code));
+                Log::error("MT5 user not found for account6 {$account->code}: " . MTRetCode::GetError($error_code));
                 $mt5Service->reportError();
                 return;
             }

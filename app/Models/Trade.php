@@ -10,6 +10,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\MT5\MTEnDealAction;
+
 
 class Trade extends Model
 {
@@ -126,4 +128,11 @@ class Trade extends Model
     {
         return $this->hasMany(Deal::class, 'position_id', 'position_id');
     }
+
+    public function corrections()
+    {
+        return $this->hasMany(Deal::class, 'account_id', 'account_id')
+            ->where('action', MTEnDealAction::DEAL_CORRECTION);
+    }
+
 }

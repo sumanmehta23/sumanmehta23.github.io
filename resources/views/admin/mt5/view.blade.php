@@ -629,8 +629,18 @@ if ($getUser) {
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
                                             <div class="mt-auto mb-auto">Security / Passwords</div>
-                                            <div class="updatePassword"><button class="btn btn-primary">Update
-                                                    Credentials</button></div>
+                                            <div class="d-flex justify-content-between gap-2">
+                                                <div class="resendCredentials">
+                                                    <button class="btn btn-secondary">
+                                                        Resend Credentials
+                                                    </button>
+                                                </div>
+                                                <div class="updatePassword">
+                                                    <button class="btn btn-primary">
+                                                        Update Credentials
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </h5>
                                         <div class="card-body">
                                             <div class="row">
@@ -1150,6 +1160,69 @@ if ($getUser) {
             $(".updatePassword").click(function() {
                 // alert("Clicekd");
                 $("#passwordupdatemodal").modal("show");
+            });
+
+            $(".resendCredentials").click(function() {
+                // Confirm action
+                Swal.fire({
+                    title: 'Resend Credentials?',
+                    text: "An email with the Account Code and Master Password will be sent to the client.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, send it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const accountCode = "{{ $account->code }}";
+
+                        // Show loading
+                        Swal.fire({
+                            title: 'Sending...',
+                            text: 'Please wait while we send the credentials.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: "{{ route('admin.resend-credentials') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                code: accountCode
+                            },
+
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: response.message || 'Credentials sent successfully.'
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Failed',
+                                        text: response.message || 'Could not send credentials.'
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                let msg = 'An error occurred while sending credentials.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    msg = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: msg
+                                });
+                            }
+                        });
+                    }
+                });
             });
 
             $("#passwordForm").on("submit", function(e) {
