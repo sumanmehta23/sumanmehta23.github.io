@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Fluent;
 
 class InternalTransfer extends Model
 {
@@ -66,27 +67,77 @@ class InternalTransfer extends Model
      */
     public static function getTransfers($email = null, $types = null, $status = null)
     {
-        $query = static::query();
+        // Build deposits query
+        $deposits = DB::table('trade_deposits')
+            ->select([
+                'email',
+                'id as raw_id',
+                DB::raw("'TDID' as source"),
+                'account_id as it_to',
+                'deposit_from as it_from',
+                'deposit_amount as amount',
+                'deposted_date as date',
+                'status',
+                'deposit_type as type'
+            ]);
 
+        // Apply filters to deposits query
         if ($email) {
-            $query->where('email', $email);
+            $deposits->where('email', $email);
         }
-
-        if ($types) {
-            $query->whereIn('type', $types);
-        }
-
         if ($status !== null) {
-            $query->where('status', $status);
+            $deposits->where('status', $status);
         }
 
-        $transfers = $query->orderBy('raw_id', 'desc')->get();
+        // Filter by deposit types
+        $depositTypes = $types ? array_intersect($types, ['Internal Transfer', 'Wallet Transfer', 'CRM', 'IB Withdraw']) : ['Internal Transfer', 'Wallet Transfer', 'CRM', 'IB Withdraw'];
+        $deposits->whereIn('deposit_type', $depositTypes);
 
-        // Load relationships manually since we're using query builder
-        $transfers->transform(function ($transfer) {
-            $transfer->accountTo = $transfer->it_to ? Account::find($transfer->it_to) : null;
-            $transfer->accountFrom = $transfer->it_from ? Account::find($transfer->it_from) : null;
-            return $transfer;
+        // Build withdrawals query
+        $withdrawals = DB::table('trade_withdrawal')
+            ->select([
+                'email',
+                'id as raw_id',
+                DB::raw("'TWID' as source"),
+                'withdraw_to as it_to',
+                'account_id as it_from',
+                'withdrawal_amount as amount',
+                'withdraw_date as date',
+                'status',
+                'withdraw_type as type'
+            ]);
+
+        // Apply filters to withdrawals query
+        if ($email) {
+            $withdrawals->where('email', $email);
+        }
+        if ($status !== null) {
+            $withdrawals->where('status', $status);
+        }
+
+        // Filter by withdrawal types
+        $withdrawalTypes = $types ? array_intersect($types, ['Internal Transfer', 'Wallet Withdrawal']) : ['Internal Transfer', 'Wallet Withdrawal'];
+        $withdrawals->whereIn('withdraw_type', $withdrawalTypes);
+
+        // Union the queries and get results as arrays for backward compatibility with views
+        $transfers = $deposits->union($withdrawals)->orderBy('raw_id', 'desc')->get();
+
+        // Load relationships and convert to Fluent objects (supports both array and object access)
+        // Include soft-deleted accounts using withTrashed()
+        $transfers = $transfers->map(function ($transfer) {
+            // Convert stdClass to array, then to Fluent for both array and object access
+            $data = (array) $transfer;
+
+            // Load relationships
+            $accountTo = $data['it_to'] ? Account::withTrashed()->find($data['it_to']) : null;
+            $accountFrom = $data['it_from'] ? Account::withTrashed()->find($data['it_from']) : null;
+
+            // Add relationships to data
+            $data['accountTo'] = $accountTo;
+            $data['accountFrom'] = $accountFrom;
+
+            // Return as Fluent object (supports both $obj->prop and $obj['prop'])
+            return new Fluent($data);
         });
 
         return $transfers;
