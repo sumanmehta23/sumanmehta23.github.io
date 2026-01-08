@@ -321,6 +321,13 @@ if (app()->environment('local')) {
                                                 Accounts</a>
                                         </li>
                                     @endcan
+                                      <li class="slide menu-item-sub ">
+                                            <a href="{{ route('admin.zapier-accounts.index') }}" class="side-menu__item">
+                                                <span class="side-menu__label">Zapier Accounts</span>
+                                            </a>
+                                            <ul class="slide-menu child1">
+                                            </ul>
+                                        </li>
                                 </ul>
                             </li>
                         @endif

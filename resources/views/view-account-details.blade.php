@@ -203,8 +203,8 @@
                                                                 {{ isset($balance) ? number_format($balance, 2) : '0.00' }}
                                                             </h3>
                                                         </div>
-                                                        <div class="col-6 text-end">
-                                                            @if ($type != 'demo' && ($account->competition_month == NULL))
+                                                        <div class="col-6 text-end">  
+                                                            @if ($type != 'demo' && !$account->isZapierAccount() && ($account->competition_month == NULL))
                                                                 <a href="/trade-deposit"
                                                                     class="btn btn-outline-light btn-print-invoice"
                                                                     onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
@@ -411,6 +411,7 @@
                                 @if ($account->competition_month == NULL)
                                     <div class="col-sm-6">
                                         <div class="mt-3 row">
+                                            @if(!$account->isZapierAccount())
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-deposit') }}"
                                                     class="card bg-primary available-balance-card">
@@ -428,6 +429,7 @@
                                                     </div>
                                                 </a>
                                             </div>
+                                            @endif
                                             @if(!$account->demo)
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-withdrawal') }}"

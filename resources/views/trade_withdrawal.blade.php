@@ -83,8 +83,7 @@
                                                                     </span>
                                                                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                                                                         <span class="mb-0 h5 d-block f-w-500">
-
-                                                                            ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
+                                                                           ${{ number_format(max(0, $liveaccount->balance - $liveaccount->totalBonusDeposit), 2) }}
                                                                         </span>
                                                                         <span class="mb-0 text-muted f-10">Current
                                                                             Balance</span>
