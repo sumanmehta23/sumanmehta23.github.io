@@ -449,7 +449,7 @@ class User extends Authenticatable
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
             '<p></p>' .
             '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
-            '<p></p>' .
+            '<p></p>'.
             '<p>Click the link below to activate your Account</p>';
         $code = $this->email_verify_token;
         $templateVars = [

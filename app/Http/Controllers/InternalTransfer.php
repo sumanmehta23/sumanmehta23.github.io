@@ -112,7 +112,7 @@ class InternalTransfer extends Controller
         
         // Block Zapier accounts from internal transfer
         if ($fromAccount->isZapierAccount() || $toAccount->isZapierAccount()) {
-            return redirect()->back()->with('error', 'Internal transfer is not available for Zapier-created accounts.');
+            return redirect()->back()->with('error', 'Internal transfer is not available for promotional accounts.');
         }
         // dump($fromAccount);
         //         dd($toAccount->accountType->ac_group);
