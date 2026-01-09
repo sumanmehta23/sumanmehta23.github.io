@@ -307,6 +307,7 @@ class AjaxController extends Controller
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
             Gate::forUser($admin)->authorize('client:impersonate', $client);
+
             activity()
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
@@ -325,6 +326,10 @@ class AjaxController extends Controller
             Auth::guard('web')->login($client);
             Session::put('admin', $admin);
             Session::put('user', $client);
+
+            // Bypass 2FA verification when admin impersonates a client
+            Session::put('2fa:verified', true);
+
             // dd('ssss');
             return response()->json([
                 'success' => true,
