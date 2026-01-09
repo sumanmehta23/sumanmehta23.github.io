@@ -1,5 +1,6 @@
 @extends('layouts.crm.crm')
 @section('content')
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <div class="pc-container">
     <div class="pc-content">
         <div class="pb-0 mb-0 page-header">
@@ -24,7 +25,7 @@
                     <div>
                         <x-input-label for="password" :value="__('Password')" />
 
-                        <x-input-field id="password" class="block w-25 mt-1" type="password" name="password" required
+                        <x-input-field id="password" class="block mt-1 w-25" type="password" name="password" required
                             autocomplete="current-password" />
 
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
