@@ -217,15 +217,35 @@
                             @endif
                           </td> --}}
                           <td class="px-4 py-3 text-sm font-medium {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-red-500') }}">
-                            @if($history->payout_callback_status)
+                            {{-- @if($history->payout_callback_status)
                                 <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? $history->payout_callback_status : 'Cancelled') }}</p>
                             @else
                                 <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
                                 <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?
                             htmlspecialchars(isset($history->payout_req) ? $history->admin_remark : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
+                            @endif --}}
+
+
+                            @if($history->payout_callback_status)
+                                <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : (($history->status == 1 && $history->payout_callback_status != 'complete') ? 'Processing' : 'Approved') }}</p>
+                            @else
+                                {{-- {{ dd($history) }} --}}
+                                <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : (($history->status == 1 && $history->payout_callback_status == 'complete') ? 'Approved' : (($history->status == 1) ? (($history->admin_remark == 'Manually Approved') ? 'Approved' : 'Processing') : 'Cancelled')) }}</p>
+                                <p>
+                                    {{
+                                        ($history->payout_req !== null && $history->admin_remark !== 'Approved' && $history->status !== 0)
+                                            ? htmlspecialchars(
+                                                in_array($history->admin_remark, ['draft', 'new'])
+                                                    ? ''
+                                                    :'('. $history->admin_remark .')'
+                                            )
+                                            : ''
+                                    }}
+                                </p>
                             @endif
 
                             <p class="text-sm text-color-green">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
+
                             @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
                                 <a  href="#"
                                     class="btn btn-sm btn-outline-primary primary-btn"
