@@ -1513,6 +1513,7 @@ class Wallet extends Controller
 
         $transaction->payout_callback_status = $payoutStatus;
         $transaction->transaction_id = $payoutTxId;
+        $transaction->admin_remark = $payoutStatus;
         $transaction->save();
 
         Log::info(

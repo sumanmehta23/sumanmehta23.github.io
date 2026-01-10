@@ -255,7 +255,7 @@
                                                         </div>
                                                         <div class="mt-2 lh-1">
                                                             <?php if ($details->status == 1) { ?>
-                                                            <span class="badge bg-success">APPROVED</span>
+                                                            <span class="badge bg-success">{{ ($details->admin_remark=='draft' || $details->admin_remark=='new') ? 'Processing (Cryptochill Draft)' : $details->admin_remark }}</span>
                                                             <?php } elseif ($details->status == 2) { ?>
                                                             <span class="badge bg-danger">REJECTED</span>
                                                             <?php } elseif ($details->status == 0) { ?>
@@ -348,7 +348,7 @@
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
                                                         <div class="mt-2 lh-1">
-                                                            <span>{{ $details->admin_remark }}</span>
+                                                            <span>{{ ($details->admin_remark=='draft' || $details->admin_remark=='new') ? 'Processing (Cryptochill Draft)' : $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
