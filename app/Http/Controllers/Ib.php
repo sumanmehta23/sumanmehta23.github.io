@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Models\IbWallet;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
+use Illuminate\Support\Str;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
