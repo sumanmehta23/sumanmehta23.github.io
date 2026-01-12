@@ -180,7 +180,7 @@ class BalanceSyncService
         $accountPromoBonus = $account->BonusTransaction()
                     ->where('bonus_type', 'Bonus In')
                     // ->whereIn('admin_remark', ['Promo Bonus', '10x Trader Leverage'])
-                    ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
+                    ->when($account->bonus_payoff_sync_at, function ($query) use($bonusPayoffSyncAt) {
                         $query->where('bonus_date', '<=', $bonusPayoffSyncAt);
                     })
                     ->whereNotNull('transaction_id');
