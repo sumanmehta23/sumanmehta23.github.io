@@ -288,7 +288,7 @@
                             @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
                                 <a href="#"
                                 class="btn btn-sm btn-outline-primary primary-btn"
-                                onclick="resendWalletWithdrawalVerifyEmail('{{ $history->id }}')">
+                                onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')">
                                     Resend Verification Email
                                 </a>
                             @endif
