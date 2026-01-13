@@ -2,7 +2,7 @@
     aria-labelledby="accountSoftDeleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="{{ route('admin.deleteAccount') }}" id="softDeleteAccountForm" method="POST">
+            <form action="{{ route('admin.softDeleteAccount') }}" id="softDeleteAccountForm" method="POST">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
                 <input type="hidden" name="code" id="code" value="{{ $getUser->code ?? '' }}">
@@ -67,7 +67,7 @@
                 <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
                 <input type="hidden" name="code" id="code" value="{{ $getUser->code ?? '' }}">
                 <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
-                <input type="hidden" name="platform" id="platform" value="{{ $getUser->trade_platform ?? '' }}">
+                <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="accountRestoreModalLabel">Restore Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

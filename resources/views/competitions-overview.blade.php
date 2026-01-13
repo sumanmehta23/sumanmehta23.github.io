@@ -26,23 +26,23 @@
 
 </head>
 
-<body class="bg-gray-50 font-sans">
+<body class="font-sans bg-gray-50">
 
     <!-- Navbar -->
-    <header class="flex flex-col md:flex-row justify-between items-center p-6 bg-white shadow">
-        <div class="flex items-center justify-center md:justify-start space-x-2 mb-3 md:mb-0">
+    <header class="flex flex-col items-center justify-between p-6 bg-white shadow md:flex-row">
+        <div class="flex items-center justify-center mb-3 space-x-2 md:justify-start md:mb-0">
             <a href='https://www.lqhmarkets.com/'>
                 <img src="/{{ $settings['admin_sidebar_logo'] }}" class="w-36 md:w-44" alt="logo">
             </a>
         </div>
-        <nav class="flex flex-col md:flex-row items-center gap-3 md:space-x-6">
-            <a href="/competitions-overview" class="text-gray-700 hover:text-emerald-600 font-medium">Competitions</a>
+        <nav class="flex flex-col items-center gap-3 md:flex-row md:space-x-6">
+            <a href="/competitions-overview" class="font-medium text-gray-700 hover:text-emerald-600">Competitions</a>
             @guest
-                <a href="/login" class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800 w-full md:w-auto text-center">
+                <a href="/login" class="w-full px-5 py-2 font-semibold text-center text-white rounded-lg shadow bg-emerald-700 hover:bg-emerald-800 md:w-auto">
                     Sign Up
                 </a>
             @else
-                <a href="/dashboard" class="px-5 py-2 bg-emerald-700 text-white rounded-lg font-semibold shadow hover:bg-emerald-800 w-full md:w-auto text-center">
+                <a href="/dashboard" class="w-full px-5 py-2 font-semibold text-center text-white rounded-lg shadow bg-emerald-700 hover:bg-emerald-800 md:w-auto">
                     Dashboard
                 </a>
             @endguest
@@ -50,20 +50,20 @@
     </header>
 
     <!-- Page Heading -->
-    <section class="text-center mt-10">
+    <section class="mt-10 text-center">
         <h1 class="text-4xl font-bold">Competition List</h1>
     </section>
 
     <!-- Filters -->
-    <div class="flex flex-wrap justify-center mt-6 gap-2 md:space-x-3 p-2">
-        <button id="btn-All" onclick="filterCards('All')" class="filter-btn px-4 py-2 bg-emerald-700 text-white rounded-lg shadow">All</button>
-        <button id="btn-Upcoming" onclick="filterCards('Upcoming')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Upcoming</button>
-        <button id="btn-InProgress" onclick="filterCards('In Progress')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">In Progress</button>
-        <button id="btn-Finished" onclick="filterCards('Finished')" class="filter-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Finished</button>
+    <div class="flex flex-wrap justify-center gap-2 p-2 mt-6 md:space-x-3">
+        <button id="btn-All" onclick="filterCards('All')" class="px-4 py-2 text-white rounded-lg shadow filter-btn bg-emerald-700">All</button>
+        <button id="btn-Upcoming" onclick="filterCards('Upcoming')" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg filter-btn hover:bg-gray-300">Upcoming</button>
+        <button id="btn-InProgress" onclick="filterCards('In Progress')" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg filter-btn hover:bg-gray-300">In Progress</button>
+        <button id="btn-Finished" onclick="filterCards('Finished')" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg filter-btn hover:bg-gray-300">Finished</button>
     </div>
 
     <!-- Contest Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-12 px-4 md:px-10">
+    <section class="grid grid-cols-1 gap-6 px-4 mt-12 sm:grid-cols-2 lg:grid-cols-4 md:gap-8 md:px-10">
         @foreach ($competitions as $competition)
             @php
                 if ($competition->competition_end_date < now('UTC')) {
@@ -75,7 +75,7 @@
                 }
             @endphp
 
-            <div class="bg-white p-6 rounded-2xl shadow-md text-center border hover:shadow-lg transition" data-status="{{ $status }}">
+            <div class="p-6 text-center transition bg-white border shadow-md rounded-2xl hover:shadow-lg" data-status="{{ $status }}">
                 <!-- Content -->
                 <div class="{{ ($status == 'Finished') ? 'opacity-50' : '' }}">
                     @if ($status != 'Finished')
@@ -84,52 +84,52 @@
                         <img src="/assets/images/trophies-gray.svg" alt="" class="mb-6">
                     @endif
 
-                    <h2 class="text-xl font-semibold mb-4">{{ Str::upper($competition->ac_name) }}</h2>
+                    <h2 class="mb-4 text-xl font-semibold">{{ Str::upper($competition->ac_name) }}</h2>
 
-                    <p class="text-sm text-gray-600 flex justify-center items-center space-x-2">
+                    <p class="flex items-center justify-center space-x-2 text-sm text-gray-600">
                         <span>Demo</span>
                         <span class="px-2 py-1 {{ $status == 'In Progress' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-200 text-gray-700' }} text-xs font-medium rounded">
                             {{ $status }}
                         </span>
                     </p>
 
-                    <p class="mt-4 text-gray-800 font-bold">CONTESTANTS</p>
+                    <p class="mt-4 font-bold text-gray-800">CONTESTANTS</p>
                     <p class="text-lg font-medium">{{ $competition->accounts ? $competition->accounts->count() : 0 }}</p>
 
-                    <div class="bg-gray-50 border rounded-xl py-4 mt-6">
+                    <div class="py-4 mt-6 border bg-gray-50 rounded-xl">
                         @if ($status == 'Upcoming')
-                            <p class="text-gray-800 font-bold">Starts At</p>
-                            <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_start_date)->format('F jS, Y') }}</p>
-                            <p id="countdown-{{ $competition->id }}" class="text-sm text-emerald-600 font-medium mt-2"></p>
+                            <p class="font-bold text-gray-800">Starts At</p>
+                            <p class="mt-1 text-lg">{{ \Carbon\Carbon::parse($competition->competition_start_date)->format('F jS, Y') }}</p>
+                            <p id="countdown-{{ $competition->id }}" class="mt-2 text-sm font-medium text-emerald-600"></p>
                         @elseif($status == 'In Progress')
-                            <p class="text-gray-800 font-bold">Finishes At</p>
-                            <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
-                            <p id="countdown-{{ $competition->id }}" class="text-sm text-emerald-600 font-medium mt-2"></p>
+                            <p class="font-bold text-gray-800">Finishes At</p>
+                            <p class="mt-1 text-lg">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
+                            <p id="countdown-{{ $competition->id }}" class="mt-2 text-sm font-medium text-emerald-600"></p>
                         @elseif($status == 'Finished')
-                            <p class="text-gray-800 font-bold">Finished At</p>
-                            <p class="text-lg mt-1">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
+                            <p class="font-bold text-gray-800">Finished At</p>
+                            <p class="mt-1 text-lg">{{ \Carbon\Carbon::parse($competition->competition_end_date)->format('F jS, Y') }}</p>
                         @endif
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="mt-6 flex gap-3">
-                    <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50" onclick="openRulesModal('{{ $competition->prize }}')">Prize Pool</button>
-                    <button class="w-1/2 border border-emerald-700 text-emerald-700 py-2 rounded-lg font-medium hover:bg-emerald-50" onclick="openLeaderboard('{{ $competition->id }}')">Standings</button>
+                <div class="flex gap-3 mt-6">
+                    <button class="w-1/2 py-2 font-medium border rounded-lg border-emerald-700 text-emerald-700 hover:bg-emerald-50" onclick="openRulesModal('{{ $competition->prize }}')">Prize Pool</button>
+                    <button class="w-1/2 py-2 font-medium border rounded-lg border-emerald-700 text-emerald-700 hover:bg-emerald-50" onclick="openLeaderboard('{{ $competition->id }}')">Standings</button>
                 </div>
 
                 @if ($status == 'Upcoming')
                     @guest
-                        <a href="/login" class="w-full mt-4 block text-center bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
+                        <a href="/login" class="block w-full py-2 mt-4 font-medium text-center text-white transition rounded-lg bg-emerald-600 hover:bg-emerald-700">
                             Register
                         </a>
                     @else
-                        <a href="/createCompetition" class="w-full mt-4 block text-center bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition">
+                        <a href="/createCompetition" class="block w-full py-2 mt-4 font-medium text-center text-white transition rounded-lg bg-emerald-600 hover:bg-emerald-700">
                             Register
                         </a>
                     @endguest
                 @else
-                    <button class="w-full mt-4 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium cursor-not-allowed">Registration
+                    <button class="w-full py-2 mt-4 font-medium text-gray-700 bg-gray-300 rounded-lg cursor-not-allowed">Registration
                         Finished</button>
                 @endif
             </div>
@@ -137,25 +137,25 @@
     </section>
 
     <!-- Rules Modal -->
-    <div id="rulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+    <div id="rulesModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-50">
         <div class="bg-white rounded-2xl shadow-lg w-[600px] max-w-2xl p-6 relative">
-            <button onclick="closeRulesModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">✖</button>
-            <h2 class="text-xl font-semibold mb-4 text-emerald-800">Competition Rules</h2>
+            <button onclick="closeRulesModal()" class="absolute text-gray-500 top-3 right-3 hover:text-gray-700">✖</button>
+            <h2 class="mb-4 text-xl font-semibold text-emerald-800">Competition Rules</h2>
             <div id="rulesContent" class="text-gray-700"></div>
         </div>
     </div>
 
     <!-- Footer (Bootstrap) -->
-    <div class="container-fluid bg-light mt-5 pt-5">
+    <div class="pt-5 mt-5 container-fluid bg-light">
         <div class="px-6 py-5">
             <div class="row gy-4">
 
                 <!-- Logo & Info -->
                 <div class="col-lg-4 col-md-6">
-                    <a href="/" class="d-inline-block mb-3">
+                    <a href="/" class="mb-3 d-inline-block">
                         <img src="/{{ $settings['admin_sidebar_logo'] }}" alt="LQH Markets Logo" class="img-fluid" style="max-height: 45px;">
                     </a>
-                    <p class="text-muted mb-1">
+                    <p class="mb-1 text-muted">
                         LQH Integrated Ltd <br> Hamchako, Mutsamudu, Autonomous Island of Anjouan, Union of Comoros.
                     </p>
                     <p class="mb-1">Email: <a href="mailto:support@lqhmarkets.com" class="text-success text-decoration-none">support@lqhmarkets.com</a></p>
@@ -164,7 +164,7 @@
 
                 <!-- Explore -->
                 <div class="col-6 col-md-3 col-lg-2">
-                    <h6 class="fw-bold mb-3">Explore</h6>
+                    <h6 class="mb-3 fw-bold">Explore</h6>
                     <ul class="list-unstyled">
                         <li><a href="https://www.lqhmarkets.com/" class="text-decoration-none text-dark">Home</a></li>
                         <li><a href="https://www.lqhmarkets.com/mt5" class="text-decoration-none text-dark">MetaTrader 5</a></li>
@@ -177,7 +177,7 @@
 
                 <!-- Disclosures -->
                 <div class="col-6 col-md-3 col-lg-2">
-                    <h6 class="fw-bold mb-3">Disclosures</h6>
+                    <h6 class="mb-3 fw-bold">Disclosures</h6>
                     <ul class="list-unstyled">
                         <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark">Risk Disclaimer</a></li>
                         <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark">Terms &amp; Conditions</a></li>
@@ -187,7 +187,7 @@
 
                 <!-- Company -->
                 <div class="col-6 col-md-3 col-lg-2">
-                    <h6 class="fw-bold mb-3">Company</h6>
+                    <h6 class="mb-3 fw-bold">Company</h6>
                     <ul class="list-unstyled">
                         <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About</a></li>
                         <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark">Contact</a></li>
@@ -196,8 +196,8 @@
 
                 <!-- Social Media -->
                 <div class="col-6 col-md-3 col-lg-2">
-                    <h6 class="fw-bold mb-3">Social Media</h6>
-                    <ul class="list-unstyled d-flex flex-column gap-2">
+                    <h6 class="mb-3 fw-bold">Social Media</h6>
+                    <ul class="gap-2 list-unstyled d-flex flex-column">
                         <li>
                             <a href="https://discord.gg/lqhmarkets" target="_blank" class="d-flex align-items-center text-decoration-none text-dark">
                                 <img src="https://cdn.prod.website-files.com/66d6faa07d7bd55c6f3ca508/683d55e6248e95183cea86a5_icons8-discord-500.png" alt="Discord" class="me-2" style="height: 20px; width: 20px;">
@@ -216,7 +216,7 @@
         </div>
 
         <!-- Legal -->
-        <div class="border-top py-4">
+        <div class="py-4 border-top">
             <div class="px-6 text-muted small">
                 <p><strong>Legal:</strong> LQH Integrated Ltd is LQHMarkets.com and the LQH Markets brand and trademark is owned
                     by LQH Integrated Ltd.</p>

@@ -631,7 +631,6 @@ class MT5Controller extends Controller
 
         if ($platform === 'x9') {
             $response = $this->x9Service->getUserDetails($login);
-
             if ($response['data']['trading_account']['client_group_type_id'] != 1) {
                 if ($response['data']['balance']['balance'] > 0) {
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
@@ -641,7 +640,7 @@ class MT5Controller extends Controller
             }
 
             // X9 deletion logic disableAccount
-            $response = $this->x9Service->disableAccount($account);
+            $response = $this->x9Service->disableAccount($account->code);
             if (!$response['status']) {
                 return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
             }
@@ -674,7 +673,7 @@ class MT5Controller extends Controller
     public function deleteAccount(Request $request)
     {
 
-        $account = Account::where('code', $request->input('code'))->first();
+        $account = Account::withTrashed()->with('trades')->where('code', $request->input('code'))->first();
         $login = $account->code;
 
         $this->ensureMT5Connection();
@@ -699,7 +698,7 @@ class MT5Controller extends Controller
             }
 
             // X9 deletion logic disableAccount
-            $response = $this->x9Service->disableAccount($account);
+            $response = $this->x9Service->disableAccount($account->code);
             if (!$response['status']) {
                 return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
             }
@@ -722,6 +721,10 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'Account has trade deposits or withdrawals, cannot delete.');
             }
 
+            if($account->trades->count() > 0){
+                return redirect()->back()->with('error', 'Account has trades associated, cannot delete.');
+            }
+
             // MT5 deletion logic
             $error_code = $this->api->DisableTradingOrDeleteUser($login);
             if (!$error_code['status']) {
@@ -733,13 +736,10 @@ class MT5Controller extends Controller
         }
     }
 
-
     public function restoreAccount(Request $request)
     {
-
-        $account = Account::withTrashed()->where('code', $request->input('code'))->first();
+        $account = Account::withTrashed()->with('trades')->where('code', $request->input('code'))->first();
         $login = $account->code;
-
         $this->ensureMT5Connection();
 
         $settings = settings();
@@ -749,7 +749,6 @@ class MT5Controller extends Controller
         ]);
 
         $platform = $request->input('platform');
-
         if ($platform === 'x9') {
             $response = $this->x9Service->getUserDetails($login);
 
@@ -758,37 +757,32 @@ class MT5Controller extends Controller
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
                 }
             }else{
-                return redirect()->back()->with('error', 'Demo accounts cannot be deleted.');
+                return redirect()->back()->with('error', 'Demo accounts cannot be Restoration.');
             }
 
-            // X9 deletion logic disableAccount
-            $response = $this->x9Service->disableAccount($account);
+            // X9 deletion logic enableAccount
+            $response = $this->x9Service->enableAccount($account->code);
             if (!$response['status']) {
-                return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
+                return redirect()->back()->with('error', 'X9 Account Restoration Failed: ' . $response['message']);
             }
             // Delete from local database
             $account->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
+            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Restored Successfully');
         } elseif ($platform === 'mt5') {
             $trade_user = NULL;
             if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
-                return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
+                return redirect()->back()->with('error', 'MT5 Account Restoration Failed. Account not present in mt5 server. '. MTRetCode::GetError($error_code));
             }
-
-            if ($trade_user->Balance > 0) {
-                if ($account->demo != 1) {
-                    return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
+            if ($trade_user) {
+                // MT5 deletion logic
+                $error_code = $this->api->EnableTrading($login);
+                if (!$error_code['status']) {
+                    return redirect()->back()->with('error', 'MT5 Account Restoring Failed: ' . $error_code['message']);
                 }
             }
-
-            // MT5 deletion logic
-            $error_code = $this->api->DisableTrading($login);
-            if (!$error_code['status']) {
-                return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
-            }
             // Delete from local database
-            $account->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
+            $account->restore();
+            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Restored Successfully');
         }
     }
 

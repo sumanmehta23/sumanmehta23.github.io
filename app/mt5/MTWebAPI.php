@@ -1014,7 +1014,6 @@ class MTWebAPI
         try {
             $user = null;
             $ret = $this->UserGet($login, $user);
-
             if ($ret == MTRetCode::MT_RET_OK && $user) {
                 // Disable trading rights
                 $user->Rights = MTEnUsersRights::USER_RIGHT_TRADE_DISABLED;
@@ -1028,6 +1027,57 @@ class MTWebAPI
                     $summary['message'] = "Trading disabled successfully.";
                 } else {
                     $summary['errors'][] = "Failed to disable trading rights, code $update_res";
+                }
+            } else {
+                $summary['errors'][] = "Failed to fetch user info for login $login (code $ret)";
+            }
+
+        } catch (\Throwable $e) {
+            $summary['errors'][] = "Exception: " . $e->getMessage();
+        }
+
+        // Finalize status/message
+        if (count($summary['errors']) > 0) {
+            $summary['status'] = false;
+            $summary['message'] = implode(' | ', $summary['errors']);
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Enable trading for an MT5 account if it has trade history,
+     * otherwise delete the user entirely.
+     *
+     * @param int $login - MT5 account login
+     * @return array - summary of actions and results
+     */
+   public function EnableTrading($login)
+    {
+        $summary = [
+            'status' => true,
+            'message' => 'Success',
+            'errors' => [],
+            'trading_disabled' => true,
+            'user_deleted' => false,
+            'has_history' => false,
+        ];
+
+        try {
+            $user = null;
+            $ret = $this->UserGet($login, $user);
+            if ($ret == MTRetCode::MT_RET_OK && $user) {
+                // Enable trading rights
+                $user->Rights = MTEnUsersRights::USER_RIGHT_ENABLED;
+
+                $updated_user = null;
+                $update_res = $this->UserUpdate($user, $updated_user);
+
+                if ($update_res == MTRetCode::MT_RET_OK) {
+                    $summary['trading_disabled'] = false;
+                    $summary['message'] = "Trading enabled successfully.";
+                } else {
+                    $summary['errors'][] = "Failed to enable trading rights, code $update_res";
                 }
             } else {
                 $summary['errors'][] = "Failed to fetch user info for login $login (code $ret)";

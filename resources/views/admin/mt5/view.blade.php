@@ -104,14 +104,18 @@ if ($getUser) {
                                                                 <i class="ti ti-database-import"></i>
                                                             </span>
                                                         @else
-                                                            <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                                data-bs-target="#accountSoftDeleteModal">Soft Delete Account
-                                                                <i class="ti ti-database-import"></i>
-                                                            </span>
-                                                            <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                                data-bs-target="#accountDeleteModal">Delete Account
-                                                                <i class="ti ti-database-import"></i>
-                                                            </span>
+                                                            <div class="gap-4 flexflex-vertical">
+                                                                <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                                    data-bs-target="#accountSoftDeleteModal">Soft Delete Account
+                                                                    <i class="ti ti-database-import"></i>
+                                                                </span>
+                                                                @if ($account->demo == 0)
+                                                                    <span class="mt-3 badge btn btn-danger" data-bs-toggle="modal"
+                                                                        data-bs-target="#accountDeleteModal">Delete Account
+                                                                        <i class="ti ti-database-import"></i>
+                                                                    </span>
+                                                                @endif
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 @endcan
