@@ -1059,7 +1059,7 @@ class Wallet extends Controller
         $payload = $request->json()->all();
 
         Log::channel("cryptochillcallback")->info(json_encode($payload));
-        response()->json(['status' => 'received'], 200)->send();
+        response()->json(['status' => 'received'], status: 200)->send();
         try {
             // Get signature and callback_id fields from provided data
             $signature = $payload['signature'] ?? null;
@@ -1511,8 +1511,13 @@ class Wallet extends Controller
             return;
         }
 
+        $payoutResult = [
+            'result' => $payoutData
+        ];
+
         $transaction->payout_callback_status = $payoutStatus;
         $transaction->transaction_id = $payoutTxId;
+        $transaction->payout_res = $payoutResult;
         $transaction->admin_remark = $payoutStatus;
         $transaction->save();
 
