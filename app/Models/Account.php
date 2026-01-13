@@ -75,7 +75,7 @@ class Account extends Model
 
     public function trades()
     {
-        return $this->hasMany(Trade::class);
+        return $this->hasMany(Trade::class)->withTrashed();
     }
 
     public function getTotalBonusDepositAttribute()
@@ -186,6 +186,17 @@ class Account extends Model
             $account->ib1Commission()->delete();
             $account->totalBalance()->delete();
         });
+
+        static::restoring(function ($account) {
+            // Restore related records
+            $account->trades()->withTrashed()->restore();
+            $account->tradeDeposits()->withTrashed()->restore();
+            $account->tradeWithdrawals()->withTrashed()->restore();
+            $account->BonusTransaction()->withTrashed()->restore();
+            $account->dailyReports()->withTrashed()->restore();
+            $account->deals()->withTrashed()->restore();
+            $account->totalBalance()->withTrashed()->restore();
+        });
     }
 
     /**
@@ -193,7 +204,7 @@ class Account extends Model
      * @return bool
      */
     public function isZapierAccount(): bool
-    {   
+    {
         return $this->created_from === 'zapier';
     }
 

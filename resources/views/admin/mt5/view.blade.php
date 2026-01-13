@@ -99,12 +99,23 @@ if ($getUser) {
                                                 @can('account:update')
                                                     <div class="mb-2 col-6" style="padding-left: 12px">
                                                         @if ($account->deleted_at)
-                                                            <label class="fs-18 text-danger fw-bold mt-1" for="">Deleted</label>
-                                                        @else
-                                                            <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                                data-bs-target="#accountDeleteModal">Delete Account
+                                                            <span class="badge btn btn-success" data-bs-toggle="modal"
+                                                            data-bs-target="#accountRestoreModal">Restore Account
                                                                 <i class="ti ti-database-import"></i>
                                                             </span>
+                                                        @else
+                                                            <div class="gap-4 flexflex-vertical">
+                                                                <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                                    data-bs-target="#accountSoftDeleteModal">Soft Delete Account
+                                                                    <i class="ti ti-database-import"></i>
+                                                                </span>
+                                                                @if ($account->demo == 0)
+                                                                    <span class="mt-3 badge btn btn-danger" data-bs-toggle="modal"
+                                                                        data-bs-target="#accountDeleteModal">Delete Account
+                                                                        <i class="ti ti-database-import"></i>
+                                                                    </span>
+                                                                @endif
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 @endcan
@@ -629,7 +640,7 @@ if ($getUser) {
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
                                             <div class="mt-auto mb-auto">Security / Passwords</div>
-                                            <div class="d-flex justify-content-between gap-2">
+                                            <div class="gap-2 d-flex justify-content-between">
                                                 <div class="resendCredentials">
                                                     <button class="btn btn-secondary">
                                                         Resend Credentials
@@ -815,7 +826,7 @@ if ($getUser) {
                                     <div class="card-header justify-content-between">
                                         <div class="card-title">
                                             TRADES
-                                            <div class="d-inline-flex gap-2 ms-3">
+                                            <div class="gap-2 d-inline-flex ms-3">
                                                 <a href="/admin/export-all-trades?id=<?= $account->id ?>"
                                                    class="export-all-btn-header btn btn-sm">
                                                     EXPORT ALL
