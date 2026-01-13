@@ -39,11 +39,8 @@
                                     $kind = $data['result']['kind'] ?? '';
                                     $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
 
-                                    if ($txid && $coin) {
-                                        $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
-                                    }
-                                    if($coin == 'USDT'){
-                                        $link = "https://usdt.tokenview.io/en/tx/{$txid}";
+                                    if($txid){
+                                        $link = "https://{$coin}.tokenview.io/en/tx/{$txid}";
                                     }
                                 }
 
