@@ -431,7 +431,13 @@ class MT5Accounts extends Controller
         $nick_name = $request->nick_name;
 
         $email = $user->email;
-        $group = AccountType::where('id', $validatedData['options'])->firstOrFail();
+        $group = AccountType::with('mt5Group')->where('id', $validatedData['options'])->firstOrFail();
+        if (!$group->mt5Group) {
+            return redirect()->back()->with('error', 'MT5 Group not found for the selected account type.');
+        }
+        if ($group->mt5Group->mt5_group_type != 'live' && $group->mt5Group->mt5_group_type != 'real') {
+            return redirect()->back()->with('error', 'Selected account type is not valid for live accounts.');
+        }
         $referral = $user->referral;
         $ib = $user->ib1;
         $account_type_id = $validatedData['options'];
@@ -479,9 +485,7 @@ class MT5Accounts extends Controller
             $account_type_id = $group->id;
         }
 
-        if (!$group) {
-            return redirect()->back()->with('error', 'Invalid account type selected. With group code: ' . $groupCode);
-        }
+
 
         $userAcc = Account::where('user_id', $user->id)->where('demo', 0)->get();
 
@@ -490,7 +494,7 @@ class MT5Accounts extends Controller
             $ibdata = Ib1::where('referral_code', $ib)->first();
         }
 
-        if ($userAcc && count($userAcc) < 2) {
+        if (count($userAcc) < 2) {
             $new_user = $this->mt5Service->userCreate();
             $new_user->MainPassword = $this->generatePassword();
             $new_user->Group = $group->ac_group;
@@ -523,7 +527,8 @@ class MT5Accounts extends Controller
                             'code' => $new_user->Login,
                             'leverage' => $new_user->Leverage,
                             'ib' => $ib,
-                            'remark' => 'Create Live Account'
+                            'remark' => 'Create Live Account',
+                            'request_data' => $request->all()
                         ]
                     )
                     ->event('create')
@@ -552,7 +557,6 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('error', $response['message']);
             }
         } else {
-            $settings = settings();
             activity()->causedBy($user->id)
                 ->withProperties(
                     [
@@ -562,7 +566,8 @@ class MT5Accounts extends Controller
                         'code' => 'Pending',
                         'leverage' => $validatedData['leverage'],
                         'ib' => $ib,
-                        'remark' => 'Create Live Account'
+                        'remark' => 'Create Live Account',
+                        'request_data' => $request->all()
                     ]
                 )
                 ->event('create')
@@ -607,49 +612,6 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('error', 'Account not created');
             }
         }
-
-        // $new_user = $this->api->UserCreate();
-        // $new_user->MainPassword = $this->generatePassword();
-        // $new_user->Group = $group->ac_group;
-        // $new_user->type = $group->ac_name;
-        // $new_user->Leverage = $validatedData['leverage'];
-        // $new_user->ZipCode = $user->zipcode;
-        // $new_user->Country = $user->country;
-        // $new_user->State = $user->state;
-        // $new_user->City = $user->city;
-        // $new_user->Address = $user->address;
-        // $new_user->Phone = $user->number;
-        // $new_user->Currency = 'USD';
-        // $new_user->Company = $settings['mt5_company_name'];
-        // $new_user->Name = $user->fullname??$user->email;
-        // $new_user->Email = $user->email;
-        // $new_user->LeadSource = $user->ib1?? "" ;
-        // $new_user->PhonePassword = $this->generatePassword();
-        // $new_user->InvestPassword = $this->generatePassword();
-        // $new_user->Login = $this->generateRandomNumber();
-        // $response = $this->CreateAccount($new_user, $user_server, 'Live');
-
-        // if ($response['status']) {
-        //     Account::create([
-        //         'user_id' => $user->id,
-        //         'name' => $new_user->Name,
-        //         'demo'=> false,
-        //         'email' => $new_user->Email,
-        //         'name' => $new_user->Name,
-        //         'code' => $new_user->Login,
-        //         'account_type_id' => $account_type_id,
-        //         'leverage' => $new_user->Leverage,
-        //         'currency' => $new_user->Currency,
-        //         'trader_password' => $new_user->MainPassword,
-        //         'invester_password' => $new_user->InvestPassword,
-        //         'phone_password' => $new_user->PhonePassword,
-        //         'ib1' => $new_user->LeadSource,
-        //     ]);
-        //     $this->sendMail($new_user, 'Live');
-        //     return redirect()->back()->with('success', $response['message']);
-        // } else {
-        //     return redirect()->back()->with('error', $response['message']);
-        // }
     }
     public function activateAccount(Request $request)
     {
@@ -1575,14 +1537,14 @@ class MT5Accounts extends Controller
             'code' => 'required|exists:accounts,code'
         ]);
         $account = Account::where('code', $request->code)
-                    ->with('user')
-                    ->firstOrFail();
+            ->with('user')
+            ->firstOrFail();
 
         // Determine Master Password
         $masterPassword = $account->trader_password;
         $platform = $account->platform ?? config('platforms.default');
 
-         // Send notification email
+        // Send notification email
         try {
             $settings = settings();
             $toEmail = $account->user->email;
