@@ -125,7 +125,7 @@
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
                                         </div>
-                                        {{-- <div class="mt-3 row">
+                                        <div class="mt-3 row">
                                             <div class="col-3"> Deposit Amount for Demo Account </div>
                                             <div class="col-9">
                                                 <div class="mb-3 input-group"><span class="input-group-text">$</span>
@@ -138,7 +138,7 @@
                                                     <div class="alert alert-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                        </div> --}}
+                                        </div>
                                         <div class="mt-2 row is_account">
                                             <div class="col-3">
                                                 <label class="form-label">Nick Name(Optional)</label>
