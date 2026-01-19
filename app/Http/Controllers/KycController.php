@@ -147,15 +147,19 @@ class KycController extends Controller
 
         $data = json_decode($payload, true);
 
-        if (! is_array($data) || empty($data['verification'])) {
+        if (! is_array($data) || empty($data['data']['verification'] ?? null)) {
             return response()->json(['status' => 'false', 'message' => 'Invalid payload'], 400);
         }
 
-        $verification = $data['verification'];
-        $status = $verification['status'] ?? null;
-        $email = $verification['vendorData'] ?? null;
+        $verification = $data['data']['verification'];
+        $decision = $verification['decision'] ?? null;
+        $email = $data['vendorData'] ?? null;
 
-        Log::info('Veriff webhook received', $verification);
+        Log::info('Veriff webhook received', [
+            'verification' => $verification,
+            'email' => $email,
+            'decision' => $decision,
+        ]);
 
         if (! $email) {
             return response()->json(['status' => 'false', 'message' => 'Missing user identifier'], 400);
@@ -179,7 +183,7 @@ class KycController extends Controller
             return response()->json(['status' => 'true', 'message' => 'Your KYC Already Verified']);
         }
 
-        if ($status === 'approved') {
+        if ($decision === 'approved') {
             $user->kyc_verify = 1;
             $user->save();
 
