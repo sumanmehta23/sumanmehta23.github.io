@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Deal;
 use App\Models\Trade;
+use App\MT5\MTEnDealAction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TradeResource;
+use App\Http\Resources\CorrectionResource;
 
 /**
  * Trades API Controller for Cellexpert Integration
@@ -58,6 +61,29 @@ class TradeController extends Controller
             'per_page' => 'nullable|integer|min:1|max:500'
         ]);
 
+        // Apply filters only when there are actual values
+        // Filter by position close date range (mandatory filter support)
+        $closeDateFrom = $request->input('position_close_date_from');
+        $closeDateTo = $request->input('position_close_date_to');
+
+        // Parse date ranges first to use in both Trade and Correction filters
+        $fromDate = null;
+        $toDate = null;
+
+        if (!empty($closeDateFrom)) {
+            $fromDate = Carbon::parse($closeDateFrom);
+            if (!preg_match('/\d{2}:\d{2}/', $closeDateFrom)) {
+                $fromDate->startOfDay();
+            }
+        }
+
+        if (!empty($closeDateTo)) {
+            $toDate = Carbon::parse($closeDateTo);
+            if (!preg_match('/\d{2}:\d{2}/', $closeDateTo)) {
+                $toDate->endOfDay();
+            }
+        }
+
         // Initialize query with account relationship for user_id and currency, and filter for live accounts only
         $query = Trade::query()->with('account:id,user_id,currency,account_type_id')
             ->whereHas('account', function ($q) {
@@ -74,36 +100,12 @@ class TradeController extends Controller
                     });
             }); // Exclude trades with zero profit
 
-        // Apply filters only when there are actual values
-        // Filter by position close date range (mandatory filter support)
-        $closeDateFrom = $request->input('position_close_date_from');
-        $closeDateTo = $request->input('position_close_date_to');
-
-        if (!empty($closeDateFrom) && !empty($closeDateTo)) {
-            // Parse from date - use specified time or start of day
-            $fromDate = Carbon::parse($closeDateFrom);
-            if (!preg_match('/\d{2}:\d{2}/', $closeDateFrom)) {
-                $fromDate->startOfDay();
-            }
-
-            // Parse to date - use specified time or end of day
-            $toDate = Carbon::parse($closeDateTo);
-            if (!preg_match('/\d{2}:\d{2}/', $closeDateTo)) {
-                $toDate->endOfDay();
-            }
-
+        // Apply date filters to trades
+        if ($fromDate && $toDate) {
             $query->whereBetween('close_time', [$fromDate, $toDate]);
-        } elseif (!empty($closeDateFrom)) {
-            $fromDate = Carbon::parse($closeDateFrom);
-            if (!preg_match('/\d{2}:\d{2}/', $closeDateFrom)) {
-                $fromDate->startOfDay();
-            }
+        } elseif ($fromDate) {
             $query->where('close_time', '>=', $fromDate);
-        } elseif (!empty($closeDateTo)) {
-            $toDate = Carbon::parse($closeDateTo);
-            if (!preg_match('/\d{2}:\d{2}/', $closeDateTo)) {
-                $toDate->endOfDay();
-            }
+        } elseif ($toDate) {
             $query->where('close_time', '<=', $toDate);
         }
 
@@ -142,20 +144,91 @@ class TradeController extends Controller
         // Order by close time descending by default
         $query->orderBy('close_time', 'desc');
 
-        // Paginate the results
-        $perPage = min($request->input('per_page', 15), 500); // Limit max per page to 100
-        $trades = $query->paginate($perPage);
+        // Get all trades (we'll paginate after merging with corrections)
+        $trades = $query->get();
+
+        // Query correction deals independently (action = 5)
+        $correctionsQuery = Deal::query()
+            ->with('account:id,user_id,currency,account_type_id')
+            ->where('action', MTEnDealAction::DEAL_CORRECTION)
+            ->whereHas('account', function ($q) {
+                $q->where('demo', 0);
+            })
+            ->whereHas('account.user', function ($q) {
+                $q->whereNotNull('cxd');
+            });
+
+        // Apply the same date filters to corrections
+        if ($fromDate && $toDate) {
+            $correctionsQuery->whereBetween('time_done', [$fromDate, $toDate]);
+        } elseif ($fromDate) {
+            $correctionsQuery->where('time_done', '>=', $fromDate);
+        } elseif ($toDate) {
+            $correctionsQuery->where('time_done', '<=', $toDate);
+        }
+
+        // Apply user_id filter to corrections if present
+        if (!empty($userId)) {
+            $correctionsQuery->whereHas('account', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        }
+
+        $corrections = $correctionsQuery->orderBy('time_done', 'desc')->get();
 
         try {
+            // Merge trades and corrections into a single collection
+            $combined = collect();
+
+            // Add all trades with their close time for sorting
+            foreach ($trades as $trade) {
+                $combined->push([
+                    'type' => 'trade',
+                    'data' => $trade,
+                    'sort_time' => $trade->close_time,
+                ]);
+            }
+
+            // Add all corrections with their time_done for sorting
+            foreach ($corrections as $correction) {
+                $combined->push([
+                    'type' => 'correction',
+                    'data' => $correction,
+                    'sort_time' => $correction->time_done,
+                ]);
+            }
+
+            // Sort combined collection by close time descending
+            $combined = $combined->sortByDesc('sort_time')->values();
+
+            // Paginate the combined results
+            $perPage = min($request->input('per_page', 15), 500);
+            $currentPage = $request->input('page', 1);
+            $total = $combined->count();
+            $lastPage = (int) ceil($total / $perPage);
+
+            // Get items for current page
+            $offset = ($currentPage - 1) * $perPage;
+            $items = $combined->slice($offset, $perPage);
+
+            // Transform to resources
+            $data = $items->map(function ($item) {
+                if ($item['type'] === 'trade') {
+                    return new TradeResource($item['data']);
+                } else {
+                    return new CorrectionResource($item['data']);
+                }
+            })->values()->all();
+
             return response()->json([
-                'data' => TradeResource::collection($trades->items()),
+                'data' => $data,
                 'meta' => [
-                    'from' => $trades->firstItem(),
-                    'to' => $trades->lastItem(),
-                    'total' => $trades->total(),
-                    'current_page' => $trades->currentPage(),
-                    'last_page' => $trades->lastPage(),
-                    'per_page' => $trades->perPage(),
+                    'from' => $total > 0 ? $offset + 1 : null,
+                    'to' => $total > 0 ? min($offset + $perPage, $total) : null,
+                    'total' => $total,
+                    'current_page' => $currentPage,
+                    'last_page' => $lastPage,
+                    'per_page' => $perPage,
                 ],
             ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
         } catch (\Exception $e) {

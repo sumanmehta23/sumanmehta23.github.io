@@ -81,7 +81,7 @@ return [
         'api_key' => env('FORGE_API_KEY', ''),
     ],
     'x9' => [
-        'base_url' => env('X9_BASE_URL', ''),
+        'base_url' => env('X9_BASE_URL', 'https://webapi.x9trader.com'),
         'access_token' => env('X9_ACCESS_TOKEN', ''),
     ],
 

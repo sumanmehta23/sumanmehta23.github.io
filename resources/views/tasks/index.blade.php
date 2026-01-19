@@ -216,7 +216,6 @@
             </div>
         </div>
     </div>
-</div>
 <script>
     $(document).ready(function() {
         // When the upload button is clicked

@@ -96,27 +96,31 @@ if ($getUser) {
                                                         </h6>
                                                     </div>
                                                 </div>
-                                                <div class="mb-2 col-6" style="padding-left: 12px">
-                                                    @if ($account->deleted_at)
-                                                        <label class="fs-18 text-danger fw-bold mt-1" for="">Deleted</label>
-                                                    @else
-                                                        <span class="badge btn btn-danger" data-bs-toggle="modal"
-                                                            data-bs-target="#accountDeleteModal">Delete Account
-                                                            <i class="ti ti-database-import"></i>
-                                                        </span>
-                                                    @endif
-                                                </div>
+                                                @can('account:update')
+                                                    <div class="mb-2 col-6" style="padding-left: 12px">
+                                                        @if ($account->deleted_at)
+                                                            <label class="fs-18 text-danger fw-bold mt-1" for="">Deleted</label>
+                                                        @else
+                                                            <span class="badge btn btn-danger" data-bs-toggle="modal"
+                                                                data-bs-target="#accountDeleteModal">Delete Account
+                                                                <i class="ti ti-database-import"></i>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                @endcan
                                             </div>
                                             @if (!$account->deleted_at)
                                                 <div class="mt-3 row justify-content-center">
                                                     @if ($account->demo == 0)
                                                         @can("trade_deposit:create")
-                                                        <div class="mb-2 col-6">
-                                                            <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                                data-bs-target="#depositModal">Deposit
-                                                                <i class="ti ti-database-import"></i>
-                                                            </span>
-                                                        </div>
+                                                            @if(!$account->isZapierAccount())
+                                                                <div class="mb-2 col-6">
+                                                                    <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                                        data-bs-target="#depositModal">Deposit
+                                                                        <i class="ti ti-database-import"></i>
+                                                                    </span>
+                                                                </div>
+                                                            @endif
                                                         @endcan
                                                         @can("trade_withdrawals:create")
                                                         <div class="mb-2 col-6">
@@ -127,12 +131,14 @@ if ($getUser) {
                                                         </div>
                                                         @endcan
                                                         @can("trade_deposit:create")
-                                                        <div class="mb-2 col-6">
-                                                            <span class="badge btn btn-primary" data-bs-toggle="modal"
-                                                                data-bs-target="#depositModalCellExp">Deposit Tracking
-                                                                <i class="ti ti-database-import"></i>
-                                                            </span>
-                                                        </div>
+                                                         @if(!$account->isZapierAccount())
+                                                            <div class="mb-2 col-6">
+                                                                <span class="badge btn btn-primary" data-bs-toggle="modal"
+                                                                    data-bs-target="#depositModalCellExp">Deposit Tracking
+                                                                    <i class="ti ti-database-import"></i>
+                                                                </span>
+                                                            </div>
+                                                            @endif
                                                         @endcan
                                                         @can("trade_withdrawals:create")
                                                         <div class="mb-2 col-6">
@@ -143,6 +149,7 @@ if ($getUser) {
                                                         </div>
                                                         @endcan
                                                         @can("bonus_transaction:create")
+                                                         @if(!$account->isZapierAccount())
                                                             <div class="mb-2 col-6">
                                                                 <span class="badge btn btn-secondary" data-bs-toggle="modal"
                                                                     data-bs-target="#bonusModalCredit">Bonus Credit
@@ -156,6 +163,7 @@ if ($getUser) {
                                                                     <i class="ti ti-plus" style="font-weight: bold"></i>
                                                                 </span>
                                                             </div>
+                                                            @endif
                                                         @endcan
                                                     @endif
                                                 </div>
@@ -621,8 +629,18 @@ if ($getUser) {
                                     <div class="card-body">
                                         <h5 class="card-title d-flex justify-content-between">
                                             <div class="mt-auto mb-auto">Security / Passwords</div>
-                                            <div class="updatePassword"><button class="btn btn-primary">Update
-                                                    Credentials</button></div>
+                                            <div class="d-flex justify-content-between gap-2">
+                                                <div class="resendCredentials">
+                                                    <button class="btn btn-secondary">
+                                                        Resend Credentials
+                                                    </button>
+                                                </div>
+                                                <div class="updatePassword">
+                                                    <button class="btn btn-primary">
+                                                        Update Credentials
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </h5>
                                         <div class="card-body">
                                             <div class="row">
@@ -1142,6 +1160,69 @@ if ($getUser) {
             $(".updatePassword").click(function() {
                 // alert("Clicekd");
                 $("#passwordupdatemodal").modal("show");
+            });
+
+            $(".resendCredentials").click(function() {
+                // Confirm action
+                Swal.fire({
+                    title: 'Resend Credentials?',
+                    text: "An email with the Account Code and Master Password will be sent to the client.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, send it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const accountCode = "{{ $account->code }}";
+
+                        // Show loading
+                        Swal.fire({
+                            title: 'Sending...',
+                            text: 'Please wait while we send the credentials.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: "{{ route('admin.resend-credentials') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                code: accountCode
+                            },
+
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: response.message || 'Credentials sent successfully.'
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Failed',
+                                        text: response.message || 'Could not send credentials.'
+                                    });
+                                }
+                            },
+                            error: function(xhr) {
+                                let msg = 'An error occurred while sending credentials.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    msg = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: msg
+                                });
+                            }
+                        });
+                    }
+                });
             });
 
             $("#passwordForm").on("submit", function(e) {

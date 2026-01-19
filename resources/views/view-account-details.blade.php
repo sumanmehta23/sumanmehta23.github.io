@@ -144,13 +144,13 @@
                                                                 class="rounded wid-60 hei-60">
                                                         @endif
                                                     </div>
-                                                    <div class="col d-flex align-items-left gap-3">
+                                                    <div class="gap-3 col d-flex align-items-left">
                                                         <div>
                                                             <h2 class="mb-0 f-w-500">
                                                                 <span class="text-truncate">{{ $code }}</span>
                                                             </h2>
                                                             @if($account->demo)
-                                                                <span class="badge bg-danger text-white rounded-pill mt-1">Demo Account</span>
+                                                                <span class="mt-1 text-white badge bg-danger rounded-pill">Demo Account</span>
                                                             @endif
                                                             @if($account->platform === 'x9' && isset($x9GroupName))
                                                                 <p class="mb-0 text-muted f-12">{{ $x9GroupName }}</p>
@@ -159,7 +159,7 @@
                                                             @endif
                                                         </div>
                                                         @if ($account->account_nick_name)
-                                                            <h4 class="mb-0 f-w-500 pt-2">({{ $account->account_nick_name }})</h4>
+                                                            <h4 class="pt-2 mb-0 f-w-500">({{ $account->account_nick_name }})</h4>
                                                             {{-- <p class="mb-0 text-muted f-12"><span
                                                                     class="text-truncate w-100"></span></p> --}}
                                                         @endif
@@ -200,11 +200,11 @@
                                                     <div class="row g-1">
                                                         <div class="col-6">
                                                             <h3 class="mb-0 text-white f-w-500">$
-                                                                {{ isset($balance) ? number_format($balance, 2) : '0.00' }}
+                                                                {{ isset($balance) ? number_format((float) $balance, 2) : '0.00' }}
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            @if ($type != 'demo' && ($account->competition_month == NULL))
+                                                            @if ($type != 'demo' && !$account->isZapierAccount() && ($account->competition_month == NULL))
                                                                 <a href="/trade-deposit"
                                                                     class="btn btn-outline-light btn-print-invoice"
                                                                     onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
@@ -411,6 +411,7 @@
                                 @if ($account->competition_month == NULL)
                                     <div class="col-sm-6">
                                         <div class="mt-3 row">
+                                            @if(!$account->isZapierAccount())
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-deposit') }}"
                                                     class="card bg-primary available-balance-card">
@@ -428,6 +429,7 @@
                                                     </div>
                                                 </a>
                                             </div>
+                                            @endif
                                             @if(!$account->demo)
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/trade-withdrawal') }}"

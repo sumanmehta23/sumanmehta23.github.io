@@ -15,17 +15,16 @@ use App\Models\IbWallet;
 use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use Illuminate\Support\Str;
-use App\Models\IbClientList;
 use App\Models\TradeDeposit;
-use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
@@ -302,7 +301,7 @@ class Ib extends Controller
             ->first();
 
         if ($ib_wallet_raw) {
-            $ib_wallet = number_format($ib_wallet_raw->wallet - $ib_wallet_raw->withdraw,2);
+            $ib_wallet = number_format($ib_wallet_raw->wallet - $ib_wallet_raw->withdraw, 2);
         }
 
         $live_accs = Account::where('user_id', $userId)
@@ -522,7 +521,22 @@ class Ib extends Controller
                 return response()->json(['error' => 'IB profile not found'], 404);
             }
 
-            $query = IbClientList::where("ib{$level}", $user->ib->referral_code);
+            $query = DB::table('aspnetusers as au')
+                ->leftJoin('accounts as acc', function ($join) {
+                    $join->on('acc.user_id', '=', 'au.id')
+                        ->where('acc.demo', '=', 0);
+                })
+                ->leftJoin('trade_deposits as td', function ($join) {
+                    $join->on('td.user_id', '=', 'au.id')
+                        ->where('td.status', '=', 1);
+                })
+                ->where("au.ib{$level}", $user->ib->referral_code)
+                ->select(
+                    DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                    DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
+                    'au.*'
+                )
+                ->groupBy('au.id');
 
             if ($request->ajax()) {
                 return datatables()->of($query)

@@ -418,9 +418,13 @@
                                             <th>Phone</th>
                                             <th>Country</th>
                                             <th>Parent IB</th>
-                                            <th>IB Request</th>
+                                            @can('client:update')
+                                                <th>IB Request</th>
+                                            @endcan
                                             <th>RM</th>
-                                            <th>Status / Action</th>
+                                            @can('client:update')
+                                                <th>Status / Action</th>
+                                            @endcan
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>IB Name/ Email</th>
@@ -656,6 +660,9 @@
         }
     </script>
     <script>
+        window.canUpdateClient = @json(auth()->user()->can('client:update'));
+    </script>
+    <script>
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -701,7 +708,8 @@
                         data: 'user_ib_status',
                         name: 'user_ib_status',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        visible: window.canUpdateClient
                     },
                     {
                         data: 'rm',
@@ -713,7 +721,8 @@
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        visible: window.canUpdateClient
                     },
                     {
                         data: 'fullname',

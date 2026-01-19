@@ -321,6 +321,13 @@ if (app()->environment('local')) {
                                                 Accounts</a>
                                         </li>
                                     @endcan
+                                      <li class="slide menu-item-sub ">
+                                            <a href="{{ route('admin.zapier-accounts.index') }}" class="side-menu__item">
+                                                <span class="side-menu__label">Zapier Accounts</span>
+                                            </a>
+                                            <ul class="slide-menu child1">
+                                            </ul>
+                                        </li>
                                 </ul>
                             </li>
                         @endif
@@ -491,10 +498,10 @@ if (app()->environment('local')) {
                             </li>
                         @endcan
 
+                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
                         <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
-                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.index') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
@@ -525,7 +532,7 @@ if (app()->environment('local')) {
                                         style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
                                         data-popper-placement="bottom">
                                         <li class="slide menu-item-sub ">
-                                            <a href="{{ route('admin.competition.create') }}" class="side-menu__item">
+                                            <a href="{{ route('admin.competitions.index') }}" class="side-menu__item">
                                                 <span class="side-menu__label">Competition List</span>
                                             </a>
                                             <ul class="slide-menu child1">
@@ -564,7 +571,7 @@ if (app()->environment('local')) {
                                 </ul>
                             </li>
                         @endif
-                        
+
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">ADMIN USERS</span>
@@ -644,11 +651,13 @@ if (app()->environment('local')) {
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 758px);"
                                 data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-                                <li class="slide menu-item-sub">
+                                @can('setting:viewAny')
+                                    <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.kyc.sync.page') }}" class="side-menu__item ">
-                                           Sumsub KYC Sync
+                                            Sumsub KYC Sync
                                         </a>
-                                </li>
+                                    </li>
+                                @endcan
                                 @can('setting:update')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.update_password') }}" class="side-menu__item ">

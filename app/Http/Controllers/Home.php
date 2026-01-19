@@ -18,6 +18,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TradeDeposit;
 use App\Models\TradeWithdrawals;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class Home extends Controller
 {
@@ -27,7 +28,14 @@ class Home extends Controller
     }
     public function dashboard()
     {
-        $userId= auth()->user()->id;
+        $user = auth()->user();
+        
+        // Check if 2FA is enabled and not yet verified
+        if ($user->two_factor_secret && $user->two_factor_confirmed_at && !Session::has('2fa:verified')) {
+            return redirect()->route('two_factor_auth');
+        }
+        
+        $userId = $user->id;
         AccountHelper::updateLiveAndDemoAccounts($userId);
         $walletBalance = $this->getWalletBalance($userId);
         $totalDeposit = $this->getTotalDeposit($userId);
@@ -104,7 +112,7 @@ class Home extends Controller
             ->whereNull('competition_start_date')
             ->whereNull('competition_end_date')
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id','user_id', 'code', 'trade_platform', 'registered_date','account_nick_name','account_type_id','platform']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id','user_id', 'code', 'trade_platform', 'registered_date','account_nick_name','account_type_id','platform' ,'created_from']);
 
         return $liveaccount_details;
     }

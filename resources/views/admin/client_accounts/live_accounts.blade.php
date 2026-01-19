@@ -45,7 +45,9 @@
                                             <td>Date</td>
                                             <td>Time</td>
                                             <td>Status</td>
-                                            <td>Actions</td>
+                                            @can('account:update')
+                                                <td>Actions</td>
+                                            @endcan
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -101,6 +103,10 @@
 @endsection()
 @section("scripts")
 <!-- End::app-content -->
+<script>
+    window.canUpdateAccount = @json(auth()->user()->can('account:update'));
+</script>
+
 <script>
     $(document).ready(function() {
         var modalElement = document.getElementById('accountUpdatemodal');
@@ -254,7 +260,9 @@
                 {
                     data: 'actions',
                     name: 'actions',
-
+                    orderable: false,
+                    searchable: false,
+                    visible: window.canUpdateAccount
                 }
 
             ],

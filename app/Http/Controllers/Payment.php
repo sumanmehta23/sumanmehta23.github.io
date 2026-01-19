@@ -74,7 +74,7 @@ class Payment extends Controller
         $address_in = $request->input('address_in');
         $order_id = $request->input('order_id');
         $responsedata = $request->all();
-
+        response()->json(['status' => 'received'], 200)->send();
         try {
             // For RagaPay, extract our payment ID from order_id (format: ragaPay{uuid})
             if (!empty($order_id) && strpos($order_id, 'ragaPay') === 0) {
@@ -961,6 +961,7 @@ class Payment extends Controller
                     'email' => $email,
                     'code' => $account->code,
                     'deposit_amount' => $amount,
+                    'promocode_code' => $promocode,
                     'deposit_type' => 'CreditCardPayissa',
                     'deposit_from' => 'CreditCardPayissa',
                     'status' => 1,

@@ -208,8 +208,8 @@ class Wallet extends Controller
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
                 $startsWithValid = (strpos($address, '1') === 0) ||
-                                   (strpos($address, '3') === 0) ||
-                                   (strpos($address, 'bc1') === 0);
+                    (strpos($address, '3') === 0) ||
+                    (strpos($address, 'bc1') === 0);
 
                 if (!$startsWithValid) {
                     return [
@@ -332,13 +332,18 @@ class Wallet extends Controller
         $ClientWallet = ClientWallet::where('user_id', $user->id)
             ->latest('created_at') // Specify the column to order by
             ->first();
+
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>' .
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
-            '<p></p>' .
-            '<p>Wallet Address: ' . $request->wallet_address . ' </p>' .
-            '<p></p>' .
+            '<p><strong>Wallet Address:</strong><br>' .
+            '<span style="
+                word-break: break-all;
+                overflow-wrap: break-word;
+                white-space: normal;
+                display: inline-block;
+                max-width: 100%;
+            ">' . e($request->wallet_address) . '</span></p>' .
             '<p>Click the link below to activate your Wallet Address</p>';
 
         $templateVars = [
@@ -381,15 +386,18 @@ class Wallet extends Controller
 
         $walletAddress = htmlspecialchars($request->wallet_address, ENT_QUOTES, 'UTF-8');
 
-        $content = '
-            <p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>
-            <p></p>
-            <p>You are receiving this email because you have added a new wallet address to your account.</p>
-            <p></p>
-            <p>Wallet Address: ' . $walletAddress . '</p>
-            <p></p>
-            <p>Click the link below to activate your Wallet Address:</p>
-        ';
+        $content =
+            '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+            '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
+            '<p><strong>Wallet Address:</strong><br>' .
+            '<span style="
+                word-break: break-all;
+                overflow-wrap: break-word;
+                white-space: normal;
+                display: inline-block;
+                max-width: 100%;
+            ">' . e($request->wallet_address) . '</span></p>' .
+            '<p>Click the link below to activate your Wallet Address</p>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -1051,6 +1059,7 @@ class Wallet extends Controller
         $payload = $request->json()->all();
 
         Log::channel("cryptochillcallback")->info(json_encode($payload));
+        response()->json(['status' => 'received'], 200)->send();
         try {
             // Get signature and callback_id fields from provided data
             $signature = $payload['signature'] ?? null;

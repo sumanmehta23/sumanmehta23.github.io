@@ -39,8 +39,8 @@ class ScheduleMailJob implements ShouldQueue
     {
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
-        Log::alert('Email subject: ' . $this->subject);
         try {
+
 
             if (strpos($this->subject, 'Competition Registration') !== false) {
                 $template = 'emails.competition_registration';
@@ -58,10 +58,14 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.transactionApproved';
             } elseif (strpos($this->subject, 'Fund Deposit') !== false) {
                 $template = 'emails.fundsAdd';
+            } elseif ((strpos($this->subject, 'Live Account Details With Welcome Deposit') !== false)) {
+                $template = 'emails.issueZapierLiveAccount';
             } elseif ((strpos($this->subject, 'Live Account Details') !== false)) {
                 $template = 'emails.issueLiveAccount';
             } elseif ((strpos($this->subject, 'Demo Account Details') !== false)) {
                 $template = 'emails.issueDemoAccount';
+            }elseif ((strpos($this->subject, 'Account Details') !== false)) {
+                $template = 'emails.resendAccountDetails';
             } elseif ((strpos($this->subject, 'Competition Account Details') !== false)) {
                 $template = 'emails.issueCompetitionAccount';
             } elseif (strpos($this->subject, 'Password Reset') !== false) {
@@ -77,8 +81,10 @@ class ScheduleMailJob implements ShouldQueue
                 // $template = 'emails.template';
             }
 
-            // Always use Brevo API for export emails or if configured
-            if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $this->apiKey) {
+            // Use Brevo API only for export emails or when Brevo is explicitly configured
+            // Prefer the application's mail driver (SMTP) unless BREVO_API_KEY or mailer=brevo is set
+            $brevoConfigured = !empty(config('services.brevo.api_key'));
+            if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $brevoConfigured) {
                 $htmlContent = view($template, $this->data)->render();
                 $payload = [
                     'sender' => [

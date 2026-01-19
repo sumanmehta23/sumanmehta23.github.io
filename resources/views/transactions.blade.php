@@ -284,18 +284,18 @@
                                 $from = 'CRM';
                             } elseif($history->type == 'IB Withdraw'){
                                 $from = 'IB Wallet';
-                            }elseif (!empty($history->accountFrom->code)) {
+                            }elseif (!empty($history->accountFrom->code ?? null)) {
                                 $from = $history->accountFrom->code;
                             }elseif($history->type == 'Wallet Transfer' && $history->source == 'TDID'){
                                 $from = 'Wallet';
                             } else {
-                                $from = $history->accountFrom()->withTrashed() ? $history->accountFrom()->withTrashed()->value('code') : $history->it_from;
+                                $from = $history->accountFrom ? $history->accountFrom->code : $history->it_from;
                             }
 
                             if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
                                 $to = $history->it_to ?? 'Wallet';
                             } else {
-                                $to = !empty($history->accountTo()->withTrashed()) ? $history->accountTo()->withTrashed()->value('code') : '';
+                                $to = $history->accountTo ? $history->accountTo->code : '';
                             }
                         @endphp
                         <tr>
