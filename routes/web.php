@@ -559,6 +559,19 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
         });
+
+        // Login History Routes
+        Route::prefix('login-history')->name('login-history.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+        });
+
+        // Inactive Users Routes
+        Route::prefix('inactive-users')->name('inactive-users.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
+        });
     });
 });
 // Test route for affiliate reference code functionality
