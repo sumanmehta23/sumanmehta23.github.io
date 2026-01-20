@@ -2411,5 +2411,6 @@
                     });
                 });
             });
+
         </script>
     @endsection

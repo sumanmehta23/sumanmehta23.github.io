@@ -387,6 +387,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
         Route::post('/client/notes/store', [ClientController::class, 'storeNote'])->name('client.notes.store');
+        Route::post('/client/remove-2fa', [ClientController::class, 'removeTwoFactor'])->name('client.remove-2fa');
 
         Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
