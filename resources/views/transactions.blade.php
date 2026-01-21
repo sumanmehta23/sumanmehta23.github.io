@@ -219,7 +219,10 @@
                                         $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
                                         if($txid){
                                             // $link = "https://{$coin}.tokenview.io/en/tx/{$txid}";
-                                            if($coin != 'USDT'){
+                                            if($coin =='ETH'){
+                                                $link = "https://etherscan.io/tx/{$txid}";
+                                            }
+                                            elseif($coin != 'USDT'){
                                                 $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
                                             }
                                             else{

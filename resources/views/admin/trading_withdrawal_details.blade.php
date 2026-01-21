@@ -38,8 +38,10 @@
                                     // Example: BTC, ETH_TRC, ETH-ERC20 → ETH
                                     $kind = $data['result']['kind'] ?? '';
                                     $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
-
-                                    if($coin != 'USDT'){
+                                    if($coin =='ETH'){
+                                        $link = "https://etherscan.io/tx/{$txid}";
+                                    }
+                                    elseif($coin != 'USDT'){
                                         $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
                                     }
                                     else{
