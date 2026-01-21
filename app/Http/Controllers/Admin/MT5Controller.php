@@ -649,6 +649,8 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
             }
             // Delete from local database
+            $account->deletion_type = 'soft';
+            $account->save();
             $account->delete();
             return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
         } elseif ($platform === 'mt5') {
@@ -669,6 +671,8 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
             }
             // Delete from local database
+            $account->deletion_type = 'soft';
+            $account->save();
             $account->delete();
             return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
         }
@@ -707,6 +711,8 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
             }
             // Delete from local database
+            $account->deletion_type = 'delete';
+            $account->save();
             $account->delete();
             return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
         } elseif ($platform === 'mt5') {
@@ -735,6 +741,8 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
             }
             // Delete from local database
+            $account->deletion_type = 'delete';
+            $account->save();
             $account->delete();
             return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
         }
@@ -770,7 +778,9 @@ class MT5Controller extends Controller
                 return redirect()->back()->with('error', 'X9 Account Restoration Failed: ' . $response['message']);
             }
             // Delete from local database
-            $account->delete();
+            $account->deletion_type = null;
+            $account->save();
+            $account->restore();
             return redirect()->route('admin.dashboard')->with('success', 'X9 Account Restored Successfully');
         } elseif ($platform === 'mt5') {
             $trade_user = NULL;
@@ -785,6 +795,8 @@ class MT5Controller extends Controller
                 }
             }
             // Delete from local database
+            $account->deletion_type = null;
+            $account->save();
             $account->restore();
             return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Restored Successfully');
         }

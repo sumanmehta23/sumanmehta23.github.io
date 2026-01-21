@@ -584,7 +584,11 @@
                                                                             </div>
                                                                             <div class="d-flex flex-column align-items-end w-50">
                                                                                 <span class="mt-2 h4 fw-normal">@money($acc->balance)</span>
-                                                                                @if($acc->deleted_at)
+                                                                                @if($acc->deleted_at && $acc->deletion_type == 'soft')
+                                                                                    <div class="mt-1 fs-18 text-danger fw-bold">
+                                                                                        Soft Deleted
+                                                                                    </div>
+                                                                                @elseif($acc->deleted_at )
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Deleted
                                                                                     </div>
