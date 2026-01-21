@@ -17,7 +17,7 @@ class TradeWithdrawals extends Model
     public function casts()
     {
         return [
-            'approved_at' => 'datetime',
+            'approved_date' => 'datetime',
         ];
     }
 
