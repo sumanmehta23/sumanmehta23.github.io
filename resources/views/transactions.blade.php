@@ -210,7 +210,7 @@
                             }
                           @endphp
                           <td>
-                            @if($link)
+                            @if(isset($link))
                                 <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}"> View Transaction</a>
                             @else
                                 <p class="text-sm">N/A</p>
