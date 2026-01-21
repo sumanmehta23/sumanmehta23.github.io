@@ -160,6 +160,7 @@
                         <th scope="col">AMOUNT</th>
                         <th scope="col">FEE</th>
                         <th scope="col">TRANSACTION HASH</th>
+                        <th scope="col">WITHDRAW DATE</th>
                         <th scope="col">STATUS</th>
                         <th scope="col">ACTION</th>
                       </tr>
@@ -194,8 +195,26 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</h6>
                           </td>
-                           <td>
-                             <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="https://uniwire.com/payout/{{ $history->transaction_id }}"> View Transaction</a>
+                          @php
+                            if($history->status == 1 && !empty($history->payout_res)){
+                                        $data = json_decode($history->payout_res, true);
+                                        $txid = $data['result']['txid'] ?? null;
+                                        $kind = $data['result']['kind'] ?? '';
+                                        $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                                        if($txid){
+                                            // $link = "https://{$coin}.tokenview.io/en/tx/{$txid}";
+                                             $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                                        }
+                            } else {
+                                    $link = null;
+                            }
+                          @endphp
+                          <td>
+                            @if($link)
+                                <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}"> View Transaction</a>
+                            @else
+                                <p class="text-sm">N/A</p>
+                            @endif
                           </td>
                           {{-- <td class="px-4 py-3 text-sm font-medium {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-red-500') }}">
                             @if($history->payout_callback_status)
@@ -226,6 +245,46 @@
                                 </a>
                             @endif
                         </td> --}}
+
+                        @php
+                            // Resolve status text
+                            if ($history->status == 0) {
+                                $statusText = ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0))
+                                    ? 'Email Not Verify'
+                                    : 'Pending';
+                            } elseif ($history->status == 1) {
+                                if (
+                                    ($history->payout_callback_status && $history->payout_callback_status != 'complete') ||
+                                    (!$history->payout_callback_status && $history->admin_remark != 'Manually Approved')
+                                ) {
+                                    $statusText = 'Processing';
+                                } else {
+                                    $statusText = 'Approved';
+                                }
+                            } else {
+                                $statusText = 'Cancelled';
+                            }
+
+                            // Resolve color class
+                            $statusClass = match ($statusText) {
+                                'Approved' => 'text-success',
+                                'Processing', 'Pending', 'Email Not Verify' => 'text-warning',
+                                'Cancelled' => 'text-red-500',
+                                default => 'text-gray-500',
+                            };
+                        @endphp
+
+                        <td class="px-4 py-3 text-sm">
+                            @if ($statusText == 'Approved' && $history->approved_date)
+                                <div class="text-xs">{{ $history->approved_date->format('Y-m-d') }}</div>
+                                <div class="text-xs text-gray-100">{{ $history->approved_date->format('h:i A') }}</div>
+                            @else
+                                <span class="px-4 py-3 text-sm "> </span>
+                            @endif
+                        </td>
+
+
+
                         <td class="px-4 py-3 text-sm font-medium">
                             @if($history->payout_callback_status)
                                 <p class="text-sm
