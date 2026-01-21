@@ -98,12 +98,16 @@ if ($getUser) {
                                                 </div>
                                                 @can('account:update')
                                                     <div class="mb-2 col-6" style="padding-left: 12px">
-                                                        @if ($account->deleted_at)
+                                                        @if ($account->deleted_at && $account->deletion_type == 'soft')
                                                             <span class="badge btn btn-success" data-bs-toggle="modal"
                                                             data-bs-target="#accountRestoreModal">Restore Account
                                                                 <i class="ti ti-database-import"></i>
                                                             </span>
-                                                        @else
+                                                        @elseif($account->deleted_at && $account->deletion_type == null)
+                                                            <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
+                                                        @elseif($account->deleted_at && $account->deletion_type == 'delete')
+                                                            <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
+                                                        @elseif($account->deleted_at == null)
                                                             <div class="gap-4 flexflex-vertical">
                                                                 <span class="badge btn btn-danger" data-bs-toggle="modal"
                                                                     data-bs-target="#accountSoftDeleteModal">Soft Delete Account
