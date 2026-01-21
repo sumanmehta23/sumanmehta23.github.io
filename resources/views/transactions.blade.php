@@ -213,7 +213,7 @@
                             @if(isset($link))
                                 <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}"> View Transaction</a>
                             @else
-                                <p class="text-sm">N/A</p>
+                                <p class="f-w-500"> </p>
                             @endif
                           </td>
                           {{-- <td class="px-4 py-3 text-sm font-medium {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-red-500') }}">
@@ -274,12 +274,14 @@
                             };
                         @endphp
 
-                        <td class="px-4 py-3 text-sm">
+                        <td>
                             @if ($statusText == 'Approved' && $history->approved_date)
-                                <div class="text-xs">{{ $history->approved_date->format('Y-m-d') }}</div>
-                                <div class="text-xs text-gray-100">{{ $history->approved_date->format('h:i A') }}</div>
+                                <h6 class="f-w-500">{{ Carbon::parse($history->approved_date)->addHours(3)->format('Y-m-d') }}</h6>
+                                <p class="mb-0 text-muted">
+                                <small>{{ Carbon::parse($history->approved_date)->addHours(3)->format('H:i A') }}</small>
+                                </p>
                             @else
-                                <span class="px-4 py-3 text-sm "> </span>
+                                <span class="px-4 py-3 text-sm font-medium"> </span>
                             @endif
                         </td>
 
