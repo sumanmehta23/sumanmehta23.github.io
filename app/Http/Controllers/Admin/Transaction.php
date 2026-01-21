@@ -449,7 +449,7 @@ class Transaction extends Controller
             //     ")
             //     ->groupBy('u.email')
             //     ->first();
-            $details = TradeWithdrawals::with('user', 'totalBalance', 'withdrawTo','clientWallet')
+            $details = TradeWithdrawals::withTrashed()->with('user', 'totalBalance', 'withdrawTo','clientWallet')
                 ->where('id', request()->id)
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
                 ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
@@ -460,8 +460,7 @@ class Transaction extends Controller
             // if ($details->email == 'kostiagraz@gmail.com'){
             //     dd($details);
             // }
-
-            if ($details->client_wallet_id) {
+            if (isset($details) && $details->client_wallet_id) {
                 $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
                     ->where('status', 1)
                     ->first();
@@ -933,8 +932,9 @@ class Transaction extends Controller
                     // Process the result from the API
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
+                        $payoutStatus = $responseData->result->status;
 
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction, $email, $depositAmount) {
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction, $email, $depositAmount,$payoutStatus) {
                             // Update wallet_withdraw table with transaction_id and status
                             TradeWithdrawals::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
@@ -942,7 +942,8 @@ class Transaction extends Controller
                                     'transaction_id' => $payoutResult->id,
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($payoutResult->passthrough),
-                                    'status' => 1  // Set status to 1 (success)
+                                    'status' => 1, // Set status to 1 (success)
+                                    'admin_remark' => $payoutStatus,
                                 ]);
                             // TotalBalance::create([
                             //     'user_id' => $transaction->user_id,
