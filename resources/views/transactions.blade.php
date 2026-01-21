@@ -196,63 +196,6 @@
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</h6>
                           </td>
                           @php
-                            if($history->status == 1 && !empty($history->payout_res)){
-                                        $data = json_decode($history->payout_res, true);
-                                        $txid = $data['result']['txid'] ?? null;
-                                        $kind = $data['result']['kind'] ?? '';
-                                        $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
-                                        if($txid){
-                                            // $link = "https://{$coin}.tokenview.io/en/tx/{$txid}";
-                                            if($coin != 'USDT'){
-                                                $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
-                                            }
-                                            else{
-                                                $link = "https://tokenview.io/en/search/{$txid}";
-                                            }
-                                        }
-                            } else {
-                                    $link = null;
-                            }
-                          @endphp
-                          <td>
-                            @if(isset($link))
-                                <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}"> View Transaction</a>
-                            @else
-                                <p class="f-w-500"> </p>
-                            @endif
-                          </td>
-                          {{-- <td class="px-4 py-3 text-sm font-medium {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-red-500') }}">
-                            @if($history->payout_callback_status)
-                                <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : (($history->status == 1 && $history->payout_callback_status != 'complete') ? 'Processing' : 'Approved') }}</p>
-                            @else
-                                <p class="text-sm">{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : (($history->status == 1 && $history->payout_callback_status == 'complete') ? 'Approved' : (($history->status == 1) ? (($history->admin_remark == 'Manually Approved') ? 'Approved' : 'Processing') : 'Cancelled')) }}</p>
-                                <p>
-                                    {{
-                                        ($history->payout_req !== null && $history->admin_remark !== 'Approved' && $history->status !== 0)
-                                            ? htmlspecialchars(
-                                                in_array($history->admin_remark, ['draft', 'new'])
-                                                    ? ''
-                                                    :'('. $history->admin_remark .')'
-                                            )
-                                            : ''
-                                    }}
-                                </p>
-                            @endif
-
-                            <p class="text-sm text-color-green">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
-
-                            @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
-                                <a  href="#"
-                                    class="btn btn-sm btn-outline-primary primary-btn"
-                                    onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')"
-                                    type="submit">
-                                        Resend Verification Email
-                                </a>
-                            @endif
-                        </td> --}}
-
-                        @php
-                            // Resolve status text
                             if ($history->status == 0) {
                                 $statusText = ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0))
                                     ? 'Email Not Verify'
@@ -269,7 +212,23 @@
                             } else {
                                 $statusText = 'Cancelled';
                             }
-
+                            if($history->status == 1 && !empty($history->payout_res) && $statusText == 'Approved'){
+                                        $data = json_decode($history->payout_res, true);
+                                        $txid = $data['result']['txid'] ?? null;
+                                        $kind = $data['result']['kind'] ?? '';
+                                        $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                                        if($txid){
+                                            // $link = "https://{$coin}.tokenview.io/en/tx/{$txid}";
+                                            if($coin != 'USDT'){
+                                                $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                                            }
+                                            else{
+                                                $link = "https://tokenview.io/en/search/{$txid}";
+                                            }
+                                        }
+                            } else {
+                                    $link = null;
+                            }
                             // Resolve color class
                             $statusClass = match ($statusText) {
                                 'Approved' => 'text-success',
@@ -278,6 +237,14 @@
                                 default => 'text-gray-500',
                             };
                         @endphp
+
+                        <td>
+                            @if(isset($link))
+                                <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}"> View Transaction</a>
+                            @else
+                                <p class="f-w-500"> </p>
+                            @endif
+                        </td>
 
                         <td>
                             @if ($statusText == 'Approved' && $history->approved_date)
@@ -289,8 +256,6 @@
                                 <span class="px-4 py-3 text-sm font-medium"> </span>
                             @endif
                         </td>
-
-
 
                         <td class="px-4 py-3 text-sm font-medium">
                             @if($history->payout_callback_status)
@@ -334,7 +299,7 @@
                                     }}
                                 </p>
 
-                                <p>
+                                {{-- <p>
                                     {{
                                         ($history->payout_req !== null && $history->admin_remark !== 'Approved' && $history->status !== 0)
                                             ? htmlspecialchars(
@@ -344,7 +309,7 @@
                                             )
                                             : ''
                                     }}
-                                </p>
+                                </p> --}}
                             @endif
 
                             <p class="text-sm text-success">
