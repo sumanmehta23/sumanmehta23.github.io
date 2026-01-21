@@ -449,7 +449,7 @@ class Transaction extends Controller
             //     ")
             //     ->groupBy('u.email')
             //     ->first();
-            $details = TradeWithdrawals::with('user', 'totalBalance', 'withdrawTo','clientWallet')
+            $details = TradeWithdrawals::withTrashed()->with('user', 'totalBalance', 'withdrawTo','clientWallet')
                 ->where('id', request()->id)
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
                 ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
@@ -460,8 +460,7 @@ class Transaction extends Controller
             // if ($details->email == 'kostiagraz@gmail.com'){
             //     dd($details);
             // }
-
-            if ($details->client_wallet_id) {
+            if (isset($details) && $details->client_wallet_id) {
                 $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
                     ->where('status', 1)
                     ->first();
