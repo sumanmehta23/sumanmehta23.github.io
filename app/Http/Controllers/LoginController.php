@@ -101,7 +101,9 @@ class LoginController extends Controller
         }
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
-            $retryAfter = RateLimiter::availableIn($key);
+            RateLimiter::clear($key);
+            RateLimiter::hit($key, 30);
+            $retryAfter = 30;
             $hours = floor($retryAfter / 3600);
             $minutes = floor(($retryAfter % 3600) / 60);
             $seconds = $retryAfter % 60;
@@ -117,9 +119,9 @@ class LoginController extends Controller
             return redirect()->back()->with(
                 'error',
                 "Too many requests. Please wait {$formattedTime} before trying again."
-            );
+            )->with('retry_after', $retryAfter);
         }
-        RateLimiter::hit($key, 300);
+        RateLimiter::hit($key, 30);
         // Validate form inputs
         $request->validate([
             'email' => 'required|email',
