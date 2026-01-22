@@ -291,10 +291,10 @@ class Transaction extends Controller
 
     public function tradeAccountWithdrawalAmountUpdate(Request $request)
     {
-        $amount = $request->amount;
-        $withdraw_ammount = $request->withdraw_ammount;
-        $transaction_fee = $request->transaction_fee;
-        $total_amount = $withdraw_ammount + $transaction_fee;
+        $amount = (float)$request->amount;
+        $withdraw_ammount = (float)$request->withdraw_ammount;
+        $transaction_fee = (float)$request->transaction_fee;
+        $total_amount = (float)$withdraw_ammount + (float)$transaction_fee;
 
         $tradeWithdrawal = TradeWithdrawals::find($request->id);
 
@@ -304,10 +304,18 @@ class Transaction extends Controller
         $user = User::where('id', $tradeWithdrawal->user_id)->first();
         $account = Account::where('id', $tradeWithdrawal->account_id)->first();
 
+        $mt5account = null;
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
+        if (($error_code = $this->mt5Service->userAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
+            session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code));
+        }
+
+        $adjusted_amount = 0;
 
         if ($tradeWithdrawal) {
-            $balance = $account->balance;
-
+            $balance = (float)$mt5account->Balance;
             if ($amount > ($balance + $total_amount)) {
                 return redirect()->back()->with('error', 'Insufficient balance in your account.');
             }
