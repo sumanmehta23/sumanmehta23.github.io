@@ -608,7 +608,7 @@ class AjaxController extends Controller
                                     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
                                 </span>
                               </span>";
-                    
+
                     // 2FA Remove Shield Icon - Only show if 2FA is enabled
                     $has2FA = !empty($row->two_factor_secret) && !empty($row->two_factor_confirmed_at);
                     if ($has2FA) {
@@ -4270,7 +4270,7 @@ class AjaxController extends Controller
                     $q->orWhere("au.ib{$level}", $user->ib->referral_code);
                 })
                 ->select(
-                    DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                    DB::raw('COUNT(DISTINCT acc.id) AS total_accounts'),
                     DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
                     'au.*'
                 )
@@ -4296,7 +4296,7 @@ class AjaxController extends Controller
                     })
 
                     ->editColumn('total_accounts', function ($row) {
-                        return $row->liveaccounts;
+                        return $row->total_accounts;
                     })
 
                     ->editColumn('total_deposit', function ($row) {
