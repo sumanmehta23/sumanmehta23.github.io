@@ -5,7 +5,7 @@
             <form action="{{ route('admin.softDeleteAccount') }}" id="softDeleteAccountForm" method="POST">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
-                <input type="hidden" name="code" id="code" value="{{ $getUser->code ?? '' }}">
+                <input type="hidden" name="account_id" id="account_id" value="{{ $getUser->id ?? '' }}">
                 <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
                 <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
                 <div class="modal-header">
@@ -36,7 +36,7 @@
             <form action="{{ route('admin.deleteAccount') }}" id="deleteAccountForm" method="POST">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
-                <input type="hidden" name="code" id="code" value="{{ $getUser->code ?? '' }}">
+                <input type="hidden" name="account_id" id="account_id" value="{{ $getUser->id ?? '' }}">
                 <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
                 <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
                 <div class="modal-header">
@@ -62,10 +62,11 @@
     aria-labelledby="accountRestoreModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
+            {{-- {{ dd($getUser) }} --}}
             <form action="{{ route('admin.restoreAccount') }}" id="restoreAccountForm" method="POST">
                 @csrf
                 <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
-                <input type="hidden" name="code" id="code" value="{{ $getUser->code ?? '' }}">
+                <input type="hidden" name="account_id" id="account_id" value="{{ $getUser->id ?? '' }}">
                 <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
                 <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
                 <div class="modal-header">

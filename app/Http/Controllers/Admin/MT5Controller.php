@@ -616,7 +616,7 @@ class MT5Controller extends Controller
     public function softDeleteAccount(Request $request)
     {
 
-        $account = Account::where('code', $request->input('code'))->first();
+        $account = Account::where('id', $request->input('account_id'))->first();
         $login = $account->code;
 
         $this->ensureMT5Connection();
@@ -677,7 +677,7 @@ class MT5Controller extends Controller
     public function deleteAccount(Request $request)
     {
 
-        $account = Account::withTrashed()->with('trades')->where('code', $request->input('code'))->first();
+        $account = Account::withTrashed()->with('trades')->where('id', $request->input('account_id'))->first();
         $login = $account->code;
 
         $this->ensureMT5Connection();
@@ -746,7 +746,7 @@ class MT5Controller extends Controller
 
     public function restoreAccount(Request $request)
     {
-        $account = Account::withTrashed()->with('trades')->where('code', $request->input('code'))->first();
+        $account = Account::withTrashed()->with('trades')->where('id', $request->input('account_id'))->first();
         $login = $account->code;
         $this->ensureMT5Connection();
 
