@@ -532,7 +532,7 @@ class Ib extends Controller
                 })
                 ->where("au.ib{$level}", $user->ib->referral_code)
                 ->select(
-                    DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                    DB::raw('COUNT(DISTINCT acc.id) AS total_accounts'),
                     DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
                     'au.*'
                 )
@@ -556,7 +556,7 @@ class Ib extends Controller
                         </div>";
                     })
                     ->editColumn('total_accounts', function ($row) {
-                        return $row->liveaccounts;
+                        return $row->total_accounts;
                     })
                     ->editColumn('total_deposit', function ($row) {
                         return $row->total_deposit ? $row->total_deposit : "$0.00";
