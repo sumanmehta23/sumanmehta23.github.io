@@ -124,25 +124,70 @@
     @if (session('error'))
         @php
             $errorTitle = session('error_title') ?? 'Something went wrong';
+            $retryAfter = session('retry_after');
         @endphp
         <script>
-            Swal.fire({
-                icon: 'warning',
-                title: '{{ $errorTitle }}',
-                html: '{{ session('error') }}',
-                showConfirmButton: true,
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                backdrop: true,
-                didOpen: () => {
-                    // Ensure body is not scrollable when modal is open
-                    document.body.style.overflow = 'hidden';
-                },
-                willClose: () => {
-                    // Restore body scroll when modal closes
-                    document.body.style.overflow = 'auto';
-                }
-            });
+            @if ($retryAfter)
+                let retryAfter = {{ $retryAfter }};
+                let timerInterval;
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: '{{ $errorTitle }}',
+                    html: '<div id="swal-timer-content">Too many requests. Please wait <strong id="swal-countdown">00:30</strong> before trying again.</div>',
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    backdrop: true,
+                    didOpen: () => {
+                        document.body.style.overflow = 'hidden';
+                        
+                        const countdownElement = document.getElementById('swal-countdown');
+                        
+                        function updateTimer() {
+                            if (retryAfter <= 0) {
+                                Swal.close();
+                                clearInterval(timerInterval);
+                                return;
+                            }
+                            
+                            const minutes = Math.floor(retryAfter / 60);
+                            const seconds = retryAfter % 60;
+                            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                            
+                            if (countdownElement) {
+                                countdownElement.textContent = timeString;
+                            }
+                            
+                            retryAfter--;
+                        }
+                        
+                        updateTimer();
+                        timerInterval = setInterval(updateTimer, 1000);
+                    },
+                    willClose: () => {
+                        document.body.style.overflow = 'auto';
+                        clearInterval(timerInterval);
+                    }
+                });
+            @else
+                Swal.fire({
+                    icon: 'warning',
+                    title: '{{ $errorTitle }}',
+                    html: '{{ session('error') }}',
+                    showConfirmButton: true,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    backdrop: true,
+                    didOpen: () => {
+                        document.body.style.overflow = 'hidden';
+                    },
+                    willClose: () => {
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            @endif
         </script>
     @endif
 
