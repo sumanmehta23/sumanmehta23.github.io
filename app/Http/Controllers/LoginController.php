@@ -221,17 +221,17 @@ class LoginController extends Controller
     public function two_factor_auth()
     {
         $user = auth()->user();
-        
+
         // If 2FA is already verified, redirect to dashboard
         if ($user && Session::has('2fa:verified')) {
             return redirect()->route('dashboard');
         }
-        
+
         // If user doesn't have 2FA enabled, redirect to dashboard
         if (!$user || !$user->two_factor_secret || !$user->two_factor_confirmed_at) {
             return redirect()->route('dashboard');
         }
-        
+
         return view('auth.verify-2fa');
     }
 
