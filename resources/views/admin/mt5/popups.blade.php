@@ -9,7 +9,7 @@
                 <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
                 <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="accountSoftDeleteModalLabel">Delete Account</h5>
+                    <h5 class="modal-title" id="accountSoftDeleteModalLabel">Soft Delete Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
