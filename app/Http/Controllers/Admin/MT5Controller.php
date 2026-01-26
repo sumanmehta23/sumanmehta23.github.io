@@ -642,13 +642,13 @@ class MT5Controller extends Controller
             // X9 deletion logic disableAccount
             $response = $this->x9Service->disableAccount($account->code);
             if (!$response['status']) {
-                return redirect()->back()->with('error', 'X9 Account Deletion Failed: ' . $response['message']);
+                return redirect()->back()->with('error', 'X9 Account Soft Deletion Failed: ' . $response['message']);
             }
             // Delete from local database
             $account->deletion_type = 'soft';
             $account->save();
             $account->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
+            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Soft Deleted Successfully');
         } elseif ($platform === 'mt5') {
             $trade_user = NULL;
             if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
@@ -664,13 +664,13 @@ class MT5Controller extends Controller
             // MT5 deletion logic
             $error_code = $this->api->DisableTrading($login);
             if (!$error_code['status']) {
-                return redirect()->back()->with('error', 'MT5 Account Deletion Failed during cleanup: ' . $error_code['message']);
+                return redirect()->back()->with('error', 'MT5 Account Soft Deletion Failed during cleanup: ' . $error_code['message']);
             }
             // Delete from local database
             $account->deletion_type = 'soft';
             $account->save();
             $account->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Deleted Successfully');
+            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Soft Deleted Successfully');
         }
     }
 
