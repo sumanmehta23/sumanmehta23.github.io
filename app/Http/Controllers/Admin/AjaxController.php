@@ -1595,9 +1595,33 @@ class AjaxController extends Controller
                     return $row->withdraw_type;
                 })
                 ->addColumn('withdraw_method', function ($row) {
-                    if ($row->status == 1) {
-                        return "<a class='text-success' target='_blank' href='https://uniwire.com/payout/{$row->transaction_id}'>{$row->withdraw_type}</a>";
-                    } else {
+                    // if ($row->status == 1) {
+                    //     return "<a class='text-success' target='_blank' href='https://uniwire.com/payout/{$row->transaction_id}'>{$row->withdraw_type}</a>";
+                    // } else {
+                    //     return 'N/A';
+                    // }
+
+                    if($row->status == 1){
+                        $data = json_decode($row->payout_res, true);
+                        $txid = $data['result']['txid'] ?? null;
+                        $kind = $data['result']['kind'] ?? '';
+                        $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                        $link = '';
+                        if($txid){
+                            if($coin =='ETH'){
+                                $link = "https://etherscan.io/tx/{$txid}";
+                            }
+                            elseif($coin != 'USDT'){
+                                $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                            }
+                            else{
+                                $link = "https://tokenview.io/en/search/{$txid}";
+                            }
+                        }
+                        $withdrawMethod =  ($row->admin_remark == 'Manually Approved') ? 'Manual' : $row->withdraw_type;
+                        // dump($withdrawMethod);
+                        return "<a class='text-success' target='_blank' href='{$link}'>{$withdrawMethod}</a>";
+                    }else{
                         return 'N/A';
                     }
                 })
