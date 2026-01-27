@@ -200,9 +200,14 @@ class Users extends Controller
         // Example values (replace with actual values as needed)
         // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
         $appToken = config('services.sumsub.api_token');
-        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level'; // URI of the request
+        $apiUrl = '/resources/accessTokens/sdk'; // URI of the request
         $requestMethod = 'POST'; // HTTP method
-        $requestBody = ''; // Add your request body if needed, empty for this example
+        $requestBody = json_encode(
+            [
+                'userId' => $user->email,
+                'levelName' => 'basic-kyc-level',
+            ]
+        ); // Add your request body if needed, empty for this example
 
         // Create the valueToSign string
         $valueToSign = $timestamp . $requestMethod . $apiUrl;
@@ -230,6 +235,7 @@ class Users extends Controller
             CURLOPT_CUSTOMREQUEST => $requestMethod,
             CURLOPT_POSTFIELDS => $requestBody,
             CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
                 'X-App-Token: ' . $appToken,
                 'X-App-Access-Ts: ' . $timestamp,
                 'X-App-Access-Sig: ' . $signatureHex,
@@ -245,7 +251,6 @@ class Users extends Controller
 
         // Parse the response
         $auth = json_decode($response);
-
         // Close cURL session
         curl_close($curl);
         $token = $auth->token ?? null;
@@ -275,7 +280,6 @@ class Users extends Controller
 
             // Redirect directly to Veriff
             return redirect()->away($sessionUrl);
-
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             Log::error('Veriff connection error', [
                 'error' => $e->getMessage(),
@@ -284,7 +288,6 @@ class Users extends Controller
 
             return redirect()->route('user-profile')
                 ->with('error', 'Unable to connect to verification service. Please try again later.');
-
         } catch (\Exception $e) {
             Log::error('Veriff verification error', [
                 'error' => $e->getMessage(),
@@ -292,7 +295,7 @@ class Users extends Controller
             ]);
 
             $userFriendlyMessage = 'An error occurred while starting verification. Please try again later.';
-            
+
             if (str_contains($e->getMessage(), 'credentials are not configured')) {
                 $userFriendlyMessage = 'Verification service is not properly configured. Please contact support.';
             }
