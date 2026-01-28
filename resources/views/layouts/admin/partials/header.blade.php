@@ -95,6 +95,70 @@ if (app()->environment('local')) {
             cursor: pointer !important;
         }
 
+        /* Server Time Display Styles */
+        .server-time-container {
+            padding: 0 0.5rem;
+        }
+
+        .server-time-icon {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            color: var(--header-prime-color);
+        }
+
+        .server-time-content {
+            line-height: 1.2;
+        }
+
+        .server-time-label {
+            font-size: 0.7rem;
+            color: #7b8191;
+            line-height: 1;
+            margin-bottom: 0.1rem;
+        }
+
+        .server-time-display {
+            font-size: 0.875rem;
+            line-height: 1.2;
+            color: var(--header-prime-color);
+            white-space: nowrap;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 991.98px) {
+            .server-time-container {
+                padding: 0 0.4rem;
+            }
+
+            .server-time-icon {
+                font-size: 0.9rem;
+                margin-right: 0.4rem;
+            }
+
+            .server-time-display {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .server-time-container {
+                padding: 0 0.3rem;
+            }
+
+            .server-time-icon {
+                font-size: 0.85rem;
+                margin-right: 0.3rem;
+            }
+
+            .server-time-display {
+                font-size: 0.75rem;
+            }
+
+            .server-time-label {
+                display: none !important;
+            }
+        }
+
         /* @media (min-width: 768px) {
       .header-search {
         width: 450px;
@@ -187,6 +251,20 @@ if (app()->environment('local')) {
                         </a>
                     </li>
                     <!-- End::header-element -->
+
+                    <!-- Start::header-element: Server Time -->
+                    <li class="header-element">
+                        <div class="d-flex align-items-center server-time-container">
+                            <i class="fe fe-clock server-time-icon"></i>
+                            <div class="d-flex flex-column server-time-content">
+                                <span class="server-time-label d-none d-md-block">Server Time</span>
+                                <span id="server-time-display" class="fw-medium server-time-display">
+                                    {{ now()->format('H:i:s') }}
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                    <!-- End::header-element: Server Time -->
 
                     <!-- Start::header-element: Language Dropdown -->
                     <li class="header-element">
