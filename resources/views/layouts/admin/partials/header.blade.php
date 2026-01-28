@@ -95,9 +95,26 @@ if (app()->environment('local') || app()->environment('development')) {
             cursor: pointer !important;
         }
 
+        /* Header Content Middle Styles */
+        .header-content-middle {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            flex: 1;
+            margin: 0 auto;
+        }
+
+        .header-server-time {
+            display: flex;
+            align-items: center;
+        }
+
         /* Server Time Display Styles */
         .server-time-container {
             padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .server-time-icon {
@@ -108,6 +125,10 @@ if (app()->environment('local') || app()->environment('development')) {
 
         .server-time-content {
             line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         .server-time-label {
@@ -115,6 +136,7 @@ if (app()->environment('local') || app()->environment('development')) {
             color: #7b8191;
             line-height: 1;
             margin-bottom: 0.1rem;
+            text-align: center;
         }
 
         .server-time-display {
@@ -122,10 +144,15 @@ if (app()->environment('local') || app()->environment('development')) {
             line-height: 1.2;
             color: var(--header-prime-color);
             white-space: nowrap;
+            text-align: center;
         }
 
         /* Mobile Responsive Styles */
         @media (max-width: 991.98px) {
+            .header-content-middle {
+                flex: 0 0 auto;
+            }
+
             .server-time-container {
                 padding: 0 0.4rem;
             }
@@ -141,6 +168,13 @@ if (app()->environment('local') || app()->environment('development')) {
         }
 
         @media (max-width: 575.98px) {
+            .header-content-middle {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                flex: 0 0 auto;
+            }
+
             .server-time-container {
                 padding: 0 0.3rem;
             }
@@ -243,6 +277,24 @@ if (app()->environment('local') || app()->environment('development')) {
                 </div>
                 <!-- End::header-content-left -->
 
+                <!-- Start::header-content-middle -->
+                <div class="header-content-middle">
+                    <!-- Start::header-element: Server Time -->
+                    <div class="my-auto header-element header-server-time">
+                        <div class="d-flex align-items-center justify-content-center server-time-container">
+                            <i class="fe fe-clock server-time-icon"></i>
+                            <div class="d-flex flex-column align-items-center server-time-content">
+                                <span class="server-time-label d-none d-md-block">Server Time</span>
+                                <span id="server-time-display" class="fw-medium server-time-display">
+                                    {{ now()->format('H:i:s') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End::header-element: Server Time -->
+                </div>
+                <!-- End::header-content-middle -->
+
                 <!-- Start::header-content-right -->
                 <ul class="header-content-right">
 
@@ -256,20 +308,6 @@ if (app()->environment('local') || app()->environment('development')) {
                         </a>
                     </li>
                     <!-- End::header-element -->
-
-                    <!-- Start::header-element: Server Time -->
-                    <li class="header-element">
-                        <div class="d-flex align-items-center server-time-container">
-                            <i class="fe fe-clock server-time-icon"></i>
-                            <div class="d-flex flex-column server-time-content">
-                                <span class="server-time-label d-none d-md-block">Server Time</span>
-                                <span id="server-time-display" class="fw-medium server-time-display">
-                                    {{ now()->format('H:i:s') }}
-                                </span>
-                            </div>
-                        </div>
-                    </li>
-                    <!-- End::header-element: Server Time -->
 
                     <!-- Start::header-element: Language Dropdown -->
                     <li class="header-element">
