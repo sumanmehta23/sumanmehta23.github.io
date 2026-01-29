@@ -35,18 +35,36 @@
         :root,
         [data-pc-preset=preset-7],
         [data-pc-preset=preset-7] * {
-            --primary-color: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-active-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-btn-hover-bg: {{ $settings['sidebar_color'] }} !important;
-            --bs-link-color-rgb: {{ $settings['sidebar_color'] }} !important;
-            --bs-primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
-            --primary-rgb: {{ hexToRGB($settings['sidebar_color']) }} !important;
+            --primary-color:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-active-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-btn-hover-bg:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-link-color-rgb:
+                {{ $settings['sidebar_color'] }}
+                !important;
+            --bs-primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
+            --primary-rgb:
+                {{ hexToRGB($settings['sidebar_color']) }}
+                !important;
         }
 
         [data-pc-preset=preset-7] .link-primary {
-            color: {{ $settings['sidebar_color'] }} !important;
+            color:
+                {{ $settings['sidebar_color'] }}
+                !important;
         }
 
         body form [data-pc-preset=preset-7] .link-primary,
@@ -56,6 +74,18 @@
             color: var(--bs-primary) !important;
         }
     </style>
+    <script type="text/javascript">
+        window.omnisend = window.omnisend || [];
+        omnisend.push(["brandID", "691e3cc91ce6ae348df16739"]);
+        omnisend.push(["track", "$pageViewed"]);
+        !function () {
+            var e = document.createElement("script");
+            e.type = "text/javascript", e.async = !0,
+                e.src = "https://omnisnippet1.com/inshop/launcher-v2.js";
+            var t = document.getElementsByTagName("script")[0];
+            t.parentNode.insertBefore(e, t)
+        }();
+    </script>
 </head>
 
 <body data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast=""
