@@ -3115,7 +3115,7 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, 0 as permissions_count, e.status,r.name,r.id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, e.two_factor_secret, e.two_factor_recovery_codes, e.two_factor_confirmed_at, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN roles r ON e.role_id = r.id
                 -- LEFT JOIN pages ON p.page_id = pages.page_id
@@ -3127,6 +3127,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
+            $dat->fa_status = (($row->two_factor_secret != null) && ($row->two_factor_recovery_codes != null) && ($row->two_factor_confirmed_at != null)) ? '<span class="badge bg-outline-success">Enabled</span>' : '<span class="badge bg-outline-danger">Disabled</span>';
             if ($admin->can('employee:update')) {
                 $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
             } else {
