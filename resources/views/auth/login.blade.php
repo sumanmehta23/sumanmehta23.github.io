@@ -1,4 +1,6 @@
 @extends('layouts.app')
+
+@section('content')
 <style>
     @media (max-width: 550px) {
         .mob_logo_center {
@@ -9,8 +11,6 @@
     }
 
 </style>
-@section('content')
-
         <div id="app" data-v-app="">
             <div  class="auth-main">
                 <div  class="auth-wrapper v3">

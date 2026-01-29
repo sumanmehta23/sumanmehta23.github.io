@@ -21,20 +21,22 @@
 
     <!-- Meta Pixel Code -->
     <script>
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', '2659568854245574');
         fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=2659568854245574&ev=PageView&noscript=1"
-        />
+            src="https://www.facebook.com/tr?id=2659568854245574&ev=PageView&noscript=1" />
     </noscript>
     <!-- End Meta Pixel Code -->
 
@@ -44,7 +46,7 @@
         body .swal2-container {
             z-index: 1090 !important;
         }
-        
+
         body .swal2-backdrop-show {
             background-color: rgba(0, 0, 0, 0.4) !important;
             backdrop-filter: blur(2px);
@@ -98,6 +100,18 @@
             color: var(--bs-primary) !important;
         }
     </style>
+    <script type="text/javascript">
+        window.omnisend = window.omnisend || [];
+        omnisend.push(["brandID", "691e3cc91ce6ae348df16739"]);
+        omnisend.push(["track", "$pageViewed"]);
+        !function () {
+            var e = document.createElement("script");
+            e.type = "text/javascript", e.async = !0,
+                e.src = "https://omnisnippet1.com/inshop/launcher-v2.js";
+            var t = document.getElementsByTagName("script")[0];
+            t.parentNode.insertBefore(e, t)
+        }();
+    </script>
 </head>
 
 <body data-pc-preset="preset-7" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme_contrast=""
@@ -130,7 +144,7 @@
             @if ($retryAfter)
                 let retryAfter = {{ $retryAfter }};
                 let timerInterval;
-                
+
                 Swal.fire({
                     icon: 'warning',
                     title: '{{ $errorTitle }}',
@@ -142,27 +156,27 @@
                     backdrop: true,
                     didOpen: () => {
                         document.body.style.overflow = 'hidden';
-                        
+
                         const countdownElement = document.getElementById('swal-countdown');
-                        
+
                         function updateTimer() {
                             if (retryAfter <= 0) {
                                 Swal.close();
                                 clearInterval(timerInterval);
                                 return;
                             }
-                            
+
                             const minutes = Math.floor(retryAfter / 60);
                             const seconds = retryAfter % 60;
                             const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                            
+
                             if (countdownElement) {
                                 countdownElement.textContent = timeString;
                             }
-                            
+
                             retryAfter--;
                         }
-                        
+
                         updateTimer();
                         timerInterval = setInterval(updateTimer, 1000);
                     },
@@ -192,7 +206,7 @@
     @endif
 
     <!-- Add your scripts here -->
-@include('components.google-translate')
+    @include('components.google-translate')
 </body>
 
 </html>
