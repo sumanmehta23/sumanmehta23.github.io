@@ -29,7 +29,6 @@ class BonusTransaction extends Model
 
      use HasFactory,HasUuids,SoftDeletes;
 
-    public $timestamps=false;
     protected $guarded = [];
 
     public function user()
