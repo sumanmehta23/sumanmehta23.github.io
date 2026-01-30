@@ -90,4 +90,10 @@ return [
         'merchant_key' => env('RAGAPAY_MERCHANT_KEY', ''),
         'password' => env('RAGAPAY_PASSWORD', ''),
     ],
+
+    'gohighlevel' => [
+        'api_url' => env('GHL_API_URL', 'https://services.leadconnectorhq.com'),
+        'api_key' => env('GHL_API_KEY', ''),
+        'location_id' => env('GHL_LOCATION_ID', ''),
+    ],
 ];
