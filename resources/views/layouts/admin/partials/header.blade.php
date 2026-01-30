@@ -95,6 +95,104 @@ if (app()->environment('local')) {
             cursor: pointer !important;
         }
 
+        /* Header Content Middle Styles */
+        .header-content-middle {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            flex: 1;
+            margin: 0 auto;
+        }
+
+        .header-server-time {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Server Time Display Styles */
+        .server-time-container {
+            padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .server-time-icon {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            color: var(--header-prime-color);
+        }
+
+        .server-time-content {
+            line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .server-time-label {
+            font-size: 0.7rem;
+            color: #7b8191;
+            line-height: 1;
+            margin-bottom: 0.1rem;
+            text-align: center;
+        }
+
+        .server-time-display {
+            font-size: 0.875rem;
+            line-height: 1.2;
+            color: var(--header-prime-color);
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 991.98px) {
+            .header-content-middle {
+                flex: 0 0 auto;
+            }
+
+            .server-time-container {
+                padding: 0 0.4rem;
+            }
+
+            .server-time-icon {
+                font-size: 0.9rem;
+                margin-right: 0.4rem;
+            }
+
+            .server-time-display {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .header-content-middle {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                flex: 0 0 auto;
+            }
+
+            .server-time-container {
+                padding: 0 0.3rem;
+            }
+
+            .server-time-icon {
+                font-size: 0.85rem;
+                margin-right: 0.3rem;
+            }
+
+            .server-time-display {
+                font-size: 0.75rem;
+            }
+
+            .server-time-label {
+                display: none !important;
+            }
+        }
+
         /* @media (min-width: 768px) {
       .header-search {
         width: 450px;
@@ -183,6 +281,24 @@ if (app()->environment('local')) {
 
                 </div>
                 <!-- End::header-content-left -->
+
+                <!-- Start::header-content-middle -->
+                <div class="header-content-middle">
+                    <!-- Start::header-element: Server Time -->
+                    <div class="my-auto header-element header-server-time">
+                        <div class="d-flex align-items-center justify-content-center server-time-container">
+                            <i class="fe fe-clock server-time-icon"></i>
+                            <div class="d-flex flex-column align-items-center server-time-content">
+                                <span class="server-time-label d-none d-md-block">Server Time</span>
+                                <span id="server-time-display" class="fw-medium server-time-display">
+                                    {{ now()->format('H:i:s') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End::header-element: Server Time -->
+                </div>
+                <!-- End::header-content-middle -->
 
                 <!-- Start::header-content-right -->
                 <ul class="header-content-right">
