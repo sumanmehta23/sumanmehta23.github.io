@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\AccountTradesDepositEvent;
 use App\Events\KycVerifiedEvent;
+use App\Listeners\GoHighLevelEventsListener;
 use App\Listeners\OmnisendEventsListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -21,6 +22,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
             OmnisendEventsListener::class,
+            GoHighLevelEventsListener::class,
         ],
 
         KycVerifiedEvent::class => [
