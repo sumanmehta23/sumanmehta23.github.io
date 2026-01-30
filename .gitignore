@@ -29,3 +29,4 @@ package-lock.json
 # Ignore local scripts
 local-scripts/
 docs
+debug.log

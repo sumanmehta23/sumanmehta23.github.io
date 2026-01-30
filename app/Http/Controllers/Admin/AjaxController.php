@@ -386,6 +386,7 @@ class AjaxController extends Controller
                 'aspnetusers.country_code',
                 'aspnetusers.two_factor_secret',
                 'aspnetusers.two_factor_confirmed_at',
+                'aspnetusers.created_at',
             ])
             ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
                 // Ensure that only users linked to the admin's rm_id are retrieved
