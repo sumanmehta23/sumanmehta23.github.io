@@ -504,6 +504,9 @@ class AjaxController extends Controller
                 ->editColumn('ib_group', function ($row) {
                     return $row->ib ? $row->ib->ib_plan_details_id : '';
                 })
+                ->addColumn('ib_id', function ($row) {
+                    return $row->ib ? $row->ib->id : '';
+                })
                 ->editColumn('ib', function ($row) {
                     $ib_name = $row->getParentIb() ? $row->getParentIb()->name : 'noIB';
                     $ib_email  = $row->getParentIb() ? $row->getParentIb()->email : '';
@@ -3885,6 +3888,9 @@ class AjaxController extends Controller
                 })
                 ->addColumn('checkbox', function ($row) {
                     return "<input type='checkbox' class='row-checkbox' >";
+                })
+                ->addColumn('ib_plan_details_id', function ($row) {
+                    return $row->ib_plan_details_id ?? '';
                 })
                 ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'date', 'status', 'action', 'checkbox'])
                 ->make(true);
