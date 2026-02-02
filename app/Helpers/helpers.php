@@ -27,12 +27,17 @@ function getBadgeProperties($remark)
 }
 function getPlanNameByPlanId($plans, $plan_id)
 {
+    if (empty($plan_id) && $plan_id !== 0) {
+        return '-';
+    }
     foreach ($plans as $plan) {
-        if ($plan->ib_plan_id == $plan_id) {
-            return $plan->ib_cat_name;
+        $matches = ($plan->id ?? null) == $plan_id
+            || (isset($plan->ib_plan_id) && $plan->ib_plan_id == $plan_id);
+        if ($matches) {
+            return $plan->plan->ib_cat_name ?? $plan->ib_cat_name ?? '-';
         }
     }
-    return "-"; // Return null if not found
+    return '-';
 }
 
 if (!function_exists('settings')) {
