@@ -90,7 +90,9 @@ class WithdrawalController extends Controller
             })
             ->when(request('withdraw_type') === 'CRM', function ($q) {
                 $q->where('cell_tracking', 1);
-            }); // Only include trade withdrawals with cell_tracking = 1
+            })
+            ->whereIn('withdraw_type', ['Trade Withdrawal', 'CRM'])
+            ->where('status',1); // Only include trade withdrawals with cell_tracking = 1
 
         // Apply date filters
         if (!empty($dateFrom) && !empty($dateTo)) {

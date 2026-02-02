@@ -37,10 +37,10 @@ class MT5RestAPIService
             return [];
         }
 
-        Log::info('MT5RestAPI: Starting batch balance sync', [
-            'login_count' => count($logins),
-            'logins' => $logins
-        ]);
+        // Log::info('MT5RestAPI: Starting batch balance sync', [
+        //     'login_count' => count($logins),
+        //     'logins' => $logins
+        // ]);
 
         // Try batch REST API endpoint first
         $balances = $this->getBatchBalancesViaRestAPI($logins);
@@ -229,11 +229,11 @@ class MT5RestAPIService
 
         // Check for API error
         if (isset($response['retcode']) && ($response['retcode'] !== "0 Done")) {
-            Log::warning('MT5RestAPI: User API error', [
-                'login' => $login,
-                'retcode' => $response['retcode'],
-                'retmsg' => $response['retmsg'] ?? 'Unknown error'
-            ]);
+            // Log::warning('MT5RestAPI: User API error', [
+            //     'login' => $login,
+            //     'retcode' => $response['retcode'],
+            //     'retmsg' => $response['retmsg'] ?? 'Unknown error'
+            // ]);
             return null;
         }
 

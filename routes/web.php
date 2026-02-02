@@ -64,6 +64,8 @@ use App\View\Components\AdminTwoFactorAuthentication;
 use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
+use App\Http\Controllers\Api\ZapierWebhookController;
+use App\Http\Controllers\Admin\ZapierAccountsController;
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
@@ -71,6 +73,7 @@ Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::cl
 Route::get('/competitions-overview/trader-data/{accountNo}/{startDate}/{endDate}', [CompetitionController::class, 'getTraderData'])->name('competitionsOverview.trader-data');
 
 Route::post('/user/kyc/listener', [KycController::class, 'listener'])->name('kyc.listener');
+Route::post('/user/kyc/veriff-listener', [KycController::class, 'veriffListener'])->name('kyc.veriff.listener');
 Route::get('/payment-response', [Payment::class, 'handlePaymentResponse'])->name('handlePaymentResponse');
 
 // Route::get('/failed-payment-response', [Payment::class, 'handleFailedPaymentResponse'])->name('handleFailedPaymentResponse');
@@ -164,8 +167,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
-    Route::get('/createCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
-    Route::post('/createCompetition', [CompetitionController::class, 'createCompetition'])->name('createCompetition');
+    Route::get('/joinCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
+    Route::post('/joinCompetition', [CompetitionController::class, 'createCompetition'])->name('joinCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
     Route::get('/competition/trader/{accountNo}/{start_date}/{end_date}', [CompetitionController::class, 'getTraderData'])->name('competition.trader-data');
     Route::get('/competition/export', [CompetitionController::class, 'exportLeaderboard'])->name('user.competition.export');
@@ -191,9 +194,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/user-profile', [Users::class, 'profile'])->name('user-profile');
     Route::get('/sumsub', [Users::class, 'sumsub'])->name('sumsub');
+    Route::get('/veriff', [Users::class, 'veriff'])->name('veriff');
     Route::get('/pamm/manager', [PammController::class, 'manager'])->name('pamm.manager');
     Route::get('/pamm/investor', [PammController::class, 'investor'])->name('pamm.investor');
     Route::post('/sumsub_verify', [Users::class, 'sumsub_verify'])->name('sumsub_verify');
+    Route::post('/veriff_event', [Users::class, 'veriff_event'])->name('veriff_event');
     Route::post('/log_kyc_verification', [Users::class, 'logVerification'])->name('logVerification');
 
     // KYC Sync Routes
@@ -257,11 +262,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
-
-
-
-
-
+    Route::post('/resend-credentials', [MT5Accounts::class, 'resendCredentials'])->name('resend-credentials');
 
     // Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     // Route::get('/users/{user}', 'Users@show')->name('users.show');
@@ -345,7 +346,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/competition/leaderboard', [Leaderboard::class, 'leaderboard'])->name('competition.leaderboard');
         Route::get('/competiton_dashboard', [Leaderboard::class, 'competiton_dashboard'])->name('competition.dashboard');
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
-        Route::get('/create_competition', [Leaderboard::class, 'create_competition'])->name('competition.create');
+        // Route::get('/competitions', [Leaderboard::class, 'index'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
         Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
 
@@ -386,6 +387,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
         Route::post('/client/notes/store', [ClientController::class, 'storeNote'])->name('client.notes.store');
+        Route::post('/client/remove-2fa', [ClientController::class, 'removeTwoFactor'])->name('client.remove-2fa');
 
         Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
@@ -453,6 +455,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             ->name('toggle_ib_approve_request')
             ->middleware('check.permissions:setting:update');
 
+        Route::post('/kyc-provider/update', [SettingsController::class, 'updateKycProvider'])
+            ->name('kyc-provider.update')
+            ->middleware('check.permissions:setting:update');
+
         Route::prefix('/logs')->group(function () {
             Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
         });
@@ -501,6 +507,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/deleteAccount", [MT5Controller::class, 'deleteAccount'])->name('deleteAccount')->middleware('check.permissions:account:delete');
+        Route::post("/softDeleteAccount", [MT5Controller::class, 'softDeleteAccount'])->name('softDeleteAccount')->middleware('check.permissions:account:delete');
+        Route::post("/restoreAccount", [MT5Controller::class, 'restoreAccount'])->name('restoreAccount')->middleware('check.permissions:account:delete');
         Route::post("/depositToCellexpertAccount", [MT5Controller::class, 'depositToCellexpertAccount'])->name('depositToCellexpertAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
         Route::post("/withdrawFromCellexpertAccount", [MT5Controller::class, 'withdrawFromCellexpertAccount'])->name('withdrawFromCellexpertAccount')->middleware('check.permissions:trade_withdrawals:create');
@@ -554,6 +562,19 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
         });
+
+        // Login History Routes
+        Route::prefix('login-history')->name('login-history.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+        });
+
+        // Inactive Users Routes
+        Route::prefix('inactive-users')->name('inactive-users.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
+        });
     });
 });
 // Test route for affiliate reference code functionality
@@ -601,4 +622,20 @@ Route::prefix('mt5-redis-demo')->group(function () {
             'message' => "Dispatched {$count} queue jobs that will coordinate through Redis with HTTP requests"
         ]);
     })->name('mt5.redis.demo.jobs');
+});
+
+// Zapier Webhook Routes (API)
+Route::prefix('api/zapier')->name('api.zapier.')->group(function () {
+    Route::post('/create-account', [ZapierWebhookController::class, 'createAccount'])->name('create-account');
+    Route::get('/health', [ZapierWebhookController::class, 'healthCheck'])->name('health-check');
+});
+
+// Admin Zapier Accounts Routes
+Route::prefix('/admin/zapier-accounts')->name('admin.zapier-accounts.')->middleware(['is_admin'])->group(function () {
+    Route::get('/', [ZapierAccountsController::class, 'index'])->name('index');
+    Route::get('/data', [ZapierAccountsController::class, 'getData'])->name('data');
+    Route::get('/export', [ZapierAccountsController::class, 'export'])->name('export');
+    Route::get('/stats', [ZapierAccountsController::class, 'getStats'])->name('stats');
+    Route::post('/resend', [ZapierAccountsController::class, 'resendEmail'])->name('resend');
+    Route::post('/delete', [ZapierAccountsController::class, 'deleteUser'])->name('delete');
 });

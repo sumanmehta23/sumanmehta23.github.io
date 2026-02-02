@@ -29,7 +29,7 @@
             <i class="ti ti-dots-vertical f-18"></i>
           </a>
           <div class="dropdown-menu dropdown-menu-end">
-            <a class="dropdown-item" href="/liveAccounts#">Open New Account</a>
+            <a class="dropdown-item" href="/createLiveAccount">Open New Account</a>
           </div>
           </div>
         </div>
@@ -94,9 +94,11 @@
           </svg></span>
           </a>
           </button>
-          <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
-          <span class="">Deposit <i class="ti ti-database-import"></i></span>
-          </a>
+          @if(!$acc->isZapierAccount())
+            <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary d-grid">
+            <span class="">Deposit <i class="ti ti-database-import"></i></span>
+            </a>
+          @endif
           {{-- <a href="{{ route('trade-withdrawal') }}"
           class="btn btn-sm btn-outline-secondary d-grid">
           <span class="">Withdraw <i class="ti ti-database-import"></i></span>

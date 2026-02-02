@@ -96,13 +96,15 @@ class Transactions extends Controller
         // dd($withdrawal_history);
 
         // Fetching internal transfers
+        $internal_transfer = InternalTransfer::getTransfers(
+            email: $email,
+            types: ['Internal Transfer', 'Wallet Withdrawal', 'Wallet Transfer', 'CRM', 'IB Withdraw'],
+            status: 1
+        );
 
-        $internal_transfer = InternalTransfer::where('email', $email)
-            ->with('accountTo', 'accountFrom')
-            ->whereIn('type', ['Internal Transfer', 'Wallet Withdrawal', 'Wallet Transfer', 'CRM', 'IB Withdraw'])
-            ->where('status', 1)
-            ->orderBy('date', 'desc')
-            ->get();
+        // Sort by date descending
+        $internal_transfer = $internal_transfer->sortByDesc('date')->values();
+
         // dd($internal_transfer);
         // $tradeWithdrawals = TradeWithdrawals::with('account')->whereIn('withdraw_type', ['Internal Transfer','Wallet Withdrawal','Wallet Transfer', 'CRM'])
         //     ->select('id','withdrawal_amount', 'withdraw_type','withdraw_date','email','status','withdraw_to','account_id')

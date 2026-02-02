@@ -2,32 +2,33 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Support\Facades\DB;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Trade;
 use App\Models\Account;
+use App\Models\AccountType;
 use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Promocode;
 use App\Models\ClientTask;
 use App\Models\Permission;
 use App\Models\RestrictIps;
+use App\Models\ClientWallet;
 use App\Models\EmployeeList;
-use App\Models\IbClientList;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
+
 use App\Models\WalletDeposit;
-
 use App\Helpers\AccountHelper;
-use App\Models\WalletWithdraw;
 
+use App\Models\WalletWithdraw;
 use App\Models\TradeWithdrawals;
-use App\Models\Trade;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -36,8 +37,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AjaxController extends Controller
 {
@@ -110,7 +111,7 @@ class AjaxController extends Controller
                         $result = $this->getMT5Groups($type);
                         break;
                     case 'getCompetitionGroups':
-                        $result = $this->getCompetitionGroups($type);
+                        $result = $this->getCompetitionGroups($request);
                         break;
                     case 'getIbGroups':
                         $result = $this->getIbGroups($type);
@@ -153,6 +154,15 @@ class AjaxController extends Controller
                         break;
                     case 'getLatestTransfer':
                         $result = $this->getLatestTransfer($id);
+                        break;
+                    case 'getClientWallets':
+                        $result = $this->getClientWallets($id);
+                        break;
+                    case 'verifyClientWallet':
+                        $result = $this->verifyClientWallet($requestData);
+                        break;
+                    case 'deleteClientWallet':
+                        $result = $this->deleteClientWallet($requestData);
                         break;
                     case 'getIbUsers':
                         $result = $this->getIbUsers();
@@ -374,6 +384,9 @@ class AjaxController extends Controller
                 'aspnetusers.country',
                 'aspnetusers.kyc_verify',
                 'aspnetusers.country_code',
+                'aspnetusers.two_factor_secret',
+                'aspnetusers.two_factor_confirmed_at',
+                'aspnetusers.created_at',
             ])
             ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
                 // Ensure that only users linked to the admin's rm_id are retrieved
@@ -596,6 +609,16 @@ class AjaxController extends Controller
                                     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
                                 </span>
                               </span>";
+
+                    // 2FA Remove Shield Icon - Only show if 2FA is enabled
+                    $has2FA = !empty($row->two_factor_secret) && !empty($row->two_factor_confirmed_at);
+                    if ($has2FA) {
+                        $html .= "<span class='remove2FAIcon' data-user-id='{$row->id}'>
+                                    <span class='badge text-danger' data-bs-toggle='tooltip' title='Remove 2FA'>
+                                        <i class='ri-shield-cross-line' style='font-size: 20px;'></i>
+                                    </span>
+                                  </span>";
+                    }
 
                     if (Auth::guard('admin')->user()->can('client:update', $row)) {
                         $html .= "<span class='editClient' data-enc='{$row->id}'>
@@ -915,7 +938,7 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail','account_status', 'actions'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
                 ->make(true);
         }
 
@@ -1495,7 +1518,7 @@ class AjaxController extends Controller
         $query = TradeWithdrawals::select('trade_withdrawal.*')
             ->with(['user', 'withdrawTo', 'account'])
             ->withTrashed()
-            ->where('trade_withdrawal.email_verified',1)
+            ->where('trade_withdrawal.email_verified', 1)
             ->whereIn('trade_withdrawal.withdraw_type', ['CRM', 'Internal Transfer', 'Trade Withdrawal']);
 
         if (!isset($_GET['id'])) {
@@ -1676,7 +1699,7 @@ class AjaxController extends Controller
         $role = session('userData')['userRole'] ?? null;
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
-        
+
         $query = Trade::select('trades.*')
             ->with(['account.user']);
 
@@ -1743,7 +1766,7 @@ class AjaxController extends Controller
                 })
                 ->addColumn('open_time_display', function ($row) {
                     if (!$row->open_time) return '-';
-                    $date = Carbon::parse($row->open_time)->addHours(3);
+                    $date = Carbon::parse($row->open_time);
                     return '<div class="d-grid">
                         <div class="date">' . $date->format('Y-m-d') . '</div>
                         <div class="time text-muted">' . $date->format('H:i:s') . '</div>
@@ -1777,7 +1800,7 @@ class AjaxController extends Controller
         $alogin = session('userData')['id'] ?? null;
         $userGroups = session('user_groups');
         $accountId = $request->get('id');
-        
+
         // Build filename with account info if accountId provided
         if ($accountId) {
             $account = Account::with('user')->find($accountId);
@@ -1865,7 +1888,7 @@ class AjaxController extends Controller
         $accountId = $request->get('id');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
-        
+
         // Build filename with account info and date range
         if ($accountId) {
             $account = Account::with('user')->find($accountId);
@@ -3064,7 +3087,7 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, 0 as permissions_count, e.status,r.name,r.id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, e.two_factor_secret, e.two_factor_recovery_codes, e.two_factor_confirmed_at, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN roles r ON e.role_id = r.id
                 -- LEFT JOIN pages ON p.page_id = pages.page_id
@@ -3076,6 +3099,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
+            $dat->fa_status = (($row->two_factor_secret != null) && ($row->two_factor_recovery_codes != null) && ($row->two_factor_confirmed_at != null)) ? '<span class="badge bg-outline-success">Enabled</span>' : '<span class="badge bg-outline-danger">Disabled</span>';
             if ($admin->can('employee:update')) {
                 $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
             } else {
@@ -3120,20 +3144,81 @@ class AjaxController extends Controller
         return ['data' => $data];
     }
 
-    public function getCompetitionGroups($type = NULL)
+    public function getCompetitionGroups(Request $request)
     {
+        $type = $request->input('type');
+        $status = $request->input('status', 'active'); // active, ended, or all
 
-        header('Content-Type: application/json');
-        if ($type == NULL) {
-            $sql = "SELECT * from account_types where (ac_name) like '%Competition%' order by display_priority desc";
-        } else {
-            $sql = "SELECT * from account_types where (ac_category) = '$type' AND (ac_name) like '%Competition%' order by display_priority asc";
+        // Build query using Eloquent to get competitions (account_types with competition_start_date)
+        $query = AccountType::whereNotNull('competition_start_date');
+
+        // Apply type filter if provided
+        if ($type != NULL) {
+            $query->where('ac_category', $type);
         }
-        $query = DB::select($sql);
-        $results = $query;
+
+        // Filter by competition status (active or ended)
+        $now = now('UTC');
+        if ($status === 'active') {
+            // Active competitions: end date is in the future
+            $query->where('competition_end_date', '>=', $now);
+        } elseif ($status === 'ended') {
+            // Ended competitions: end date is in the past
+            $query->where('competition_end_date', '<', $now);
+        }
+        // If status is 'all', don't apply date filter
+
+        // Get DataTables parameters
+        $draw = $request->input('draw');
+        $start = $request->input('start', 0);
+        $length = $request->input('length', 10);
+        $searchValue = $request->input('search.value');
+        $orderColumnIndex = $request->input('order.0.column', 0);
+        $orderDirection = $request->input('order.0.dir', 'desc');
+
+        // Apply search filter
+        if (!empty($searchValue)) {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('ac_name', 'like', "%{$searchValue}%")
+                    ->orWhere('ac_group', 'like', "%{$searchValue}%")
+                    ->orWhere('ac_min_deposit', 'like', "%{$searchValue}%");
+            });
+        }
+
+        // Count total records before pagination
+        $totalRecords = AccountType::whereNotNull('competition_start_date')->count();
+        $filteredRecords = $query->count();
+
+        // Define columns for ordering
+        $columns = [
+            'ac_name',
+            'display_priority',
+            'competition_start_date',
+            'competition_end_date',
+            'total_participants', // Can't order by this (computed)
+            'prize',
+            'leaderboard', // Can't order by this (action)
+            'ac_group',
+            'ac_min_deposit',
+            'ac_spread',
+            'status',
+            'is_client_group',
+            'enc_id' // Can't order by this (action)
+        ];
+
+        // Apply ordering if valid column
+        if (isset($columns[$orderColumnIndex]) && !in_array($columns[$orderColumnIndex], ['total_participants', 'leaderboard', 'enc_id'])) {
+            $query->orderBy($columns[$orderColumnIndex], $orderDirection);
+        } else {
+            // Default ordering
+            $query->orderBy('display_priority', 'desc');
+        }
+
+        // Apply pagination
+        $results = $query->skip($start)->take($length)->get();
+
         $data = [];
         foreach ($results as $row) {
-            // dd($row);
             $dat = $row;
             $url = route('admin.competition.leaderboard', [
                 'competition_id' => $row->id,
@@ -3151,8 +3236,13 @@ class AjaxController extends Controller
             $dat->acc_status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
             $data[] = $dat;
         }
-        // dd($data);
-        return ['data' => $data];
+
+        return [
+            'draw' => intval($draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ];
     }
 
     public function getIbGroups($type = NULL)
@@ -3409,7 +3499,7 @@ class AjaxController extends Controller
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type. '</a>',
+                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
@@ -4169,9 +4259,24 @@ class AjaxController extends Controller
                 return response()->json(['error' => 'User or IB profile not found'], 404);
             }
 
-            $query = IbClientList::where(function ($query) use ($user, $level) {
-                $query->orWhere("ib$level", $user->ib->referral_code);
-            });
+            $query = DB::table('aspnetusers as au')
+                ->leftJoin('accounts as acc', function ($join) {
+                    $join->on('acc.user_id', '=', 'au.id')
+                        ->where('acc.demo', '=', 0);
+                })
+                ->leftJoin('trade_deposits as td', function ($join) {
+                    $join->on('td.user_id', '=', 'au.id')
+                        ->where('td.status', '=', 1);
+                })
+                ->where(function ($q) use ($user, $level) {
+                    $q->orWhere("au.ib{$level}", $user->ib->referral_code);
+                })
+                ->select(
+                    DB::raw('COUNT(DISTINCT acc.id) AS total_accounts'),
+                    DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
+                    'au.*'
+                )
+                ->groupBy('au.id');
 
             if ($request->ajax()) {
                 return DataTables::of($query)
@@ -4193,7 +4298,7 @@ class AjaxController extends Controller
                     })
 
                     ->editColumn('total_accounts', function ($row) {
-                        return $row->liveaccounts;
+                        return $row->total_accounts;
                     })
 
                     ->editColumn('total_deposit', function ($row) {
@@ -4213,7 +4318,7 @@ class AjaxController extends Controller
                     ->editColumn('client_email', function ($row) {
                         return $row->email;
                     })
-                    ->rawColumns(['email','total_accounts', 'profile_status', 'client_name', 'client_email'])
+                    ->rawColumns(['email', 'total_accounts', 'profile_status', 'client_name', 'client_email'])
                     ->make(true);
             }
 
@@ -5034,11 +5139,11 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Promo code is valid. You’ll get a ' . $promocode->promo_percentage . '% discount on your deposit.';
+            $message = 'Promo code is valid. Deposit between ' . $promocode->min_deposit . ' and ' . $promocode->max_deposit . ' and receive ' . $promocode->promo_percentage . '% extra bonus.';
 
-            if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
-                $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
-            }
+            // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
+            //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
+            // }
 
             return response()->json([
                 'valid' => true,
@@ -5049,6 +5154,178 @@ class AjaxController extends Controller
                 'valid' => false,
                 'message' => 'Invalid promocode. Please try again.',
             ]);
+        }
+    }
+
+    /**
+     * Get client wallets for DataTable display
+     */
+    public function getClientWallets($id)
+    {
+        try {
+            $wallets = ClientWallet::withTrashed()
+                ->where('user_id', $id)
+                ->with('user')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $data = [];
+            foreach ($wallets as $wallet) {
+                $verifiedBadge = $wallet->verified
+                    ? '<span class="badge bg-success"><i class="ri-check-line"></i> Verified</span>'
+                    : '<span class="badge bg-warning"><i class="ri-close-line"></i> Not Verified</span>';
+
+                // STATUS BADGE
+                if ($wallet->deleted_at) {
+                    if ($wallet->admin_action_by == 'Admin') {
+                        $statusBadge = '<span class="badge bg-danger">Deleted by Admin</span>';
+                    } else {
+                        $statusBadge = '<span class="badge bg-danger">Deleted by User</span>';
+                    }
+
+                    $actionButtons = ''; // keep empty when deleted
+
+                } else {
+
+                    // Normal active / inactive badge
+                    $statusBadge = $wallet->status == 1
+                        ? '<span class="badge bg-outline-success">Active</span>'
+                        : '<span class="badge bg-outline-danger">Inactive</span>';
+
+                    // Normal action buttons
+                    $actionButtons = '';
+
+                    if (!$wallet->verified) {
+                        $actionButtons .= '<button class="btn btn-sm btn-success verifyWallet" data-wallet-id="' . $wallet->id . '" title="Verify Wallet"><i class="ri-check-line"></i> Verify</button>';
+                    }
+
+                    $actionButtons .= ' <button class="btn btn-sm btn-danger deleteWallet" data-wallet-id="' . $wallet->id . '" data-wallet-name="' . $wallet->wallet_name . '" title="Delete Wallet"><i class="ri-delete-bin-line"></i> Delete</button>';
+                }
+
+                $data[] = [
+                    'created_on' => Carbon::parse($wallet->created_at)->format('Y-m-d H:i:s'),
+                    'wallet_name' => $wallet->wallet_name,
+                    'wallet_currency' => $wallet->wallet_currency,
+                    'wallet_network' => $wallet->wallet_network,
+                    'wallet_address' => $wallet->wallet_address,
+                    'verified' => $verifiedBadge,
+                    'status' => $statusBadge,
+                    'action' => $actionButtons,
+                ];
+            }
+
+            return ['data' => $data];
+        } catch (\Exception $e) {
+            Log::error('Error fetching client wallets: ' . $e->getMessage());
+            return ['data' => [], 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Verify a client wallet
+     */
+    public function verifyClientWallet($requestData)
+    {
+        try {
+            $walletId = $requestData['wallet_id'] ?? null;
+            $userId = $requestData['user_id'] ?? null;
+
+            if (!$walletId || !$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid wallet or user ID'
+                ], 422);
+            }
+
+            $wallet = ClientWallet::where('id', $walletId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Wallet not found'
+                ], 404);
+            }
+
+            $wallet->verified = true;
+            $wallet->admin_action_by = 'admin';
+            $wallet->save();
+
+            // Log the action
+            Log::info("Wallet {$walletId} verified by " . Auth::user()->email);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Wallet verified successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error verifying wallet: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to verify wallet: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a client wallet
+     * Checks for pending withdrawals before deletion
+     */
+    public function deleteClientWallet($requestData)
+    {
+        try {
+            $walletId = $requestData['wallet_id'] ?? null;
+            $userId = $requestData['user_id'] ?? null;
+
+            if (!$walletId || !$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid wallet or user ID'
+                ], 422);
+            }
+
+            $wallet = ClientWallet::where('id', $walletId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Wallet not found'
+                ], 404);
+            }
+
+            // Check for pending withdrawals
+            $pendingWithdrawals = TradeWithdrawals::where('client_wallet_id', $wallet->id)
+                ->where('status', 0)
+                ->count();
+            if ($pendingWithdrawals > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete wallet with pending withdrawals. Please resolve all pending withdrawals first.'
+                ], 422);
+            }
+
+            // Update before soft delete
+            $wallet->update([
+                'admin_action_by'            => 'Admin',
+                'wallet_delete_verification' => 1,
+            ]);
+
+            // Soft delete wallet
+            $wallet->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Wallet deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting wallet: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete wallet: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

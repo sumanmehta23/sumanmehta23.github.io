@@ -9,6 +9,7 @@ use App\Events\KycVerifiedEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Actions\SubscribeToKlaviyoList;
+use Illuminate\Support\Facades\Config;
 
 class KycController extends Controller
 {
@@ -114,5 +115,88 @@ class KycController extends Controller
         } else {
             return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
         }
+    }
+
+    /**
+     * Veriff webhook listener.
+     *
+     * Expects HMAC SHA256 signature in X-Veriff-Signature header.
+     */
+    public function veriffListener(Request $request, SubscribeToKlaviyoList $subscribeToKlaviyoList)
+    {
+        $payload = $request->getContent();
+        $signatureHeader = $request->header('x-hmac-signature');
+        $secret = (string) Config::get('services.veriff.api_secret', '');
+
+        if ($secret === '' || $signatureHeader === null) {
+            Log::warning('Veriff webhook received without proper configuration or signature header.');
+
+            return response()->json(['status' => 'false', 'message' => 'Invalid configuration or signature'], 400);
+        }
+
+        $expected = hash_hmac('sha256', $payload, $secret);
+
+        if (! hash_equals($expected, $signatureHeader)) {
+            Log::warning('Veriff webhook signature mismatch.', [
+                'expected' => $expected,
+                'received' => $signatureHeader,
+            ]);
+
+            return response()->json(['status' => 'false', 'message' => 'Invalid signature'], 400);
+        }
+
+        $data = json_decode($payload, true);
+
+        if (! is_array($data) || empty($data['data']['verification'] ?? null)) {
+            return response()->json(['status' => 'false', 'message' => 'Invalid payload'], 400);
+        }
+
+        $verification = $data['data']['verification'];
+        $decision = $verification['decision'] ?? null;
+        $email = $data['vendorData'] ?? null;
+
+        Log::info('Veriff webhook received', [
+            'verification' => $verification,
+            'email' => $email,
+            'decision' => $decision,
+        ]);
+
+        if (! $email) {
+            return response()->json(['status' => 'false', 'message' => 'Missing user identifier'], 400);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            return response()->json(['status' => 'false', 'message' => 'User not found'], 404);
+        }
+
+        // Store callback log in the database
+        KycLog::create([
+            'client_id' => $email,
+            'user_id' => $user->id,
+            'callback_code' => 'VERIFF_WEBHOOK',
+            'callback_payload' => $verification,
+        ]);
+
+        if ($user->kyc_verify) {
+            return response()->json(['status' => 'true', 'message' => 'Your KYC Already Verified']);
+        }
+
+        if ($decision === 'approved') {
+            $user->kyc_verify = 1;
+            $user->save();
+
+            event(new KycVerifiedEvent($user));
+
+            $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
+            if ($list_id) {
+                $subscribeToKlaviyoList->handle($user, $list_id);
+            }
+
+            return response()->json(['status' => 'true', 'message' => 'KYC Verified']);
+        }
+
+        return response()->json(['status' => 'false', 'message' => 'Verification not approved yet']);
     }
 }

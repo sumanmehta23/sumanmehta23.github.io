@@ -14,5 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         '/cryptochill/callback',
         '/user/kyc/listener',
+        '/api/zapier/*',
+        '/user/kyc/veriff-listener',
     ];
 }

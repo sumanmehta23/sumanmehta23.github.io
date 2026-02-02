@@ -418,9 +418,13 @@
                                             <th>Phone</th>
                                             <th>Country</th>
                                             <th>Parent IB</th>
-                                            <th>IB Request</th>
+                                            @can('client:update')
+                                                <th>IB Request</th>
+                                            @endcan
                                             <th>RM</th>
-                                            <th>Status / Action</th>
+                                            @can('client:update')
+                                                <th>Status / Action</th>
+                                            @endcan
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>IB Name/ Email</th>
@@ -656,6 +660,9 @@
         }
     </script>
     <script>
+        window.canUpdateClient = @json(auth()->user()->can('client:update'));
+    </script>
+    <script>
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {
@@ -701,7 +708,8 @@
                         data: 'user_ib_status',
                         name: 'user_ib_status',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        visible: window.canUpdateClient
                     },
                     {
                         data: 'rm',
@@ -713,7 +721,8 @@
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        visible: window.canUpdateClient
                     },
                     {
                         data: 'fullname',
@@ -1113,6 +1122,77 @@
                                 location.reload();
                             });
                         }
+                    }
+                });
+            });
+
+            // Remove 2FA Icon Click Handler
+            $('.ajaxDataTable tbody').off('click', '.remove2FAIcon');
+            $('.ajaxDataTable tbody').on('click', '.remove2FAIcon', function(e) {
+                e.preventDefault();
+                var $icon = $(this);
+                var userId = $icon.data('user-id');
+
+                Swal.fire({
+                    title: 'Confirm 2FA Removal',
+                    html: '<div style="text-align: left;">' +
+                        '<p>You are about to remove Two-Factor Authentication (2FA) for this client.</p>' +
+                        '<p>This action is not reversible and should only be performed upon the client\'s explicit request.</p>' +
+                        '<p>Please confirm that the client has requested this change before proceeding.</p>' +
+                        '</div>',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Confirm & Remove 2FA',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Disable icon during request
+                        $icon.css('opacity', '0.5').css('pointer-events', 'none');
+
+                        $.ajax({
+                            url: '{{ route("admin.client.remove-2fa") }}',
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                user_id: userId
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: response.message || 'Two-factor authentication has been successfully removed.',
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        dTtable.ajax.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: response.message || 'Failed to remove two-factor authentication.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                    $icon.css('opacity', '1').css('pointer-events', 'auto');
+                                }
+                            },
+                            error: function(xhr) {
+                                var errorMessage = 'An error occurred while removing two-factor authentication.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: errorMessage,
+                                    confirmButtonText: 'OK'
+                                });
+                                $icon.css('opacity', '1').css('pointer-events', 'auto');
+                            }
+                        });
                     }
                 });
             });

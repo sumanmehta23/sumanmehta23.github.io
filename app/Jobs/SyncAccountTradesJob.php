@@ -35,7 +35,7 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
-    protected $batchSize = 200;
+    protected $batchSize = 400;
     /**
      * Create a new job instance.
      */
@@ -106,7 +106,7 @@ class SyncAccountTradesJob implements ShouldQueue
 
             // Check if commission already exists
             $exists = Ib1Commission::where('code', $this->account->code)
-                ->where('expert_position_id', $order->ExpertPositionID)
+                ->where('order_id', $order->Order)
                 ->exists();
 
             if ($exists) {
@@ -155,7 +155,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 return;
             }
 
-            Log::info('Syncing account trades for account: ' . $this->account->code);
+            // Log::info('Syncing account trades for account: ' . $this->account->code);
             $login = $this->account->code;
             $from = 'September 01,2024';
             $to = 'March 31,2080';
@@ -172,7 +172,7 @@ class SyncAccountTradesJob implements ShouldQueue
             }
 
             if ($total == 0) {
-                Log::info("No trades found for account {$login}");
+                // Log::info("No trades found for account {$login}");
                 return;
             }
 
@@ -213,11 +213,11 @@ class SyncAccountTradesJob implements ShouldQueue
                     }
 
                     // Insert in batches of batchSize
-                    if (count($ibCommissionBatch) >= $this->batchSize) {
+                    if (count($ibCommissionBatch) == $this->batchSize) {
                         try {
                             Ib1Commission::insert($ibCommissionBatch);
                             // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
-
+                            $this->newTrades = true;
                             $ibCommissionBatch = [];
                         } catch (Exception $e) {
                             $this->newTrades = false;
@@ -232,7 +232,6 @@ class SyncAccountTradesJob implements ShouldQueue
                     try {
                         Ib1Commission::insert($ibCommissionBatch);
                         // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
-                        $this->newTrades = true;
                     } catch (Exception $e) {
                         $this->newTrades = false;
                         Log::error('Error logging IB commissions batch: ' . $e->getMessage());
@@ -248,12 +247,12 @@ class SyncAccountTradesJob implements ShouldQueue
             }
 
             // Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
-
+            DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
             // Dispatch the IB commission job if we had new trades
-            if ($this->newTrades) {
-                Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
-                DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
-            }
+            // if ($this->newTrades) {
+            //     // Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
+            //     DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+            // }
         } catch (\Exception $e) {
             Log::error("Error processing account {$accountId}: " . $e->getMessage());
             throw $e;

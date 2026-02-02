@@ -53,6 +53,296 @@ class TradeWithdrawal extends Controller
         return true;
     }
 
+    private function validateWithdrawalRequest(Request $request)
+    {
+        if (!$request->filled('client_wallet_id')) {
+            throw new \Exception('Please set up wallet address.');
+        }
+
+        $request->validate([
+            'account_id' => 'required',
+            'withdraw_amount' => 'required|numeric|min:10',
+        ], [
+            'account_id.required' => 'Account is not selected.',
+        ]);
+    }
+
+    private function calculateBonusAmounts($accountId)
+    {
+        $bonus = BonusTransaction::where('account_id', $accountId)
+            ->where(function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                    ->orWhere('bonus_type', 'Bonus Out');
+            })
+            ->selectRaw("
+                SUM(CASE
+                    WHEN admin_remark NOT LIKE '%Credit%'
+                    AND admin_remark NOT LIKE '%10x Trader Leverage%'
+                    AND admin_remark NOT LIKE '%Promo Bonus%'
+                    AND admin_remark NOT LIKE '%Promo Deduction%'
+                    AND admin_remark NOT LIKE '%Promo Addition%'
+                    AND admin_remark NOT LIKE '%Bonus Pay Off%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_bonus,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Bonus%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_promo_bonus_amount,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Bonus%'
+                    THEN bonus_used
+                    ELSE 0
+                END) AS total_promo_bonus_used,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Deduction%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_promo_deduction
+            ")
+            ->first();
+
+        return [
+            'total_bonus' => $bonus->total_bonus ?? 0,
+            'promo_left' => ($bonus->total_promo_bonus_amount ?? 0) - ($bonus->total_promo_bonus_used ?? 0),
+            'total_promo_bonus' => $bonus->total_promo_bonus_amount ?? 0,
+            'total_promo_bonus_used' => $bonus->total_promo_bonus_used ?? 0,
+        ];
+    }
+
+    private function validateSufficientBalance($amount, $accountBalance, $totalBonus)
+    {
+        if ((float)$amount > ((float)$accountBalance - (float)$totalBonus)) {
+            throw new \Exception('Insufficient balance');
+        }
+    }
+
+    private function calculateWithdrawalFees($amount)
+    {
+        if ($amount >= 100) {
+            return ['withdrawal_amount' => $amount, 'withdrawal_fee' => 0];
+        }
+        return ['withdrawal_amount' => $amount - 5, 'withdrawal_fee' => 5];
+    }
+
+    private function handle10xLeverageAdjustment($account, $amount, $userId)
+    {
+        if ($account->accountType->ac_group !== 'LM\B-Book\10x\DF-B') {
+            return;
+        }
+
+        $totalDepositAmount = $account->tradeDeposits->sum('deposit_amount');
+        $accountBalance = $account->balance;
+        $accountProfit = $accountBalance - $totalDepositAmount;
+
+        if ($amount <= $accountProfit) {
+            return; // No adjustment needed if withdrawing only profit
+        }
+
+        $multiplier = $accountProfit < 0 ? $amount : $amount - $accountProfit;
+        $multiplier = min($multiplier, 250);
+        $bonusAmount = -abs(-9 * $multiplier);
+
+        $ticket = null;
+        $errorCode = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusAmount, '10x Trader Leverage', $ticket, true);
+
+        if ($errorCode !== MTRetCode::MT_RET_OK) {
+            throw new \Exception(MTRetCode::GetError($errorCode));
+        }
+
+        $tradeUser = null;
+        if ($this->api->UserGet($account->code, $tradeUser) !== MTRetCode::MT_RET_OK) {
+            throw new \Exception('Failed to get user account details');
+        }
+
+        $bonusTransaction = BonusTransaction::where('email', $account->email)
+            ->where('account_id', $account->id)
+            ->where('user_id', $userId)
+            ->where('bonus_type', 'Bonus In')
+            ->where('admin_remark', '10x Trader Leverage')
+            ->first();
+
+        if ($bonusTransaction) {
+            $tradeDeposit = $account->tradeDeposits->where('transaction_id', $bonusTransaction->transaction_id)->first();
+
+            if ($tradeDeposit) {
+                $leverage = round($account->leverage * ($tradeDeposit->deposit_amount) / ($tradeDeposit->deposit_amount + $tradeUser->Credit), 2);
+                $tradeUser->Leverage = $leverage;
+
+                $updatedUser = "";
+                if ($this->api->UserUpdate($tradeUser, $updatedUser) !== MTRetCode::MT_RET_OK) {
+                    throw new \Exception('Failed to update leverage');
+                }
+            }
+        }
+
+        BonusTransaction::create([
+            'email' => $account->email,
+            'user_id' => $userId,
+            'account_id' => $account->id,
+            'code' => $account->code,
+            'bonus_amount' => $bonusAmount,
+            'bonus_type' => 'Bonus Out',
+            'status' => 1,
+            'admin_remark' => '10x Trader Leverage',
+            'bonus_currency' => 'USD',
+        ]);
+
+        Log::info("10x Leverage adjustment applied", [
+            'account' => $account->code,
+            'bonus_amount' => $bonusAmount
+        ]);
+    }
+
+    private function handlePromoDeductions($account, $amount, $userId, $promoLeft)
+    {
+        if (!$promoLeft) {
+            return 0;
+        }
+
+        $tradeDeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
+        $tradeWithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
+            ->where('status', '!=', 3)
+            ->sum(function ($item) {
+                return $item->withdrawal_amount + $item->transaction_fee;
+            });
+
+        $depositsWithoutPromo = $account->tradeDeposits->whereNull('promocode_code')->sum('deposit_amount');
+        $pnl = $account->balance - $tradeDeposits + $tradeWithdrawals;
+        $amountToDeduct = $amount - $depositsWithoutPromo - $pnl;
+
+        $totalBonusDepositValue = BonusTransaction::select(DB::raw('SUM(bonus_amount / (promocode.promo_percentage / 100)) as total'))
+            ->leftJoin('promocode', 'bonus_transactions.promocode_id', '=', 'promocode.id')
+            ->where('bonus_transactions.account_id', $account->id)
+            ->value('total');
+
+        $mt5Account = new \stdClass();
+        if ($this->api->UserAccountGet($account->code, $mt5Account) !== MTRetCode::MT_RET_OK) {
+            throw new \Exception('Unable to get MT5 account details');
+        }
+
+        // Adjust deductible amount based on balance threshold
+
+        if ($mt5Account->Balance < $totalBonusDepositValue && $account->balance > $totalBonusDepositValue) {
+            $amountToDeduct = $amount - ($account->balance - $totalBonusDepositValue);
+        } elseif ($mt5Account->Balance < $totalBonusDepositValue && $account->balance <= $totalBonusDepositValue) {
+            $amountToDeduct = $amount;
+        }
+
+        $totalDeductableAmount = $amountToDeduct;
+        $totalPromoDeducted = 0;
+        $deductedAmounts = 0;
+
+        $promos = $account->BonusTransaction()
+            ->where('admin_remark', 'Promo Bonus')
+            ->with('promocode')
+            ->where(function ($query) {
+                $query->whereRaw('CAST(bonus_amount AS DECIMAL(10,2)) > CAST(COALESCE(bonus_used, 0) AS DECIMAL(10,2))')
+                    ->orWhereNull('bonus_used');
+            })
+            ->get()
+            ->sortByDesc(function ($transaction) {
+                return optional($transaction->promocode)->promo_percentage;
+            });
+
+        Log::info("Processing promo deductions", [
+            'account' => $account->code,
+            'amount_to_deduct' => $amountToDeduct,
+            'promo_count' => $promos->count()
+        ]);
+
+        foreach ($promos as $promo) {
+            $promoPercentage = $promo->promocode ? $promo->promocode->promo_percentage : 0;
+
+            if (!$promoPercentage || $amountToDeduct <= 0 || $mt5Account->Balance >= $totalBonusDepositValue) {
+                break;
+            }
+
+            $depositAmountOfBonus = $promo->bonus_amount / ($promoPercentage / 100);
+            $depositAmountOfBonusUsed = $promo->bonus_used > 0 ? $promo->bonus_used / ($promoPercentage / 100) : 0;
+            $depositAmountOfBonusLeft = $depositAmountOfBonus - $depositAmountOfBonusUsed;
+
+            $threshold = $amountToDeduct;
+
+            $promoDeduction = 0;
+
+            if ($depositAmountOfBonusLeft >= $threshold) {
+                $promoDeduction = $threshold * ($promoPercentage / 100);
+                $deductedAmounts += $threshold;
+            } else {
+                $promoDeduction = $depositAmountOfBonusLeft * ($promoPercentage / 100);
+                $amountToDeduct -= $depositAmountOfBonusLeft;
+                $deductedAmounts += $depositAmountOfBonusLeft;
+            }
+
+            if ($mt5Account->Balance == 0) {
+                $maxDeductible = $promo->bonus_amount - $promo->bonus_used;
+                $promoDeduction = $maxDeductible;
+
+                // Reset leverage to original
+                $tradeUser = null;
+                if ($this->api->UserGet($account->code, $tradeUser) === MTRetCode::MT_RET_OK) {
+                    $tradeUser->Leverage = $account->leverage;
+                    $updatedUser = "";
+                    $this->api->UserUpdate($tradeUser, $updatedUser);
+                }
+            }
+
+            if ($promoDeduction > 0) {
+                if($promoDeduction > $mt5Account->Credit){
+                    $promoDeduction = $mt5Account->Credit;
+                }
+                $deduction = abs((float)$promoDeduction) * -1;
+                $ticket = null;
+
+                if ($this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket, true) !== MTRetCode::MT_RET_OK) {
+                    throw new \Exception('Failed to apply promo deduction');
+                }
+
+                $promo->bonus_used += $promoDeduction;
+                $promo->save();
+                $totalPromoDeducted += $promoDeduction;
+
+                BonusTransaction::create([
+                    'email' => $account->email,
+                    'user_id' => $userId,
+                    'account_id' => $account->id,
+                    'code' => $account->code,
+                    'bonus_amount' => $deduction,
+                    'bonus_type' => 'Bonus Out',
+                    'status' => 1,
+                    'admin_remark' => 'Promo Deduction',
+                    'bonus_currency' => 'USD',
+                ]);
+
+                if ($mt5Account->Balance > 0) {
+                    $tradeUser = null;
+                    if ($this->api->UserGet($account->code, $tradeUser) === MTRetCode::MT_RET_OK) {
+                        $leverage = round($account->leverage * ($tradeDeposits) / ($tradeDeposits + $tradeUser->Credit), 2);
+                        $tradeUser->Leverage = $leverage;
+                        $updatedUser = "";
+                        $this->api->UserUpdate($tradeUser, $updatedUser);
+                    }
+                }
+            }
+
+            if ($deductedAmounts >= $totalDeductableAmount) {
+                break;
+            }
+        }
+
+        Log::info("Promo deductions completed", [
+            'account' => $account->code,
+            'total_deducted' => $totalPromoDeducted
+        ]);
+
+        return $totalPromoDeducted;
+    }
+
     public function index(Request $request)
     {
         $account_id = $request['account_id'];
@@ -101,508 +391,215 @@ class TradeWithdrawal extends Controller
     // TODO: Consider RagaPay service endpoint for withdrawal/payout processing
     public function withdraw(Request $request)
     {
+        try {
+            // Validate wallet setup
+            $this->validateWithdrawalRequest($request);
 
-        if (!$request->filled('client_wallet_id')) {
-            return redirect()->back()->with('error', 'Please set up wallet address.');
-        }
+            // Ensure MT5 connection
+            if (!$this->ensureMT5Connection()) {
+                return redirect()->back()->with('error', 'Failed to connect to MT5 server');
+            }
 
-        if (!$this->ensureMT5Connection()) {
-            return redirect()->back()->with('error', 'Failed to connect to MT5 server');
-        }
+            // Rate limiting
+            $key = 'deposit:' . (auth()->id() ?: $request->ip());
+            if (RateLimiter::tooManyAttempts($key, 1)) {
+                $retryAfter = RateLimiter::availableIn($key);
+                return redirect()->back()->with('error', "Too many requests. Please wait {$retryAfter} seconds before trying again.");
+            }
+            RateLimiter::hit($key, 10);
 
-        // Generate a unique rate-limiting key based on user or IP
-        $key = 'deposit:' . (auth()->id() ?: $request->ip());
+            // Get user and account details
+            $userId = auth()->user()->id;
+            $userEmail = auth()->user()->email;
+            $userFullname = auth()->user()->fullname;
+            $accountId = $request->account_id;
+            $amount = $request->input('withdraw_amount');
 
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            $retryAfter = RateLimiter::availableIn($key);
-            return redirect()->back()->with([
-                'error' => "Too many requests. Please wait {$retryAfter} seconds before trying again."
+            // Fetch account with relations
+            $account = Account::with('accountType', 'tradeDeposits', 'BonusTransaction')
+                ->where('id', $accountId)
+                ->where('user_id', $userId)
+                ->firstOrFail();
+
+            // Sync account balances
+            Artisan::call('app:sync-account-balances', [
+                '--accounts' => $account->code,
+                '--force' => true
             ]);
-        }
 
-        // Increment the rate limiter
-        RateLimiter::hit($key, 10); // Lock for 10 seconds
-        // TODO: 'Implement Policy to check ownership of the account';
-        $user_id = auth()->user()->id;
-        $user_email = auth()->user()->email;
-        $user_fullname = auth()->user()->fullname;
-        $account_id = $request->account_id;
-        $request->validate([
-            'account_id' => 'required',
-            'withdraw_amount' => 'required|numeric|min:10',
-        ], [
-            'account_id.required' => 'Account is not selected.',
-        ]);
+            // Calculate bonus amounts
+            $bonusData = $this->calculateBonusAmounts($accountId);
+            $totalBonus = $bonusData['total_bonus'];
+            $promoLeft = $bonusData['promo_left'];
 
-        $account = Account::with('accountType', 'tradeDeposits', 'BonusTransaction')
-            ->where('id', $account_id)
-            ->where('user_id', $user_id)
-            ->firstOrFail();
+            // Validate sufficient balance
+            $this->validateSufficientBalance($amount, $account->balance, $totalBonus);
 
-        // Sync account balances before processing withdrawal
-        Artisan::call('app:sync-account-balances', [
-            '--accounts' => $account->code,
-            '--force' => true
-        ]);
+            // Calculate withdrawal balance
+            $balance = (float)$amount > (float)$account->balance
+                ? abs((float)$amount - ((float)$amount - (float)$account->balance)) * -1
+                : abs((float)$amount) * -1;
 
-        // dd($account->tradeDeposits[0]->deposit_amount );
-        $bonus = BonusTransaction::where('account_id', $request->account_id)
-            ->where(function ($query) {
-                $query->where('bonus_type', 'Bonus In')
-                    ->orWhere('bonus_type', 'Bonus Out');
-            })
-            ->selectRaw("
-                            SUM(CASE
-                                WHEN admin_remark NOT LIKE '%Credit%'
-                                AND admin_remark NOT LIKE '%10x Trader Leverage%'
-                                AND admin_remark NOT LIKE '%Promo Bonus%'
-                                AND admin_remark NOT LIKE '%Promo Deduction%'
-                                AND admin_remark NOT LIKE '%Promo Addition%'
-                                AND admin_remark NOT LIKE '%Bonus Pay Off%'
-                                THEN bonus_amount
-                                ELSE 0
-                            END) AS total_bonus,
-
-                            SUM(CASE
-                                WHEN admin_remark LIKE '%Promo Bonus%'
-                                THEN bonus_amount
-                                ELSE 0
-                            END) AS total_promo_bonus_amount,
-
-                            SUM(CASE
-                                WHEN admin_remark LIKE '%Promo Bonus%'
-                                THEN bonus_used
-                                ELSE 0
-                            END) AS total_promo_bonus_used,
-
-                            SUM(CASE
-                                WHEN admin_remark LIKE '%Promo Deduction%'
-                                THEN bonus_amount
-                                ELSE 0
-                            END) AS total_promo_deduction
-                        ")
-            ->first();
-
-        $total_bonus = $bonus->total_bonus;
-        $total_promo_bonus = $bonus->total_promo_bonus_amount;
-        $total_promo_bonus_used = $bonus->total_promo_bonus_used;
-        $promo_left = $total_promo_bonus - $total_promo_bonus_used;
-        //Calculate deposit/profit other then promo bonus
-        $withdraw_type = $request->input('withdraw_type');
-        $amount = $request->input('withdraw_amount');
-        $to_account_id = $request->input('withdraw_to', '');
-
-        // Get the account balance
-        Log::alert("promo_left " . ($promo_left));
-        Log::alert("amount " . (float) ($amount));
-        Log::alert("account->balance " . (float) ($account->balance));
-        Log::alert("account->credit " . (float) ($account->credit));
-        Log::alert("total_bonus " . (float) ($total_bonus));
-        Log::alert("sadasdsaaaaaa " . (float) ((float) ($amount) > (((float) $account->balance + (float) $account->credit) - (float) $total_bonus)));
-        $totalBonusDepositValue = BonusTransaction::select(DB::raw('SUM(bonus_amount / (promocode.promo_percentage / 100)) as total'))
-            ->leftJoin('promocode', 'bonus_transactions.promocode_id', '=', 'promocode.id')
-            ->where('bonus_transactions.account_id', $request->account_id)
-            ->value('total');
-        Log::alert("threshold " . $totalBonusDepositValue);
-        // return redirect()->back()->with('error', 'Withdrawal disabled at the moment . Please contact support for assistance.');
-
-        // Check for sufficient balance
-        if ((float) ($amount) > (((float) $account->balance - (float)$total_bonus))) {
-            return redirect()->back()->with('error', 'Insufficient balance');
-        }
-        if ((float)$amount > (float) $account->balance) {
-            $balance = abs((float)$amount - ((float)$amount - (float) $account->balance)) * -1;
-        } else {
-            $balance = abs((float)$amount) * -1;
-        }
-        $mt5account = new \stdClass();
-        $comment = 'Withdraw';
-        $ticket = NULL;
-        $ticket1 = NULL;
-        $login = $account->code;
-        $email = $account->email;
-        activity()->causedBy($user_id)
-            ->withProperties(
-                [
+            // Log activity
+            activity()->causedBy($userId)
+                ->withProperties([
                     'ip' => $request->ip(),
-                    'email' => $user_email,
-                    'code' => $login,
+                    'email' => $userEmail,
+                    'code' => $account->code,
                     'withdraw_amount' => $balance,
                     'remark' => 'Account Withdraw'
-                ]
-            )
-            ->event('create')
-            ->log('Account Withdraw');
+                ])
+                ->event('create')
+                ->log('Account Withdraw');
 
-        $clientWalletId = $request->input('client_wallet_id');
-        $clientWallet = ClientWallet::where('id', $clientWalletId)->where('user_id', $user_id)->firstOrFail();
+            // Get client wallet
+            $clientWalletId = $request->input('client_wallet_id');
+            $clientWallet = ClientWallet::where('id', $clientWalletId)
+                ->where('user_id', $userId)
+                ->firstOrFail();
 
-        if ($account->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
-            $total_deposit_amount = $account->tradeDeposits->sum('deposit_amount');
-            $account_balance = $account->balance;
+            // Handle 10x leverage adjustments
+            $this->handle10xLeverageAdjustment($account, $amount, $userId);
 
-            // if ($account_balance >= $total_deposit_amount) {
-            //     $multiple_value = $total_deposit_amount - $account_balance + (-$balance);
-            // } elseif ($account_balance < $total_deposit_amount) {
-            //     $multiple_value = $total_deposit_amount - $account_balance - ($balance);
-            // }
-            //Cehck current withdrawal request amount. If current withdrawal amount is less then his total profit , we don't deduct bonus .
-            $accountProfit = $account_balance - $total_deposit_amount;
+            // Process MT5 withdrawal
+            $ticket = null;
+            $comment = 'Withdraw';
+            $errorCode = $this->api->TradeBalance(
+                $account->code,
+                MTEnDealAction::DEAL_BALANCE,
+                $balance,
+                $comment,
+                $ticket,
+                true
+            );
 
-
-            if ($amount > $accountProfit) {
-                if ($accountProfit < 0) {
-                    $multiplier = $amount;
-                } else {
-                    $multiplier = $amount - $accountProfit;
-                }
-
-                if ($multiplier > 250) {
-                    $multiplier = 250;
-                }
-                $bonusamount = -abs(-9 * $multiplier);
-
-                // if($account->code==817752){
-                //     dump($account_balance);
-                //     dump($total_deposit_amount);
-                //     dump($accountProfit);
-                //     dump($multiplier);
-                //     dump($bonusamount);
-                // }
-
-                if (($error_code = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                    return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                } else {
-                    $trade_user = NULL;
-                    $this->api->UserGet($account->code, $trade_user);
-                    if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                    }
-                    $bonusTransaction = BonusTransaction::where('email', $account->email)
-                        ->where('account_id', $account->id)
-                        ->where('user_id', $user_id)
-                        ->where('bonus_type', 'Bonus In')
-                        ->where('admin_remark', '10x Trader Leverage')
-                        ->first();
-
-                    $tradedeposits = $account->tradeDeposits->where('transaction_id',$bonusTransaction->transaction_id)->first();
-                    Log::alert(" $account->leverage * (($tradedeposits->deposit_amount) / ($tradedeposits->deposit_amount + ($trade_user->Credit)) ) ");
-
-                    $leverage = round($account->leverage * (($tradedeposits->deposit_amount) / ($tradedeposits->deposit_amount + ($trade_user->Credit))), 2);
-
-                    $trade_user->Leverage = $leverage;
-
-                    $updated_user = "";
-                    if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                        return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                    }
-
-                    $deposit_details = BonusTransaction::create([
-                        'email' => $account->email,
-                        'user_id' => $user_id,
-                        'account_id' => $account->id,
-                        'code' => $account->code,
-                        'bonus_amount' => $bonusamount,
-                        'bonus_type' => 'Bonus Out',
-                        'status' => 1,
-                        'admin_remark' => '10x Trader Leverage',
-                        'bonus_currency' => 'USD',
-                        // 'created_by' => session('alogin')
-                    ]);
-                }
+            if ($errorCode !== MTRetCode::MT_RET_OK) {
+                Log::error('MT5 withdrawal failed', [
+                    'account' => $account->code,
+                    'amount' => $balance,
+                    'error' => MTRetCode::GetError($errorCode)
+                ]);
+                return redirect()->back()->with('error', 'Withdrawal failed: ' . MTRetCode::GetError($errorCode));
             }
-        }
 
-        Log::alert("balance withdraw " . (float) ($balance));
-        Log::alert("account " . ($login));
-
-        $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-
-        // if (1 == 2) {
-        if ($errorCode1 != MTRetCode::MT_RET_OK) {
-            $error = MTRetCode::GetError($errorCode1);
-            return response()->json([
-                'success' => false,
-                'message' => 'Something went wrong',
-                'error' => $error,
-            ], 400);
-        } else {
-
+            // Start database transaction
             DB::beginTransaction();
 
-            if ($amount >= 100) {
-                $withdrawal_amount = $amount;
-                $withdrawal_fee = 0;
-            } else {
-                $withdrawal_fee = 5;
-                $withdrawal_amount = $amount - $withdrawal_fee;
-            }
-
-            $total_promo_deducted = 0;
-            $deductableAmount = 0; //Amount from withdrwal request which will be used to calculate promo deductions . So this must be sum of deposits without bonus +/- profit/loss on the account
-
-            if ($promo_left) {
-                $tradedeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
-                Log::alert("tradedeposits " . $tradedeposits);
-                $tradewithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
-                    ->where('status', '!=', 3)
-                    ->sum(function ($item) {
-                        return $item->withdrawal_amount + $item->transaction_fee;
-                    });
-                Log::alert("tradewithdrawals " . $tradewithdrawals);
-                $depositswithoutpromo = $account->tradeDeposits->whereNull('promocode_code')->sum('deposit_amount');
-                Log::alert("depositswithoutpromo " . $depositswithoutpromo);
-                $depositswithpromo = $account->tradeDeposits->whereNotNull('promocode_code')->sum('deposit_amount');
-                Log::alert("depositswithpromo " . $depositswithpromo);
-                $pnl = $account->balance - $tradedeposits + $tradewithdrawals;
-                // $pnl = $account->balance - $tradedeposits;
-                Log::alert("PNL " . $pnl);
-                $totaldeductableamount = $amount_to_deduct = $amount - $depositswithoutpromo - $pnl;
-                Log::alert("amountForDeductions " . $amount_to_deduct);
-
-                if (($error_code2 = $this->api->UserAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
-                    session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code2));
-                    return redirect()->route('trade-withdrawal')->with('error', 'Unable to get account details.');
-                }
-                //SPECIAL CASE TO TACKLE MULTIPLE PROMO CODES AND SECOND WITHDRAWAL :TODO
-                // if ($amount_to_deduct < 0) {
-                //     $totaldeductableamount = $amount_to_deduct = $amount;
-                // }
-
-
-                if ($mt5account->Balance < $totalBonusDepositValue && $account->balance > $totalBonusDepositValue) {
-                    $totaldeductableamount = $amount_to_deduct = $amount - ($account->balance - $totalBonusDepositValue);
-                } elseif ($mt5account->Balance < $totalBonusDepositValue && $account->balance <= $totalBonusDepositValue) {
-                    $totaldeductableamount = $amount_to_deduct = $amount;
-                }
-
-
-                Log::alert("amountForDeductions " . $amount_to_deduct);
-                $promos = $account->BonusTransaction()
-                    ->where('admin_remark', 'Promo Bonus')
-                    ->with('promocode') // assuming 'promocode' is the relation name
-                    ->where(function ($query) {
-                        $query->whereRaw('CAST(bonus_amount AS DECIMAL(10,2)) > CAST(COALESCE(bonus_used, 0) AS DECIMAL(10,2))')
-                            ->orWhereNull('bonus_used');
-                    })
-                    ->get()
-                    ->sortByDesc(function ($transaction) {
-                        return optional($transaction->promocode)->promo_percentage;
-                    });
-                // ->sortByDesc(function ($transaction) {
-                //     return optional($transaction->promocode)->promo_percentage;
-                // });
-                //log entire $promos
-                Log::alert("promos " . $promos->toJson());
-                // dd($promos);
-                // $promos = $account->BonusTransaction()
-                $i = 0;
-
-
-                $deductedamounts = 0;
-                foreach ($promos as $promo) {
-
-                    $depositamountofbonusused = 0;
-                    $promo_percentage_value = $promo->promocode ? $promo->promocode->promo_percentage : 0;
-                    if ($promo_percentage_value && $amount_to_deduct > 0 && $mt5account->Balance < $totalBonusDepositValue) {
-                        $oldThreshold = $totalBonusDepositValue;
-                        $threshold = $amount_to_deduct;
-                        $depositamountofbonus = $promo->bonus_amount / ($promo_percentage_value / 100);
-                        Log::alert("depositamountofbonus " . $depositamountofbonus);
-                        if ($promo->bonus_used > 0) {
-                            $depositamountofbonusused = $promo->bonus_used / ($promo_percentage_value / 100);
-                        }
-                        $depositamountofbonusleft = $depositamountofbonus - $depositamountofbonusused;
-                        Log::alert("depositamountofbonusleft " . $depositamountofbonusleft);
-                        Log::alert("promo_percentage_value " . $promo_percentage_value);
-                        Log::alert("threshold " . $threshold);
-                        if ($depositamountofbonusleft >= $threshold) {
-                            $promo_deduction = ($threshold * ($promo_percentage_value / 100));
-                            $deductedamounts += $threshold;
-                        } elseif ($mt5account->Balance > $oldThreshold) {
-                            break;
-                        } else {
-                            $promo_deduction = ($depositamountofbonusleft * ($promo_percentage_value / 100));
-                            $amount_to_deduct = $threshold - $depositamountofbonusleft;
-                            $deductedamounts += $depositamountofbonusleft;
-                        }
-
-                        // $promo_deduction = ($threshold * ($promo_percentage_value / 100)) - $promo->bonus_used;
-
-                        Log::alert("promo_deduction " . $promo_deduction);
-                        Log::alert('amount_to_deduct ' . $amount_to_deduct);
-                        // Ensure we do not deduct more than available in this promo bucket
-
-
-                        if ($mt5account->Balance == 0) {
-                            $max_deductible = $promo->bonus_amount - $promo->bonus_used;
-                            $promo_deduction = $max_deductible;
-
-                            // Updating leverage
-                            $trade_user = NULL;
-                            $this->api->UserGet($account->code, $trade_user);
-                            if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                            }
-
-                            $trade_user->Leverage = $account->leverage;
-
-                            $updated_user = "";
-                            if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                            }
-                        }
-                        Log::alert("promo_percentage_value " . $promo_percentage_value);
-                        Log::alert("promo_deduction " . $promo_deduction);
-
-                        // continue;
-                        if ($promo_deduction > 0) {
-                            $deduction = abs((float)$promo_deduction) * -1;
-                            if (($error_code3 = $this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
-                                $balance = abs((float)$balance) * -1;
-                                $errorCode1 = $this->api->TradeBalance($login, $type = MTEnDealAction::DEAL_BALANCE, $balance, $comment, $ticket1, $margin_check = true);
-                                if ($errorCode1 != MTRetCode::MT_RET_OK) {
-                                    $error = MTRetCode::GetError($errorCode1);
-                                    return response()->json([
-                                        'success' => false,
-                                        'message' => 'Something went wrong',
-                                        'error' => $error,
-                                    ], 400);
-                                }
-                                return redirect()->back()->with('error', MTRetCode::GetError($error_code3));
-                            }
-
-                            $promo->bonus_used += $promo_deduction;
-                            $promo->save();
-                            $total_promo_deducted += $promo_deduction;
-
-                            // Record the deduction
-                            BonusTransaction::create([
-                                'email' => $account->email,
-                                'user_id' => $user_id,
-                                'account_id' => $account->id,
-                                'code' => $account->code,
-                                'bonus_amount' => $deduction,
-                                'bonus_type' => 'Bonus Out',
-                                'status' => 1,
-                                'admin_remark' => 'Promo Deduction',
-                                'bonus_currency' => 'USD',
-                            ]);
-
-                            if ($mt5account->Balance > 0) {
-                                $trade_user = NULL;
-                                $this->api->UserGet($account->code, $trade_user);
-                                if (($error_code = $this->api->UserGet($account->code, $trade_user)) != MTRetCode::MT_RET_OK) {
-                                    return redirect()->back()->with('error', 'Something went wrong on Updating leverage' . MTRetCode::GetError($error_code));
-                                }
-
-                                Log::alert(" $account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit)) ) ");
-
-                                $leverage = round($account->leverage * (($tradedeposits) / ($tradedeposits + ($trade_user->Credit))), 2);
-
-                                $trade_user->Leverage = $leverage;
-
-                                $updated_user = "";
-                                if (($error_code = $this->api->UserUpdate($trade_user, $updated_user)) != MTRetCode::MT_RET_OK) {
-                                    return redirect()->back()->with("error", "Something went wrong on Updating leverage" . MTRetCode::GetError($error_code));
-                                }
-                            }
-                        }
-                        if ($deductedamounts == $totaldeductableamount) {
-                            break;
-                        }
-                    } else {
-                        // No deduction needed yet
-                        break;
-                    }
-                }
-            }
-
-
             try {
-                $TradeWithdrawal = TradeWithdrawals::create([
-                    'email' => $user_email,
-                    'user_id' => $user_id,
+                // Calculate fees
+                $fees = $this->calculateWithdrawalFees($amount);
+                $withdrawalAmount = $fees['withdrawal_amount'];
+                $withdrawalFee = $fees['withdrawal_fee'];
+                Log::info("message".$withdrawalAmount);
+                log::info("fee".$withdrawalFee);
+
+                // Handle promo deductions
+                $totalPromoDeducted = $this->handlePromoDeductions($account, $amount, $userId, $promoLeft);
+                Log::info("message".$totalPromoDeducted);
+                // Create withdrawal record
+                $tradeWithdrawal = TradeWithdrawals::create([
+                    'email' => $userEmail,
+                    'user_id' => $userId,
                     'account_id' => $account->id,
-                    'withdrawal_amount' => $withdrawal_amount,
-                    'transaction_fee' => $withdrawal_fee,
-                    'withdraw_type' => $withdraw_type,
+                    'withdrawal_amount' => $withdrawalAmount,
+                    'transaction_fee' => $withdrawalFee,
+                    'withdraw_type' => $request->input('withdraw_type'),
                     'code' => $account->code,
-                    // 'withdraw_to' => $to_account_id,
                     'wallet_qr' => '',
                     'status' => 0,
                     'email_verified' => 0,
                     'client_wallet_id' => $clientWallet->id,
-                    'promo_deduction' => $total_promo_deducted
+                    'promo_deduction' => $totalPromoDeducted
                 ]);
 
-                // TotalBalance::create([
-                //     'account_id' => $account->id,
-                //     'email' => $email,
-                //     'user_id' => $user_id,
-                //     'deposit_amount' => $amount,
-                // ]);
-                // WalletDeposit::create([
-                //     'email' => $email,
-                //     'user_id' => $user_id,
-                //     'deposit_amount' => $amount,
-                //     'deposit_type' => 'Internal Transfer',
-                //     'status' => 1,
-                // ]);
                 DB::commit();
 
-                $toEmail = $user_email;
-                $type = 'Withdrawal Details Verification';
-                $from = $this->settings['email_from_address'];
-                $emailSubject = $this->settings['admin_title'] . ' - ' . $type;
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= 'From:' . $this->settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                // Send verification email
+                $this->sendWithdrawalVerificationEmail($tradeWithdrawal, $userEmail, $userFullname, $account, $withdrawalAmount);
 
-                $content =
-                    '<p>Welcome to ' . htmlspecialchars($this->settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-                    '<p></p>' .
-                    '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawal_amount . ' from your account ' . $account->code . '</p>' .
-                    '<p></p>' .
-                    '<p>Click the link below to activate your Account Withdrawal</p>';
+                Log::info('Withdrawal request created successfully', [
+                    'withdrawal_id' => $tradeWithdrawal->id,
+                    'account' => $account->code,
+                    'amount' => $withdrawalAmount
+                ]);
 
-                $templateVars = [
-                    'name' => $user_fullname,
-                    'server_name' => $this->settings['mt5_company_name'],
-                    'site_link' => $this->settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$TradeWithdrawal->id",
-                    'email' => $from,
-                    "content" => $content,
-                    "title_right" => "Activate",
-                    "subtitle_right" => "Your Account Withdrawal Request",
-                    "btn_text" => "Verify"
-                ];
-                $blockedEmails = [
-                    'topzplaza18@gmail.com',
-                    'lhenriquega@gmail.com',
-                    'luchatrader23fx@gmail.com',
-                    'alexbostontrading@gmail.com',
-                    'alisakotsa@gmail.com',
-                    'abhay@lqhmarkets.com',
-                ];
-                if (!in_array($toEmail, $blockedEmails)) {
-                    $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
-                }
-
-                // RateLimiter::clear($key);
-                // return response()->json(['success' => "Verification email sent successfully."]);
                 return redirect()->route('trade-withdrawal')->with('success', 'Verification email sent successfully.');
+
             } catch (\Exception $e) {
                 DB::rollBack();
-                echo "<pre>";
-                print_r($e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Something Went Wrong !!! Please Try Again'
-                ], 400);
+
+                // Reverse the MT5 withdrawal
+                $reverseBalance = abs((float)$balance);
+                $this->api->TradeBalance(
+                    $account->code,
+                    MTEnDealAction::DEAL_BALANCE,
+                    $reverseBalance,
+                    'Withdrawal Reversal',
+                    $ticket,
+                    true
+                );
+
+                Log::error('Withdrawal transaction failed', [
+                    'account' => $account->code,
+                    'error' => $e->getMessage()
+                ]);
+
+                throw $e;
             }
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()->with('error', 'Account or wallet not found.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Withdrawal error', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
+    private function sendWithdrawalVerificationEmail($tradeWithdrawal, $userEmail, $userFullname, $account, $withdrawalAmount)
+    {
+        $type = 'Withdrawal Details Verification';
+        $from = $this->settings['email_from_address'];
+        $emailSubject = $this->settings['admin_title'] . ' - ' . $type;
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $this->settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+        $content = '<p>Welcome to ' . htmlspecialchars($this->settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+            '<p></p>' .
+            '<p>You are receiving this email because you have requested a withdrawal of amount $' . $withdrawalAmount . ' from your account ' . $account->code . '</p>' .
+            '<p></p>' .
+            '<p>Click the link below to activate your Account Withdrawal</p>';
+
+        $templateVars = [
+            'name' => $userFullname,
+            'server_name' => $this->settings['mt5_company_name'],
+            'site_link' => $this->settings['copyright_site_name_text'] . "/account_withdrawal_verify?accountWithdrawal_id=$tradeWithdrawal->id",
+            'email' => $from,
+            "content" => $content,
+            "title_right" => "Activate",
+            "subtitle_right" => "Your Account Withdrawal Request",
+            "btn_text" => "Verify"
+        ];
+
+        $blockedEmails = [
+            'topzplaza18@gmail.com',
+            'lhenriquega@gmail.com',
+            'luchatrader23fx@gmail.com',
+            'alexbostontrading@gmail.com',
+            'alisakotsa@gmail.com',
+            'abhay@lqhmarkets.com',
+        ];
+
+        if (!in_array($userEmail, $blockedEmails)) {
+            $this->mailService->sendEmail($userEmail, $emailSubject, $headers, '', $templateVars);
+        }
+    }
 
     public function account_withdrawal_verify(Request $request)
     {
@@ -644,7 +641,8 @@ class TradeWithdrawal extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $content =
                     '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</div>' .
-                    '<div>Your Account withdrawal has been successfully confirmed.</div>';
+                    '<div>Your withdrawal has been confirmed, your funds will be processed shortly.</div>'.
+                    '<div>If you have any questions, our support team is ready to assist.</div>';
                 $templateVars = [
                     'name' => $new_wallet_Withdrawal->user->fullname,
                     'server_name' => $settings['mt5_company_name'],

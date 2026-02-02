@@ -1,109 +1,120 @@
 @extends('layouts.app')
-<style>
-     .country-code-select {
-        border: 1px solid white !important;
-    }
 
-    .country-code-wrapper .select2-container {
-        max-width: 25%;
-        display: block;
-        padding: 0.6rem .75rem;
-        font-size: .875rem;
-        font-weight: 400;
-        line-height: 1.5;
-        color: #131920;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        background-color: #fff;
-        background-clip: padding-box;
-        border: 1px solid #bec8d0;
-        border-radius: 8px;
-        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-    }
-    @media (max-width: 750px) {
-        .register_mob {
-            margin-top:10% !important;
-        }
-    }
-    @media (max-width: 550px) {
-        .mob_logo_center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom:10%
-        }
-    }
-
-.lqh-sale-banner {
-  width: 100%;
-  background-size: 100%;
-  background-color: #003e40;
-  text-align: center;
-  padding: 10px 20px;
-}
-
-.lqh-sale-banner h1 {
-   font-size: 20px;
-   margin-top: 0px;
-   color: #FFFFFF;
-   text-shadow: 0 0 7px #000000;
-}
-
-
-.banner-link:hover {
-  text-decoration: none;
-}
-.loggedin .sales-banner-container{
-  position:fixed;
-  top:0;
-  z-index: 1030;
-}
-@media (max-width: 550px) {
-  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
-        font-size: 14px;
-    }
-}
-
-.lqh-sale-banner {
-  width: 100%;
-  background-size: 100%;
-  background-color: #003e40;
-  text-align: center;
-  padding: 10px 20px;
-}
-
-.lqh-sale-banner h1 {
-   font-size: 20px;
-   margin-top: 0px;
-   color: #FFFFFF;
-   text-shadow: 0 0 7px #000000;
-}
-
-
-.banner-link:hover {
-  text-decoration: none;
-}
-.loggedin .sales-banner-container{
-  position:fixed;
-  top:0;
-  z-index: 1030;
-}
-@media (max-width: 550px) {
-  .loggedin .lqh-sale-banner h1,.lqh-sale-banner h1 {
-        font-size: 14px;
-    }
-}
-
- </style>
 @section('content')
+    <style>
+        .country-code-select {
+            border: 1px solid white !important;
+        }
+
+        .country-code-wrapper .select2-container {
+            max-width: 25%;
+            display: block;
+            padding: 0.6rem .75rem;
+            font-size: .875rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #131920;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #bec8d0;
+            border-radius: 8px;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        @media (max-width: 750px) {
+            .register_mob {
+                margin-top: 10% !important;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .mob_logo_center {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 10%
+            }
+        }
+
+        .lqh-sale-banner {
+            width: 100%;
+            background-size: 100%;
+            background-color: #003e40;
+            text-align: center;
+            padding: 10px 20px;
+        }
+
+        .lqh-sale-banner h1 {
+            font-size: 20px;
+            margin-top: 0px;
+            color: #FFFFFF;
+            text-shadow: 0 0 7px #000000;
+        }
+
+
+        .banner-link:hover {
+            text-decoration: none;
+        }
+
+        .loggedin .sales-banner-container {
+            position: fixed;
+            top: 0;
+            z-index: 1030;
+        }
+
+        @media (max-width: 550px) {
+
+            .loggedin .lqh-sale-banner h1,
+            .lqh-sale-banner h1 {
+                font-size: 14px;
+            }
+        }
+
+        .lqh-sale-banner {
+            width: 100%;
+            background-size: 100%;
+            background-color: #003e40;
+            text-align: center;
+            padding: 10px 20px;
+        }
+
+        .lqh-sale-banner h1 {
+            font-size: 20px;
+            margin-top: 0px;
+            color: #FFFFFF;
+            text-shadow: 0 0 7px #000000;
+        }
+
+
+        .banner-link:hover {
+            text-decoration: none;
+        }
+
+        .loggedin .sales-banner-container {
+            position: fixed;
+            top: 0;
+            z-index: 1030;
+        }
+
+        @media (max-width: 550px) {
+
+            .loggedin .lqh-sale-banner h1,
+            .lqh-sale-banner h1 {
+                font-size: 14px;
+            }
+        }
+    </style>
     <div id="app" data-v-app="">
-        <div  class="auth-main">
-            <div  class="auth-wrapper v3">
+        <div class="auth-main">
+            <div class="auth-wrapper v3">
                 <div class="auth-form register_mob" style="margin: 0;">
-                    <div  class="auth-header row ">
-                        <div  class="my-1 col mob_logo_center"><a  href="/login"><img class="mob_logo_center"
-                                     src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo" style="height: 8vh;"></a>
+                    <div class="auth-header row ">
+                        <div class="my-1 col mob_logo_center"><a href="/login"><img class="mob_logo_center"
+                                    src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo"
+                                    style="height: 8vh;"></a>
                         </div>
                         <div data-v-97e32e5a="" class="col-auto my-1">
                             <h5 data-v-97e32e5a="" class="m-0 text-muted f-w-500"> Step <b data-v-97e32e5a="" class="h5"
@@ -113,8 +124,9 @@
 
                     @if(config("services.sales.promotion"))
                         {{-- <div class="mt-4 w-100 sales-banner-container">
-                            <div class="banner-link" ><div class="lqh-sale-banner">
-                                <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
+                            <div class="banner-link">
+                                <div class="lqh-sale-banner">
+                                    <h1 class="animated pulse">{!!config("services.sales.promotiontext")!!}</h1>
                                 </div>
                             </div>
                         </div> --}}
@@ -124,8 +136,8 @@
                         <div data-v-97e32e5a="" class="card-body">
                             <ul data-v-97e32e5a="" class="nav nav-tabs d-none" id="myTab" role="tablist">
                                 <li data-v-97e32e5a="" class="nav-item" role="presentation"><a data-v-97e32e5a=""
-                                        class="nav-link active" id="auth-tab-1" data-bs-toggle="tab" href="#"
-                                        role="tab" data-slide-index="1" aria-controls="auth-1" aria-selected="true"></a>
+                                        class="nav-link active" id="auth-tab-1" data-bs-toggle="tab" href="#" role="tab"
+                                        data-slide-index="1" aria-controls="auth-1" aria-selected="true"></a>
                                 </li>
                             </ul>
 
@@ -137,7 +149,8 @@
                                         <div data-v-97e32e5a="" class="text-center">
                                             <h3 data-v-97e32e5a="" class="mb-2 text-center f-w-600">Join Us Now
                                             </h3>
-                                            <p data-v-97e32e5a="" class="mb-4 fs-5">Get Started with Trading Today: Quick and Easy Account Setup!</p>
+                                            <p data-v-97e32e5a="" class="mb-4 fs-5">Get Started with Trading Today: Quick
+                                                and Easy Account Setup!</p>
                                         </div>
                                         @if (session('status'))
                                             <div class="alert alert-success">
@@ -154,8 +167,8 @@
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                         class="form-label">Email</label><input data-v-97e32e5a=""
-                                                        type="email" id="email" class="form-control"
-                                                        placeholder="Email" required="" name="email"><!----></div>
+                                                        type="email" id="email" class="form-control" placeholder="Email"
+                                                        required="" name="email"><!----></div>
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
@@ -168,30 +181,30 @@
                                                 <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                         class="form-label">Confirm Password </label><input
                                                         data-v-97e32e5a="" id="confirmpassword" type="password"
-                                                        class="form-control" placeholder="Confirm Password"
-                                                        required="" name="password_confirmation"><!----></div>
+                                                        class="form-control" placeholder="Confirm Password" required=""
+                                                        name="password_confirmation"><!----></div>
                                             </div>
                                         </div>
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button id="registration1"
-                                                        data-v-97e32e5a="" class="btn btn-primary" type="button"
-                                                        role="tab" data-bs-toggle="tab" data-bs-target="#auth-2">
+                                                        data-v-97e32e5a="" class="btn btn-primary" type="button" role="tab"
+                                                        data-bs-toggle="tab" data-bs-target="#auth-2">
                                                         Continue </button></div>
                                             </div>
                                         </div>
 
                                         <div data-v-97e32e5a="" class="row">
                                             <div data-v-97e32e5a="" class="mt-2 d-flex align-items-end">
-                                                <p class="mb-0 f-w-500"
-                                                    style="font-size: 14px !important;">Already have an Account? </p><a
-                                                    href="/login" class="link-primary"
+                                                <p class="mb-0 f-w-500" style="font-size: 14px !important;">Already have an
+                                                    Account? </p><a href="/login" class="link-primary"
                                                     style="font-size: 14px !important; padding-left: 10px; margin-top: 10px;">
                                                     Login</a>
-                                                    <a href="https://www.lqhmarkets.com/risk-disclaimer" class="link-primary ms-auto"
+                                                <a href="https://www.lqhmarkets.com/risk-disclaimer"
+                                                    class="link-primary ms-auto"
                                                     style="font-size: 14px !important; padding-left: 10px;">
                                                     Risk Disclaimer
-                                                    </a>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -205,8 +218,11 @@
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="form-group">
                                                     <label data-v-97e32e5a="" class="form-label">Full Name</label>
-                                                        <input data-v-97e32e5a="" type="text" class="form-control" placeholder="Full name" required name="fullname" maxlength="30" onpaste="handlePaste(event)">
-                                                        <small data-v-97e32e5a="">*as it appears on your ID Card / Proof of Identity</small>
+                                                    <input data-v-97e32e5a="" type="text" class="form-control"
+                                                        placeholder="Full name" required name="fullname" maxlength="30"
+                                                        onpaste="handlePaste(event)">
+                                                    <small data-v-97e32e5a="">*as it appears on your ID Card / Proof of
+                                                        Identity</small>
                                                 </div>
                                             </div>
                                             <div data-v-97e32e5a="" class="col-12">
@@ -223,10 +239,10 @@
                                                                 (<?= $country['country_name'] ?>)</option>
                                                             <?php } ?>
                                                         </select>
-                                                        <input type="number" id="telephone"
-                                                            class="form-control w-75 ms-2" maxlength="25"
-                                                            name="telephone" placeholder="Enter a phone number"
-                                                            tabindex="0" aria-describedby="">
+                                                        <input type="number" id="telephone" class="form-control w-75 ms-2"
+                                                            maxlength="25" name="telephone"
+                                                            placeholder="Enter a phone number" tabindex="0"
+                                                            aria-describedby="">
                                                     </div>
                                                 </div>
                                             </div>
@@ -245,10 +261,9 @@
                                                 </div>
                                             </div>
                                             {{-- <div class="col-sm-12">
-                                                <div class="form-group"><label
-                                                        class="form-label">Gender</label><input
-                                                        type="text" class="form-control" placeholder="Gender"
-                                                        required name="gender"><!----></div>
+                                                <div class="form-group"><label class="form-label">Gender</label><input
+                                                        type="text" class="form-control" placeholder="Gender" required
+                                                        name="gender"><!----></div>
                                             </div> --}}
 
                                             @if(request()->has('refercode') && $referral_code)
@@ -256,15 +271,15 @@
                                                     <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
                                                             class="form-label">Referral Code</label><input data-v-97e32e5a=""
                                                             type="text" class="form-control" value="{{ $referral_code }}"
-                                                            required readonly disabled name="refercode"><!----><small data-v-97e32e5a="">*your referral link code provided.</small></div>
+                                                            required readonly disabled name="refercode"><!----><small
+                                                            data-v-97e32e5a="">*your referral link code provided.</small></div>
                                                 </div>
-                                            {{-- @else
+                                                {{-- @else
                                                 <div data-v-97e32e5a="" class="col-sm-12">
                                                     <div data-v-97e32e5a="" class="form-group"><label data-v-97e32e5a=""
-                                                        class="form-label">Referral Code<small data-v-97e32e5a="">(if
-                                                            any)</small></label><input data-v-97e32e5a="" type="text"
-                                                        class="form-control" placeholder="Referral Code"
-                                                        name="referral">
+                                                            class="form-label">Referral Code<small data-v-97e32e5a="">(if
+                                                                any)</small></label><input data-v-97e32e5a="" type="text"
+                                                            class="form-control" placeholder="Referral Code" name="referral">
                                                     </div>
                                                 </div> --}}
                                             @endif
@@ -307,14 +322,13 @@
                             for <?= $settings['admin_title'] ?> to contact me for marketing purposes. <br
                                 data-v-97e32e5a=""> By
                             registering you agree
-                            to our <a data-v-97e32e5a="" href="#">Privacy Policy</a>, <a data-v-97e32e5a=""
-                                href="#">Client
+                            to our <a data-v-97e32e5a="" href="#">Privacy Policy</a>, <a data-v-97e32e5a="" href="#">Client
                                 Agreement </a>&amp; <a data-v-97e32e5a="" href="#">Trading Risk
                                 Warning</a>. </p>
                     </div>
                     <?php } ?>
                 </div>
-                <div  class="auth-sidecontent"
+                <div class="auth-sidecontent"
                     style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
                     <div class="p-3 text-center px-lg-5">
                         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
@@ -324,8 +338,7 @@
                                     <h5 class="mb-0 text-white">Regulatory Excellence</h5>
                                     <p class="text-white text-opacity-50">Compliance Assurance</p>
                                     <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
+                                            class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star-half-alt text-warning"></i></div>
                                     <p class="text-white"> With meticulous attention to regulatory standards,
@@ -340,8 +353,7 @@
                                     <h5 class="mb-0 text-white">Transparent Pricing Policy</h5>
                                     <p class="text-white text-opacity-50">Clear Cost Commitment</p>
                                     <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
+                                            class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star-half-alt text-warning"></i></div>
                                     <p class="text-white"> At <?= $settings['admin_title'] ?>, transparency is paramount.
@@ -356,8 +368,7 @@
                                     <h5 class="mb-0 text-white">Swift and Precise Execution</h5>
                                     <p class="text-white text-opacity-50">Precision Trading</p>
                                     <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
+                                            class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star-half-alt text-warning"></i></div>
                                     <p class="text-white"> Experience lightning-fast trade execution with
@@ -365,15 +376,15 @@
                                         Our advanced
                                         trading infrastructure ensures swift and precise order processing, enabling
                                         traders to capitalize on
-                                        market opportunities instantly. </p>
+                                        market opportunities instantly.
+                                    </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-04.png" alt="user-image"
                                         class="mb-3 hei-150">
                                     <h5 class="mb-0 text-white">Competitive Spreads</h5>
                                     <p class="text-white text-opacity-50">Cost Efficiency</p>
                                     <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
-                                            class="fas fa-star text-warning"></i><i
+                                            class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star-half-alt text-warning"></i></div>
                                     <p class="text-white"> Gain a competitive edge with <?= $settings['admin_title'] ?>'
@@ -411,7 +422,7 @@
                 alert('Hyperlinks are not allowed in the Full Name field.');
             }
         }
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             function formatOption(option) {
                 if (!option.id) {
@@ -419,7 +430,7 @@
                 }
                 var $option = $(
                     '<span><span class="fi fis fi-' + $(option.element).data('flag') + '"></span>' + option
-                    .text + '</span>'
+                        .text + '</span>'
                 );
                 return $option;
             }
@@ -429,7 +440,7 @@
                 templateSelection: formatOption,
                 selectionCssClass: "country-code-select"
             });
-            $('#registration1').click(function() {
+            $('#registration1').click(function () {
                 const email = $('#email').val();
                 const password = $('#password').val();
                 const confirmPassword = $('#confirmpassword').val();
@@ -494,7 +505,7 @@
                 $('#auth-active-slide').html(2);
             });
         });
-        $.get("http://ipinfo.io", function(response) {
+        $.get("http://ipinfo.io", function (response) {
             var country = response.country.toLowerCase();
             var option = $("#country_code option[data-flag='" + country + "']").attr("value");
             $("#country_code").val(option).trigger("change")

@@ -75,7 +75,7 @@ class Account extends Model
 
     public function trades()
     {
-        return $this->hasMany(Trade::class);
+        return $this->hasMany(Trade::class)->withTrashed();
     }
 
     public function getTotalBonusDepositAttribute()
@@ -84,7 +84,7 @@ class Account extends Model
         $bonusDeposit = $this->BonusTransaction
             ? $this->BonusTransaction
             ->filter(function ($transaction) {
-                return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage' && $transaction->admin_remark !== 'Promo Bonus' && $transaction->admin_remark !== 'Promo Deduction' && $transaction->admin_remark !== 'Promo Addition');
+                return ($transaction->admin_remark !== 'Credit' && $transaction->admin_remark !== '10x Trader Leverage' && $transaction->admin_remark !== 'Promo Bonus' && $transaction->admin_remark !== 'Promo Deduction' && $transaction->admin_remark !== 'Promo Addition' && $transaction->admin_remark !== 'Bonus Pay Off');
             })
             ->sum(function ($transaction) {
                 return (float) $transaction->bonus_amount; // Cast to float to avoid string issues
@@ -186,6 +186,26 @@ class Account extends Model
             $account->ib1Commission()->delete();
             $account->totalBalance()->delete();
         });
+
+        static::restoring(function ($account) {
+            // Restore related records
+            $account->trades()->withTrashed()->restore();
+            $account->tradeDeposits()->withTrashed()->restore();
+            $account->tradeWithdrawals()->withTrashed()->restore();
+            $account->BonusTransaction()->withTrashed()->restore();
+            $account->dailyReports()->withTrashed()->restore();
+            $account->deals()->withTrashed()->restore();
+            $account->totalBalance()->withTrashed()->restore();
+        });
+    }
+
+    /**
+     * Check if this account was created via Zapier
+     * @return bool
+     */
+    public function isZapierAccount(): bool
+    {
+        return $this->created_from === 'zapier';
     }
 
 }

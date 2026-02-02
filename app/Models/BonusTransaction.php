@@ -29,7 +29,6 @@ class BonusTransaction extends Model
 
      use HasFactory,HasUuids,SoftDeletes;
 
-    public $timestamps=false;
     protected $guarded = [];
 
     public function user()
@@ -51,4 +50,10 @@ class BonusTransaction extends Model
     {
         return $this->belongsTo(Promocode::class);
     }
+
+    public function scopeZapier($query)
+    {
+        return $query->where('admin_remark', 'like', '%Zapier%');
+    }
+
 }

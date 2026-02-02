@@ -141,7 +141,7 @@ class BalanceSyncService
 
             return 'not_found';
         }
-
+        Log::info("message".json_encode($accountData));
         // Extract balance and equity from the standardized response
         $currentBalance = (float) ($accountData['balance'] ?? 0);
         $currentEquity = (float) ($accountData['equity'] ?? 0);
@@ -179,16 +179,91 @@ class BalanceSyncService
 
         $accountPromoBonus = $account->BonusTransaction()
                     ->where('bonus_type', 'Bonus In')
-                    ->whereIn('admin_remark', ['Promo Bonus', '10x Trader Leverage'])
-                    ->when($account->bonus_payoff_sync_at, function ($query, $bonusPayoffSyncAt) {
+                    // ->whereIn('admin_remark', ['Promo Bonus', '10x Trader Leverage'])
+                    ->when($account->bonus_payoff_sync_at, function ($query) use($bonusPayoffSyncAt) {
                         $query->where('bonus_date', '<=', $bonusPayoffSyncAt);
-                    });
+                    })
+                    ->whereNotNull('transaction_id');
 
-        Log::info('Promo Bonus Query: '.$accountPromoBonus->toSql(), $accountPromoBonus->getBindings());
-        Log::info("account sync for payoff".$account->code);
+        $bonus = $account->BonusTransaction()
+            ->where(function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                    ->orWhere('bonus_type', 'Bonus Out');
+            })
+            ->selectRaw("
+                SUM(CASE
+                    WHEN admin_remark NOT LIKE '%Credit%'
+                    AND admin_remark NOT LIKE '%10x Trader Leverage%'
+                    AND admin_remark NOT LIKE '%Promo Bonus%'
+                    AND admin_remark NOT LIKE '%Promo Deduction%'
+                    AND admin_remark NOT LIKE '%Promo Addition%'
+                    AND admin_remark NOT LIKE '%Bonus Pay Off%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_bonus,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Bonus%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_promo_bonus_amount,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Bonus%'
+                    THEN bonus_used
+                    ELSE 0
+                END) AS total_promo_bonus_used,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Deduction%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_promo_deduction
+            ")
+            ->first();
+
+        // Log::info('Promo Bonus Query: '.$accountPromoBonus->toSql(), $accountPromoBonus->getBindings());
+        Log::info("account sync for payoff".json_encode($bonus));
         Log::info("account promo bonus".$accountPromoBonus->sum('bonus_amount'));
-        Log::info("account currentCredit".$currentCredit);
-        Log::info("account code".$account->code);
+        // Log::info("account currentCredit".$currentCredit);
+        // Log::info("account code".$account->code);
+        $avalableBonus = $bonus->total_promo_bonus_amount - ($bonus->total_promo_bonus_used );
+
+
+        //make credit equal
+
+
+        if ($currentCredit > 0 &&  ($avalableBonus > $currentCredit) ) {
+            $deduction = $avalableBonus - $currentCredit;
+            if ($deduction > 0) {
+                Log::info("BatchBalanceSyncJob: Creating bonus payoff transaction", [
+                    'account_id' => $account->id,
+                    'deduction_amount' => $deduction,
+                    'email' => $account->email
+                ]);
+
+                BonusTransaction::create([
+                    'email' => $account->email,
+                    'user_id' => $account->user_id,
+                    'account_id' => $account->id,
+                    'code' => $account->code,
+                    'bonus_amount' => $deduction * -1,
+                    'bonus_type' => 'Bonus Out',
+                    'status' => 1,
+                    'admin_remark' => 'Bonus Pay Off',
+                    'bonus_currency' => 'USD',
+                ]);
+
+                // Log::debug("BatchBalanceSyncJob: Updating bonus used amounts");
+                $accountPromoBonus->update([
+                    'bonus_used' => \DB::raw('bonus_amount')
+                ]);
+
+                $account->bonus_payoff_sync_at = now();
+                $account->save();
+            } else {
+            }
+        }
 
         if ($currentCredit == 0 &&  ($accountPromoBonus->sum('bonus_amount') > $currentCredit) ) {
                 Log::info("BatchBalanceSyncJob: Checking bonus payoff for account", [

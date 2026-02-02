@@ -242,9 +242,14 @@
                                             <div class="col-3"></div>
                                             <div class="col-9">
                                                 <div class="gap-2 mt-2 d-grid">
-                                                    <button class="btn btn-lg btn-primary" value="Live Account Creation"
-                                                        name="a[register]" type="submit"><i class="ti ti-plus me-2"></i>
-                                                        Create Account</button>
+                                                    <button id="createAccountBtn" class="btn btn-lg btn-primary" value="Live Account Creation"
+                                                        name="a[register]" type="submit">
+                                                        <span id="btnText"><i class="ti ti-plus me-2"></i>Create Account</span>
+                                                        <span id="btnLoading" class="d-none">
+                                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                            Creating Account...
+                                                        </span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -398,5 +403,30 @@
         // Initialize on page load
         $(".platform-select").trigger("change");
         $(".acc-types").trigger("change");
+
+        // Prevent duplicate form submissions
+        $('form').on('submit', function(e) {
+            const $btn = $('#createAccountBtn');
+            const $btnText = $('#btnText');
+            const $btnLoading = $('#btnLoading');
+            
+            // Check if button is already disabled (prevent double submission)
+            if ($btn.prop('disabled')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Disable button and show loading state
+            $btn.prop('disabled', true);
+            $btnText.addClass('d-none');
+            $btnLoading.removeClass('d-none');
+            
+            // Re-enable button after 12 seconds as fallback (in case of error)
+            setTimeout(function() {
+                $btn.prop('disabled', false);
+                $btnText.removeClass('d-none');
+                $btnLoading.addClass('d-none');
+            }, 12000);
+        });
     </script>
 @endsection

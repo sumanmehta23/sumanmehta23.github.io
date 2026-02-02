@@ -162,7 +162,8 @@
           { data: 'email', title: 'Email / Username' },
           { data: 'name', title: 'Role' },
           { data: 'permissions_count', title: 'Per. Count' },
-          { data: 'status', title: 'status' },
+          { data: 'status', title: 'Status' },
+          { data: 'fa_status', title: '2FA Status' },
           {
           data: 'action',
           title: 'Action',

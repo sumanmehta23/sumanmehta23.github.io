@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Str;
 use Laravel\Telescope\Telescope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -58,9 +59,9 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewTelescope', function ($user) {
-            return in_array($user->email, [
+            return (in_array($user->email, [
                 'admin@lqhmarkets.com'
-            ]);
+            ]) || Str::endsWith($user->email, '@tradetech.app'));
         });
     }
     protected function authorization()

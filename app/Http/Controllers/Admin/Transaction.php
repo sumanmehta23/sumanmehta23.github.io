@@ -291,10 +291,10 @@ class Transaction extends Controller
 
     public function tradeAccountWithdrawalAmountUpdate(Request $request)
     {
-        $amount = $request->amount;
-        $withdraw_ammount = $request->withdraw_ammount;
-        $transaction_fee = $request->transaction_fee;
-        $total_amount = $withdraw_ammount + $transaction_fee;
+        $amount = (float)$request->amount;
+        $withdraw_ammount = (float)$request->withdraw_ammount;
+        $transaction_fee = (float)$request->transaction_fee;
+        $total_amount = (float)$withdraw_ammount + (float)$transaction_fee;
 
         $tradeWithdrawal = TradeWithdrawals::find($request->id);
 
@@ -304,10 +304,18 @@ class Transaction extends Controller
         $user = User::where('id', $tradeWithdrawal->user_id)->first();
         $account = Account::where('id', $tradeWithdrawal->account_id)->first();
 
+        $mt5account = null;
+        if (!$this->ensureMT5Connection()) {
+            return redirect()->back()->with('error', 'Failed to connect to MT5 server. Please try again.');
+        }
+        if (($error_code = $this->mt5Service->userAccountGet($account->code, $mt5account)) != MTRetCode::MT_RET_OK) {
+            session()->flash('error', 'MT5 ' . $account->code . ': ' . MTRetCode::GetError($error_code));
+        }
+
+        $adjusted_amount = 0;
 
         if ($tradeWithdrawal) {
-            $balance = $account->balance;
-
+            $balance = (float)$mt5account->Balance;
             if ($amount > ($balance + $total_amount)) {
                 return redirect()->back()->with('error', 'Insufficient balance in your account.');
             }
@@ -449,7 +457,7 @@ class Transaction extends Controller
             //     ")
             //     ->groupBy('u.email')
             //     ->first();
-            $details = TradeWithdrawals::with('user', 'totalBalance', 'withdrawTo','clientWallet')
+            $details = TradeWithdrawals::withTrashed()->with('user', 'totalBalance', 'withdrawTo','clientWallet')
                 ->where('id', request()->id)
                 ->withSum('totalBalance', 'deposit_amount') // Aggregate total wallet deposits
                 ->withSum('totalBalance', 'trading_deposited') // Aggregate total trading deposits
@@ -460,8 +468,7 @@ class Transaction extends Controller
             // if ($details->email == 'kostiagraz@gmail.com'){
             //     dd($details);
             // }
-
-            if ($details->client_wallet_id) {
+            if (isset($details) && $details->client_wallet_id) {
                 $client_wallet = ClientWallet::withTrashed()->where('id', $details->client_wallet_id)
                     ->where('status', 1)
                     ->first();
@@ -933,8 +940,9 @@ class Transaction extends Controller
                     // Process the result from the API
                     if (isset($responseData->result) && isset($responseData->result->id)) {
                         $payoutResult = $responseData->result;
+                        $payoutStatus = $responseData->result->status;
 
-                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction, $email, $depositAmount) {
+                        DB::transaction(function () use ($request, $response, $payoutResult, $transaction, $email, $depositAmount,$payoutStatus) {
                             // Update wallet_withdraw table with transaction_id and status
                             TradeWithdrawals::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
@@ -942,7 +950,8 @@ class Transaction extends Controller
                                     'transaction_id' => $payoutResult->id,
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($payoutResult->passthrough),
-                                    'status' => 1  // Set status to 1 (success)
+                                    'status' => 1, // Set status to 1 (success)
+                                    'admin_remark' => $payoutStatus,
                                 ]);
                             // TotalBalance::create([
                             //     'user_id' => $transaction->user_id,

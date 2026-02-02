@@ -208,8 +208,8 @@ class Wallet extends Controller
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
                 $startsWithValid = (strpos($address, '1') === 0) ||
-                                   (strpos($address, '3') === 0) ||
-                                   (strpos($address, 'bc1') === 0);
+                    (strpos($address, '3') === 0) ||
+                    (strpos($address, 'bc1') === 0);
 
                 if (!$startsWithValid) {
                     return [
@@ -332,13 +332,18 @@ class Wallet extends Controller
         $ClientWallet = ClientWallet::where('user_id', $user->id)
             ->latest('created_at') // Specify the column to order by
             ->first();
+
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>' .
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
-            '<p></p>' .
-            '<p>Wallet Address: ' . $request->wallet_address . ' </p>' .
-            '<p></p>' .
+            '<p><strong>Wallet Address:</strong><br>' .
+            '<span style="
+                word-break: break-all;
+                overflow-wrap: break-word;
+                white-space: normal;
+                display: inline-block;
+                max-width: 100%;
+            ">' . e($request->wallet_address) . '</span></p>' .
             '<p>Click the link below to activate your Wallet Address</p>';
 
         $templateVars = [
@@ -381,15 +386,18 @@ class Wallet extends Controller
 
         $walletAddress = htmlspecialchars($request->wallet_address, ENT_QUOTES, 'UTF-8');
 
-        $content = '
-            <p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>
-            <p></p>
-            <p>You are receiving this email because you have added a new wallet address to your account.</p>
-            <p></p>
-            <p>Wallet Address: ' . $walletAddress . '</p>
-            <p></p>
-            <p>Click the link below to activate your Wallet Address:</p>
-        ';
+        $content =
+            '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
+            '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
+            '<p><strong>Wallet Address:</strong><br>' .
+            '<span style="
+                word-break: break-all;
+                overflow-wrap: break-word;
+                white-space: normal;
+                display: inline-block;
+                max-width: 100%;
+            ">' . e($request->wallet_address) . '</span></p>' .
+            '<p>Click the link below to activate your Wallet Address</p>';
 
         $templateVars = [
             'name' => $user->fullname,
@@ -694,7 +702,7 @@ class Wallet extends Controller
                 "btn_text" => "Login"
             ];
             $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
-            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Details succesfully updated');
+            return redirect()->route('user-profile')->with('status', 'Your Wallet Details succesfully updated');
         }
         return redirect()->route('user-profile')->with('error', 'Something went wrong');
     }
@@ -744,7 +752,7 @@ class Wallet extends Controller
         ];
         $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
         if ($deleted) {
-            return redirect()->route('user-profile')->with('status', 'WoW! Your Wallet Address succesfully deleted');
+            return redirect()->route('user-profile')->with('status', 'Your Wallet Address succesfully deleted');
         } else {
             return redirect()->route('user-profile')->with('error', 'Something went wrong');
         }
@@ -801,7 +809,7 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('success', 'WoW! Your Wallet Address is now Verified');
+                return redirect()->route('trade-withdrawal')->with('success', 'Your Wallet Address is now Verified');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
             }
@@ -1051,6 +1059,7 @@ class Wallet extends Controller
         $payload = $request->json()->all();
 
         Log::channel("cryptochillcallback")->info(json_encode($payload));
+        response()->json(['status' => 'received'], status: 200)->send();
         try {
             // Get signature and callback_id fields from provided data
             $signature = $payload['signature'] ?? null;
@@ -1071,6 +1080,16 @@ class Wallet extends Controller
 
             // Log callback data (you can change log storage if needed)
             $logData = "IP: " . $request->ip() . "\nPayload: " . json_encode($payload, JSON_PRETTY_PRINT) . "\n";
+
+            if (isset($payload['transaction'])) {
+                Log::channel('cryptochillcallback')->error('Transaction data missing in payload: ' . json_encode($payload));
+            } elseif (isset($payload['callback_status']) && in_array($payload['callback_status'], ['payout_pending', 'payout_confirmed', 'payout_complete'])) {
+                Log::channel('cryptochillcallback')->info('Payout callback received, no action taken: ' . json_encode($payload));
+                $this->handlePayoutCallback($payload);
+                return response()->json(['status' => 'payout callback processed'], 200);
+            } else {
+                return response()->json(['error' => 'Transaction data missing in payload'], 200);
+            }
 
             // Check if the callback status is transaction confirmed or complete
             if (isset($payload["callback_status"]) && in_array($payload["callback_status"], ['transaction_confirmed', 'transaction_complete'])) {
@@ -1452,6 +1471,62 @@ class Wallet extends Controller
         return response()->json(['error' => 'Invalid callback status'], 200);
     }
 
+    private function handlePayoutCallback(array $payload)
+    {
+        $payoutData = $payload['payout'] ?? null;
+        $callbackStatus = $payload['callback_status'] ?? null;
+
+        if (!$payoutData || !$callbackStatus) {
+            return;
+        }
+
+        if (!in_array($callbackStatus, [
+            'payout_pending',
+            'payout_confirmed',
+            'payout_complete'
+        ])) {
+            return;
+        }
+
+        // passthrough comes as JSON string
+        $passthrough = [];
+
+        if (!empty($payoutData['passthrough'])) {
+            $passthrough = json_decode($payoutData['passthrough'], true);
+        }
+
+        if (!isset($passthrough['trans_id'])) {
+            Log::warning('Payout callback received without trans_id', $payload);
+            return;
+        }
+
+        $transactionId = $passthrough['trans_id'];
+        $payoutStatus = $payoutData['status'] ?? 'unknown';
+        $payoutTxId = $payoutData['txid'] ?? null;
+
+        $transaction = TradeWithdrawals::where('id', $transactionId)->first();
+
+        if (!$transaction) {
+            Log::warning("Trade withdrawal not found for trans_id: {$transactionId}");
+            return;
+        }
+
+        $payoutResult = [
+            'result' => $payoutData
+        ];
+
+        $transaction->payout_callback_status = $payoutStatus;
+        $transaction->transaction_id = $payoutTxId;
+        $transaction->payout_res = $payoutResult;
+        $transaction->admin_remark = $payoutStatus;
+        $transaction->save();
+
+        Log::info(
+            "Payout callback updated | Withdrawal ID: {$transactionId} | " .
+            "TxID: {$payoutTxId} | Status: {$payoutStatus}"
+        );
+    }
+
     // Function to generate HMAC signature
     private function encodeHmac($key, $msg)
     {
@@ -1694,7 +1769,7 @@ class Wallet extends Controller
                     "subtitle_right" => "Successful",
                 ];
                 $this->mailService->sendEmail($new_wallet_Withdrawal->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('wallet_withdrawal')->with('status', 'WoW! Your Wallet Withdrawal is now Verified');
+                return redirect()->route('wallet_withdrawal')->with('status', 'Your Wallet Withdrawal is now Verified');
             } else {
                 return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Withdrawal is already Verified');
             }

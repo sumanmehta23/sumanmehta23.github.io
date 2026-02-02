@@ -11,6 +11,11 @@
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="{{ asset('assets/js/sweetalert2.all.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('admin_assets/assets/libs/sweetalert2/sweetalert2.min.css') }}">
+    <style>
+        .swal2-popup { font-family: "Cairo", sans-serif !important; }
+        .swal2-confirm { background-color: #00b98e !important; border-color: #00b98e !important; }
+        .swal2-confirm:hover { background-color: #0b8367 !important; }
+    </style>
 </head>
 
 <body>

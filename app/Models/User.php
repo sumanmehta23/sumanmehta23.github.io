@@ -125,6 +125,11 @@ class User extends Authenticatable
             ->withPivot('added_by');
     }
 
+    public function relationshipManager()
+    {
+        return $this->hasOne(RelationshipManager::class, 'user_id');
+    }
+
     // public function getCountry()
     // {
     //     return Country::where('country_name', '=', $this->country)
@@ -215,7 +220,8 @@ class User extends Authenticatable
 
     public function getNewTotalDepositAttribute()
     {
-        return TradeDeposit::where('user_id', $this->id)
+        return TradeDeposit::withTrashed()
+            ->where('user_id', $this->id)
             ->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa'])
             ->where('status', 1)
             ->sum('deposit_amount');
@@ -223,17 +229,18 @@ class User extends Authenticatable
 
     public function getNewTotalWithdrawalAttribute()
     {
-        return TradeWithdrawals::where('user_id', $this->id)
+        return TradeWithdrawals::withTrashed()
+            ->where('user_id', $this->id)
             ->where('withdraw_type', 'Trade Withdrawal')
             ->where('status', 1)
-            ->whereNull('deleted_at')
             ->selectRaw('SUM(withdrawal_amount + COALESCE(transaction_fee, 0)) as total')
             ->value('total');
     }
 
     public function getPendingWwAttribute()
     {
-        return WalletWithdraw::where('user_id', $this->id)
+        return WalletWithdraw::withTrashed()
+            ->where('user_id', $this->id)
             ->where('status', 0)
             ->selectRaw('SUM(withdraw_amount + COALESCE(withdraw_transaction_fee, 0)) as total')
             ->value('total');
@@ -241,7 +248,8 @@ class User extends Authenticatable
 
     public function getTotalBalanceAttribute()
     {
-        return TotalBalance::where('user_id', $this->id)
+        return TotalBalance::withTrashed()
+            ->where('user_id', $this->id)
             ->selectRaw('
                 SUM(deposit_amount) as deposit_amount,
                 SUM(trading_deposited) as trading_deposited,
@@ -292,18 +300,18 @@ class User extends Authenticatable
         return $this->countryDetail;
     }
 
-       /**
+    /**
      * Get affiliate parent user
      * Usage: $user->affiliateParent()
      */
     public function affiliateParent()
     {
         if (!$this->cxd) return null;
-        
-        $cxdValue = strpos($this->cxd, '_') !== false 
-            ? substr($this->cxd, 0, strpos($this->cxd, '_')) 
+
+        $cxdValue = strpos($this->cxd, '_') !== false
+            ? substr($this->cxd, 0, strpos($this->cxd, '_'))
             : $this->cxd;
-        
+
         return Affiliate::where('custom_id', $cxdValue)->first();
     }
 
@@ -314,7 +322,7 @@ class User extends Authenticatable
     public function affiliateChildren()
     {
         if (!$this->affiliate_id) return collect();
-        
+
         return User::where('cxd', $this->affiliate_id)
             ->orWhere('cxd', 'LIKE', $this->affiliate_id . '_%')
             ->get();
@@ -328,17 +336,33 @@ class User extends Authenticatable
 
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
 
-        // Dynamically build the query for all 15 levels using a single query.
-        $clients = IbClientList::where(function ($query) use ($referralCode) {
-            for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib$i", $referralCode);
-            }
-        })->get();
+        // Query aspnetusers with aggregated data from accounts and trade_deposits
+        $clients = DB::table('aspnetusers as au')
+            ->leftJoin('accounts as acc', function ($join) {
+                $join->on('acc.user_id', '=', 'au.id')
+                    ->where('acc.demo', '=', 0);
+            })
+            ->leftJoin('trade_deposits as td', function ($join) {
+                $join->on('td.user_id', '=', 'au.id')
+                    ->where('td.status', '=', 1);
+            })
+            ->where(function ($query) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $query->orWhere("au.ib$i", $referralCode);
+                }
+            })
+            ->select(
+                DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
+                'au.*'
+            )
+            ->groupBy('au.id')
+            ->get();
 
         // Group clients by level (ib1, ib2, ..., ib15)
         $groupedClients = $clients->mapToGroups(function ($client) use ($referralCode) {
             foreach (range(1, 15) as $level) {
-                if ($client["ib$level"] === $referralCode) {
+                if ($client->{"ib{$level}"} === $referralCode) {
                     return [$level => $client];
                 }
             }
@@ -357,11 +381,17 @@ class User extends Authenticatable
         $referralCode = $this->ib->referral_code ?: $this->ib->getAttribute('referral_code');
 
         // Perform a single query to calculate the total deposit
-        $totalDeposit = IbClientList::where(function ($query) use ($referralCode) {
-            for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib{$i}", $referralCode);
-            }
-        })->sum('total_deposit'); // Directly sum in SQL, avoids loading all models into memory
+        $totalDeposit = DB::table('aspnetusers as au')
+            ->leftJoin('trade_deposits as td', function ($join) {
+                $join->on('td.user_id', '=', 'au.id')
+                    ->where('td.status', '=', 1);
+            })
+            ->where(function ($query) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $query->orWhere("au.ib{$i}", $referralCode);
+                }
+            })
+            ->sum(DB::raw('DISTINCT td.deposit_amount'));
 
         return $totalDeposit ?? 0;
     }
@@ -374,15 +404,20 @@ class User extends Authenticatable
 
         $referralCode = $this->ib->referral_code ? $this->ib->referral_code : $this->ib->email;
         // Dynamically build the query for all 15 levels using a single query.
-        $totalWithdrawal = IbClientList::where(function ($query) use ($referralCode) {
-            for ($i = 1; $i <= 15; $i++) {
-                $query->orWhere("ib$i", $referralCode);
-            }
-        })->sum('total_withdrawal');
+        $totalWithdrawal = DB::table('aspnetusers as au')
+            ->leftJoin('trade_withdrawal as tw', function ($join) {
+                $join->on('tw.user_id', '=', 'au.id')
+                    ->where('tw.status', '=', 1)->where('tw.withdraw_type', '=', 'Trade Withdrawal');
+            })
+            ->where(function ($query) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $query->orWhere("au.ib$i", $referralCode);
+                }
+            })
+            ->sum(DB::raw('DISTINCT (tw.withdrawal_amount + COALESCE(tw.transaction_fee, 0))'));
 
-        // Calculate the total sum of 'total_deposit'
-        // $totalWithdrawal = $clients->sum('total_withdrawal');
-        return $totalWithdrawal ?? 0;
+        // No withdrawal field available, returning count as placeholder
+        return $totalWithdrawal;
     }
 
     public function getTicketStatusAttribute()
@@ -412,11 +447,11 @@ class User extends Authenticatable
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
-            '<p></p>'.
+            '<p></p>' .
             '<p>You are receiving this email because you have registered for a LQH Markets Account.</p>' .
             '<p></p>'.
             '<p>Click the link below to activate your Account</p>';
-        $code = $this->emailToken;
+        $code = $this->email_verify_token;
         $templateVars = [
             'name' => $this->fullname,
             'server_name' => $settings['mt5_company_name'],
@@ -439,5 +474,4 @@ class User extends Authenticatable
             }) : 0;
         });
     }
-
 }
