@@ -51,7 +51,7 @@
 <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form action="#" id="ibRequestForm"  method="POST">
+      <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestForm" method="POST">
         @csrf
         <input type="hidden" name="client_id" id="client_id" value="">
         <div class="modal-header">
@@ -112,7 +112,7 @@
 <div class="modal fade" id="ibRequestApprovalModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <form action="/admin/bulkIbApprove" id="ibRequestApproveForm" method="POST">
+        <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestApproveForm" method="POST">
             @csrf
           <input type="hidden" name="client_id" id="client_id" value="">
           <div class="modal-header">
