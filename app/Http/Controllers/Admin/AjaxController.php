@@ -307,6 +307,7 @@ class AjaxController extends Controller
             // Find the user to impersonate
             $client = User::findOrFail($clientId);
             Gate::forUser($admin)->authorize('client:impersonate', $client);
+
             activity()
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
@@ -325,6 +326,10 @@ class AjaxController extends Controller
             Auth::guard('web')->login($client);
             Session::put('admin', $admin);
             Session::put('user', $client);
+
+            // Bypass 2FA verification when admin impersonates a client
+            Session::put('2fa:verified', true);
+
             // dd('ssss');
             return response()->json([
                 'success' => true,
@@ -498,6 +503,9 @@ class AjaxController extends Controller
                 })
                 ->editColumn('ib_group', function ($row) {
                     return $row->ib ? $row->ib->ib_plan_details_id : '';
+                })
+                ->addColumn('ib_id', function ($row) {
+                    return $row->ib ? $row->ib->id : '';
                 })
                 ->editColumn('ib', function ($row) {
                     $ib_name = $row->getParentIb() ? $row->getParentIb()->name : 'noIB';
@@ -1596,9 +1604,33 @@ class AjaxController extends Controller
                     return $row->withdraw_type;
                 })
                 ->addColumn('withdraw_method', function ($row) {
-                    if ($row->status == 1) {
-                        return "<a class='text-success' target='_blank' href='https://uniwire.com/payout/{$row->transaction_id}'>{$row->withdraw_type}</a>";
-                    } else {
+                    // if ($row->status == 1) {
+                    //     return "<a class='text-success' target='_blank' href='https://uniwire.com/payout/{$row->transaction_id}'>{$row->withdraw_type}</a>";
+                    // } else {
+                    //     return 'N/A';
+                    // }
+
+                    if($row->status == 1){
+                        $data = json_decode($row->payout_res, true);
+                        $txid = $data['result']['txid'] ?? null;
+                        $kind = $data['result']['kind'] ?? '';
+                        $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                        $link = '';
+                        if($txid){
+                            if($coin =='ETH'){
+                                $link = "https://etherscan.io/tx/{$txid}";
+                            }
+                            elseif($coin != 'USDT'){
+                                $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                            }
+                            else{
+                                $link = "https://tokenview.io/en/search/{$txid}";
+                            }
+                        }
+                        $withdrawMethod =  ($row->admin_remark == 'Manually Approved') ? 'Manual' : $row->withdraw_type;
+                        // dump($withdrawMethod);
+                        return "<a class='text-success' target='_blank' href='{$link}'>{$withdrawMethod}</a>";
+                    }else{
                         return 'N/A';
                     }
                 })
@@ -1636,7 +1668,7 @@ class AjaxController extends Controller
                     if ($row->status == 1) {
                         return "<div class='badge bg-outline-success'>Approved</div>";
                     } elseif ($row->status == 2) {
-                        return "<div class='badge bg-outline-danger'>Rejected</div>";
+                        return "<div class='badge bg-outline-danger'>Cancelled by Admin</div>";
                     } elseif ($row->status == 3) {
                         return "<div class='badge bg-outline-danger'>Cancelled By User</div>";
                     } else {
@@ -3502,7 +3534,7 @@ class AjaxController extends Controller
                 'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Rejected</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
+                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Cancelled by Admin</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
                     '<span class="badge bg-outline-primary">Pending</span>')),
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
@@ -3856,6 +3888,9 @@ class AjaxController extends Controller
                 })
                 ->addColumn('checkbox', function ($row) {
                     return "<input type='checkbox' class='row-checkbox' >";
+                })
+                ->addColumn('ib_plan_details_id', function ($row) {
+                    return $row->ib_plan_details_id ?? '';
                 })
                 ->rawColumns(['id', 'name', 'total_deposit', 'total_withdrawal', 'date', 'status', 'action', 'checkbox'])
                 ->make(true);

@@ -494,7 +494,7 @@
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="#" id="ibRequestForm" method="post">
+                <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestForm" method="post">
                     @csrf
                     <input type="hidden" name="client_id" id="client_id" value="">
                     <div class="modal-header">
@@ -760,28 +760,33 @@
                         },
                         searchable: false
                     },
+                    {
+                        data: 'ib_id',
+                        name: 'ib_id',
+                        visible: false
+                    },
                 ],
-                "initComplete": function() {
-                    var needs = [2];
-                    this.api()
-                        .columns()
-                        .every(function(index) {
-                            if (needs.indexOf(index) == -1) {
-                                return false;
-                            }
-                            let column = this;
-                            let title = column.header().textContent;
-                            let input = document.createElement('input');
-                            input.placeholder = title;
-                            column.header().replaceChildren(input);
+                // "initComplete": function() {
+                //     var needs = [2];
+                //     this.api()
+                //         .columns()
+                //         .every(function(index) {
+                //             if (needs.indexOf(index) == -1) {
+                //                 return false;
+                //             }
+                //             let column = this;
+                //             let title = column.header().textContent;
+                //             let input = document.createElement('input');
+                //             input.placeholder = title;
+                //             column.header().replaceChildren(input);
 
-                            input.addEventListener('keyup', () => {
-                                if (column.search() !== this.value) {
-                                    column.search(input.value).draw();
-                                }
-                            });
-                        });
-                },
+                //             input.addEventListener('keyup', () => {
+                //                 if (column.search() !== this.value) {
+                //                     column.search(input.value).draw();
+                //                 }
+                //             });
+                //         });
+                // },
                 "rowCallback": function(row, data) {
 
                 },
@@ -860,18 +865,14 @@
                 $('.ajaxDataTable tbody tr').off('click', '.ibToggle');
                 $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function() {
                     var data = dTtable.row($(this).closest("tr")).data();
-                    $("#clientName,#clientEmail").html("");
-                    $("#clientName").html(data.fullname)
-                    $("#clientEmail").html(data.email)
-                    $("#client_id").val(data.id)
-                    $("[name='ib_status']").val(data.ib_status).trigger("change");
-                    $("[name='ib_group']").val(data.ib_group).trigger("change");
+                    $("#ibRequestForm #clientName,#ibRequestForm #clientEmail").html("");
+                    $("#ibRequestForm #clientName").html(data.fullname || '');
+                    $("#ibRequestForm #clientEmail").html(data.fullemail || data.email || '');
+                    var clientId = (data.ib_id && data.ib_id !== '' && data.ib_id != null) ? data.ib_id : data.id;
+                    $("#ibRequestForm input[name='client_id']").val(clientId);
+                    $("#ibRequestForm [name='ib_status']").val(data.ib_status != null && data.ib_status !== '' ? String(data.ib_status) : '').trigger("change");
+                    $("#ibRequestForm [name='ib_group']").val(data.ib_group != null && data.ib_group !== '' ? String(data.ib_group) : '').trigger("change");
                     myModal.show();
-                    // swal.fire({
-                    //   icon: "info",
-                    //   title: "IB Status ==> " + data.ib_status
-                    // });
-
                 });
                 $('.ajaxDataTable tbody').off('click', '.editClient')
                 $('.ajaxDataTable tbody').on('click', '.editClient', function() {

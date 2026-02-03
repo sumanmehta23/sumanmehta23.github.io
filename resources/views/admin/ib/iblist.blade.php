@@ -51,7 +51,7 @@
 <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form action="#" id="ibRequestForm"  method="POST">
+      <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestForm" method="POST">
         @csrf
         <input type="hidden" name="client_id" id="client_id" value="">
         <div class="modal-header">
@@ -112,7 +112,7 @@
 <div class="modal fade" id="ibRequestApprovalModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <form action="/admin/bulkIbApprove" id="ibRequestApproveForm" method="POST">
+        <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestApproveForm" method="POST">
             @csrf
           <input type="hidden" name="client_id" id="client_id" value="">
           <div class="modal-header">
@@ -296,6 +296,7 @@
           { data: 'fullemail', name: 'fullemail', visible: false },
           { data: 'created_date', name: 'created_date', visible: false },
           { data: 'created_time', name: 'created_time', visible: false },
+          { data: 'ib_plan_details_id', name: 'ib_plan_details_id', visible: false },
         ]
       });
 
@@ -305,12 +306,12 @@
         $('.ajaxDataTable tbody tr').on('click', '.ibToggle', function () {
           const data = dTtable.row($(this).closest('tr')).data();
           $("#ibRequestForm input,#ibRequestForm select").not("input[name='_token']").val("").trigger("change");
-          $("#clientName,#clientEmail").html("");
-          $("#clientName").html(data.fullname);
-          $("#clientEmail").html(data.email);
-          $("#client_id").val(data.user_id);
-          $("[name='ib_status']").val(data.ib_status).trigger("change");
-          $("[name='ib_group']").val(data.acc_type).trigger("change");
+          $("#ibRequestForm .card-header #clientName,#ibRequestForm .card-header #clientEmail").html("");
+          $("#ibRequestForm .card-header #clientName").html(data.fullname || '');
+          $("#ibRequestForm .card-header #clientEmail").html(data.fullemail || '');
+          $("#ibRequestForm input[name='client_id']").val(data.id);
+          $("#ibRequestForm [name='ib_status']").val(data.ib_status != null ? String(data.ib_status) : '').trigger("change");
+          $("#ibRequestForm [name='ib_group']").val(data.ib_plan_details_id != null ? String(data.ib_plan_details_id) : '').trigger("change");
           myModal.show();
         });
       }
