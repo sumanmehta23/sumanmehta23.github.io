@@ -20,9 +20,29 @@ class GoHighLevelMainIbListener implements ShouldQueue
     use InteractsWithQueue;
 
     /**
+     * Handle the event (Laravel expects single handle method).
+     */
+    public function handle(object $event): void
+    {
+        Log::info('GoHighLevelMainIbListener: Event received', [
+            'event_class' => get_class($event),
+        ]);
+
+        if ($event instanceof IbCreated) {
+            $this->handleIbCreated($event);
+        } elseif ($event instanceof IbStatusChanged) {
+            $this->handleIbStatusChanged($event);
+        } else {
+            Log::warning('GoHighLevelMainIbListener: Unknown event type', [
+                'event_class' => get_class($event),
+            ]);
+        }
+    }
+
+    /**
      * Handle IB created event (Main IB enrollment).
      */
-    public function handleIbCreated(IbCreated $event): void
+    protected function handleIbCreated(IbCreated $event): void
     {
         $ib = $event->ib;
 
@@ -41,7 +61,7 @@ class GoHighLevelMainIbListener implements ShouldQueue
     /**
      * Handle IB status changed event (admin approval).
      */
-    public function handleIbStatusChanged(IbStatusChanged $event): void
+    protected function handleIbStatusChanged(IbStatusChanged $event): void
     {
         $ib = $event->ib;
 
