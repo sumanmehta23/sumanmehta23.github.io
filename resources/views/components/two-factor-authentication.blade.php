@@ -1,4 +1,5 @@
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <section x-data="twoFA()">
     <header>
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -54,7 +55,7 @@
                     <div class="mt-4">
                         <x-input-label for="code" value="{{ __('Code') }}" />
 
-                        <x-text-input id="code" type="text" name="code" class="block w-25 mt-1"
+                        <x-text-input id="code" type="text" name="code" class="block mt-1 w-25"
                             inputmode="numeric" autofocus autocomplete="one-time-code" x-model="code"
                             x-on:keydown.enter="confirmTwoFactorAuthentication" />
 
@@ -79,7 +80,7 @@
             @endif
         @endif
 
-        <div class="mt-5 d-flex justify-content-between align-items-center gap-3">
+        <div class="gap-3 mt-5 d-flex justify-content-between align-items-center">
             @if (!$enabled)
                 <x-primary-button type="submit" class="me-3" wire:loading.attr="disabled"
                     @click="enableTwoFactorAuthentication()">
@@ -92,7 +93,7 @@
                         {{ __('Regenerate Recovery Codes') }}
                     </x-primary-button>
                 @elseif ($showingConfirmation)
-                    <x-primary-button type="button" class="me-3 p-2" wire:loading.attr="disabled"
+                    <x-primary-button type="button" class="p-2 me-3" wire:loading.attr="disabled"
                         @click="confirmTwoFactorAuthentication()">
                         {{ __('Confirm') }}
                     </x-primary-button>
@@ -118,7 +119,7 @@
             <form @submit.prevent="confirmPassword()">
                 <x-text-input id="password" type="text" name="password" class="block w-1/2 mt-2" autofocus
                     autocomplete="password" x-model="password" x-on:keydown.enter="confirmPassword" />
-                <x-primary-button type="submit" class="me-3 mt-4">
+                <x-primary-button type="submit" class="mt-4 me-3">
                     {{ __('Confirm Password') }}
                 </x-primary-button>
             </form>
