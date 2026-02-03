@@ -98,6 +98,7 @@ class GoHighLevelMainIbListener implements ShouldQueue
                 return;
             }
 
+            
             // Load user relationship if not already loaded
             if (!$ib->relationLoaded('user')) {
                 $ib->load('user');
