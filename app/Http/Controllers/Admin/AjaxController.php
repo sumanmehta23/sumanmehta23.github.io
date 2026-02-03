@@ -4097,9 +4097,13 @@ class AjaxController extends Controller
             }
 
 
-            // Get old status before update
+            // Get IB record and old status before update
             $ibRecord = Ib1::where('user_id', $clientId)->first();
-            $oldStatus = $ibRecord ? $ibRecord->status : null;
+            if (!$ibRecord) {
+                return ['status' => false, 'message' => 'IB record not found'];
+            }
+            
+            $oldStatus = $ibRecord->status;
 
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
@@ -4108,10 +4112,21 @@ class AjaxController extends Controller
                     // 'indexId' => random_int(100000, 999999),
                 ]);
 
-            // Fire IbStatusChanged event if status changed
-            if ($updated && $ibRecord && $oldStatus !== null && $oldStatus != $ibStatus) {
+            // Fire IbStatusChanged event ONLY when status changes to approved (status = 1)
+            if ($updated && $oldStatus != $ibStatus && $ibStatus == 1) {
                 $ibRecord->refresh();
+                \Illuminate\Support\Facades\Log::info('requestIB: Firing IbStatusChanged event (IB Approved)', [
+                    'ib_id' => $ibRecord->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $ibStatus,
+                ]);
                 event(new \App\Events\IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+            } elseif ($updated && $oldStatus != $ibStatus && $ibStatus != 1) {
+                \Illuminate\Support\Facades\Log::info('requestIB: IB status changed but not approved, skipping event', [
+                    'ib_id' => $ibRecord->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $ibStatus,
+                ]);
             }
             activity()
                 ->causedBy(auth()->guard('admin')->user())
@@ -4178,10 +4193,21 @@ class AjaxController extends Controller
                         'ib_plan_details_id' => $ibGroup,
                     ]);
 
-                    // Fire IbStatusChanged event if status changed
-                    if ($updated && $oldStatus != $ibStatus) {
+                    // Fire IbStatusChanged event ONLY when status changes to approved (status = 1)
+                    if ($updated && $oldStatus != $ibStatus && $ibStatus == 1) {
                         $ibRecord->refresh();
+                        \Illuminate\Support\Facades\Log::info('bulkIbApprove: Firing IbStatusChanged event (IB Approved)', [
+                            'ib_id' => $ibRecord->id,
+                            'old_status' => $oldStatus,
+                            'new_status' => $ibStatus,
+                        ]);
                         event(new \App\Events\IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+                    } elseif ($updated && $oldStatus != $ibStatus && $ibStatus != 1) {
+                        \Illuminate\Support\Facades\Log::info('bulkIbApprove: IB status changed but not approved, skipping event', [
+                            'ib_id' => $ibRecord->id,
+                            'old_status' => $oldStatus,
+                            'new_status' => $ibStatus,
+                        ]);
                     }
 
                     activity()
