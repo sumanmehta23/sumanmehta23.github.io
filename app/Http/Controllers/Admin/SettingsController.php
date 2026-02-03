@@ -820,9 +820,14 @@ class SettingsController extends Controller
                 $Ibs = Ib1::where('status', 0)->get();
                 // dd($Ibs);
                 $Ibs->each(function ($ib) use ($ibGroup) {
+                    $oldStatus = $ib->status;
                     $ib->status = 1; // Approve status
                     $ib->ib_plan_details_id = $ibGroup;
                     $ib->save();
+                    // Fire IbStatusChanged event for auto-approval
+                    if ($oldStatus != 1) {
+                        event(new \App\Events\IbStatusChanged($ib, $oldStatus, 1));
+                    }
                 });
                 $ibRequestToggle->value = 'automatic';
             }

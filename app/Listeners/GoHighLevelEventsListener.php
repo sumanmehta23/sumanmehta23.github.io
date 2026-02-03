@@ -58,6 +58,7 @@ class GoHighLevelEventsListener implements ShouldQueue
                 'source' => 'IB Page',
                 'refercode' => $user->ib1,
                 'user_id' => $user->id,
+                'tags' => ['Referred IB'],
             ];
 
             $ghlService->createContact($contactPayload);
