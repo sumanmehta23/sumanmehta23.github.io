@@ -824,8 +824,13 @@ class SettingsController extends Controller
                     $ib->status = 1; // Approve status
                     $ib->ib_plan_details_id = $ibGroup;
                     $ib->save();
-                    // Fire IbStatusChanged event for auto-approval
+                    // Fire IbStatusChanged event for auto-approval (status = 1)
                     if ($oldStatus != 1) {
+                        \Illuminate\Support\Facades\Log::info('toggleIbApproveRequest: Firing IbStatusChanged event (IB Auto-Approved)', [
+                            'ib_id' => $ib->id,
+                            'old_status' => $oldStatus,
+                            'new_status' => 1,
+                        ]);
                         event(new \App\Events\IbStatusChanged($ib, $oldStatus, 1));
                     }
                 });
