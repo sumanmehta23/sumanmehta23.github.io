@@ -1515,6 +1515,12 @@ class Wallet extends Controller
             'result' => $payoutData
         ];
 
+        if($payoutStatus == 'complete'){
+            $transaction->status = 1; // Mark as completed
+        }elseif($payoutStatus == 'rejected' || $payoutStatus == 'failed'){
+            $transaction->status = 3; // Mark as failed
+        }
+
         $transaction->payout_callback_status = $payoutStatus;
         $transaction->transaction_id = $payoutTxId;
         $transaction->payout_res = $payoutResult;
