@@ -101,7 +101,9 @@ class LoginController extends Controller
         }
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
-            $retryAfter = RateLimiter::availableIn($key);
+            RateLimiter::clear($key);
+            RateLimiter::hit($key, 30);
+            $retryAfter = 30;
             $hours = floor($retryAfter / 3600);
             $minutes = floor(($retryAfter % 3600) / 60);
             $seconds = $retryAfter % 60;
@@ -117,9 +119,9 @@ class LoginController extends Controller
             return redirect()->back()->with(
                 'error',
                 "Too many requests. Please wait {$formattedTime} before trying again."
-            );
+            )->with('retry_after', $retryAfter);
         }
-        RateLimiter::hit($key, 300);
+        RateLimiter::hit($key, 30);
         // Validate form inputs
         $request->validate([
             'email' => 'required|email',
@@ -185,6 +187,12 @@ class LoginController extends Controller
             ->whereNull('client_ip')
             ->update(['client_ip' => $request->ip()]);
 
+        // Reactivate user if they were marked as inactive
+        if ($user->is_inactive) {
+            $user->is_inactive = false;
+            $user->save();
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
         // Set session variables
@@ -213,17 +221,17 @@ class LoginController extends Controller
     public function two_factor_auth()
     {
         $user = auth()->user();
-        
+
         // If 2FA is already verified, redirect to dashboard
         if ($user && Session::has('2fa:verified')) {
             return redirect()->route('dashboard');
         }
-        
+
         // If user doesn't have 2FA enabled, redirect to dashboard
         if (!$user || !$user->two_factor_secret || !$user->two_factor_confirmed_at) {
             return redirect()->route('dashboard');
         }
-        
+
         return view('auth.verify-2fa');
     }
 
@@ -720,17 +728,19 @@ class LoginController extends Controller
     }
     private function recordLoginHistory($user, $ip)
     {
-
         $geoData = Http::get(config('services.ip_geolocation.url'), [
             'apikey' => config('services.ip_geolocation.key'),
             'ip' => $ip
         ])->json();
 
+        // Use country from user's profile, fallback to geolocation API, then 'Unknown'
+        $country = $user->country ?? ($geoData['country_name'] ?? 'Unknown');
+
         LoginHistory::create([
             'user_id' => $user->id,
             'email' => $user->email,
             'ip' => $geoData['ip'] ?? $ip,
-            'country' => $geoData['country_name'] ?? 'Unknown',
+            'country' => $country,
             'action' => 'login',
             'created_date_js' => now(),
             'status' => 1

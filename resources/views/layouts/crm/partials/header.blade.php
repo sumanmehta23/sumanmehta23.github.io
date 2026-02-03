@@ -326,6 +326,16 @@ if (app()->environment('local') || config('services.sales.promotion')) {
 
         }
     </style>
+    <script type="text/javascript">
+        window.omnisend = window.omnisend || [];
+        omnisend.push(["brandID", "691e3cc91ce6ae348df16739"]);
+        omnisend.push(["track", "$pageViewed"]);
+        !function(){var e=document.createElement("script");
+        e.type="text/javascript",e.async=!0,
+        e.src="https://omnisnippet1.com/inshop/launcher-v2.js";
+        var t=document.getElementsByTagName("script")[0];
+        t.parentNode.insertBefore(e,t)}();
+</script>
 </head>
 
 <body class="@if (!Auth::guest()) loggedin @endif" data-pc-preset="preset-7" data-pc-sidebar-caption="true"
@@ -534,7 +544,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 <div class="col-12">
                                     <p class="mb-3 text-uppercase text-muted fw-semibold small">MT5 Platform</p>
                                 </div>
-                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                <div class="mb-3 col-lg-4 col-md-4 col-sm-6">
                                     <a target="_blank" href="{{ $settings['mt5_android_platform'] }}"
                                         class="text-center d-block platform-download-btn">
                                         <div class="platform-icon-wrapper">
@@ -544,7 +554,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                         <span class="platform-label">Android</span>
                                     </a>
                                 </div>
-                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                <div class="mb-3 col-lg-4 col-md-4 col-sm-6">
                                     <a target="_blank" href="{{ $settings['mt5_ios_platform'] }}"
                                         class="text-center d-block platform-download-btn">
                                         <div class="platform-icon-wrapper">
@@ -554,7 +564,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                         <span class="platform-label">Apple iOS</span>
                                     </a>
                                 </div>
-                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                <div class="mb-3 col-lg-4 col-md-4 col-sm-6">
                                     <a target="_blank" href="{{ $settings['mt5_windows_platform'] }}"
                                         class="text-center d-block platform-download-btn">
                                         <div class="platform-icon-wrapper">
@@ -567,7 +577,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 <div class="col-12">
                                     <p class="mt-4 mb-3 text-uppercase text-muted fw-semibold small">X9 Platform</p>
                                 </div>
-                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                <div class="mb-3 col-lg-4 col-md-4 col-sm-6">
                                     <a target="_blank" href="https://web.x9trader.com/login?returnUrl=%2Fterminal"
                                         class="text-center d-block platform-download-btn">
                                         <div class="platform-icon-wrapper">
@@ -577,7 +587,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                         <span class="platform-label">Web Terminal</span>
                                     </a>
                                 </div>
-                                <div class="col-lg-4 col-md-4 col-sm-6 mb-3">
+                                <div class="mb-3 col-lg-4 col-md-4 col-sm-6">
                                     <a target="_blank" href="https://app.x9trader.com/login"
                                         class="text-center d-block platform-download-btn">
                                         <div class="platform-icon-wrapper">

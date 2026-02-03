@@ -387,6 +387,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/updateUser', [ClientController::class, 'updateUser'])->name('updateUser');
         Route::post('/sendPasswordResetLink', [ClientController::class, 'sendPasswordResetLink'])->name('sendPasswordResetLink');
         Route::post('/client/notes/store', [ClientController::class, 'storeNote'])->name('client.notes.store');
+        Route::post('/client/remove-2fa', [ClientController::class, 'removeTwoFactor'])->name('client.remove-2fa');
 
         Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
@@ -506,6 +507,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/updateAccountDetails", [MT5Controller::class, 'updateAccountDetails'])->name('updateAccountDetails');
         Route::post("/depositToAccount", [MT5Controller::class, 'depositToAccount'])->name('depositToAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/deleteAccount", [MT5Controller::class, 'deleteAccount'])->name('deleteAccount')->middleware('check.permissions:account:delete');
+        Route::post("/softDeleteAccount", [MT5Controller::class, 'softDeleteAccount'])->name('softDeleteAccount')->middleware('check.permissions:account:delete');
+        Route::post("/restoreAccount", [MT5Controller::class, 'restoreAccount'])->name('restoreAccount')->middleware('check.permissions:account:delete');
         Route::post("/depositToCellexpertAccount", [MT5Controller::class, 'depositToCellexpertAccount'])->name('depositToCellexpertAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
         Route::post("/withdrawFromCellexpertAccount", [MT5Controller::class, 'withdrawFromCellexpertAccount'])->name('withdrawFromCellexpertAccount')->middleware('check.permissions:trade_withdrawals:create');
@@ -558,6 +561,19 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'destroy'])->name('destroy');
+        });
+
+        // Login History Routes
+        Route::prefix('login-history')->name('login-history.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+        });
+
+        // Inactive Users Routes
+        Route::prefix('inactive-users')->name('inactive-users.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
         });
     });
 });

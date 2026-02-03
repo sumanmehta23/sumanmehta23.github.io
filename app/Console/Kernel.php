@@ -43,6 +43,8 @@ class Kernel extends ConsoleKernel
         // Export cleanup - runs daily at 2 AM to clean up exports older than 7 days
         $schedule->command('export:cleanup --days=7')->daily()->at('02:00');
 
+        // Mark inactive users based on login_history - runs daily at 3 AM
+        $schedule->command('app:mark-inactive-users')->daily()->at('03:00');
 
         $schedule->command('app:alter-group-codes --group_code=a_book');
         $schedule->command('app:alter-group-codes --group_code=b_book');

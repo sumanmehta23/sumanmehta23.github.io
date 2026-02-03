@@ -133,7 +133,7 @@
                   <div class="auth-main">
                     <div class="card-body">
                       <div class="text-center me-4">
-                        <a href="/transactions/deposit#"><img src="/assets/images/deposit2.png" class="w-25" alt="img"></a>
+                        <a href=""><img src="/assets/images/deposit2.png" class="w-25" alt="img"></a>
                       </div>
                       <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No Deposit History found!</h6>
                     </div>
@@ -160,6 +160,7 @@
                         <th scope="col">AMOUNT</th>
                         <th scope="col">FEE</th>
                         <th scope="col">TRANSACTION HASH</th>
+                        <th scope="col">WITHDRAW DATE</th>
                         <th scope="col">STATUS</th>
                         <th scope="col">ACTION</th>
                       </tr>
@@ -194,30 +195,139 @@
                           <td>
                             <h6 class="f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</h6>
                           </td>
-                           <td>
-                             <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="https://uniwire.com/payout/{{ $history->transaction_id }}"> View Transaction</a>
-                          </td>
-                          {{-- {{ dump(($history->payout_req)) }} --}}
-                          <td class="{{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
+                          @php
+                            if ($history->status == 0) {
+                                $statusText = ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0))
+                                    ? 'Email Not Verify'
+                                    : 'Pending';
+                            } elseif ($history->status == 1) {
+                                if (
+                                    ($history->payout_callback_status && $history->payout_callback_status != 'complete') ||
+                                    (!$history->payout_callback_status && $history->admin_remark != 'Manually Approved')
+                                ) {
+                                    $statusText = 'Processing';
+                                } else {
+                                    $statusText = 'Approved';
+                                }
+                            } else {
+                                $statusText = 'Cancelled';
+                            }
+                            if($history->status == 1 && !empty($history->payout_res) && $statusText == 'Approved'){
+                                        $data = json_decode($history->payout_res, true);
+                                        $txid = $data['result']['txid'] ?? null;
+                                        $kind = $data['result']['kind'] ?? '';
+                                        $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                                        if($txid){
+                                            // $link = "https://{$coin}.tokenview.io/en/tx/{$txid}";
+                                            if($coin =='ETH'){
+                                                $link = "https://etherscan.io/tx/{$txid}";
+                                            }
+                                            elseif($coin != 'USDT'){
+                                                $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                                            }
+                                            else{
+                                                $link = "https://tokenview.io/en/search/{$txid}";
+                                            }
+                                        }
+                            } else {
+                                    $link = null;
+                            }
+                            // Resolve color class
+                            $statusClass = match ($statusText) {
+                                'Approved' => 'text-success',
+                                'Processing', 'Pending', 'Email Not Verify' => 'text-warning',
+                                'Cancelled' => 'text-red-500',
+                                default => 'text-gray-500',
+                            };
+                        @endphp
 
-                            <p>{{ $history->status == 0 ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)? 'Email Not Verify' : 'Pending') : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+                        <td>
+                            @if(isset($link))
+                                <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}"> View Transaction</a>
+                            @else
+                                <p class="f-w-500"> </p>
+                            @endif
+                        </td>
 
-                            <p class="text-success">{{ ($history->status == 0 && ($history->verified == 1) ? 'Email Verified' : '') }}</p>
+                        <td>
+                            @if ($statusText == 'Approved' && $history->approved_date)
+                                <h6 class="f-w-500">{{ Carbon::parse($history->approved_date)->addHours(3)->format('Y-m-d') }}</h6>
+                                <p class="mb-0 text-muted">
+                                <small>{{ Carbon::parse($history->approved_date)->addHours(3)->format('H:i A') }}</small>
+                                </p>
+                            @else
+                                <span class="px-4 py-3 text-sm font-medium"> </span>
+                            @endif
+                        </td>
 
-                            <p>{{ (($history->payout_req != NULL) && $history->admin_remark != 'Approved') ?
-                            htmlspecialchars(isset($history->payout_req) ? $history->admin_remark : '') : ($history->admin_remark ? '(' . $history->admin_remark . ')' : '' )}}</p>
+                        <td class="px-4 py-3 text-sm font-medium">
+                            @if($history->payout_callback_status)
+                                <p class="text-sm
+                                    {{ $history->status == 0
+                                        ? 'text-warning'
+                                        : (($history->status == 1 && $history->payout_callback_status != 'complete')
+                                            ? 'text-warning'
+                                            : 'text-success')
+                                    }}">
+                                    {{ $history->status == 0
+                                        ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)
+                                            ? 'Email Not Verify'
+                                            : 'Pending')
+                                        : (($history->status == 1 && $history->payout_callback_status != 'complete')
+                                            ? 'Processing'
+                                            : 'Approved')
+                                    }}
+                                </p>
+                            @else
+                                <p class="text-sm
+                                    {{ $history->status == 0
+                                        ? 'text-warning'
+                                        : (($history->status == 1)
+                                            ? (($history->admin_remark == 'Manually Approved')
+                                                ? 'text-success'
+                                                : 'text-warning')
+                                            : 'text-red-500')
+                                    }}">
+                                    {{ $history->status == 0
+                                        ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)
+                                            ? 'Email Not Verify'
+                                            : 'Pending')
+                                        : (($history->status == 1 && $history->payout_callback_status == 'complete')
+                                            ? 'Approved'
+                                            : (($history->status == 1)
+                                                ? (($history->admin_remark == 'Manually Approved')
+                                                    ? 'Approved'
+                                                    : 'Processing')
+                                                : 'Cancelled'))
+                                    }}
+                                </p>
 
-                            @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
-                                <a  href="#"
-                                    class="btn btn-sm btn-outline-primary primary-btn"
-                                    onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')"
-                                    type="submit">
-                                        Resend Verification Email
-                                </a>
+                                {{-- <p>
+                                    {{
+                                        ($history->payout_req !== null && $history->admin_remark !== 'Approved' && $history->status !== 0)
+                                            ? htmlspecialchars(
+                                                in_array($history->admin_remark, ['draft', 'new'])
+                                                    ? ''
+                                                    : '(' . $history->admin_remark . ')'
+                                            )
+                                            : ''
+                                    }}
+                                </p> --}}
                             @endif
 
+                            <p class="text-sm text-success">
+                                {{ ($history->status == 0 && ($history->verified == 1)) ? 'Email Verified' : '' }}
+                            </p>
 
-                          </td>
+                            @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
+                                <a href="#"
+                                class="btn btn-sm btn-outline-primary primary-btn"
+                                onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')">
+                                    Resend Verification Email
+                                </a>
+                            @endif
+                        </td>
+
                           @if($history->status == 0)
                             <td >
                                 <a  href="#"

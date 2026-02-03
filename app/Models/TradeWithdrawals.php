@@ -14,6 +14,13 @@ class TradeWithdrawals extends Model
     // public $timestamps = false;
     protected $guarded = [];
 
+    public function casts()
+    {
+        return [
+            'approved_date' => 'datetime',
+        ];
+    }
+
     public function account()
     {
         return $this->belongsTo(Account::class);

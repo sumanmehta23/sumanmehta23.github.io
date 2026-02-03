@@ -1,4 +1,6 @@
 @extends('layouts.app')
+
+@section('content')
 <style>
     @media (max-width: 550px) {
         .mob_logo_center {
@@ -9,8 +11,6 @@
     }
 
 </style>
-@section('content')
-
         <div id="app" data-v-app="">
             <div  class="auth-main">
                 <div  class="auth-wrapper v3">
@@ -24,7 +24,7 @@
                         
                         <div  class="my-3 card">
                             <div  class="card-body">
-                                <form method="POST" action="{{ route('login') }}">
+                                <form method="POST" action="{{ route('login') }}" id="login-form">
                                     @csrf
                                     <div  class="text-center">
                                         <h3  class="mb-3 text-center">Login</h3>
@@ -36,8 +36,11 @@
                                         </div>
                                     @endif
                                     @if (session('error'))
-                                        <div class="alert alert-danger">
-                                            {{ session('error') }}
+                                        <div class="alert alert-danger" id="rate-limit-error">
+                                            <span id="error-message">{{ session('error') }}</span>
+                                            @if (session('retry_after'))
+                                                <span id="countdown-timer"></span>
+                                            @endif
                                         </div>
                                     @endif
                                     <div  class="mt-4 row">
@@ -67,7 +70,7 @@
                                     <div  class="mt-1 row g-3">
                                         <div  class="col-sm-12">
                                             <div  class="d-grid">
-                                                <input type="submit" name="signin" value="Login" class="btn btn-primary">
+                                                <input type="submit" name="signin" value="Login" class="btn btn-primary" id="login-submit-btn">
                                             </div>
                                         </div>
                                         <div  class="col-sm-12">
@@ -192,5 +195,63 @@
                 'flagPreviewId' => 'flag-preview-client-login'
             ])
         </div>
+
+        @if (session('retry_after'))
+        <script>
+            (function() {
+                let retryAfter = {{ session('retry_after') }};
+                const countdownElement = document.getElementById('countdown-timer');
+                const errorMessage = document.getElementById('error-message');
+                const errorAlert = document.getElementById('rate-limit-error');
+                const loginForm = document.getElementById('login-form');
+                const loginBtn = document.getElementById('login-submit-btn');
+                
+                // Disable form and button
+                if (loginForm && loginBtn) {
+                    loginBtn.disabled = true;
+                    loginBtn.style.opacity = '0.6';
+                    loginBtn.style.cursor = 'not-allowed';
+                    loginForm.addEventListener('submit', function(e) {
+                        if (retryAfter > 0) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                }
+                
+                if (countdownElement && errorMessage && retryAfter > 0) {
+                    function updateCountdown() {
+                        if (retryAfter <= 0) {
+                            if (errorAlert) {
+                                errorAlert.style.display = 'none';
+                            }
+                            // Re-enable form and button
+                            if (loginBtn) {
+                                loginBtn.disabled = false;
+                                loginBtn.style.opacity = '1';
+                                loginBtn.style.cursor = 'pointer';
+                            }
+                            return;
+                        }
+                        
+                        const minutes = Math.floor(retryAfter / 60);
+                        const seconds = retryAfter % 60;
+                        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        
+                        errorMessage.textContent = `Too many requests. Please wait `;
+                        countdownElement.textContent = timeString + ` before trying again.`;
+                        
+                        retryAfter--;
+                        
+                        if (retryAfter >= 0) {
+                            setTimeout(updateCountdown, 1000);
+                        }
+                    }
+                    
+                    updateCountdown();
+                }
+            })();
+        </script>
+        @endif
 
 @endsection

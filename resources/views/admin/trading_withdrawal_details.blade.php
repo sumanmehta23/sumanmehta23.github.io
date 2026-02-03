@@ -19,10 +19,34 @@
                         <div class="card-body">
                             <h6 class="card-title fw-medium">WITHDRAW TICKET #{{ $details->id }}</h6>
                               @php
-                                if ($details->status == 1) {
-                                    $link = 'https://uniwire.com/payout/' . $details->transaction_id;
-                                }else {
-                                    $link = '';
+                                // if ($details->status == 1) {
+                                //     $link = 'https://uniwire.com/payout/' . $details->transaction_id;
+                                // }else {
+                                //     $link = '';
+                                // }
+
+                                $link = '';
+
+                                if ($details->status == 1 && !empty($details->payout_res)) {
+
+                                    // Decode JSON
+                                    $data = json_decode($details->payout_res, true);
+
+                                    // Get txid
+                                    $txid = $data['result']['txid'] ?? null;
+
+                                    // Example: BTC, ETH_TRC, ETH-ERC20 → ETH
+                                    $kind = $data['result']['kind'] ?? '';
+                                    $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                                    if($coin =='ETH'){
+                                        $link = "https://etherscan.io/tx/{$txid}";
+                                    }
+                                    elseif($coin != 'USDT'){
+                                        $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                                    }
+                                    else{
+                                        $link = "https://tokenview.io/en/search/{$txid}";
+                                    }
                                 }
 
                             @endphp
@@ -32,7 +56,7 @@
                                         <span class="fs-11 text-muted">Payment Method:</span>
                                         <strong class="ms-1">{{ $details->withdraw_type ?? 'N/A' }}</strong>
                                     </div>
-                                    @if(!empty($link))
+                                    @if(!empty($link) && (stripos($details->payout_res, 'complete') !== false))
                                         <div class="ms-3">
                                             <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Withdrawal Hash</a>
                                         </div>
@@ -255,7 +279,7 @@
                                                         </div>
                                                         <div class="mt-2 lh-1">
                                                             <?php if ($details->status == 1) { ?>
-                                                            <span class="badge bg-success">APPROVED</span>
+                                                            <span class="badge bg-success">{{ ($details->admin_remark=='draft' || $details->admin_remark=='new') ? 'Processing (Cryptochill Draft)' : $details->admin_remark }}</span>
                                                             <?php } elseif ($details->status == 2) { ?>
                                                             <span class="badge bg-danger">REJECTED</span>
                                                             <?php } elseif ($details->status == 0) { ?>
@@ -348,7 +372,7 @@
                                                             <span class="fs-11 text-muted">ADMIN REMARKS</span>
                                                         </div>
                                                         <div class="mt-2 lh-1">
-                                                            <span>{{ $details->admin_remark }}</span>
+                                                            <span>{{ ($details->admin_remark=='draft' || $details->admin_remark=='new') ? 'Processing (Cryptochill Draft)' : $details->admin_remark }}</span>
                                                         </div>
                                                     </div>
                                                 </div>

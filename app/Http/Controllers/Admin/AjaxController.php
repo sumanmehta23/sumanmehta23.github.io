@@ -389,6 +389,9 @@ class AjaxController extends Controller
                 'aspnetusers.country',
                 'aspnetusers.kyc_verify',
                 'aspnetusers.country_code',
+                'aspnetusers.two_factor_secret',
+                'aspnetusers.two_factor_confirmed_at',
+                'aspnetusers.created_at',
             ])
             ->when($admin->userRole === 'Relationship Manager', function ($q) use ($admin) {
                 // Ensure that only users linked to the admin's rm_id are retrieved
@@ -611,6 +614,16 @@ class AjaxController extends Controller
                                     <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-eye'><path stroke='none' d='M0 0h24v24H0z' fill='none' /><path d='M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0' /><path d='M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6' /></svg>
                                 </span>
                               </span>";
+
+                    // 2FA Remove Shield Icon - Only show if 2FA is enabled
+                    $has2FA = !empty($row->two_factor_secret) && !empty($row->two_factor_confirmed_at);
+                    if ($has2FA) {
+                        $html .= "<span class='remove2FAIcon' data-user-id='{$row->id}'>
+                                    <span class='badge text-danger' data-bs-toggle='tooltip' title='Remove 2FA'>
+                                        <i class='ri-shield-cross-line' style='font-size: 20px;'></i>
+                                    </span>
+                                  </span>";
+                    }
 
                     if (Auth::guard('admin')->user()->can('client:update', $row)) {
                         $html .= "<span class='editClient' data-enc='{$row->id}'>
@@ -3079,7 +3092,7 @@ class AjaxController extends Controller
     {
 
         header('Content-Type: application/json');
-        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, 0 as permissions_count, e.status,r.name,r.id
+        $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, e.two_factor_secret, e.two_factor_recovery_codes, e.two_factor_confirmed_at, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN roles r ON e.role_id = r.id
                 -- LEFT JOIN pages ON p.page_id = pages.page_id
@@ -3091,6 +3104,7 @@ class AjaxController extends Controller
         foreach ($results as $row) {
             $dat = $row;
             $dat->status = $row->status == 1 ? '<span class="badge bg-outline-success">Active</span>' : '<span class="badge bg-outline-danger">Inactive</span>';
+            $dat->fa_status = (($row->two_factor_secret != null) && ($row->two_factor_recovery_codes != null) && ($row->two_factor_confirmed_at != null)) ? '<span class="badge bg-outline-success">Enabled</span>' : '<span class="badge bg-outline-danger">Disabled</span>';
             if ($admin->can('employee:update')) {
                 $dat->action = '<a data-id="' . $row->id . '" class="btn btn-sm btn-secondary update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" >Edit</a>';
             } else {
@@ -4263,7 +4277,7 @@ class AjaxController extends Controller
                     $q->orWhere("au.ib{$level}", $user->ib->referral_code);
                 })
                 ->select(
-                    DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                    DB::raw('COUNT(DISTINCT acc.id) AS total_accounts'),
                     DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
                     'au.*'
                 )
@@ -4289,7 +4303,7 @@ class AjaxController extends Controller
                     })
 
                     ->editColumn('total_accounts', function ($row) {
-                        return $row->liveaccounts;
+                        return $row->total_accounts;
                     })
 
                     ->editColumn('total_deposit', function ($row) {
@@ -5130,7 +5144,7 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Promo code is valid. Deposit between ' . $promocode->min_deposit . ' and ' . $promocode->max_deposit . ' and receive ' . $promocode->promo_percentage . '% extra.';
+            $message = 'Promo code is valid. Deposit between ' . $promocode->min_deposit . ' and ' . $promocode->max_deposit . ' and receive ' . $promocode->promo_percentage . '% extra bonus.';
 
             // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
             //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';

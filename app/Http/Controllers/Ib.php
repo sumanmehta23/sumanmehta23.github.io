@@ -13,16 +13,18 @@ use App\Models\Country;
 use App\Models\Setting;
 use App\Models\IbWallet;
 use App\Models\LiveAccount;
+use App\MT5\MTEnDealAction;
+use Illuminate\Support\Str;
 use App\Models\TradeDeposit;
-use App\Services\UniversalMT5Service;
 use Illuminate\Http\Request;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
@@ -530,7 +532,7 @@ class Ib extends Controller
                 })
                 ->where("au.ib{$level}", $user->ib->referral_code)
                 ->select(
-                    DB::raw('COUNT(DISTINCT acc.id) AS liveaccounts'),
+                    DB::raw('COUNT(DISTINCT acc.id) AS total_accounts'),
                     DB::raw('SUM(DISTINCT td.deposit_amount) AS total_deposit'),
                     'au.*'
                 )
@@ -554,7 +556,7 @@ class Ib extends Controller
                         </div>";
                     })
                     ->editColumn('total_accounts', function ($row) {
-                        return $row->liveaccounts;
+                        return $row->total_accounts;
                     })
                     ->editColumn('total_deposit', function ($row) {
                         return $row->total_deposit ? $row->total_deposit : "$0.00";
