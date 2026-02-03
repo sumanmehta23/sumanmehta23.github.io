@@ -761,27 +761,27 @@
                         searchable: false
                     },
                 ],
-                "initComplete": function() {
-                    var needs = [2];
-                    this.api()
-                        .columns()
-                        .every(function(index) {
-                            if (needs.indexOf(index) == -1) {
-                                return false;
-                            }
-                            let column = this;
-                            let title = column.header().textContent;
-                            let input = document.createElement('input');
-                            input.placeholder = title;
-                            column.header().replaceChildren(input);
+                // "initComplete": function() {
+                //     var needs = [2];
+                //     this.api()
+                //         .columns()
+                //         .every(function(index) {
+                //             if (needs.indexOf(index) == -1) {
+                //                 return false;
+                //             }
+                //             let column = this;
+                //             let title = column.header().textContent;
+                //             let input = document.createElement('input');
+                //             input.placeholder = title;
+                //             column.header().replaceChildren(input);
 
-                            input.addEventListener('keyup', () => {
-                                if (column.search() !== this.value) {
-                                    column.search(input.value).draw();
-                                }
-                            });
-                        });
-                },
+                //             input.addEventListener('keyup', () => {
+                //                 if (column.search() !== this.value) {
+                //                     column.search(input.value).draw();
+                //                 }
+                //             });
+                //         });
+                // },
                 "rowCallback": function(row, data) {
 
                 },
