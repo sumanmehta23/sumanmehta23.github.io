@@ -29,9 +29,9 @@ class GoHighLevelService
     }
 
     /**
-     * Create a contact/lead in GoHighLevel (e.g. when someone subscribes via IB page).
+     * Create a contact/lead in GoHighLevel (e.g. when someone subscribes via IB page or Main IB enrollment).
      *
-     * @param  array{email: string, fullname?: string, number?: string, country?: string, source?: string, refercode?: string, user_id?: int}  $contactData
+     * @param  array{email: string, fullname?: string, number?: string, country?: string, source?: string, refercode?: string, user_id?: int, tags?: array<string>}  $contactData
      */
     public function createContact(array $contactData): bool
     {
@@ -108,6 +108,11 @@ class GoHighLevelService
             'country' => $contactData['country'] ?? '',
             'source' => $contactData['source'] ?? 'IB Page',
         ];
+
+        // Add tags if provided
+        if (!empty($contactData['tags']) && is_array($contactData['tags'])) {
+            $payload['tags'] = $contactData['tags'];
+        }
 
         $customFields = [];
         if (!empty($contactData['refercode'])) {
