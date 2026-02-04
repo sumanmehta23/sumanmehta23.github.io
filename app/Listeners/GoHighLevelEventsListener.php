@@ -61,12 +61,21 @@ class GoHighLevelEventsListener implements ShouldQueue
                 'tags' => ['Referred IB'],
             ];
 
-            $ghlService->createContact($contactPayload);
+            $result = $ghlService->createContact($contactPayload);
 
-            Log::info('GoHighLevelEventsListener: IB lead sent to GHL', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-            ]);
+            if ($result) {
+                Log::info('GoHighLevelEventsListener: IB lead upserted to GHL successfully', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'phone' => $user->number ?? 'N/A',
+                ]);
+            } else {
+                Log::warning('GoHighLevelEventsListener: Failed to upsert IB lead to GHL', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'phone' => $user->number ?? 'N/A',
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('GoHighLevelEventsListener error: ' . $e->getMessage(), [
                 'event' => get_class($event),
