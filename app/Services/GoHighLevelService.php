@@ -29,33 +29,37 @@ class GoHighLevelService
     }
 
     /**
-     * Create a contact/lead in GoHighLevel (e.g. when someone subscribes via IB page or Main IB enrollment).
+     * Create or update (upsert) a contact/lead in GoHighLevel.
+     * Uses upsert endpoint to handle duplicate contacts automatically.
+     * If contact exists (matched by phone/email), it will be updated; otherwise, a new contact is created.
      *
      * @param  array{email: string, fullname?: string, number?: string, country?: string, source?: string, refercode?: string, user_id?: int, tags?: array<string>}  $contactData
      */
     public function createContact(array $contactData): bool
     {
         if (!$this->hasValidCredentials()) {
-            Log::warning('GoHighLevel credentials not configured. Skipping contact creation.', [
+            Log::warning('GoHighLevel credentials not configured. Skipping contact upsert.', [
                 'contact_email' => $contactData['email'] ?? 'unknown',
             ]);
             return false;
         }
 
         if (empty($contactData['email'])) {
-            Log::warning('Cannot create GoHighLevel contact: email is missing', ['contact_data' => $contactData]);
+            Log::warning('Cannot upsert GoHighLevel contact: email is missing', ['contact_data' => $contactData]);
             return false;
         }
 
         $payload = $this->formatContactPayload($contactData);
 
-        Log::info('GoHighLevel API payload', [
+        Log::info('GoHighLevel API payload (upsert)', [
             'contact_email' => $contactData['email'],
+            'contact_phone' => $contactData['number'] ?? $contactData['phone'] ?? 'N/A',
             'payload' => $payload,
         ]);
 
         try {
-            $url = "{$this->apiUrl}/contacts/";
+            // Use upsert endpoint to handle duplicate contacts automatically
+            $url = "{$this->apiUrl}/contacts/upsert";
 
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
@@ -64,14 +68,22 @@ class GoHighLevelService
             ])->post($url, $payload);
 
             if ($response->successful()) {
-                Log::info('GoHighLevel contact created successfully', [
+                $responseData = $response->json();
+                $contactId = $responseData['contact']['id'] ?? null;
+                $wasCreated = isset($responseData['contact']['id']);
+                
+                Log::info('GoHighLevel contact upserted successfully', [
                     'contact_email' => $contactData['email'],
+                    'contact_phone' => $contactData['number'] ?? $contactData['phone'] ?? 'N/A',
+                    'contact_id' => $contactId,
+                    'action' => $wasCreated ? 'created' : 'updated',
                 ]);
                 return true;
             }
 
-            Log::error('Failed to create GoHighLevel contact', [
+            Log::error('Failed to upsert GoHighLevel contact', [
                 'contact_email' => $contactData['email'],
+                'contact_phone' => $contactData['number'] ?? $contactData['phone'] ?? 'N/A',
                 'response_status' => $response->status(),
                 'response_body' => $response->body(),
             ]);
@@ -86,7 +98,7 @@ class GoHighLevelService
     }
 
     /**
-     * Format contact data for GHL Contacts API (create contact).
+     * Format contact data for GHL Contacts API (upsert contact).
      */
     protected function formatContactPayload(array $contactData): array
     {

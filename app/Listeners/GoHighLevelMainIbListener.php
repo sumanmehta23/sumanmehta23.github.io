@@ -124,14 +124,25 @@ class GoHighLevelMainIbListener implements ShouldQueue
                 'tags' => ['Main IB'],
             ];
 
-            $ghlService->createContact($contactPayload);
+            $result = $ghlService->createContact($contactPayload);
 
-            Log::info('GoHighLevelMainIbListener: Main IB sent to GHL', [
-                'ib_id' => $ib->id,
-                'user_id' => $user->id,
-                'email' => $contactPayload['email'],
-                'context' => $context,
-            ]);
+            if ($result) {
+                Log::info('GoHighLevelMainIbListener: Main IB upserted to GHL successfully', [
+                    'ib_id' => $ib->id,
+                    'user_id' => $user->id,
+                    'email' => $contactPayload['email'],
+                    'phone' => $contactPayload['number'],
+                    'context' => $context,
+                ]);
+            } else {
+                Log::warning('GoHighLevelMainIbListener: Failed to upsert Main IB to GHL', [
+                    'ib_id' => $ib->id,
+                    'user_id' => $user->id,
+                    'email' => $contactPayload['email'],
+                    'phone' => $contactPayload['number'],
+                    'context' => $context,
+                ]);
+            }
         } catch (\Exception $e) {
             Log::error('GoHighLevelMainIbListener error: ' . $e->getMessage(), [
                 'ib_id' => $ib->id ?? null,
