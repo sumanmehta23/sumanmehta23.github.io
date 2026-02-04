@@ -53,6 +53,8 @@ class TradeController extends Controller
         $request->validate([
             'position_close_date_from' => 'nullable|date',
             'position_close_date_to' => 'nullable|date|after_or_equal:position_close_date_from',
+            'last_modified_date_from' => 'nullable|date',
+            'last_modified_date_to' => 'nullable|date|after_or_equal:last_modified_date_from',
             'user_id' => 'nullable|string',
             'symbol' => 'nullable|string|max:20',
             'position_status' => 'nullable|string|max:50',
@@ -107,6 +109,35 @@ class TradeController extends Controller
             $query->where('close_time', '>=', $fromDate);
         } elseif ($toDate) {
             $query->where('close_time', '<=', $toDate);
+        }
+        $modifiedDateFrom = $request->input('last_modified_date_from');
+        $modifiedDateTo = $request->input('last_modified_date_to');
+        if (!empty($modifiedDateFrom) && !empty($modifiedDateTo)) {
+            // Parse from date - use specified time or start of day
+            $fromDate = Carbon::parse($modifiedDateFrom);
+            if (!preg_match('/\d{2}:\d{2}/', $modifiedDateFrom)) {
+                $fromDate->startOfDay();
+            }
+
+            // Parse to date - use specified time or end of day
+            $toDate = Carbon::parse($modifiedDateTo);
+            if (!preg_match('/\d{2}:\d{2}/', $modifiedDateTo)) {
+                $toDate->endOfDay();
+            }
+
+            $query->whereBetween('updated_at', [$fromDate, $toDate]);
+        } elseif (!empty($modifiedDateFrom)) {
+            $fromDate = Carbon::parse($modifiedDateFrom);
+            if (!preg_match('/\d{2}:\d{2}/', $modifiedDateFrom)) {
+                $fromDate->startOfDay();
+            }
+            $query->where('updated_at', '>=', $fromDate);
+        } elseif (!empty($modifiedDateTo)) {
+            $toDate = Carbon::parse($modifiedDateTo);
+            if (!preg_match('/\d{2}:\d{2}/', $modifiedDateTo)) {
+                $toDate->endOfDay();
+            }
+            $query->where('updated_at', '<=', $toDate);
         }
 
         // Filter by user ID (optional) - allows querying individual users

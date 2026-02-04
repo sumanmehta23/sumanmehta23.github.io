@@ -281,7 +281,7 @@
                                                             <?php if ($details->status == 1) { ?>
                                                             <span class="badge bg-success">{{ ($details->admin_remark=='draft' || $details->admin_remark=='new') ? 'Processing (Cryptochill Draft)' : $details->admin_remark }}</span>
                                                             <?php } elseif ($details->status == 2) { ?>
-                                                            <span class="badge bg-danger">REJECTED</span>
+                                                            <span class="badge bg-danger">CANCELLED BY ADMIN</span>
                                                             <?php } elseif ($details->status == 0) { ?>
                                                             <span class="badge bg-primary">WAITING FOR APPROVAL</span>
                                                             <?php } ?>
@@ -350,7 +350,7 @@
                                                             onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
                                                             type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
                                                         @if (($details->status == 0) || ($details->payout_res != null))
-                                                            <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',3)" type="submit" class="m-1 btn btn-danger btn-space">
+                                                            <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',2)" type="submit" class="m-1 btn btn-danger btn-space">
                                                             Reject
                                                             </button>
                                                             {{-- {{ dd($details) }} --}}
@@ -484,8 +484,9 @@
               <input type="hidden" name="status" value="${status}">
               <input type="hidden" name="action" value="update_transaction">
                 ${
-                  status == 3
+                  (status == 2 || status == 3)
                       ? `
+                  <input type="hidden" name="id" value="${parsedData}">
                   <div class="mt-2 col-12 text-start">
                       <label for="transaction_id" class="form-label">Transaction ID</label>
                       <input type="hidden" id="transaction_id" name="transaction_id" value="${parsedData}">
@@ -527,9 +528,9 @@
             showCancelButton: true,
             confirmButtonText: 'Submit',
             preConfirm: () => {
-              if(status==2){
-                const rejection_reason = document.querySelector('#rejection_reason').value;
-                if (!rejection_reason) {
+              if(status==2 || status==3){
+                const rejection_reason = document.querySelector('#rejection_reason');
+                if (!rejection_reason || !rejection_reason.value) {
                     Swal.showValidationMessage('Please fill out all fields');
                     return false;
                 }
