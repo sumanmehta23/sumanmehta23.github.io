@@ -215,9 +215,9 @@
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="#" id="ibRequestForm" method="post">
+                <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestForm" method="post">
                     @csrf
-                    <input type="hidden" name="client_id" id="client_id" value="{{ $user->id }}">
+                    <input type="hidden" name="client_id" id="client_id" value="{{ $user->ib ? $user->ib->id : $user->id }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="ibModalLabel">IB Request Management</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1155,18 +1155,26 @@
                                                                 <?php if (!isset($user->ib) || ($user->ib && $user->ib->status != 1)): ?>
                                                                 <?php if (!isset($user->ib) || ($user->ib && $user->ib->status == '0')): ?>
                                                                 <button type="button"
-                                                                    class="py-3 my-2 ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                    data-bs-toggle="modal" data-bs-target="#ibModal">
+                                                                    class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                    data-bs-toggle="modal" data-bs-target="#ibModal"
+                                                                    data-fullname="<?= e($user->fullname) ?>"
+                                                                    data-email="<?= e($user->email) ?>"
+                                                                    data-id="<?= $user->id ?>"
+                                                                    data-ib_id="<?= $user->ib ? $user->ib->id : '' ?>"
+                                                                    data-ib_status="<?= $user->ib ? $user->ib->status : '' ?>"
+                                                                    data-ib_group="<?= $user->ib ? $user->ib->ib_plan_details_id : '' ?>">
                                                                     Approve Request
                                                                 </button>
                                                                 <?php else: ?>
                                                                 <button type="button"
                                                                     class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
                                                                     data-bs-toggle="modal" data-bs-target="#ibModal"
-                                                                    data-fullname="<?= $user->fullname ?>"
-                                                                    data-email="<?= $user->email ?>"
-                                                                    data-enc="<?= $user->email ?>"
-                                                                    data-ib_status="<?= $user->ib->status ?? '' ?>">
+                                                                    data-fullname="<?= e($user->fullname) ?>"
+                                                                    data-email="<?= e($user->email) ?>"
+                                                                    data-id="<?= $user->id ?>"
+                                                                    data-ib_id="<?= $user->ib ? $user->ib->id : '' ?>"
+                                                                    data-ib_status="<?= $user->ib->status ?? '' ?>"
+                                                                    data-ib_group="<?= $user->ib->ib_plan_details_id ?? '' ?>">
                                                                     Request To become IB
                                                                 </button>
                                                                 <?php endif; ?>
@@ -1317,7 +1325,7 @@
                                                                 <div class="col-8">
                                                                     <p class=" text-muted">IB PLAN</p>
 
-                                                                    <h4>{{ getPlanNameByPlanId($acc_groups, $ib_details->acc_type) }}
+                                                                    <h4>{{ getPlanNameByPlanId($acc_groups, $ib_details->ib_plan_details_id ?? $ib_details->acc_type) }}
                                                                     </h4>
                                                                 </div>
                                                             </div>
@@ -1688,13 +1696,13 @@
             $(document).ready(function() {
                 $(document).on('click', '.ibToggle', function() {
                     var data = $(this).data();
-                    $("#clientName,#clientEmail").html("");
-                    $("#clientName").html(data.fullname)
-                    $("#clientEmail").html(data.email)
-                    $("#client_id").val(data.enc)
-                    $("[name='ib_status']").val(data.ib_status).trigger("change");
-                    $("[name='ib_group']").val(data.ib_group).trigger("change");
-                    // myModal.show();
+                    $("#ibRequestForm #clientName,#ibRequestForm #clientEmail").html("");
+                    $("#ibRequestForm #clientName").html(data.fullname || '');
+                    $("#ibRequestForm #clientEmail").html(data.email || '');
+                    var clientId = (data.ib_id && data.ib_id !== '' && data.ib_id != null) ? data.ib_id : data.id;
+                    $("#ibRequestForm input[name='client_id']").val(clientId);
+                    $("#ibRequestForm [name='ib_status']").val(data.ib_status != null && data.ib_status !== '' ? String(data.ib_status) : '').trigger("change");
+                    $("#ibRequestForm [name='ib_group']").val(data.ib_group != null && data.ib_group !== '' ? String(data.ib_group) : '').trigger("change");
                 });
                 $('#tableDeposit').DataTable({
                     "ajax": {
