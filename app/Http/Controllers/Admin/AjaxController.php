@@ -9,12 +9,12 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Trade;
 use App\Models\Account;
-use App\Models\AccountType;
 use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Promocode;
 use App\Models\ClientTask;
 use App\Models\Permission;
+use App\Models\AccountType;
 use App\Models\RestrictIps;
 use App\Models\ClientWallet;
 use App\Models\EmployeeList;
@@ -25,6 +25,7 @@ use App\Models\WalletDeposit;
 use App\Helpers\AccountHelper;
 
 use App\Models\WalletWithdraw;
+use App\Events\IbStatusChanged;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
@@ -4097,9 +4098,18 @@ class AjaxController extends Controller
                     $ib1->emailToken = $user->emailToken;
                     $ib1->status = $ibStatus;
                     $ib1->save();
+                    // IbCreated event will fire automatically via model boot()
                 }
             }
 
+
+            // Get IB record and old status before update
+            $ibRecord = Ib1::where('user_id', $clientId)->first();
+            if (!$ibRecord) {
+                return ['status' => false, 'message' => 'IB record not found'];
+            }
+
+            $oldStatus = $ibRecord->status;
 
             $updated = Ib1::where('user_id', $clientId)
                 ->update([
@@ -4107,6 +4117,23 @@ class AjaxController extends Controller
                     'ib_plan_details_id' => $ibGroup,
                     // 'indexId' => random_int(100000, 999999),
                 ]);
+
+            // Fire IbStatusChanged event ONLY when status changes to approved (status = 1)
+            if ($updated && $oldStatus != $ibStatus && $ibStatus == 1) {
+                $ibRecord->refresh();
+                Log::info('requestIB: Firing IbStatusChanged event (IB Approved)', [
+                    'ib_id' => $ibRecord->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $ibStatus,
+                ]);
+                event(new IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+            } elseif ($updated && $oldStatus != $ibStatus && $ibStatus != 1) {
+                Log::info('requestIB: IB status changed but not approved, skipping event', [
+                    'ib_id' => $ibRecord->id,
+                    'old_status' => $oldStatus,
+                    'new_status' => $ibStatus,
+                ]);
+            }
             activity()
                 ->causedBy(auth()->guard('admin')->user())
                 ->withProperties([
@@ -4164,10 +4191,30 @@ class AjaxController extends Controller
                 if ($ibRecord) {
                     Gate::forUser($admin)->authorize('ib:update', $ibRecord);
 
+                    // Get old status before update
+                    $oldStatus = $ibRecord->status;
+
                     $updated = $ibRecord->update([
                         'status' => $ibStatus,
                         'ib_plan_details_id' => $ibGroup,
                     ]);
+
+                    // Fire IbStatusChanged event ONLY when status changes to approved (status = 1)
+                    if ($updated && $oldStatus != $ibStatus && $ibStatus == 1) {
+                        $ibRecord->refresh();
+                        Log::info('bulkIbApprove: Firing IbStatusChanged event (IB Approved)', [
+                            'ib_id' => $ibRecord->id,
+                            'old_status' => $oldStatus,
+                            'new_status' => $ibStatus,
+                        ]);
+                        event(new IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+                    } elseif ($updated && $oldStatus != $ibStatus && $ibStatus != 1) {
+                        Log::info('bulkIbApprove: IB status changed but not approved, skipping event', [
+                            'ib_id' => $ibRecord->id,
+                            'old_status' => $oldStatus,
+                            'new_status' => $ibStatus,
+                        ]);
+                    }
 
                     activity()
                         ->causedBy(auth()->guard('admin')->user())
@@ -4218,11 +4265,19 @@ class AjaxController extends Controller
                 ]);
 
                 $ibRecord->save();
+                // IbCreated event will fire automatically via model boot()
 
+                $oldStatus = $ibRecord->status;
                 $updated = $ibRecord->update([
                     'status' => $ibStatus,
                     'ib_plan_details_id' => $ibGroup,
                 ]);
+
+                // Fire IbStatusChanged event if status changed
+                if ($updated && $oldStatus != $ibStatus) {
+                    $ibRecord->refresh();
+                    event(new IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+                }
 
                 Cache::forget('ib1_' . $clientId);
 

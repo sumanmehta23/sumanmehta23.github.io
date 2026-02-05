@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\IbCreated;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -13,6 +14,16 @@ class Ib1 extends Model
     protected $table = 'ib1';
 
     protected $guarded=[];
+
+    protected static function booted()
+    {
+        parent::booted();
+
+        // Fire IbCreated event when IB is created
+        static::created(function ($ib) {
+            event(new IbCreated($ib));
+        });
+    }
     /**
      * The attributes that should be cast.
      *
