@@ -360,7 +360,7 @@ class SettingsController extends Controller
                 }
             }
             return back()->with('success', 'IP ban applied and email sent successfully.');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
@@ -758,7 +758,6 @@ class SettingsController extends Controller
 
                 // Log what actually happened
                 Log::info("Gateway {$name}: " . ($result->wasRecentlyCreated ? 'CREATED' : 'UPDATED') . " with value {$value}, ID: {$result->id}");
-
             } catch (\Exception $e) {
                 Log::error("Failed to update/create setting {$name}: " . $e->getMessage());
             }
@@ -826,7 +825,7 @@ class SettingsController extends Controller
                     $ib->save();
                     // Fire IbStatusChanged event for auto-approval (status = 1)
                     if ($oldStatus != 1) {
-                        \Illuminate\Support\Facades\Log::info('toggleIbApproveRequest: Firing IbStatusChanged event (IB Auto-Approved)', [
+                        Log::info('toggleIbApproveRequest: Firing IbStatusChanged event (IB Auto-Approved)', [
                             'ib_id' => $ib->id,
                             'old_status' => $oldStatus,
                             'new_status' => 1,
