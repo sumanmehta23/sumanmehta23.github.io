@@ -9,12 +9,12 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Trade;
 use App\Models\Account;
-use App\Models\AccountType;
 use App\Models\UserLog;
 use App\Models\IbWallet;
 use App\Models\Promocode;
 use App\Models\ClientTask;
 use App\Models\Permission;
+use App\Models\AccountType;
 use App\Models\RestrictIps;
 use App\Models\ClientWallet;
 use App\Models\EmployeeList;
@@ -25,6 +25,7 @@ use App\Models\WalletDeposit;
 use App\Helpers\AccountHelper;
 
 use App\Models\WalletWithdraw;
+use App\Events\IbStatusChanged;
 use App\Models\TradeWithdrawals;
 use Yajra\DataTables\DataTables;
 use App\Exports\CompetitionExport;
@@ -4107,7 +4108,7 @@ class AjaxController extends Controller
             if (!$ibRecord) {
                 return ['status' => false, 'message' => 'IB record not found'];
             }
-            
+
             $oldStatus = $ibRecord->status;
 
             $updated = Ib1::where('user_id', $clientId)
@@ -4120,14 +4121,14 @@ class AjaxController extends Controller
             // Fire IbStatusChanged event ONLY when status changes to approved (status = 1)
             if ($updated && $oldStatus != $ibStatus && $ibStatus == 1) {
                 $ibRecord->refresh();
-                \Illuminate\Support\Facades\Log::info('requestIB: Firing IbStatusChanged event (IB Approved)', [
+                Log::info('requestIB: Firing IbStatusChanged event (IB Approved)', [
                     'ib_id' => $ibRecord->id,
                     'old_status' => $oldStatus,
                     'new_status' => $ibStatus,
                 ]);
-                event(new \App\Events\IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+                event(new IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
             } elseif ($updated && $oldStatus != $ibStatus && $ibStatus != 1) {
-                \Illuminate\Support\Facades\Log::info('requestIB: IB status changed but not approved, skipping event', [
+                Log::info('requestIB: IB status changed but not approved, skipping event', [
                     'ib_id' => $ibRecord->id,
                     'old_status' => $oldStatus,
                     'new_status' => $ibStatus,
@@ -4201,14 +4202,14 @@ class AjaxController extends Controller
                     // Fire IbStatusChanged event ONLY when status changes to approved (status = 1)
                     if ($updated && $oldStatus != $ibStatus && $ibStatus == 1) {
                         $ibRecord->refresh();
-                        \Illuminate\Support\Facades\Log::info('bulkIbApprove: Firing IbStatusChanged event (IB Approved)', [
+                        Log::info('bulkIbApprove: Firing IbStatusChanged event (IB Approved)', [
                             'ib_id' => $ibRecord->id,
                             'old_status' => $oldStatus,
                             'new_status' => $ibStatus,
                         ]);
-                        event(new \App\Events\IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+                        event(new IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
                     } elseif ($updated && $oldStatus != $ibStatus && $ibStatus != 1) {
-                        \Illuminate\Support\Facades\Log::info('bulkIbApprove: IB status changed but not approved, skipping event', [
+                        Log::info('bulkIbApprove: IB status changed but not approved, skipping event', [
                             'ib_id' => $ibRecord->id,
                             'old_status' => $oldStatus,
                             'new_status' => $ibStatus,
@@ -4275,7 +4276,7 @@ class AjaxController extends Controller
                 // Fire IbStatusChanged event if status changed
                 if ($updated && $oldStatus != $ibStatus) {
                     $ibRecord->refresh();
-                    event(new \App\Events\IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
+                    event(new IbStatusChanged($ibRecord, $oldStatus, $ibStatus));
                 }
 
                 Cache::forget('ib1_' . $clientId);
