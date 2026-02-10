@@ -121,11 +121,13 @@
                                                                                 </svg></span>
                                                                         </a>
                                                                     </button>
-                                                                    <a href="{{ url('/trade-deposit') }}"
-                                                                        class="btn btn-sm btn-outline-secondary d-grid">
-                                                                        <span class="">Deposit <i
-                                                                                class="ti ti-database-import"></i></span>
-                                                                    </a>
+                                                                    @if($acc->demo == 0)
+                                                                        <a href="{{ url('/trade-deposit') }}"
+                                                                            class="btn btn-sm btn-outline-secondary d-grid">
+                                                                            <span class="">Deposit <i
+                                                                                    class="ti ti-database-import"></i></span>
+                                                                        </a>
+                                                                    @endif
                                                                     {{-- <a href="#" class="btn btn-sm btn-outline-secondary d-grid"
                                                                         data-bs-toggle="modal" data-bs-target="#changeLeverage"
                                                                         data-id="{{ $acc->account_type_id }}"

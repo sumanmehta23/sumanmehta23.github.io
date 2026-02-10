@@ -17,7 +17,8 @@ class IbWallet extends Model
     }
     public function account()
     {
-        return $this->belongsTo(Account::class,'account_id','id');
+        return $this->belongsTo(Account::class, 'account_id', 'id')
+                    ->withTrashed();
     }
     public function ib1Commission()
     {
