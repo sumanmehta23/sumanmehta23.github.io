@@ -44,6 +44,7 @@ class Wallet extends Controller
     protected $paymentController;
     protected $mailService;
     protected $mt5Service;
+    protected $api;
 
     public function __construct(Payment $paymentController, MailService $mailService, UniversalMT5Service $mt5Service)
     {
@@ -51,6 +52,21 @@ class Wallet extends Controller
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in Transaction');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
     public function alldeposits()
     {
@@ -1083,7 +1099,7 @@ class Wallet extends Controller
 
             if (isset($payload['transaction'])) {
                 Log::channel('cryptochillcallback')->error('Transaction data missing in payload: ' . json_encode($payload));
-            } elseif (isset($payload['callback_status']) && in_array($payload['callback_status'], ['payout_pending', 'payout_confirmed', 'payout_complete'])) {
+            } elseif (isset($payload['callback_status']) && in_array($payload['callback_status'], ['payout_pending', 'payout_confirmed', 'payout_complete','payout_rejected'])) {
                 Log::channel('cryptochillcallback')->info('Payout callback received, no action taken: ' . json_encode($payload));
                 $this->handlePayoutCallback($payload);
                 return response()->json(['status' => 'payout callback processed'], 200);
@@ -1379,6 +1395,47 @@ class Wallet extends Controller
 
                                 Log::channel("cryptochillcallback")->info('Transaction confirmed successfully for account: ' . $account->code);
 
+
+                                $settings = settings();
+
+                                $toEmail = $user->email;
+                                $type = 'Transaction Successful';
+                                $from = $settings['email_from_address'];
+                                $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                                $headers = "MIME-Version: 1.0" . "\r\n";
+                                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+                                $content = '
+                                                <p style="font-size: 16px; color: #000000;">
+                                                    We are pleased to inform you that your transaction has been <b>successful</b>.
+                                                </p>
+                                                <p style="font-size: 16px; color: #000000;">
+                                                    The approved amount has been deposited into your account <b>' . $tradeDeposit->code . '</b>.
+                                                </p>
+
+                                                <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
+                                                <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
+                                                    <li><b>Approved Amount:</b> $' . $amount . '</li>
+                                                    <li><b>Reference ID:</b> ' . $tradeDeposit->id . '</li>
+                                                    <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $tradeDeposit->transaction_id . '</span></li>
+                                                    <li><b>Deposited Date:</b> ' . $tradeDeposit->deposted_date . '</li>
+                                                    <li><b>Payment Type:</b> ' . $tradeDeposit->deposit_type . '</li>
+                                                </ol>
+                                            ';
+
+                                $templateVars = [
+                                    'name' => $user->fullname,
+                                    'site_link' => $settings['copyright_site_name_text'],
+                                    'email' => $settings['email_from_address'],
+                                    "content" => $content,
+                                    "title_right" => "Transaction",
+                                    "subtitle_right" => "Successful",
+                                    "btn_text" => "Go To Dashboard",
+                                ];
+                                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+
                                 return response()->json(['status' => 'true']);
                             } catch (\Throwable $th) {
                                 DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
@@ -1442,7 +1499,8 @@ class Wallet extends Controller
         if (!in_array($callbackStatus, [
             'payout_pending',
             'payout_confirmed',
-            'payout_complete'
+            'payout_complete',
+            'payout_rejected'
         ])) {
             return;
         }
@@ -1473,6 +1531,22 @@ class Wallet extends Controller
         $payoutResult = [
             'result' => $payoutData
         ];
+
+        if($payoutStatus == 'complete'){
+            $transaction->status = 1; // Mark as completed
+        }elseif(($payoutStatus == 'rejected' || $payoutStatus == 'failed') && $transaction->status != 3){
+            $transaction->status = 3; // Mark as failed
+
+            $comment = 'Cancelled Withdrawal';
+            $ticket = null;
+            $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode);
+            } else {
+                Log::info("Withdrawal refund successful for Withdrawal ID: {$transactionId}");
+            }
+        }
 
         $transaction->payout_callback_status = $payoutStatus;
         $transaction->transaction_id = $payoutTxId;
