@@ -716,6 +716,19 @@ if (app()->environment('local')) {
                             </li>
                         @endif
 
+
+                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">2FA</span>
+                            </li>
+                                <li class="slide menu-item-main">
+                                    <a href="{{ route('admin.2fa-settings') }}" class="side-menu__item">
+                                        <i class="side-menu__icon fe fe-settings"></i>
+                                        <span class="side-menu__label">2FA Settings</span>
+                                    </a>
+                                </li>
+                        @endif
+
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">ADMIN USERS</span>

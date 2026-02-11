@@ -438,6 +438,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/bulk_activate_account', [MT5Accounts::class, 'bulkActivateAccount'])->name('bulk_activate_account');
         });
 
+        Route::get('/2fa-settings', [SettingsController::class, 'twoFactorAuthenticationAdmin'])->name("2fa-settings")->middleware('check.permissions:setting:viewAny');
+
         Route::prefix('/ui_settings')->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
             Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
