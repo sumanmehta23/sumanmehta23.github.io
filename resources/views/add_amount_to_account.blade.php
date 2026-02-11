@@ -282,8 +282,15 @@ function setupCryptoChillWithValues() {
     let clientAccountId = $('.select-liveaccount:checked').val();
 
     if (!clientAccountId) {
-        alert("Please select a live account before proceeding.");
-        return; // Stop execution if clientAccountId is empty
+        swal.fire({
+            icon: "warning",
+            title: "Live Account Required",
+            text: "Please select a live account before proceeding.",
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            confirmButtonText: "OK"
+        });
+        return;
     }
 
     let promocode = $("#promocode").val();
