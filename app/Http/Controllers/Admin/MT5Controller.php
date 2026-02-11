@@ -593,12 +593,7 @@ class MT5Controller extends Controller
             $settings = settings();
             $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
             $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
-      <div><b>Transaction Details</b></div>
-      <div><b>Amount: </b>$' . $amount . '</div>
-      <div><b>Account ID: </b>' . $code . '</div>
-      <div><b>Transaction ID: </b>' . $transid . '</div>
-      <div><b>Deposited Date: </b>' . date("Y-m-d H:i:s") . '</div>
-      <div><b>Deposit Type </b>' . $deposit_type . '</div>';
+      <div><b>Transaction Details</b></div>';
             $templateVars = [
                 'name' => $user->fullname,
                 'site_link' => settings()['copyright_site_name_text'],
