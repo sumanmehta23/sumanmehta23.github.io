@@ -153,7 +153,7 @@
                                                                 <span class="mt-1 text-white badge bg-danger rounded-pill">Demo Account</span>
                                                             @endif
                                                             @if($account->platform === 'x9' && isset($x9GroupName))
-                                                                <p class="mb-0 text-muted f-12">{{ $x9GroupName }}</p>
+                                                                <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
                                                             @elseif($getUser && $getUser->accountType)
                                                                 <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
                                                             @endif
