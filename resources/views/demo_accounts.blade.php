@@ -94,11 +94,11 @@
                                                                         {{ $acc->email }}
                                                                     </span>
                                                                 </p>
-                                                                {{-- <p class="mb-0 text-muted ms-2 f-12">
+                                                                <h6 class="pl-2 mb-0 text-muted ms-2 f-12">
                                                                     <span class="text-truncate w-100">
                                                                         {{ $acc->accountType->ac_name }}
                                                                     </span>
-                                                                </p> --}}
+                                                                </h>
                                                             </div>
                                                         </div>
                                                     </td>
