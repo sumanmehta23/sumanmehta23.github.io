@@ -29,12 +29,12 @@ class Home extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        
+
         // Check if 2FA is enabled and not yet verified
         if ($user->two_factor_secret && $user->two_factor_confirmed_at && !Session::has('2fa:verified')) {
             return redirect()->route('two_factor_auth');
         }
-        
+
         $userId = $user->id;
         AccountHelper::updateLiveAndDemoAccounts($userId);
         $walletBalance = $this->getWalletBalance($userId);
@@ -119,8 +119,11 @@ class Home extends Controller
     public function getDemoAccountDetails($email)
     {
         $demoaccount_details = auth()->user()->demoAccounts()
+            ->with('accountType')
+            ->whereNull('competition_start_date')
+            ->whereNull('competition_end_date')
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date','platform']);
+            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date','platform','account_type_id']);
         return $demoaccount_details;
     }
     public function getIb1Details($userId)
