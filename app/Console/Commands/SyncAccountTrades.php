@@ -49,7 +49,7 @@ class SyncAccountTrades extends Command
         if ($email) {
             $ibQuery->where('email', $email);
         }
-
+        Log::info("Total IBs to process: " . $ibQuery->count());
         $ibQuery->cursor()  // More memory efficient for large datasets
             ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, $code, &$totalJobsCreated) {
                 $plan_id = $ib1->planDetails->ib_category_id ?? null;
@@ -94,7 +94,15 @@ class SyncAccountTrades extends Command
                             ->orWhereNull('last_trade_at');
                     });
                 }
-
+                Log::info("Total accounts to process for IB $referral_code: " . $accountQuery->whereHas(
+                    'user',
+                    fn($query) =>
+                    $query->where(function ($q) use ($referral_code) {
+                        for ($i = 1; $i <= 15; $i++) {
+                            $q->orWhere("ib$i", $referral_code);
+                        }
+                    })->where('status', 1)
+                )->count());
                 $accountQuery->whereHas(
                     'user',
                     fn($query) =>

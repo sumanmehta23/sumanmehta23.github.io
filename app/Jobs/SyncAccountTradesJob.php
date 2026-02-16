@@ -65,7 +65,7 @@ class SyncAccountTradesJob implements ShouldQueue
             $this->mt5Service = app(QueueSafeMT5Service::class);
 
             // The QueueSafeMT5Service handles connection management internally
-            // Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
+            Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
 
 
             // Process each account
