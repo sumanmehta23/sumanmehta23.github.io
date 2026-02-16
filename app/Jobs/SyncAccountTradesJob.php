@@ -235,6 +235,10 @@ class SyncAccountTradesJob implements ShouldQueue
                 ]);
                 if ($error_code == MTRetCode::MT_RET_ERR_NOTFOUND) {
                     //soft delete account as not found on mt5
+                    $this->account->update([
+                        'deletion_type' => 'not_found_on_mt5',
+                    ]);
+
                     $this->account->delete();
                 }
                 return;
