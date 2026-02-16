@@ -211,7 +211,7 @@ return [
             'queue' => ['distributeibcommission'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 15), // Increased from 3 to handle queue backlog
+            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 30), // Increased from 15 with optimized job performance
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512, // Increased from 256 for better performance
