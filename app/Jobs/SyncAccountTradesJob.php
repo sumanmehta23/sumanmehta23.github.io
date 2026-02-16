@@ -259,7 +259,7 @@ class SyncAccountTradesJob implements ShouldQueue
 
             // Use pagination to get all trades
             $orders = [];
-            $pageSize = 1000; // Fetch 1000 orders at a time
+            $pageSize = 100; // MT5 API returns max 100 records per page
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
