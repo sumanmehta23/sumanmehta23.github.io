@@ -175,7 +175,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
                         $accountTimings[] = ['account' => $account->code, 'time' => $accountTime, 'result' => $result];
 
-                        Log::info("Account {$account->code}: {$result} ({$accountTime}ms)");
+                        Log::debug("Account {$account->code}: {$result} ({$accountTime}ms)");
                     } catch (\Exception $e) {
                         $results['errors']++;
                         $results['processed']++;
@@ -385,11 +385,11 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 } else {
                     // Deal counts differ - need to sync the difference
                     $dealDifference = $mt5DealTotal - $dbDealCount;
-                    Log::info("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing deal sync first...");
+                    Log::debug("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing deal sync first...");
 
                     // FORCE DEAL SYNC: When deal counts don't match, we must sync deals first
                     // This ensures we have all the missing deals before proceeding with trade sync
-                    Log::info("DEBUG[{$account->code}]: Syncing missing deals due to count mismatch before proceeding with trade sync");
+                    Log::debug("DEBUG[{$account->code}]: Syncing missing deals due to count mismatch before proceeding with trade sync");
 
                     // Force deal sync for the same date range to get missing deals
                     $dealSyncJob = new DealSyncJob([$account], [$fromTime]);
@@ -402,7 +402,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                     // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
                     // This ensures we get the missing deals from MT5 instead of using stale database data
-                    Log::info("DEBUG[{$account->code}]: Skipping database optimizations due to deal count mismatch - proceeding with MT5 API sync");
+                    Log::debug("DEBUG[{$account->code}]: Skipping database optimizations due to deal count mismatch - proceeding with MT5 API sync");
                     // Continue to MT5 API calls below (skip all the database optimization logic)
                 }
             } else {
@@ -421,7 +421,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                 // If latest deal is BEFORE the requested sync range, account has no activity in requested period
                 if ($latestDealTime < $fromTime) {
-                    Log::info("DEBUG[{$account->code}]: Account inactive - latest deal ({$latestDeal->time_done}) is before requested range ({$fromDateDb}). No new activity to sync.");
+                    Log::debug("DEBUG[{$account->code}]: Account inactive - latest deal ({$latestDeal->time_done}) is before requested range ({$fromDateDb}). No new activity to sync.");
 
                     $this->updateSyncStatus($account, 'success');
                     $timings['total_processing'] = round((microtime(true) - $accountStartTime) * 1000, 2);

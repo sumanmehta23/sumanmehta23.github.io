@@ -95,7 +95,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 $accountStartTime = microtime(true);
                 $this->processAccount($accountId);
                 $accountDuration = microtime(true) - $accountStartTime;
-                Log::info("Completed processing account {$accountId}", [
+                Log::debug("Completed processing account {$accountId}", [
                     'duration_seconds' => round($accountDuration, 2),
                     'total_orders_processed' => $this->totalOrdersProcessed,
                 ]);
@@ -199,7 +199,7 @@ class SyncAccountTradesJob implements ShouldQueue
     {
         $accountStartTime = microtime(true);
         if ($accountId == 'a0382ba7-7977-4914-865f-2b306e549c9e') {
-            Log::info('processing sync for 794195');
+            Log::debug('processing sync for 794195');
         }
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
@@ -346,7 +346,7 @@ class SyncAccountTradesJob implements ShouldQueue
                     }
                 }
 
-                Log::info("Completed page {$pageCount} of {$totalPages}", [
+                Log::debug("Completed page {$pageCount} of {$totalPages}", [
                     'page_number' => $pageCount,
                     'total_pages' => $totalPages,
                     'orders_on_page' => count($pageOrders),

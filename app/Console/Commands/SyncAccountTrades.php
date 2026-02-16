@@ -49,7 +49,7 @@ class SyncAccountTrades extends Command
         if ($email) {
             $ibQuery->where('email', $email);
         }
-        Log::info("Total IBs to process: " . $ibQuery->count());
+        Log::debug("Total IBs to process: " . $ibQuery->count());
         $ibQuery->cursor()  // More memory efficient for large datasets
             ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, $code, &$totalJobsCreated) {
                 $plan_id = $ib1->planDetails->ib_category_id ?? null;
@@ -94,15 +94,17 @@ class SyncAccountTrades extends Command
                             ->orWhereNull('last_trade_at');
                     });
                 }
-                Log::info("Total accounts to process for IB $referral_code: " . $accountQuery->whereHas(
-                    'user',
-                    fn($query) =>
-                    $query->where(function ($q) use ($referral_code) {
-                        for ($i = 1; $i <= 15; $i++) {
-                            $q->orWhere("ib$i", $referral_code);
-                        }
-                    })->where('status', 1)
-                )->count());
+                // Log suppressed to reduce noise - use debug logging if needed
+                // Log::debug("Total accounts to process for IB $referral_code: " . $accountQuery->whereHas(
+                //     'user',
+                //     fn($query) =>
+                //     $query->where(function ($q) use ($referral_code) {
+                //         for ($i = 1; $i <= 15; $i++) {
+                //             $q->orWhere("ib$i", $referral_code);
+                //         }
+                //     })->where('status', 1)
+                // )->count());
+
                 $accountQuery->whereHas(
                     'user',
                     fn($query) =>
@@ -131,10 +133,6 @@ class SyncAccountTrades extends Command
 
                             $accountIds = $accountChunk->pluck('id')->toArray();
                             $this->info("Dispatching sync for accounts: " . implode(', ', $accountIds));
-                            if (in_array('9fbb706d-e237-488c-a319-16d52d2e36d2', $accountIds)) {
-                                $this->info('Dispatching sync for 505255');
-                                Log::info('dispaching sync for 505255');
-                            }
 
                             $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
                             $totalJobsCreated++;
