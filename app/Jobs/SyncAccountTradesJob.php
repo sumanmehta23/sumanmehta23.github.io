@@ -479,7 +479,7 @@ class SyncAccountTradesJob implements ShouldQueue
      * 
      * This prevents the distributeibcommission queue from backing up exponentially by:
      * 1. Limiting pending jobs to 50 maximum
-     * 2. Checking for duplicate jobs for the same referral_code
+     * 2. Checking for duplicate jobs for the same referral_code using Redis set
      * 3. Only dispatching when conditions are met
      */
     private function dispatchIbCommissionJobIfAllowed($referral_code, $ib_user_id, $ib_acc_plans, $accountId): void
@@ -504,31 +504,29 @@ class SyncAccountTradesJob implements ShouldQueue
                 return;
             }
 
-            // Check for duplicate job with same referral_code in the queue
-            // We'll scan the queue to see if a job with the same parameters exists
-            $jobsKey = $redisPrefix . "jobs";
-            $reservedKey = $redisPrefix . "reserved";
+            // Use Redis set to track queued referral codes for duplicate detection
+            // This is more reliable than parsing job payloads
+            $queuedSetKey = $redisPrefix . "queued_referral_codes:distributeibcommission";
 
-            // Get all jobs from the queue (this gets payloads)
-            $allJobs = Redis::zrevrange($queueKey, 0, -1);
-
-            foreach ($allJobs as $jobPayload) {
-                // Each job payload is JSON encoded, try to decode and check referral_code
-                if (
-                    strpos($jobPayload, "DistributeIbCommissionJob") !== false &&
-                    strpos($jobPayload, $referral_code) !== false
-                ) {
-                    Log::debug("Duplicate DistributeIbCommissionJob found for referral_code, skipping dispatch", [
-                        'referral_code' => $referral_code,
-                        'account_id' => $accountId,
-                    ]);
-                    return;
-                }
+            // Check if this referral_code is already queued
+            if (Redis::sismember($queuedSetKey, $referral_code)) {
+                Log::warning("Duplicate DistributeIbCommissionJob found for referral_code, skipping dispatch", [
+                    'referral_code' => $referral_code,
+                    'account_id' => $accountId,
+                    'pending_jobs' => $pendingCount,
+                ]);
+                return;
             }
 
             // All checks passed, dispatch the job
             DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
-            Log::debug("Dispatched DistributeIbCommissionJob", [
+
+            // Add referral_code to the queued set with a TTL of 1 hour (3600 seconds)
+            // This allows the same referral_code to be queued again after processing
+            Redis::setex("$queuedSetKey:$referral_code", 3600, 1);
+            Redis::sadd($queuedSetKey, $referral_code);
+
+            Log::info("Dispatched DistributeIbCommissionJob", [
                 'referral_code' => $referral_code,
                 'account_id' => $accountId,
                 'pending_jobs' => $pendingCount,
@@ -539,8 +537,7 @@ class SyncAccountTradesJob implements ShouldQueue
                 'account_id' => $accountId,
                 'trace' => $e->getTraceAsString(),
             ]);
-            // Fall back to dispatching anyway if there's an error in the check
-            DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
+            // Don't dispatch as fallback - better to skip than to queue duplicates
         }
     }
 
