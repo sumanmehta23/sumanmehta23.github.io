@@ -42,7 +42,7 @@ class SyncAccountTrades extends Command
         $code = $this->option('code');
 
         $totalJobsCreated = 0;
-        
+
         Log::info('SyncAccountTrades command started', [
             'batch_size' => $batchSize,
             'max_jobs' => $maxJobs,
