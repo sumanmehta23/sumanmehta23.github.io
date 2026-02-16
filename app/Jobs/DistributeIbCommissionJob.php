@@ -63,12 +63,15 @@ class DistributeIbCommissionJob implements ShouldQueue
      */
     public function handle(): void
     {
+        $jobStart = microtime(true);
         try {
             Log::debug('DistributeIbCommissionJob: processing referral_code ' . $this->referral_code . ' userId ' . $this->userId . ' accountId ' . $this->accountId);
             // Find all parent Ib of current account owner and distribute commission , change status of commission to 1
             DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
+            
+            $levelTimings = [];
             for ($i = 1; $i <= 15; $i++) {
-
+                $levelStart = microtime(true);
                 $this->buffer = [];
                 $this->finalResults = [];
                 try {
@@ -143,17 +146,17 @@ class DistributeIbCommissionJob implements ShouldQueue
                             $this->buffer = $newBuffer;
                             $this->processTrades($finalResults, $i);
                         });
+                    
+                    $levelTimings[$i] = round(microtime(true) - $levelStart, 2);
                 } catch (Exception $e) {
                     Log::error('Error processing IB commissions for level ' . $i . ': ' . $e->getMessage(), [
                         'level' => $i,
                         'referral_code' => $this->referral_code,
                         'trace' => $e->getTraceAsString(),
                     ]);
+                    $levelTimings[$i] = round(microtime(true) - $levelStart, 2);
                     continue;
                 }
-                // if (count($this->buffer) > 0) {
-                //     $this->processTrades(collect($this->buffer)->flatten(1), $i);
-                // }
             }
 
             // collect($this->processedtrades)->chunk(200)->each(function ($chunk) {
@@ -172,6 +175,14 @@ class DistributeIbCommissionJob implements ShouldQueue
                     }
                 });
             }
+            
+            Log::info('DistributeIbCommissionJob completed', [
+                'referral_code' => $this->referral_code,
+                'total_duration_seconds' => round(microtime(true) - $jobStart, 2),
+                'level_timings' => $levelTimings,
+                'processed_trades' => count($this->processedtrades),
+                'discarded_ids' => count($this->discardedIds),
+            ]);
         } catch (Exception $e) {
             Log::error('Critical error in DistributeIbCommissionJob: ' . $e->getMessage(), [
                 'referral_code' => $this->referral_code,
@@ -186,6 +197,8 @@ class DistributeIbCommissionJob implements ShouldQueue
     protected function processTrades($trades, $i): void
     {
         try {
+            $processStart = microtime(true);
+            
             // Convert array to collection if needed
             if (is_array($trades)) {
                 $trades = collect($trades);
@@ -219,17 +232,44 @@ class DistributeIbCommissionJob implements ShouldQueue
 
             // Single batch database query for all IB users instead of per-user lookups
             $ibUsers = [];
+            $planDetailsMap = []; // Cache plan details by plan_id
             if (!empty($referralCodesToLookup)) {
                 $ibUsers = Ib1::with('planDetails')
                     ->whereIn('referral_code', array_keys($referralCodesToLookup))
                     ->get()
                     ->keyBy('referral_code')
                     ->toArray();
+
+                // Batch load all plan IDs we need
+                $planIds = [];
+                foreach ($ibUsers as $ib1) {
+                    if (isset($ib1['plan_details']['ib_category_id'])) {
+                        $planIds[$ib1['plan_details']['ib_category_id']] = true;
+                    }
+                }
+
+                // Batch load all IbPlanDetails for these plan IDs
+                if (!empty($planIds)) {
+                    $plans = IbPlanDetails::whereIn('ib_category_id', array_keys($planIds))
+                        ->where('status', 1)
+                        ->whereNull('deleted_at')
+                        ->get();
+                    
+                    foreach ($plans as $plan) {
+                        if (!isset($planDetailsMap[$plan->ib_category_id])) {
+                            $planDetailsMap[$plan->ib_category_id] = [];
+                        }
+                        // Store by account_type_id and level_id for quick lookup
+                        $planDetailsMap[$plan->ib_category_id][$plan->account_type_id][$plan->level_id] = [];
+                        for ($k = 1; $k <= $plan->level_id; $k++) {
+                            $planDetailsMap[$plan->ib_category_id][$plan->account_type_id][$plan->level_id]["d$k"] = $plan->{"d$k"};
+                        }
+                    }
+                }
             }
 
             foreach ($trades as $ca) {
                 try {
-                    // Log::info("sync tradess".json_encode($ca));
                     if (! $ca->user || ! $ca->account) {
                         Log::warning('Missing user or account relation for trade', [
                             'trade_id' => $ca->id,
@@ -252,21 +292,27 @@ class DistributeIbCommissionJob implements ShouldQueue
                             continue;
                         }
 
-                        // Cache IB user lookup to avoid duplicate DB calls
-                        $ib1 = Cache::remember("ib1user:{$referralCode}", 3600, function () use ($referralCode) {
-                            return Ib1::with('planDetails')->where('referral_code', $referralCode)->first();
-                        });
-
-                        if (! $ib1 || ! $ib1->planDetails) {
+                        // Use pre-loaded $ibUsers array instead of Cache::remember()
+                        if (!isset($ibUsers[$referralCode])) {
                             continue;
                         }
 
-                        $planId = $ib1->planDetails->ib_category_id;
+                        $ib1 = $ibUsers[$referralCode];
+                        if (!isset($ib1['plan_details'])) {
+                            continue;
+                        }
+
+                        $planId = $ib1['plan_details']['ib_category_id'] ?? null;
                         if (! $planId) {
                             continue;
                         }
 
-                        $ibAccPlans = $this->getIbPlanDetails($ib1->user_id, $planId);
+                        // Use pre-loaded plan details instead of querying again
+                        $ibAccPlans = $planDetailsMap[$planId] ?? [];
+                        if (empty($ibAccPlans)) {
+                            continue;
+                        }
+
                         $ibLevel = $j;
 
                         $commission = in_array($this->referral_code, ['sensei', 'wealthytrades', 'fxalexg'])
@@ -320,9 +366,11 @@ class DistributeIbCommissionJob implements ShouldQueue
                         ->values()
                         ->toArray();
                     IbWallet::insert($walletsToCreate);
-                    Log::info('Successfully inserted ' . count($walletsToCreate) . ' IB wallet records', [
+                    Log::debug('Successfully inserted ' . count($walletsToCreate) . ' IB wallet records for level ' . $i, [
                         'referral_code' => $this->referral_code,
                         'level' => $i,
+                        'count' => count($walletsToCreate),
+                        'duration_seconds' => round(microtime(true) - $processStart, 2),
                     ]);
                 } catch (Exception $e) {
                     Log::error('Error inserting IB wallet records: ' . $e->getMessage(), [
@@ -337,29 +385,8 @@ class DistributeIbCommissionJob implements ShouldQueue
             Log::error('Critical error in processTrades method: ' . $e->getMessage(), [
                 'referral_code' => $this->referral_code,
                 'level' => $i,
-                'trade_count' => count($trades),
+                'trade_count' => count($trades) ?? 0,
                 'trace' => $e->getTraceAsString(),
             ]);
         }
     }
-
-    private function getIbPlanDetails($user, $plan_id)
-    {
-        $ibPlans = Cache::remember('ibPlans:' . $user, 3600, function () use ($plan_id) {
-            return IbPlanDetails::where('ib_category_id', $plan_id)->where('status', 1)
-                ->whereNull('deleted_at')
-                ->get()
-                ->toArray();
-        });
-        $ib_acc_plans = [];
-        foreach ($ibPlans as $plan) {
-            $ib_acc_plans[$plan['account_type_id']][$plan['level_id']] = [];
-
-            for ($i = 1; $i <= $plan['level_id']; $i++) {
-                $ib_acc_plans[$plan['account_type_id']][$plan['level_id']]["d$i"] = $plan["d$i"];
-            }
-        }
-
-        return $ib_acc_plans;
-    }
-}
