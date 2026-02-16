@@ -186,7 +186,7 @@ class PrioritySyncAccountsCommand extends Command
             ->where('code', '<>', 'Rejected')
             ->count();
 
-        Log::info("totalAccounts ".$totalAccounts);
+        Log::info("totalAccounts " . $totalAccounts);
 
         $neverSynced = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -197,7 +197,7 @@ class PrioritySyncAccountsCommand extends Command
             ->where('code', '<>', 'Rejected')
             ->count();
 
-        Log::info("neverSynced ".$neverSynced);
+        Log::info("neverSynced " . $neverSynced);
 
         $syncedToday = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -207,7 +207,7 @@ class PrioritySyncAccountsCommand extends Command
             ->where('last_sync_attempt_at', '>=', now()->subDay())
             ->count();
 
-        Log::info("syncedToday ".$syncedToday);
+        Log::info("syncedToday " . $syncedToday);
 
         $stale6h = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -382,7 +382,7 @@ class PrioritySyncAccountsCommand extends Command
         if ($specificAccounts === null) {
             if (!$ignoreBalanceFilter) {
                 // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
-                $query->where(function ($q) use ($staleTime, $veryStaleTime) {
+                $query->where('balance', '<>', 0)->where(function ($q) use ($staleTime, $veryStaleTime) {
                     $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts
                         ->orWhere(function ($balanceQuery) use ($staleTime) {
                             $balanceQuery->where('has_balance_activity', true)
