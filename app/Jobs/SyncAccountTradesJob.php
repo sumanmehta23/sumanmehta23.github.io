@@ -20,6 +20,7 @@ use App\Jobs\DistributeIbCommissionJob;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Bus\Batchable;
@@ -375,7 +376,8 @@ class SyncAccountTradesJob implements ShouldQueue
                 'account_id' => $accountId,
             ]);
 
-            DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+            // Dispatch DistributeIbCommissionJob with duplicate check and queue limit
+            $this->dispatchIbCommissionJobIfAllowed($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
             // Dispatch the IB commission job if we had new trades
             // if ($this->newTrades) {
             //     // Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
@@ -471,6 +473,77 @@ class SyncAccountTradesJob implements ShouldQueue
             'created_at' => now(),
         ];
     }
+
+    /**
+     * Dispatch DistributeIbCommissionJob only if queue limit not exceeded and no duplicate exists
+     * 
+     * This prevents the distributeibcommission queue from backing up exponentially by:
+     * 1. Limiting pending jobs to 50 maximum
+     * 2. Checking for duplicate jobs for the same referral_code
+     * 3. Only dispatching when conditions are met
+     */
+    private function dispatchIbCommissionJobIfAllowed($referral_code, $ib_user_id, $ib_acc_plans, $accountId): void
+    {
+        try {
+            $queueName = 'distributeibcommission';
+            $maxPendingJobs = 50;
+            $redisPrefix = env('HORIZON_PREFIX', 'laravel_horizon:');
+
+            // Count pending jobs in the distributeibcommission queue
+            // Redis key format: {prefix}queues:{queue_name}
+            $queueKey = $redisPrefix . "queues:{$queueName}";
+            $pendingCount = Redis::zcard($queueKey);
+
+            if ($pendingCount >= $maxPendingJobs) {
+                Log::warning("DistributeIbCommissionJob queue limit reached", [
+                    'pending_jobs' => $pendingCount,
+                    'max_allowed' => $maxPendingJobs,
+                    'referral_code' => $referral_code,
+                    'account_id' => $accountId,
+                ]);
+                return;
+            }
+
+            // Check for duplicate job with same referral_code in the queue
+            // We'll scan the queue to see if a job with the same parameters exists
+            $jobsKey = $redisPrefix . "jobs";
+            $reservedKey = $redisPrefix . "reserved";
+
+            // Get all jobs from the queue (this gets payloads)
+            $allJobs = Redis::zrevrange($queueKey, 0, -1);
+
+            foreach ($allJobs as $jobPayload) {
+                // Each job payload is JSON encoded, try to decode and check referral_code
+                if (
+                    strpos($jobPayload, "DistributeIbCommissionJob") !== false &&
+                    strpos($jobPayload, $referral_code) !== false
+                ) {
+                    Log::debug("Duplicate DistributeIbCommissionJob found for referral_code, skipping dispatch", [
+                        'referral_code' => $referral_code,
+                        'account_id' => $accountId,
+                    ]);
+                    return;
+                }
+            }
+
+            // All checks passed, dispatch the job
+            DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
+            Log::debug("Dispatched DistributeIbCommissionJob", [
+                'referral_code' => $referral_code,
+                'account_id' => $accountId,
+                'pending_jobs' => $pendingCount,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error in dispatchIbCommissionJobIfAllowed: " . $e->getMessage(), [
+                'referral_code' => $referral_code,
+                'account_id' => $accountId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Fall back to dispatching anyway if there's an error in the check
+            DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
+        }
+    }
+
     protected function processBatch(array $trades)
     {
         try {

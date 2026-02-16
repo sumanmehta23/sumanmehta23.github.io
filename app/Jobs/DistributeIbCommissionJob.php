@@ -66,6 +66,37 @@ class DistributeIbCommissionJob implements ShouldQueue
         $jobStart = microtime(true);
         try {
             Log::debug('DistributeIbCommissionJob: processing referral_code ' . $this->referral_code . ' userId ' . $this->userId . ' accountId ' . $this->accountId);
+
+            // Safety check: if there are more than 100k unprocessed commissions for this referral code,
+            // this indicates a stuck account with too many trades. Log and skip to prevent infinite loop.
+            $unprocessedCount = Ib1Commission::whereHas('user', function ($query) {
+                $query->where('ib1', $this->referral_code)
+                    ->orWhere('ib2', $this->referral_code)
+                    ->orWhere('ib3', $this->referral_code)
+                    ->orWhere('ib4', $this->referral_code)
+                    ->orWhere('ib5', $this->referral_code)
+                    ->orWhere('ib6', $this->referral_code)
+                    ->orWhere('ib7', $this->referral_code)
+                    ->orWhere('ib8', $this->referral_code)
+                    ->orWhere('ib9', $this->referral_code)
+                    ->orWhere('ib10', $this->referral_code)
+                    ->orWhere('ib11', $this->referral_code)
+                    ->orWhere('ib12', $this->referral_code)
+                    ->orWhere('ib13', $this->referral_code)
+                    ->orWhere('ib14', $this->referral_code)
+                    ->orWhere('ib15', $this->referral_code);
+            })->where('orderstate', 4)->count();
+
+            if ($unprocessedCount > 100000) {
+                Log::warning('DistributeIbCommissionJob: Stuck account detected with excessive commissions', [
+                    'referral_code' => $this->referral_code,
+                    'unprocessed_count' => $unprocessedCount,
+                    'account_id' => $this->accountId,
+                ]);
+                // Skip processing but don't fail - this prevents infinite retries
+                return;
+            }
+
             // Find all parent Ib of current account owner and distribute commission , change status of commission to 1
             DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
 
