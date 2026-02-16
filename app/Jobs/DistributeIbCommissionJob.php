@@ -12,6 +12,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
 class DistributeIbCommissionJob implements ShouldQueue
@@ -214,6 +215,18 @@ class DistributeIbCommissionJob implements ShouldQueue
                 'processed_trades' => count($this->processedtrades),
                 'discarded_ids' => count($this->discardedIds),
             ]);
+
+            // Clean up: Remove referral_code from queued set to allow future jobs for this code
+            try {
+                $redisPrefix = env('HORIZON_PREFIX', 'laravel_horizon:');
+                $queuedSetKey = $redisPrefix . "queued_referral_codes:distributeibcommission";
+                Redis::srem($queuedSetKey, $this->referral_code);
+                Redis::del("$queuedSetKey:{$this->referral_code}");
+            } catch (\Exception $e) {
+                Log::warning("Failed to clean up queued referral code: " . $e->getMessage(), [
+                    'referral_code' => $this->referral_code,
+                ]);
+            }
         } catch (Exception $e) {
             Log::error('Critical error in DistributeIbCommissionJob: ' . $e->getMessage(), [
                 'referral_code' => $this->referral_code,
@@ -221,8 +234,42 @@ class DistributeIbCommissionJob implements ShouldQueue
                 'account_id' => $this->accountId,
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // Clean up on error too, to prevent permanent blocking
+            try {
+                $redisPrefix = env('HORIZON_PREFIX', 'laravel_horizon:');
+                $queuedSetKey = $redisPrefix . "queued_referral_codes:distributeibcommission";
+                Redis::srem($queuedSetKey, $this->referral_code);
+            } catch (\Exception $cleanupError) {
+                // Silently ignore cleanup errors
+            }
+
             throw $e;
         }
+    }
+
+    /**
+     * Handle job failure - cleanup queued referral code
+     */
+    public function failed(\Throwable $exception): void
+    {
+        try {
+            $redisPrefix = env('HORIZON_PREFIX', 'laravel_horizon:');
+            $queuedSetKey = $redisPrefix . "queued_referral_codes:distributeibcommission";
+            Redis::srem($queuedSetKey, $this->referral_code);
+            Redis::del("$queuedSetKey:{$this->referral_code}");
+        } catch (\Exception $e) {
+            Log::warning("Failed to clean up queued referral code on job failure: " . $e->getMessage(), [
+                'referral_code' => $this->referral_code,
+            ]);
+        }
+
+        Log::error('DistributeIbCommissionJob failed permanently', [
+            'referral_code' => $this->referral_code,
+            'user_id' => $this->userId,
+            'account_id' => $this->accountId,
+            'exception' => $exception->getMessage(),
+        ]);
     }
 
     protected function processTrades($trades, $i): void
