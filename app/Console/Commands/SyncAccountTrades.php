@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Cache;
 class SyncAccountTrades extends Command
 {
     protected $totalAccountsProcessed = 0;
-    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=500 : Maximum number of jobs to create} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
+    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=500 : Maximum number of jobs to create} {--accounts-per-ib=100 : Maximum accounts to process per IB in one pass} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
     protected $description = 'Sync account trades for IBs';
 
     // private function interpolateQuery($query, $bindings)
@@ -36,11 +36,19 @@ class SyncAccountTrades extends Command
         // });
         $batchSize = (int) $this->option('batch-size');
         $maxJobs = (int) $this->option('max-jobs');
+        $accountsPerIb = (int) $this->option('accounts-per-ib'); // New option to limit accounts per IB
         $activeOnly = $this->option('active-only');
         $email = $this->option('email');
         $code = $this->option('code');
 
         $totalJobsCreated = 0;
+        
+        Log::info('SyncAccountTrades command started', [
+            'batch_size' => $batchSize,
+            'max_jobs' => $maxJobs,
+            'accounts_per_ib' => $accountsPerIb,
+            'active_only' => $activeOnly,
+        ]);
         $ibQuery = Ib1::with(['planDetails', 'user'])
             ->where('status', 1)
             ->whereNotNull('ib_plan_details_id');
@@ -51,7 +59,7 @@ class SyncAccountTrades extends Command
         }
         Log::debug("Total IBs to process: " . $ibQuery->count());
         $ibQuery->cursor()  // More memory efficient for large datasets
-            ->each(function ($ib1) use ($batchSize, $maxJobs, $activeOnly, $code, &$totalJobsCreated) {
+            ->each(function ($ib1) use ($batchSize, $maxJobs, $accountsPerIb, $activeOnly, $code, &$totalJobsCreated) {
                 $plan_id = $ib1->planDetails->ib_category_id ?? null;
 
                 if (!$plan_id) return;
@@ -114,7 +122,7 @@ class SyncAccountTrades extends Command
                         }
                     })->where('status', 1)
                 )
-                    ->chunk(5000, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
+                    ->chunk($accountsPerIb, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
                         $this->totalAccountsProcessed += $accounts->count();
                         // Stop creating jobs if we've reached the limit
                         if ($totalJobsCreated >= $maxJobs) {
