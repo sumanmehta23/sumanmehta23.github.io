@@ -68,7 +68,7 @@ class DistributeIbCommissionJob implements ShouldQueue
             Log::debug('DistributeIbCommissionJob: processing referral_code ' . $this->referral_code . ' userId ' . $this->userId . ' accountId ' . $this->accountId);
             // Find all parent Ib of current account owner and distribute commission , change status of commission to 1
             DB::statement("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', ''))");
-            
+
             $levelTimings = [];
             for ($i = 1; $i <= 15; $i++) {
                 $levelStart = microtime(true);
@@ -146,7 +146,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                             $this->buffer = $newBuffer;
                             $this->processTrades($finalResults, $i);
                         });
-                    
+
                     $levelTimings[$i] = round(microtime(true) - $levelStart, 2);
                 } catch (Exception $e) {
                     Log::error('Error processing IB commissions for level ' . $i . ': ' . $e->getMessage(), [
@@ -175,7 +175,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                     }
                 });
             }
-            
+
             Log::info('DistributeIbCommissionJob completed', [
                 'referral_code' => $this->referral_code,
                 'total_duration_seconds' => round(microtime(true) - $jobStart, 2),
@@ -198,7 +198,7 @@ class DistributeIbCommissionJob implements ShouldQueue
     {
         try {
             $processStart = microtime(true);
-            
+
             // Convert array to collection if needed
             if (is_array($trades)) {
                 $trades = collect($trades);
@@ -254,7 +254,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                         ->where('status', 1)
                         ->whereNull('deleted_at')
                         ->get();
-                    
+
                     foreach ($plans as $plan) {
                         if (!isset($planDetailsMap[$plan->ib_category_id])) {
                             $planDetailsMap[$plan->ib_category_id] = [];
@@ -390,3 +390,4 @@ class DistributeIbCommissionJob implements ShouldQueue
             ]);
         }
     }
+}
