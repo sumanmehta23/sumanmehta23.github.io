@@ -104,10 +104,10 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             $this->mt5Service = app(QueueSafeMT5Service::class);
 
             // The QueueSafeMT5Service handles connection management internally
-            Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts", [
-                'account_ids' => $this->accountIds,
-                'referral_code' => $this->referral_code,
-            ]);
+            // Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts", [
+            //     'account_ids' => $this->accountIds,
+            //     'referral_code' => $this->referral_code,
+            // ]);
 
             // Process each account with retry logic for socket errors
             foreach ($this->accountIds as $accountId) {
@@ -122,18 +122,18 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                     ]);
                 }
                 $accountDuration = microtime(true) - $accountStartTime;
-                Log::debug("Completed processing account {$accountId}", [
-                    'duration_seconds' => round($accountDuration, 2),
-                    'total_orders_processed' => $this->totalOrdersProcessed,
-                ]);
+                // Log::debug("Completed processing account {$accountId}", [
+                //     'duration_seconds' => round($accountDuration, 2),
+                //     'total_orders_processed' => $this->totalOrdersProcessed,
+                // ]);
             }
 
             $totalDuration = microtime(true) - $this->startTime;
-            Log::info("SyncAccountTradesJob: Completed successfully", [
-                'duration_seconds' => round($totalDuration, 2),
-                'total_orders_processed' => $this->totalOrdersProcessed,
-                'accounts_processed' => count($this->accountIds),
-            ]);
+            // Log::info("SyncAccountTradesJob: Completed successfully", [
+            //     'duration_seconds' => round($totalDuration, 2),
+            //     'total_orders_processed' => $this->totalOrdersProcessed,
+            //     'accounts_processed' => count($this->accountIds),
+            // ]);
         } catch (\Exception $e) {
             Log::error("SyncAccountTradesJob failed: " . $e->getMessage(), [
                 'error' => $e->getMessage(),
@@ -238,10 +238,10 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                 return;
             }
 
-            Log::info('Syncing account trades for account: ' . $this->account->code, [
-                'account_id' => $accountId,
-                'account_code' => $this->account->code,
-            ]);
+            // Log::info('Syncing account trades for account: ' . $this->account->code, [
+            //     'account_id' => $accountId,
+            //     'account_code' => $this->account->code,
+            // ]);
 
             $login = $this->account->code;
             $from = 'September 01,2024';
@@ -271,11 +271,11 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                 return;
             }
 
-            Log::info("Retrieved total trade count for account {$login}", [
-                'total_trades' => $total,
-                'duration_seconds' => round($getTotal_duration, 2),
-                'account_id' => $accountId,
-            ]);
+            // Log::info("Retrieved total trade count for account {$login}", [
+            //     'total_trades' => $total,
+            //     'duration_seconds' => round($getTotal_duration, 2),
+            //     'account_id' => $accountId,
+            // ]);
 
             if ($total == 0) {
                 Log::info("No trades found for account {$login}", [
@@ -390,14 +390,14 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                     }
                 }
 
-                Log::debug("Completed page {$pageCount} of {$totalPages}", [
-                    'page_number' => $pageCount,
-                    'total_pages' => $totalPages,
-                    'orders_on_page' => count($pageOrders),
-                    'inserted_count' => $insertedCount,
-                    'duration_seconds' => round($pageDuration, 2),
-                    'account_id' => $accountId,
-                ]);
+                // Log::debug("Completed page {$pageCount} of {$totalPages}", [
+                //     'page_number' => $pageCount,
+                //     'total_pages' => $totalPages,
+                //     'orders_on_page' => count($pageOrders),
+                //     'inserted_count' => $insertedCount,
+                //     'duration_seconds' => round($pageDuration, 2),
+                //     'account_id' => $accountId,
+                // ]);
 
                 $orders = array_merge($orders, $pageOrders);
                 $this->totalOrdersProcessed += count($pageOrders);
@@ -409,12 +409,12 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             }
 
             $pagination_duration = microtime(true) - $pagination_start;
-            Log::info("Successfully processed " . count($orders) . " orders for account {$login}", [
-                'total_orders' => count($orders),
-                'pagination_duration_seconds' => round($pagination_duration, 2),
-                'hit_page_limit' => $this->hitPageLimit,
-                'account_id' => $accountId,
-            ]);
+            // Log::info("Successfully processed " . count($orders) . " orders for account {$login}", [
+            //     'total_orders' => count($orders),
+            //     'pagination_duration_seconds' => round($pagination_duration, 2),
+            //     'hit_page_limit' => $this->hitPageLimit,
+            //     'account_id' => $accountId,
+            // ]);
 
             // Dispatch DistributeIbCommissionJob with duplicate check and queue limit
             $this->dispatchIbCommissionJobIfAllowed($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
