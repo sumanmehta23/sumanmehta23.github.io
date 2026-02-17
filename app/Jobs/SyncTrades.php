@@ -21,13 +21,19 @@ class SyncTrades implements ShouldQueue
     protected $account;
     protected $batchSize = 1;
 
-    public function __construct($account)
+    public function __construct($account = null)
     {
         $this->account = $account;
     }
 
     public function handle()
     {
+        // Guard: Ensure account was provided
+        if (!$this->account) {
+            Log::error("SyncTrades job dispatched without account parameter");
+            return;
+        }
+
         Log::info("Started SyncTrades job for account ID: {$this->account->code}");
 
         // Get existing trades to check their status
