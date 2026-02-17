@@ -71,7 +71,7 @@ class MTConnect
       return MTRetCode::MT_RET_ERR_NETWORK;
     }
     //--- try create connection to server
-    if (!socket_connect($this->m_connect, $this->m_ip_mt5, $this->m_port_mt5)) {
+    if (!@socket_connect($this->m_connect, $this->m_ip_mt5, $this->m_port_mt5)) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, "socket connect failed to " . $this->m_ip_mt5 . ":" . $this->m_port_mt5 . ", " . $this->GetSocketError());
       return MTRetCode::MT_RET_ERR_CONNECTION;
     }
@@ -215,9 +215,12 @@ class MTConnect
         // Log query content in hex to avoid issues with binary data
         // Log::debug("Sending query (hex): " . bin2hex($querdy));
 
-        $send_data = socket_write($this->m_connect, $query, $query_len);
+        // Suppress warnings and handle socket errors gracefully
+        $send_data = @socket_write($this->m_connect, $query, $query_len);
         if (!$send_data) {
-            Log::error("Send failed.", ['error' => $this->GetSocketError()]);
+            $socketError = $this->GetSocketError();
+            Log::error("Send failed. Connection may be broken.", ['error' => $socketError]);
+            // Return early to prevent cascading errors
             return false;
         }
 
@@ -394,9 +397,9 @@ class MTConnect
     $header = null;
     //---
     try {
-      $count_read = socket_recv($this->m_connect, $header_data, MTHeaderProtocol::HEADER_LENGTH, MSG_WAITALL);
+      // Suppress warnings - handle errors gracefully
+      $count_read = @socket_recv($this->m_connect, $header_data, MTHeaderProtocol::HEADER_LENGTH, MSG_WAITALL);
     } catch (\Throwable $th) {
-
       Log::error("Unable to connect to MT5 " . $th->getMessage() . " on " . $this->m_ip_mt5 . ":" . $this->m_port_mt5);
       return null;
     }
@@ -422,12 +425,18 @@ class MTConnect
     $data         = '';
     $count_packet = 0;
     while ($read_len < $need_len) {
-      $count_read = socket_recv($this->m_connect, $temp_data, $need_len - $read_len, MSG_WAITALL); //socket_read($this->m_connect, $need_len - $read_len, PHP_BINARY_READ);
+      // Suppress warnings - socket may be broken
+      $count_read = @socket_recv($this->m_connect, $temp_data, $need_len - $read_len, MSG_WAITALL);
       //--- check data
-      if ($temp_data === false) {
+      if ($temp_data === false || $count_read === false) {
         $error_code = socket_last_error($this->m_connect);
         $error_msg  = socket_strerror($error_code);
         if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::DEBUG, 'socket error [' . $error_code . '] ' . $error_msg);
+        Log::warning("Socket read failed - connection may be broken", [
+          'error_code' => $error_code,
+          'error_msg' => $error_msg,
+          'server' => $this->m_ip_mt5 . ':' . $this->m_port_mt5
+        ]);
         return null;
       }
       //--- try get all data
