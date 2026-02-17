@@ -1097,15 +1097,15 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 return $callback();
             } catch (\Exception $e) {
                 $lastException = $e;
-                
+
                 // Check if it's a socket/connection error that should be retried
                 $isSocketError = stripos($e->getMessage(), 'broken pipe') !== false ||
-                                stripos($e->getMessage(), 'connection reset') !== false ||
-                                stripos($e->getMessage(), 'connection refused') !== false ||
-                                stripos($e->getMessage(), 'unable to write to socket') !== false ||
-                                stripos($e->getMessage(), 'connection timed out') !== false ||
-                                stripos($e->getMessage(), 'transport endpoint') !== false;
-                
+                    stripos($e->getMessage(), 'connection reset') !== false ||
+                    stripos($e->getMessage(), 'connection refused') !== false ||
+                    stripos($e->getMessage(), 'unable to write to socket') !== false ||
+                    stripos($e->getMessage(), 'connection timed out') !== false ||
+                    stripos($e->getMessage(), 'transport endpoint') !== false;
+
                 if (!$isSocketError || $attempt >= $maxAttempts) {
                     throw $e;
                 }
