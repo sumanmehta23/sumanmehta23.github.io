@@ -194,7 +194,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
                         $accountTimings[] = ['account' => $account->code, 'time' => $accountTime, 'result' => $result];
 
-                        Log::debug("Account {$account->code}: {$result} ({$accountTime}ms)");
+                        // Log::debug("Account {$account->code}: {$result} ({$accountTime}ms)");
                     } catch (\Throwable $e) {
                         $results['errors']++;
                         $results['processed']++;
