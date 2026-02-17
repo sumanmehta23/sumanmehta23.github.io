@@ -23,9 +23,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Bus\Batchable;
 
-class SyncAccountTradesJob implements ShouldQueue
+class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
@@ -45,6 +46,11 @@ class SyncAccountTradesJob implements ShouldQueue
      */
     public $maxExceptions = 2;
 
+    /**
+     * Unique job ID for 10 minutes to prevent duplicate syncs for same accounts
+     */
+    public $uniqueFor = 600;
+
     protected $mt5Service;
     protected $api;
     protected $account;
@@ -56,16 +62,28 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $batchSize = 500;
     protected $totalOrdersProcessed = 0;
     protected $startTime = null;
+    protected $maxPagesPerSync;
+    protected $hitPageLimit = false;
+    /**
+     * Get the unique ID for the job to prevent concurrent executions for same accounts.
+     */
+    public function uniqueId()
+    {
+        $sortedIds = collect($this->accountIds)->sort()->join('-');
+        return "sync-account-trades-{$sortedIds}";
+    }
+
     /**
      * Create a new job instance.
      */
-    public function __construct($accountIds, $referral_code, $ib_user_id, $ib_acc_plans)
+    public function __construct($accountIds, $referral_code, $ib_user_id, $ib_acc_plans, $maxPagesPerSync = null)
     {
         // Support both single account ID (backward compatibility) and array of IDs
         $this->accountIds = is_array($accountIds) ? $accountIds : [$accountIds];
         $this->referral_code = $referral_code;
         $this->ib_user_id = $ib_user_id;
         $this->ib_acc_plans = $ib_acc_plans;
+        $this->maxPagesPerSync = $maxPagesPerSync ?? config('sync-all-trades.batch_sync.max_pages_per_sync', 20);
         $this->onQueue('syncaccountstrades');
     }
     protected function calculateLotSize($volumeInitialExt, $contractSize)
@@ -268,6 +286,19 @@ class SyncAccountTradesJob implements ShouldQueue
 
             // Log::info("orders for account trades: " . json_encode($orders));
             while (count($orders) < $total) {
+                // PAGE_LIMIT: Check if we've hit the maximum pages per sync
+                if ($pageCount >= $this->maxPagesPerSync && count($orders) < $total) {
+                    Log::info("PAGE_LIMIT: Hit maximum pages per sync, stopping pagination", [
+                        'account_id' => $accountId,
+                        'account_code' => $login,
+                        'pages_synced' => $pageCount,
+                        'max_pages_allowed' => $this->maxPagesPerSync,
+                        'orders_synced' => count($orders),
+                        'total_orders' => $total,
+                    ]);
+                    $this->hitPageLimit = true;
+                    break;
+                }
                 $pageCount++;
                 $currentPageSize = min($pageSize, $total - count($orders));
                 $position = count($orders);
@@ -373,11 +404,31 @@ class SyncAccountTradesJob implements ShouldQueue
             Log::info("Successfully processed " . count($orders) . " orders for account {$login}", [
                 'total_orders' => count($orders),
                 'pagination_duration_seconds' => round($pagination_duration, 2),
+                'hit_page_limit' => $this->hitPageLimit,
                 'account_id' => $accountId,
             ]);
 
             // Dispatch DistributeIbCommissionJob with duplicate check and queue limit
             $this->dispatchIbCommissionJobIfAllowed($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+
+            // AUTO_REQUEUE: If we hit page limit, dispatch another job to continue syncing remaining pages
+            if ($this->hitPageLimit && count($orders) < $total) {
+                Log::info("AUTO_REQUEUE: Dispatching continuation job to sync remaining trades", [
+                    'account_id' => $accountId,
+                    'account_code' => $login,
+                    'orders_synced_so_far' => count($orders),
+                    'total_orders' => $total,
+                    'remaining_orders' => $total - count($orders),
+                ]);
+                // Dispatch a new job instance to continue syncing from next page
+                static::dispatch(
+                    $this->accountIds,
+                    $this->referral_code,
+                    $this->ib_user_id,
+                    $this->ib_acc_plans,
+                    $this->maxPagesPerSync
+                )->delay(now()->addSeconds(5));
+            }
             // Dispatch the IB commission job if we had new trades
             // if ($this->newTrades) {
             //     // Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");

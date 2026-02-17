@@ -37,8 +37,10 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
     protected $fromTimes;
     protected $maxTradesLimit;
     protected $minTradesLimit;
+    protected $maxPagesPerSync; // Limit pages fetched per sync to ensure fair queue distribution
     public $timeout = 300; // 5 minutes for batch
     public $tries = 2;
+    public $retryAfter = 300; // Wait 5 minutes before retrying to allow MT5 server to recover
     public $uniqueFor = 600; // Prevent duplicates for 10 minutes
 
     /**
@@ -50,7 +52,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         return "batch-sync-trades-{$accountCodes}";
     }
 
-    public function __construct(array $accounts, array $fromTimes = [], int $maxTradesLimit = null, int $minTradesLimit = null)
+    public function __construct(array $accounts, array $fromTimes = [], int $maxTradesLimit = null, int $minTradesLimit = null, int $maxPagesPerSync = null)
     {
         // Convert Account models or arrays to serializable array format
         $this->accounts = collect($accounts)->map(function ($account) {
@@ -77,6 +79,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $this->fromTimes = $fromTimes;
         $this->maxTradesLimit = $maxTradesLimit;
         $this->minTradesLimit = $minTradesLimit;
+        $this->maxPagesPerSync = $maxPagesPerSync ?? config('sync-all-trades.batch_sync.max_pages_per_sync', 20);
 
         // Set timeout based on number of accounts with optimized timing
         // Base: 5 minutes, then 60 seconds per account (reduced from 90) + 2 minute buffer (reduced from 5)
@@ -89,6 +92,9 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
         $accountCount = count($this->accounts);
         $startMemory = memory_get_usage(true);
+        $currentAccountCode = null;
+        $currentPhase = 'initialization';
+        $partialSyncAccounts = []; // Track accounts that need re-queueing due to page limits
 
         // Additional duplicate protection using manual cache locks
         $lockKey = "batch-sync-lock-" . collect($this->accounts)->pluck('code')->sort()->join('-');
@@ -117,6 +123,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
             try {
                 // Track MT5 connection time
+                $currentPhase = 'mt5_connection';
                 $connectionStart = microtime(true);
                 if (!$mt5Service->connect()) {
                     throw new \Exception("Failed to establish MT5 connection (via pool)");
@@ -125,11 +132,15 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $api = $mt5Service->getApi();
 
                 // Pre-warm cache for all accounts in this batch
+                $currentPhase = 'cache_warmup';
                 $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
                 $cacheService->warmupAccounts($accountModels->all());
 
                 foreach ($this->accounts as $index => $accountData) {
                     $accountIterationStart = microtime(true);
+                    $currentAccountCode = $accountData['code'];
+                    $currentPhase = "account_sync:{$currentAccountCode}";
+
                     try {
                         // Convert array back to Account model for processing
                         $account = Account::find($accountData['id']);
@@ -157,6 +168,14 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                             case 'not_found':
                                 $results['not_found']++;
                                 break;
+                            case 'partial_sync':
+                                // Account hit page limit - will be re-queued automatically
+                                if (!isset($results['partial_sync'])) {
+                                    $results['partial_sync'] = 0;
+                                }
+                                $results['partial_sync']++;
+                                $partialSyncAccounts[] = $accountData; // Store for re-queueing
+                                break;
                             case 'skipped_high_volume':
                             case 'skipped_low_volume':
                                 // Track skipped accounts separately but don't count as errors
@@ -176,12 +195,24 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         $accountTimings[] = ['account' => $account->code, 'time' => $accountTime, 'result' => $result];
 
                         Log::debug("Account {$account->code}: {$result} ({$accountTime}ms)");
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         $results['errors']++;
                         $results['processed']++;
                         $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
                         $accountTimings[] = ['account' => $accountData['code'], 'time' => $accountTime, 'result' => 'error'];
-                        Log::error("Error syncing account {$accountData['code']}: " . $e->getMessage());
+
+                        Log::error("CRITICAL ERROR: Error while syncing account {$accountData['code']}", [
+                            'exception_class' => get_class($e),
+                            'exception_message' => $e->getMessage(),
+                            'exception_code' => $e->getCode(),
+                            'exception_file' => $e->getFile(),
+                            'exception_line' => $e->getLine(),
+                            'stack_trace' => $e->getTraceAsString(),
+                            'account_code' => $accountData['code'],
+                            'account_id' => $accountData['id'],
+                            'job_attempt' => $this->attempts(),
+                            'job_id' => $this->job->getJobId() ?? 'unknown'
+                        ]);
 
                         // Report error to connection pool for adaptive management
                         $mt5Service->reportError();
@@ -192,8 +223,20 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         usleep(100000); // 0.1 second - optimized for better throughput
                     }
                 }
-            } catch (\Exception $e) {
-                Log::error("BatchSyncTradesJob failed: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                Log::error("CRITICAL EXCEPTION in BatchSyncTradesJob connection/iteration phase", [
+                    'exception_class' => get_class($e),
+                    'exception_message' => $e->getMessage(),
+                    'exception_code' => $e->getCode(),
+                    'exception_file' => $e->getFile(),
+                    'exception_line' => $e->getLine(),
+                    'current_phase' => $currentPhase,
+                    'current_account' => $currentAccountCode,
+                    'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+                    'job_attempt' => $this->attempts(),
+                    'job_id' => $this->job->getJobId() ?? 'unknown',
+                    'stack_trace' => $e->getTraceAsString()
+                ]);
                 throw $e;
             }
 
@@ -224,16 +267,65 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 'account_breakdown' => $accountTimings
             ];
 
-            // Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
-            //     "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
-            //     "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
-            //     "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
-            //     "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
+            Log::info("BatchSyncTradesJob COMPLETED - Summary Report", [
+                'total_accounts' => $accountCount,
+                'processed' => $results['processed'],
+                'successful' => $results['success'],
+                'no_changes' => $results['no_changes'],
+                'errors' => $results['errors'],
+                'not_found' => $results['not_found'],
+                'skipped' => $results['skipped'],
+                'total_time_ms' => $totalJobTime,
+                'connection_time_ms' => $connectionTime,
+                'avg_per_account_ms' => $avgPerAccountMs,
+                'min_time_ms' => $minTime,
+                'max_time_ms' => $maxTime,
+                'median_time_ms' => $medianTime,
+                'memory_used_mb' => $memoryUsed,
+                'peak_memory_mb' => $peakMemory,
+                'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'attempt' => $this->attempts()
+            ]);
 
-            // Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+            // AUTO RE-QUEUE: Handle accounts that hit page limits during pagination
+            // This ensures fair distribution - high-volume accounts don't block others
+            if (!empty($partialSyncAccounts)) {
+                Log::info("AUTO_REQUEUE: " . count($partialSyncAccounts) . " account(s) hit page limits and will be re-queued for continuation");
+                foreach ($partialSyncAccounts as $partialAccount) {
+                    Log::info("REQUEUE: Account {$partialAccount['code']} (ID: {$partialAccount['id']}) - page limit reached, re-queueing for next sync");
+
+                    // Re-dispatch the same account for continuation
+                    // It will calculate fresh sync range based on last successfully synced trades
+                    $retryJob = new BatchSyncTradesJob(
+                        [$partialAccount],
+                        [],
+                        $this->maxTradesLimit,
+                        $this->minTradesLimit,
+                        $this->maxPagesPerSync
+                    );
+                    dispatch($retryJob);
+                }
+                Log::info("AUTO_REQUEUE: Dispatched " . count($partialSyncAccounts) . " continuation jobs");
+            }
 
             // Clear sync-in-progress cache for all accounts in this batch
             $this->clearBatchSyncInProgressCache();
+        } catch (\Exception $e) {
+            Log::error("FATAL ERROR: Unexpected exception in BatchSyncTradesJob main try block", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+                'current_phase' => $currentPhase,
+                'current_account' => $currentAccountCode,
+                'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+                'job_attempt' => $this->attempts(),
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         } finally {
             // Always release the lock
             $lock->release();
@@ -253,15 +345,147 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         }
     }
 
+    /**
+     * IMPROVED SYNC STRATEGY: Calculate optimal sync time range based on database state
+     * 
+     * Instead of always syncing 7+ days of data, intelligently determine:
+     * - What trades we already have
+     * - What new dates we need to check
+     * - How far back to look based on account activity patterns
+     * - IMPORTANT: Check for open positions that need continuous monitoring
+     * 
+     * Returns: ['from' => Carbon, 'strategy' => string]
+     */
+    protected function getSmartSyncTimeRange(Account $account, Carbon $fallbackFromTime): array
+    {
+        try {
+            // CRITICAL: Check for open positions (trades still running)
+            // These need to be synced regardless of when they were opened
+            $openPositions = Trade::where('account_id', $account->id)
+                ->whereNull('close_time')
+                ->select('open_time', 'position_id', 'symbol')
+                ->orderBy('open_time')
+                ->get();
+
+            if ($openPositions->count() > 0) {
+                // Account has open positions - MUST sync to check their current status
+                $oldestOpenTrade = $openPositions->first();
+                $oldestOpenTime = Carbon::parse($oldestOpenTrade->open_time);
+                $hoursSinceOldestOpen = now()->diffInHours($oldestOpenTime);
+                $daysSinceOldestOpen = now()->diffInDays($oldestOpenTime);
+
+                Log::info("DEBUG[{$account->code}]: Found {$openPositions->count()} OPEN positions. Oldest opened {$daysSinceOldestOpen} days ago ({$oldestOpenTrade->symbol}). Must sync to update status.");
+
+                // For open trades, always sync back to at least when the oldest one opened
+                // Plus buffer time to catch any related activity
+                $bufferHours = min($hoursSinceOldestOpen + 24, 168); // Max 7 days buffer
+                $syncFromTime = $oldestOpenTime->subHours(2);
+
+                return [
+                    'from' => $syncFromTime,
+                    'strategy' => 'OPEN_POSITION_SYNC (' . $openPositions->count() . ' active positions, oldest: ' . $daysSinceOldestOpen . ' days)'
+                ];
+            }
+
+            // Get the latest CLOSED trade in our database for this account
+            $latestTrade = Trade::where('account_id', $account->id)
+                ->whereNotNull('close_time')
+                ->orderByDesc('close_time')
+                ->select('open_time', 'close_time', 'created_at')
+                ->first();
+
+            if (!$latestTrade) {
+                // No trades in database - do full sync from fallback time
+                return [
+                    'from' => $fallbackFromTime,
+                    'strategy' => 'FULL_INITIAL_SYNC (no history)'
+                ];
+            }
+
+            // Calculate how long ago the latest CLOSED trade was
+            $latestTradeTime = Carbon::parse($latestTrade->close_time);
+            $hoursSinceLastTrade = now()->diffInHours($latestTradeTime);
+            $daysSinceLastTrade = now()->diffInDays($latestTradeTime);
+
+            // Strategy 1: Very Recent Activity (< 1 hour)
+            // Sync last 2 hours to catch any trades in near real-time
+            if ($hoursSinceLastTrade <= 1) {
+                $syncFromTime = now()->subHours(2);
+                return [
+                    'from' => $syncFromTime,
+                    'strategy' => 'INCREMENTAL_VERY_RECENT (last 2 hours)'
+                ];
+            }
+
+            // Strategy 2: Recent Activity (< 1 day)
+            // Sync last 2 days to catch any new trades
+            if ($daysSinceLastTrade <= 1) {
+                $syncFromTime = now()->subDays(2);
+                return [
+                    'from' => $syncFromTime,
+                    'strategy' => 'INCREMENTAL_RECENT (last 2 days)'
+                ];
+            }
+
+            // Strategy 3: Moderately Recent (1-7 days)
+            // Sync last 14 days to account for potential delays
+            if ($daysSinceLastTrade <= 7) {
+                $syncFromTime = now()->subDays(14);
+                return [
+                    'from' => $syncFromTime,
+                    'strategy' => 'INCREMENTAL_MODERATE (last 14 days)'
+                ];
+            }
+
+            // Strategy 4: Inactive (7-30 days)
+            // Only check active hours - might have overnight trades
+            if ($daysSinceLastTrade <= 30) {
+                // Still sync back 30 days to see if account regains activity
+                $syncFromTime = now()->subDays(30);
+                return [
+                    'from' => $syncFromTime,
+                    'strategy' => 'INCREMENTAL_INACTIVE (last 30 days - hoping for activity)'
+                ];
+            }
+
+            // Strategy 5: Very Inactive (> 30 days)
+            // Check just last 24 hours in case account comes back to life
+            // This avoids massive 7-day syncs for dormant accounts
+            $syncFromTime = now()->subDays(1);
+            return [
+                'from' => $syncFromTime,
+                'strategy' => 'MINIMAL_CHECK_DORMANT (last 24 hours - account inactive ' . $daysSinceLastTrade . ' days)'
+            ];
+        } catch (\Exception $e) {
+            // If anything goes wrong, fall back to the provided time
+            Log::warning("Error calculating smart sync time range for {$account->code}: " . $e->getMessage());
+            return [
+                'from' => $fallbackFromTime,
+                'strategy' => 'FALLBACK (error in calculation)'
+            ];
+        }
+    }
+
     protected function syncSingleAccount($api, Account $account, Carbon $fromTime, TradeCacheService $cacheService): string
     {
         $accountStartTime = microtime(true);
         $timings = [];
         $apiCalls = [];
+        $hitPageLimit = false; // Track if we hit pagination limit (for fair queue distribution)
 
         if (!$account->code) {
             return 'error';
         }
+
+        // Phase 0: IMPROVED SYNC STRATEGY - Calculate optimal sync time range
+        // Instead of always syncing from passed $fromTime, use smart incremental sync
+        $phaseStart = microtime(true);
+        $optimizedFromTime = $this->getSmartSyncTimeRange($account, $fromTime);
+        $fromTime = $optimizedFromTime['from'];
+        $syncStrategy = $optimizedFromTime['strategy'];
+        $timings['sync_range_calculation'] = round((microtime(true) - $phaseStart) * 1000, 2);
+
+        Log::info("SYNC_STRATEGY[{$account->code}]: Using {$syncStrategy} - syncing from {$fromTime->format('Y-m-d H:i:s')}");
 
         // Phase 1: MT5 User Check
         $phaseStart = microtime(true);
@@ -604,6 +828,16 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $orders = array_merge($orders, $pageOrders);
                 Log::info("DEBUG[{$account->code}]: Page {$pageCount} fetched " . count($pageOrders) . " orders in {$pageTime}ms (total so far: " . count($orders) . "/{$total})");
 
+                // ⚠️ PAGE LIMIT CHECK: Stop if we've reached max pages per sync (fair queue distribution)
+                if ($pageCount >= $this->maxPagesPerSync && count($orders) < $total) {
+                    $remainingOrders = $total - count($orders);
+                    Log::warning("PAGE_LIMIT[{$account->code}]: Reached max pages ({$this->maxPagesPerSync}). Fetched {$pageCount} pages ({$totalHistoryTime}ms). Got " . count($orders) . " orders so far. {$remainingOrders} orders remaining - will be synced in next batch job.");
+                    Log::info("FAIRNESS: Stopping pagination for {$account->code} to allow other accounts in batch to be processed. This account will be re-queued.");
+                    $hitPageLimit = true; // Mark that we hit the limit
+                    // Break early - process what we have and re-queue account for next sync
+                    break;
+                }
+
                 // Safety check: if we got fewer orders than expected and it's not the last page
                 if (count($pageOrders) === 0) {
                     Log::warning("DEBUG[{$account->code}]: Got 0 orders on page {$pageCount}, stopping pagination");
@@ -689,6 +923,11 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $skippedTradesCount = 0; // Track skipped trades with invalid position_id
 
             foreach ($ordersByPosition as $positionId => $positionOrders) {
+                // Ensure $positionOrders is a collection for method calls  
+                if (!($positionOrders instanceof \Illuminate\Support\Collection)) {
+                    $positionOrders = collect($positionOrders);
+                }
+
                 // Sort orders by time to identify open/close sequence
                 $positionOrders = $positionOrders->sortBy('TimeDone');
                 $existingTrade = $existingTrades->get($positionId);
@@ -794,7 +1033,14 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
             // Phase 10: Update Account Status & Cache Invalidation
             $phaseStart = microtime(true);
-            $this->updateSyncStatus($account, 'success', $savedCount);
+
+            // If we hit page limit, mark as partial sync instead of complete success
+            if ($hitPageLimit) {
+                Log::info("PARTIAL_SYNC[{$account->code}]: Sync incomplete due to page limit. {$savedCount} trades processed but more remain. Account will be re-queued automatically.");
+                $this->updateSyncStatus($account, 'partial_sync', $savedCount, "Partial sync - page limit reached. Remaining data will be synced in next batch.");
+            } else {
+                $this->updateSyncStatus($account, 'success', $savedCount);
+            }
 
             // Invalidate cache since we've updated trades
             if ($savedCount > 0) {
@@ -817,11 +1063,23 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 "Breakdown: " . json_encode($timings) . " | " .
                 "API Calls: " . json_encode($apiCalls));
 
-            return 'success';
+            return $hitPageLimit ? 'partial_sync' : 'success';
         } catch (\Exception $e) {
             $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
-            Log::error("PERF[{$account->code}]: {$totalTime}ms ERROR - " . $e->getMessage());
-            Log::error("Error syncing account {$account->code}: " . $e->getMessage());
+            Log::error("SYNC ERROR for account {$account->code} after {$totalTime}ms", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+                'account_code' => $account->code,
+                'account_id' => $account->id,
+                'account_demo' => $account->demo,
+                'total_time_ms' => $totalTime,
+                'job_attempt' => $this->attempts(),
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
             $this->updateSyncStatus($account, 'error');
             return 'error';
         }
@@ -1065,7 +1323,17 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             }
         } catch (\Exception $e) {
             $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
-            Log::error("Error processing trade batch (" . count($trades) . " trades, {$batchTime}ms): " . $e->getMessage());
+            Log::error("CRITICAL ERROR processing trade batch: {$batchTime}ms", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+                'batch_size' => count($trades),
+                'batch_time_ms' => $batchTime,
+                'sample_trades' => array_slice($trades, 0, 3), // Log first 3 trades for context
+                'stack_trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
     }
@@ -1160,17 +1428,19 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             ->withProperties($logData)
             ->log("🚨 CRITICAL: Invalid position_id ({$positionId}) in {$tradeType} trade for account {$account->code}");
 
-        // Send immediate admin notification if configured
+        // Send immediate admin notification if Slack is configured
         try {
-            // You can add email/slack notification here if needed
-            Log::channel('slack')->critical("Invalid position_id detected in trade sync", [
-                'account' => $account->code,
-                'position_id' => $positionId,
-                'trade_type' => $tradeType,
-                'order_id' => $order->Order ?? 'unknown'
-            ]);
+            if (config('logging.channels.slack') !== null) {
+                Log::channel('slack')->critical("Invalid position_id detected in trade sync", [
+                    'account' => $account->code,
+                    'position_id' => $positionId,
+                    'trade_type' => $tradeType,
+                    'order_id' => $order->Order ?? 'unknown'
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
+            // Slack not configured or unavailable - only log as warning
+            Log::warning("Slack notification skipped for invalid position_id (not configured or unavailable)");
         }
     }
 
@@ -1191,23 +1461,52 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
     /**
      * Handle job failure - clear sync-in-progress cache and reset account status
+     * This is called when the job hits max attempts
      */
     public function failed(\Throwable $exception)
     {
-        Log::error("BatchSyncTradesJob permanently failed: " . $exception->getMessage(), [
-            'accounts' => collect($this->accounts)->pluck('code')->toArray(),
-            'exception' => $exception->getTraceAsString()
-        ]);
+        $accountCodes = collect($this->accounts)->pluck('code')->toArray();
+        $accountIds = collect($this->accounts)->pluck('id')->toArray();
+
+        $failureDetails = [
+            'reason' => 'Max attempts exceeded',
+            'exception_class' => get_class($exception),
+            'exception_message' => $exception->getMessage(),
+            'exception_code' => $exception->getCode(),
+            'exception_file' => $exception->getFile(),
+            'exception_line' => $exception->getLine(),
+            'accounts_codes' => $accountCodes,
+            'accounts_count' => count($this->accounts),
+            'job_id' => $this->job->getJobId() ?? 'unknown',
+            'job_attempts' => $this->attempts(),
+            'job_max_tries' => $this->tries,
+            'job_timeout' => $this->timeout,
+            'queue_name' => $this->job->getQueue() ?? 'default',
+            'timestamp' => now()->toIso8601String(),
+            'stack_trace' => $exception->getTraceAsString(),
+            'previous_exception' => $exception->getPrevious() ? [
+                'class' => get_class($exception->getPrevious()),
+                'message' => $exception->getPrevious()->getMessage(),
+                'file' => $exception->getPrevious()->getFile(),
+                'line' => $exception->getPrevious()->getLine()
+            ] : null
+        ];
+
+        Log::error("🚨 CRITICAL: BatchSyncTradesJob permanently failed after {$this->attempts()} attempts", $failureDetails);
+
+        // Log to activity log for admin visibility
+        activity('batch_sync_job_failure')
+            ->withProperties($failureDetails)
+            ->log("BatchSyncTradesJob failed for accounts: " . implode(', ', $accountCodes));
 
         // Clear sync-in-progress cache so accounts can be retried
         $this->clearBatchSyncInProgressCache();
 
         // Reset account sync status so they can be retried by the next cycle
-        $accountIds = collect($this->accounts)->pluck('id')->toArray();
         Account::whereIn('id', $accountIds)
             ->update([
                 'sync_status' => 'needs_retry',
-                'sync_error' => 'Job failed after max attempts: ' . $exception->getMessage()
+                'sync_error' => 'Job failed after max attempts (' . $this->attempts() . '): ' . substr($exception->getMessage(), 0, 255)
             ]);
     }
 

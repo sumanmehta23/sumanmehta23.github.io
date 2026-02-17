@@ -50,4 +50,33 @@ return [
         'min_sync_interval' => env('PRIORITY_SYNC_MIN_INTERVAL', 60), // Minutes
         'max_pending_jobs' => env('PRIORITY_SYNC_MAX_PENDING_JOBS', 100),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Batch Trade Sync Pagination Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Controls pagination and fairness for BatchSyncTradesJob
+    | Limits the number of pages fetched per sync to ensure queue fairness
+    | and prevent high-volume accounts from blocking the queue
+    |
+    */
+    'batch_sync' => [
+        // Page limit per sync job to ensure fair queue distribution
+        // Default: 20 pages (~2000 trades per page) = ~2 seconds per account
+        // Higher: Faster for large accounts but less fair to other accounts
+        // Lower: Fairer queue but more re-queuing overhead
+        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 20),
+
+        // Enable automatic re-queueing of partial syncs
+        'auto_requeue_partial' => env('BATCH_SYNC_AUTO_REQUEUE', true),
+
+        // Trade count limits for high-volume account handling
+        'max_trades_limit' => env('BATCH_SYNC_MAX_TRADES', 5000),      // Skip if > 5000 trades
+        'min_trades_limit' => env('BATCH_SYNC_MIN_TRADES', 10),        // Skip if < 10 trades
+
+        // Batch processing
+        'accounts_per_batch' => env('BATCH_SYNC_ACCOUNTS_PER_BATCH', 10),
+        'batch_delay_ms' => env('BATCH_SYNC_BATCH_DELAY_MS', 100),     // Delay between accounts
+    ],
 ];
