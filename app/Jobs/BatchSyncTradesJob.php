@@ -374,7 +374,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $hoursSinceOldestOpen = now()->diffInHours($oldestOpenTime);
                 $daysSinceOldestOpen = now()->diffInDays($oldestOpenTime);
 
-                Log::info("DEBUG[{$account->code}]: Found {$openPositions->count()} OPEN positions. Oldest opened {$daysSinceOldestOpen} days ago ({$oldestOpenTrade->symbol}). Must sync to update status.");
+                // Log::info("DEBUG[{$account->code}]: Found {$openPositions->count()} OPEN positions. Oldest opened {$daysSinceOldestOpen} days ago ({$oldestOpenTrade->symbol}). Must sync to update status.");
 
                 // For open trades, always sync back to at least when the oldest one opened
                 // Plus buffer time to catch any related activity
@@ -485,7 +485,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $syncStrategy = $optimizedFromTime['strategy'];
         $timings['sync_range_calculation'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
-        Log::info("SYNC_STRATEGY[{$account->code}]: Using {$syncStrategy} - syncing from {$fromTime->format('Y-m-d H:i:s')}");
+        // Log::info("SYNC_STRATEGY[{$account->code}]: Using {$syncStrategy} - syncing from {$fromTime->format('Y-m-d H:i:s')}");
 
         // Phase 1: MT5 User Check
         $phaseStart = microtime(true);
