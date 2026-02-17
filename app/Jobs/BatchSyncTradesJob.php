@@ -39,6 +39,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
     protected $minTradesLimit;
     public $timeout = 300; // 5 minutes for batch
     public $tries = 2;
+    public $retryAfter = 300; // Wait 5 minutes before retrying to allow MT5 server to recover
     public $uniqueFor = 600; // Prevent duplicates for 10 minutes
 
     /**
@@ -89,6 +90,8 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $accountCodes = collect($this->accounts)->pluck('code')->join(', ');
         $accountCount = count($this->accounts);
         $startMemory = memory_get_usage(true);
+        $currentAccountCode = null;
+        $currentPhase = 'initialization';
 
         // Additional duplicate protection using manual cache locks
         $lockKey = "batch-sync-lock-" . collect($this->accounts)->pluck('code')->sort()->join('-');
@@ -117,6 +120,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
             try {
                 // Track MT5 connection time
+                $currentPhase = 'mt5_connection';
                 $connectionStart = microtime(true);
                 if (!$mt5Service->connect()) {
                     throw new \Exception("Failed to establish MT5 connection (via pool)");
@@ -125,11 +129,15 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $api = $mt5Service->getApi();
 
                 // Pre-warm cache for all accounts in this batch
+                $currentPhase = 'cache_warmup';
                 $accountModels = collect($this->accounts)->map(fn($acc) => Account::find($acc['id']))->filter();
                 $cacheService->warmupAccounts($accountModels->all());
 
                 foreach ($this->accounts as $index => $accountData) {
                     $accountIterationStart = microtime(true);
+                    $currentAccountCode = $accountData['code'];
+                    $currentPhase = "account_sync:{$currentAccountCode}";
+
                     try {
                         // Convert array back to Account model for processing
                         $account = Account::find($accountData['id']);
@@ -176,12 +184,24 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         $accountTimings[] = ['account' => $account->code, 'time' => $accountTime, 'result' => $result];
 
                         Log::debug("Account {$account->code}: {$result} ({$accountTime}ms)");
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         $results['errors']++;
                         $results['processed']++;
                         $accountTime = round((microtime(true) - $accountIterationStart) * 1000, 2);
                         $accountTimings[] = ['account' => $accountData['code'], 'time' => $accountTime, 'result' => 'error'];
-                        Log::error("Error syncing account {$accountData['code']}: " . $e->getMessage());
+
+                        Log::error("CRITICAL ERROR: Error while syncing account {$accountData['code']}", [
+                            'exception_class' => get_class($e),
+                            'exception_message' => $e->getMessage(),
+                            'exception_code' => $e->getCode(),
+                            'exception_file' => $e->getFile(),
+                            'exception_line' => $e->getLine(),
+                            'stack_trace' => $e->getTraceAsString(),
+                            'account_code' => $accountData['code'],
+                            'account_id' => $accountData['id'],
+                            'job_attempt' => $this->attempts(),
+                            'job_id' => $this->job->getJobId() ?? 'unknown'
+                        ]);
 
                         // Report error to connection pool for adaptive management
                         $mt5Service->reportError();
@@ -192,8 +212,20 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         usleep(100000); // 0.1 second - optimized for better throughput
                     }
                 }
-            } catch (\Exception $e) {
-                Log::error("BatchSyncTradesJob failed: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                Log::error("CRITICAL EXCEPTION in BatchSyncTradesJob connection/iteration phase", [
+                    'exception_class' => get_class($e),
+                    'exception_message' => $e->getMessage(),
+                    'exception_code' => $e->getCode(),
+                    'exception_file' => $e->getFile(),
+                    'exception_line' => $e->getLine(),
+                    'current_phase' => $currentPhase,
+                    'current_account' => $currentAccountCode,
+                    'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+                    'job_attempt' => $this->attempts(),
+                    'job_id' => $this->job->getJobId() ?? 'unknown',
+                    'stack_trace' => $e->getTraceAsString()
+                ]);
                 throw $e;
             }
 
@@ -224,16 +256,44 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 'account_breakdown' => $accountTimings
             ];
 
-            // Log::info("BatchSyncTradesJob PERFORMANCE SUMMARY: {$results['processed']} accounts in {$totalJobTime}ms " .
-            //     "(avg: {$avgPerAccountMs}ms/account, median: {$medianTime}ms). " .
-            //     "Connection: {$connectionTime}ms. Range: {$minTime}ms-{$maxTime}ms. " .
-            //     "Success: {$results['success']}, No changes: {$results['no_changes']}, Errors: {$results['errors']}, Not found: {$results['not_found']}, Skipped: {$results['skipped']} " .
-            //     "Memory: {$memoryUsed}MB used, {$peakMemory}MB peak.");
-
-            // Log::info("PERF_BREAKDOWN: " . json_encode($performanceReport));
+            Log::info("BatchSyncTradesJob COMPLETED - Summary Report", [
+                'total_accounts' => $accountCount,
+                'processed' => $results['processed'],
+                'successful' => $results['success'],
+                'no_changes' => $results['no_changes'],
+                'errors' => $results['errors'],
+                'not_found' => $results['not_found'],
+                'skipped' => $results['skipped'],
+                'total_time_ms' => $totalJobTime,
+                'connection_time_ms' => $connectionTime,
+                'avg_per_account_ms' => $avgPerAccountMs,
+                'min_time_ms' => $minTime,
+                'max_time_ms' => $maxTime,
+                'median_time_ms' => $medianTime,
+                'memory_used_mb' => $memoryUsed,
+                'peak_memory_mb' => $peakMemory,
+                'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'attempt' => $this->attempts()
+            ]);
 
             // Clear sync-in-progress cache for all accounts in this batch
             $this->clearBatchSyncInProgressCache();
+        } catch (\Exception $e) {
+            Log::error("FATAL ERROR: Unexpected exception in BatchSyncTradesJob main try block", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+                'current_phase' => $currentPhase,
+                'current_account' => $currentAccountCode,
+                'accounts' => collect($this->accounts)->pluck('code')->toArray(),
+                'job_attempt' => $this->attempts(),
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
         } finally {
             // Always release the lock
             $lock->release();
@@ -820,8 +880,20 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             return 'success';
         } catch (\Exception $e) {
             $totalTime = round((microtime(true) - $accountStartTime) * 1000, 2);
-            Log::error("PERF[{$account->code}]: {$totalTime}ms ERROR - " . $e->getMessage());
-            Log::error("Error syncing account {$account->code}: " . $e->getMessage());
+            Log::error("SYNC ERROR for account {$account->code} after {$totalTime}ms", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+                'account_code' => $account->code,
+                'account_id' => $account->id,
+                'account_demo' => $account->demo,
+                'total_time_ms' => $totalTime,
+                'job_attempt' => $this->attempts(),
+                'job_id' => $this->job->getJobId() ?? 'unknown',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
             $this->updateSyncStatus($account, 'error');
             return 'error';
         }
@@ -1065,7 +1137,17 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             }
         } catch (\Exception $e) {
             $batchTime = round((microtime(true) - $batchStart) * 1000, 2);
-            Log::error("Error processing trade batch (" . count($trades) . " trades, {$batchTime}ms): " . $e->getMessage());
+            Log::error("CRITICAL ERROR processing trade batch: {$batchTime}ms", [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+                'exception_code' => $e->getCode(),
+                'exception_file' => $e->getFile(),
+                'exception_line' => $e->getLine(),
+                'batch_size' => count($trades),
+                'batch_time_ms' => $batchTime,
+                'sample_trades' => array_slice($trades, 0, 3), // Log first 3 trades for context
+                'stack_trace' => $e->getTraceAsString()
+            ]);
             throw $e;
         }
     }
@@ -1160,17 +1242,19 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             ->withProperties($logData)
             ->log("🚨 CRITICAL: Invalid position_id ({$positionId}) in {$tradeType} trade for account {$account->code}");
 
-        // Send immediate admin notification if configured
+        // Send immediate admin notification if Slack is configured
         try {
-            // You can add email/slack notification here if needed
-            Log::channel('slack')->critical("Invalid position_id detected in trade sync", [
-                'account' => $account->code,
-                'position_id' => $positionId,
-                'trade_type' => $tradeType,
-                'order_id' => $order->Order ?? 'unknown'
-            ]);
+            if (config('logging.channels.slack') !== null) {
+                Log::channel('slack')->critical("Invalid position_id detected in trade sync", [
+                    'account' => $account->code,
+                    'position_id' => $positionId,
+                    'trade_type' => $tradeType,
+                    'order_id' => $order->Order ?? 'unknown'
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::warning("Failed to send admin notification for invalid position_id: " . $e->getMessage());
+            // Slack not configured or unavailable - only log as warning
+            Log::warning("Slack notification skipped for invalid position_id (not configured or unavailable)");
         }
     }
 
@@ -1191,23 +1275,52 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
     /**
      * Handle job failure - clear sync-in-progress cache and reset account status
+     * This is called when the job hits max attempts
      */
     public function failed(\Throwable $exception)
     {
-        Log::error("BatchSyncTradesJob permanently failed: " . $exception->getMessage(), [
-            'accounts' => collect($this->accounts)->pluck('code')->toArray(),
-            'exception' => $exception->getTraceAsString()
-        ]);
+        $accountCodes = collect($this->accounts)->pluck('code')->toArray();
+        $accountIds = collect($this->accounts)->pluck('id')->toArray();
+
+        $failureDetails = [
+            'reason' => 'Max attempts exceeded',
+            'exception_class' => get_class($exception),
+            'exception_message' => $exception->getMessage(),
+            'exception_code' => $exception->getCode(),
+            'exception_file' => $exception->getFile(),
+            'exception_line' => $exception->getLine(),
+            'accounts_codes' => $accountCodes,
+            'accounts_count' => count($this->accounts),
+            'job_id' => $this->job->getJobId() ?? 'unknown',
+            'job_attempts' => $this->attempts(),
+            'job_max_tries' => $this->tries,
+            'job_timeout' => $this->timeout,
+            'queue_name' => $this->job->getQueue() ?? 'default',
+            'timestamp' => now()->toIso8601String(),
+            'stack_trace' => $exception->getTraceAsString(),
+            'previous_exception' => $exception->getPrevious() ? [
+                'class' => get_class($exception->getPrevious()),
+                'message' => $exception->getPrevious()->getMessage(),
+                'file' => $exception->getPrevious()->getFile(),
+                'line' => $exception->getPrevious()->getLine()
+            ] : null
+        ];
+
+        Log::error("🚨 CRITICAL: BatchSyncTradesJob permanently failed after {$this->attempts()} attempts", $failureDetails);
+
+        // Log to activity log for admin visibility
+        activity('batch_sync_job_failure')
+            ->withProperties($failureDetails)
+            ->log("BatchSyncTradesJob failed for accounts: " . implode(', ', $accountCodes));
 
         // Clear sync-in-progress cache so accounts can be retried
         $this->clearBatchSyncInProgressCache();
 
         // Reset account sync status so they can be retried by the next cycle
-        $accountIds = collect($this->accounts)->pluck('id')->toArray();
         Account::whereIn('id', $accountIds)
             ->update([
                 'sync_status' => 'needs_retry',
-                'sync_error' => 'Job failed after max attempts: ' . $exception->getMessage()
+                'sync_error' => 'Job failed after max attempts (' . $this->attempts() . '): ' . substr($exception->getMessage(), 0, 255)
             ]);
     }
 
