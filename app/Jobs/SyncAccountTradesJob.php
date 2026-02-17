@@ -278,9 +278,9 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             // ]);
 
             if ($total == 0) {
-                Log::info("No trades found for account {$login}", [
-                    'account_id' => $accountId,
-                ]);
+                // Log::info("No trades found for account {$login}", [
+                //     'account_id' => $accountId,
+                // ]);
                 return;
             }
 

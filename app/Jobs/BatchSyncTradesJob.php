@@ -609,11 +609,11 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 } else {
                     // Deal counts differ - need to sync the difference
                     $dealDifference = $mt5DealTotal - $dbDealCount;
-                    Log::debug("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing deal sync first...");
+                    // Log::debug("DEBUG[{$account->code}]: Deal count mismatch! MT5: {$mt5DealTotal}, DB: {$dbDealCount}, Difference: {$dealDifference}. Forcing deal sync first...");
 
                     // FORCE DEAL SYNC: When deal counts don't match, we must sync deals first
                     // This ensures we have all the missing deals before proceeding with trade sync
-                    Log::debug("DEBUG[{$account->code}]: Syncing missing deals due to count mismatch before proceeding with trade sync");
+                    // Log::debug("DEBUG[{$account->code}]: Syncing missing deals due to count mismatch before proceeding with trade sync");
 
                     // Force deal sync for the same date range to get missing deals
                     $dealSyncJob = new DealSyncJob([$account], [$fromTime]);
@@ -626,7 +626,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
                     // FORCE FULL MT5 SYNC: Skip all database optimizations when deal counts don't match
                     // This ensures we get the missing deals from MT5 instead of using stale database data
-                    Log::debug("DEBUG[{$account->code}]: Skipping database optimizations due to deal count mismatch - proceeding with MT5 API sync");
+                    // Log::debug("DEBUG[{$account->code}]: Skipping database optimizations due to deal count mismatch - proceeding with MT5 API sync");
                     // Continue to MT5 API calls below (skip all the database optimization logic)
                 }
             } else {
@@ -1247,15 +1247,15 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $contractSize = $openOrder->ContractSize ?? 100000;
 
             $profit = round($priceDiff * $volumeInLots * $contractSize * $rateProfit * $multiplier, 2);
-            Log::warning("DEBUG[{$account->code}]: Position {$positionId} using calculated profit: {$profit} (no deals available)");
+            // Log::warning("DEBUG[{$account->code}]: Position {$positionId} using calculated profit: {$profit} (no deals available)");
             // Log calculation details for troubleshooting
-            Log::warning("DEBUG[{$account->code}]: Manual calculation details line 956 - " .
-                "Type: " . ($openOrder->Type ? 'sell' : 'buy') . ", " .
-                "PriceDiff: {$priceDiff}, " .
-                "VolumeLots: {$volumeInLots}, " .
-                "ContractSize: {$contractSize}, " .
-                "RateProfit: {$rateProfit}, " .
-                "Multiplier: {$multiplier}");
+            // Log::warning("DEBUG[{$account->code}]: Manual calculation details line 956 - " .
+            //     "Type: " . ($openOrder->Type ? 'sell' : 'buy') . ", " .
+            //     "PriceDiff: {$priceDiff}, " .
+            //     "VolumeLots: {$volumeInLots}, " .
+            //     "ContractSize: {$contractSize}, " .
+            //     "RateProfit: {$rateProfit}, " .
+            //     "Multiplier: {$multiplier}");
 
             // Track accounts with frequent manual calculations for admin review
             // activity('trade_profit_calculation')
