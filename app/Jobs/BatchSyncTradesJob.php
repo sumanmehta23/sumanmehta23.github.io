@@ -1087,9 +1087,45 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
     protected function executeWithRetries($callback)
     {
-        // Note: This method is now simplified since UniversalMT5Service
-        // handles retries internally. Keep for backward compatibility.
-        return $callback();
+        $maxAttempts = 3;
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt < $maxAttempts) {
+            try {
+                $attempt++;
+                return $callback();
+            } catch (\Exception $e) {
+                $lastException = $e;
+
+                // Check if it's a socket/connection error that should be retried
+                $isSocketError = stripos($e->getMessage(), 'broken pipe') !== false ||
+                    stripos($e->getMessage(), 'connection reset') !== false ||
+                    stripos($e->getMessage(), 'connection refused') !== false ||
+                    stripos($e->getMessage(), 'unable to write to socket') !== false ||
+                    stripos($e->getMessage(), 'connection timed out') !== false ||
+                    stripos($e->getMessage(), 'transport endpoint') !== false;
+
+                if (!$isSocketError || $attempt >= $maxAttempts) {
+                    throw $e;
+                }
+
+                // Log the retry attempt
+                Log::warning("Socket/Connection error detected, retrying (attempt {$attempt}/{$maxAttempts})", [
+                    'error_message' => $e->getMessage(),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                ]);
+
+                // Exponential backoff: 1s, 2s, 4s
+                $sleepSeconds = 1 * (2 ** ($attempt - 1));
+                sleep($sleepSeconds);
+            }
+        }
+
+        if ($lastException) {
+            throw $lastException;
+        }
     }
 
     protected function prepareOpenTrade($account, $positionId, $order)

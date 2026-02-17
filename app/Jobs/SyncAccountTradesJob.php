@@ -109,10 +109,18 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                 'referral_code' => $this->referral_code,
             ]);
 
-            // Process each account
+            // Process each account with retry logic for socket errors
             foreach ($this->accountIds as $accountId) {
                 $accountStartTime = microtime(true);
-                $this->processAccount($accountId);
+                try {
+                    $this->processAccountWithRetry($accountId);
+                } catch (\Exception $e) {
+                    Log::error("Failed to process account after retries: {$accountId}", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ]);
+                }
                 $accountDuration = microtime(true) - $accountStartTime;
                 Log::debug("Completed processing account {$accountId}", [
                     'duration_seconds' => round($accountDuration, 2),
@@ -608,5 +616,54 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
         }
 
         // Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
+    }
+
+    /**
+     * Process account with retry logic for socket errors
+     */
+    protected function processAccountWithRetry($accountId): void
+    {
+        $maxAttempts = 3;
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt < $maxAttempts) {
+            try {
+                $attempt++;
+                $this->processAccount($accountId);
+                return; // Success
+            } catch (\Exception $e) {
+                $lastException = $e;
+
+                // Check if it's a socket/connection error that should be retried
+                $isSocketError = stripos($e->getMessage(), 'broken pipe') !== false ||
+                    stripos($e->getMessage(), 'connection reset') !== false ||
+                    stripos($e->getMessage(), 'connection refused') !== false ||
+                    stripos($e->getMessage(), 'unable to write to socket') !== false ||
+                    stripos($e->getMessage(), 'connection timed out') !== false ||
+                    stripos($e->getMessage(), 'transport endpoint') !== false ||
+                    stripos($e->getMessage(), 'socket error') !== false;
+
+                if (!$isSocketError || $attempt >= $maxAttempts) {
+                    throw $e;
+                }
+
+                // Log the retry attempt
+                Log::warning("Socket/Connection error in SyncAccountTradesJob, retrying (attempt {$attempt}/{$maxAttempts})", [
+                    'account_id' => $accountId,
+                    'error_message' => $e->getMessage(),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                ]);
+
+                // Exponential backoff: 1s, 2s, 4s
+                $sleepSeconds = 1 * (2 ** ($attempt - 1));
+                sleep($sleepSeconds);
+            }
+        }
+
+        if ($lastException) {
+            throw $lastException;
+        }
     }
 }
