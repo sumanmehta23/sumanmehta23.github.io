@@ -15,6 +15,8 @@ use function PHPUnit\Framework\isNull;
 
 class AdminTwoFactorAuthentication extends Component
 {
+    protected $guard = 'admin';
+
     public $showingQrCode = false;
     public $showingConfirmation = false;
     public $showingRecoveryCodes = false;
@@ -22,31 +24,61 @@ class AdminTwoFactorAuthentication extends Component
 
     public function __construct()
     {
+        $this->initTwoFactorStatus();
+    }
+
+    /**
+     * Initialize the 2FA status based on the user's current state.
+     */
+    protected function initTwoFactorStatus()
+    {
         if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm')) {
-            // app(DisableTwoFactorAuthentication::class)(Auth::user());
             if ($this->isEnabled()) {
-                $this->showingConfirmation = $this->showingQrCode = (bool) (!empty($this->user()->two_factor_secret) && !empty($this->user()->two_factor_recovery_codes) && is_null($this->user()->two_factor_confirmed_at));
+                // If two_factor_confirmed_at is null, we're still in confirmation mode
+                $this->showingConfirmation = $this->showingQrCode = (bool) (
+                    !empty($this->user()->two_factor_secret) &&
+                    !empty($this->user()->two_factor_recovery_codes) &&
+                    is_null($this->user()->two_factor_confirmed_at)
+                );
                 $this->showingRecoveryCodes = !$this->showingConfirmation;
             }
         }
     }
 
-    public function enableTwoFactorAuthentication(EnableTwoFactorAuthentication $enable)
+    /**
+     * Get the currently authenticated user based on guard.
+     */
+    public function user()
     {
-
-        if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
-
-            if (Auth::guard('admin')->check()) {
-                $this->ensureAdminPasswordIsConfirmed();
-            } else {
-                $this->ensurePasswordIsConfirmed();
-            }
+        // Check if admin is authenticated using admin guard
+        if (Auth::guard($this->guard)->check()) {
+            return Auth::guard($this->guard)->user();
         }
 
-        $enable(Auth::user());
+        // Fallback to default auth
+        return Auth::user();
+    }
+
+    /**
+     * Check if 2FA is enabled for the user.
+     */
+    public function isEnabled()
+    {
+        return !empty($this->user()->two_factor_secret);
+    }
+
+    public function enableTwoFactorAuthentication(EnableTwoFactorAuthentication $enable)
+    {
+        if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
+            $this->ensurePasswordIsConfirmed();
+        }
+
+        $enable($this->user());
         $this->showingQrCode = true;
         $this->showingConfirmation = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm');
         $this->showingRecoveryCodes = !$this->showingConfirmation;
+
+        return true;
     }
 
     public function confirmTwoFactorAuthentication(Request $request, ConfirmTwoFactorAuthentication $confirm)
@@ -54,60 +86,74 @@ class AdminTwoFactorAuthentication extends Component
         $code = $request->input('code');
 
         if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
-            if (Auth::guard('admin')->check()) {
-                $this->ensureAdminPasswordIsConfirmed();
-            } else {
-                $this->ensurePasswordIsConfirmed();
-            }
+            $this->ensurePasswordIsConfirmed();
         }
-        $confirm(Auth::user(), $code);
-        $this->showingQrCode = false;
-        $this->showingConfirmation = false;
-        $this->showingRecoveryCodes = true;
+
+        try {
+            $confirm($this->user(), $code);
+            $this->showingQrCode = false;
+            $this->showingConfirmation = false;
+            $this->showingRecoveryCodes = true;
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     public function showRecoveryCodes()
     {
         $this->showingRecoveryCodes = true;
+        return true;
     }
 
     public function regenerateRecoveryCodes(GenerateNewRecoveryCodes $generate)
     {
-        $generate(Auth::user());
+        if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
+            $this->ensurePasswordIsConfirmed();
+        }
+
+        $generate($this->user());
         $this->showingRecoveryCodes = true;
+        return true;
     }
 
     public function disableTwoFactorAuthentication(DisableTwoFactorAuthentication $disable)
     {
         if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
-
-            if (Auth::guard('admin')->check()) {
-                $this->ensureAdminPasswordIsConfirmed();
-            } else {
-                $this->ensurePasswordIsConfirmed();
-            }
+            $this->ensurePasswordIsConfirmed();
         }
-        $disable(Auth::user());
+
+        $disable($this->user());
         $this->showingQrCode = false;
         $this->showingConfirmation = false;
         $this->showingRecoveryCodes = false;
+        return true;
     }
 
-    public function user()
+    /**
+     * Ensure that the user's password has been recently confirmed.
+     *
+     * @param  int|null  $maximumSecondsSinceConfirmation
+     * @return void
+     */
+    protected function ensurePasswordIsConfirmed($maximumSecondsSinceConfirmation = null)
     {
-        return Auth::user();
+        $maximumSecondsSinceConfirmation = $maximumSecondsSinceConfirmation ?: config('auth.password_timeout', 900);
+
+        if (!$this->passwordIsConfirmed($maximumSecondsSinceConfirmation)) {
+            abort(403, 'Password confirmation required.');
+        }
     }
 
-    public function isEnabled()
+    protected function passwordIsConfirmed($maximumSecondsSinceConfirmation = null)
     {
-        return !empty($this->user()->two_factor_secret);
-    }
+        $maximumSecondsSinceConfirmation = $maximumSecondsSinceConfirmation ?: config('auth.password_timeout', 900);
 
+        return (time() - session('auth.password_confirmed_at', 0)) < $maximumSecondsSinceConfirmation;
+    }
 
     public function render()
     {
-        // Determine if the authenticated user is an admin
-
         return view('components.admin-two-factor-authentication', [
             'user' => $this->user(),
             'enabled' => $this->isEnabled(),
@@ -117,26 +163,4 @@ class AdminTwoFactorAuthentication extends Component
             'code' => $this->code,
         ]);
     }
-
-    /**
-     * Ensure that the user's password has been recently confirmed.
-     *
-     * @param  int|null  $maximumSecondsSinceConfirmation
-     * @return void
-     */
-
-
-    protected function ensureAdminPasswordIsConfirmed($maximumSecondsSinceConfirmation = null)
-    {
-        $maximumSecondsSinceConfirmation = $maximumSecondsSinceConfirmation ?: config('auth.password_timeout', 900);
-
-        $this->passwordIsConfirmed($maximumSecondsSinceConfirmation) ? null : abort(403);
-    }
-    protected function passwordIsConfirmed($maximumSecondsSinceConfirmation = null)
-    {
-        $maximumSecondsSinceConfirmation = $maximumSecondsSinceConfirmation ?: config('auth.password_timeout', 900);
-
-        return (time() - session('auth.password_confirmed_at', 0)) < $maximumSecondsSinceConfirmation;
-    }
-
 }
