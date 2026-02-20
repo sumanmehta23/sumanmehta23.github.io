@@ -737,6 +737,20 @@ if (app()->environment('local') || app()->environment('development')) {
                             </li>
                         @endif
 
+                        @if (auth()->user()->can('setting:viewAny'))
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">2FA SETTINGS</span>
+                            </li>
+                            <li class="slide menu-item-main ">
+                                <a href="{{ route('admin.2fa.index') }}" class="side-menu__item">
+                                    <i class="side-menu__icon fe fe-settings"></i>
+                                    <span class="side-menu__label">2FA Authentication</span>
+                                </a>
+                                <ul class="slide-menu child1">
+                                </ul>
+                            </li>
+                        @endif
+
                         @can('employee:viewAny')
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">ADMIN USERS</span>

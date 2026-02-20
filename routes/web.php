@@ -1,71 +1,71 @@
 <?php
 
-use App\Models\Ib1;
-use App\Models\User;
-use App\Models\Account;
-use App\Models\KycUpdate;
-use App\Models\Permission;
-use Illuminate\Support\Str;
-use App\Http\Controllers\Ib;
-use App\Models\TotalBalance;
-use Illuminate\Http\Request;
-use App\Models\Ib1Commission;
-use App\Models\WalletDeposit;
+use App\Http\Controllers\Admin\AjaxController;
+use App\Http\Controllers\Admin\ApiAjaxController;
+use App\Http\Controllers\Admin\ClientAccController;
+use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\CompetitionProductController;
+use App\Http\Controllers\Admin\Dashboard;
+use App\Http\Controllers\Admin\IBController;
+use App\Http\Controllers\Admin\Kyc;
+use App\Http\Controllers\Admin\Leaderboard;
+use App\Http\Controllers\Admin\Login;
+use App\Http\Controllers\Admin\ManualPaymentController;
+use App\Http\Controllers\Admin\MT5Controller;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ProductsController;
+use App\Http\Controllers\Admin\SearchController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StaffManagement;
+use App\Http\Controllers\Admin\SumsubController;
+use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\Admin\Ticket;
+use App\Http\Controllers\Admin\Transaction;
+use App\Http\Controllers\Admin\TwoFactorAuthController;
+use App\Http\Controllers\Admin\ZapierAccountsController;
+use App\Http\Controllers\Api\ZapierWebhookController;
+use App\Http\Controllers\ClientTaskController;
+use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\Home;
+use App\Http\Controllers\Ib;
+use App\Http\Controllers\InternalTransfer;
+use App\Http\Controllers\KycController;
+use App\Http\Controllers\KycSyncController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MT5Accounts;
+use App\Http\Controllers\MT5RedisCoordinationDemoController;
+use App\Http\Controllers\PammController;
+use App\Http\Controllers\Payment;
+use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\Tickets;
+use App\Http\Controllers\TradeDepositController;
+use App\Http\Controllers\TradeWithdrawal;
+use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
+use App\Models\Account;
+use App\Models\Ib1;
+use App\Models\Ib1Commission;
+use App\Models\KycUpdate;
+use App\Models\Permission;
+use App\Models\TotalBalance;
 use App\Models\TradeWithdrawals;
-use Laravel\Telescope\Telescope;
-use App\Http\Controllers\Payment;
-use App\Http\Controllers\Tickets;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Admin\Kyc;
-use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\WalletDeposit;
+use App\View\Components\AdminTwoFactorAuthentication;
+use App\View\Components\TwoFactorAuthentication;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
-use App\Http\Controllers\Admin\Login;
-use App\Http\Controllers\MT5Accounts;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\Ticket;
-use App\Http\Controllers\Transactions;
-use App\Http\Controllers\KycController;
+use Illuminate\Support\Str;
+use Laravel\Telescope\Telescope;
 
-use App\Http\Controllers\PammController;
-use App\Http\Controllers\Admin\Dashboard;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\TradeWithdrawal;
-use App\Http\Controllers\InternalTransfer;
-use App\Http\Controllers\Admin\Leaderboard;
-use App\Http\Controllers\Admin\Transaction;
-
-use App\Http\Controllers\KycSyncController;
-use App\Http\Controllers\Admin\IBController;
-use App\Http\Controllers\Admin\MT5Controller;
-use App\Http\Controllers\Admin\AjaxController;
-use App\Http\Controllers\Admin\TaskController;
-use App\Http\Controllers\ClientTaskController;
 use function PHPUnit\Framework\throwException;
-use App\Http\Controllers\Admin\StaffManagement;
-use App\Http\Controllers\CompetitionController;
-use App\Http\Controllers\Admin\ClientController;
-use App\Http\Controllers\Admin\SearchController;
-use App\Http\Controllers\Admin\SumsubController;
-use App\Http\Controllers\TradeDepositController;
-use App\View\Components\TwoFactorAuthentication;
-use App\Http\Controllers\Admin\ApiAjaxController;
-use App\Http\Controllers\Admin\ProductsController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\ClientAccController;
-use App\Http\Controllers\PaymentCallbackController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\View\Components\AdminTwoFactorAuthentication;
-use App\Http\Controllers\Admin\ManualPaymentController;
-use App\Http\Controllers\Admin\CompetitionProductController;
-use App\Http\Controllers\MT5RedisCoordinationDemoController;
-use App\Http\Controllers\Api\ZapierWebhookController;
-use App\Http\Controllers\Admin\ZapierAccountsController;
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
@@ -359,10 +359,20 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
-        Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
-        Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');
-        Route::post('/two-factor/confirm', [AdminTwoFactorAuthentication::class, 'confirmTwoFactorAuthentication'])->name('two-factor.confirm');
-        Route::post('/two-factor/recovery-codes', [AdminTwoFactorAuthentication::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
+        // Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
+        // Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');
+        // Route::post('/two-factor/confirm', [AdminTwoFactorAuthentication::class, 'confirmTwoFactorAuthentication'])->name('two-factor.confirm');
+        // Route::post('/two-factor/recovery-codes', [AdminTwoFactorAuthentication::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
+
+        Route::prefix('/2fa')->group(function () {
+            Route::get('/', [TwoFactorAuthController::class, 'index'])->name('2fa.index')->middleware('check.permissions:setting:viewAny');
+            Route::get('/status', [TwoFactorAuthController::class, 'getStatus'])->name('two-factor.status');
+            Route::post('/enable', [TwoFactorAuthController::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
+            Route::delete('/disable', [TwoFactorAuthController::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');
+            Route::post('/confirm', [TwoFactorAuthController::class, 'confirmTwoFactorAuthentication'])->name('two-factor.confirm');
+            Route::post('/recovery-codes', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
+            Route::get('/recovery-codes', [TwoFactorAuthController::class, 'showRecoveryCodes'])->name('two-factor.recovery-codes.show');
+        });
 
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
@@ -454,6 +464,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/activate_account', [MT5Accounts::class, 'activateAccount'])->name('activate_account');
             Route::post('/bulk_activate_account', [MT5Accounts::class, 'bulkActivateAccount'])->name('bulk_activate_account');
         });
+
+        Route::get('/2fa-settings', [SettingsController::class, 'twoFactorAuthenticationAdmin'])->name("2fa-settings")->middleware('check.permissions:setting:viewAny');
 
         Route::prefix('/ui_settings')->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');

@@ -103,7 +103,6 @@ class DealSyncJob implements ShouldQueue
                     $results[$result['status']]++;
                     $results['deals_synced'] += $result['deals_count'];
                     $results['processed']++;
-
                 } catch (\Exception $e) {
                     $results['errors']++;
                     $results['processed']++;

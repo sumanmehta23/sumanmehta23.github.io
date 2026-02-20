@@ -20,13 +20,37 @@ use App\Jobs\DistributeIbCommissionJob;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Bus\Batchable;
 
-class SyncAccountTradesJob implements ShouldQueue
+class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
+
+    /**
+     * The number of seconds the job can run.
+     * Set to 45 minutes to handle large trade volumes
+     */
+    public $timeout = 2700;
+
+    /**
+     * The number of times the job may be attempted.
+     */
+    public $tries = 2;
+
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     */
+    public $maxExceptions = 2;
+
+    /**
+     * Unique job ID for 10 minutes to prevent duplicate syncs for same accounts
+     */
+    public $uniqueFor = 600;
+
     protected $mt5Service;
     protected $api;
     protected $account;
@@ -35,17 +59,31 @@ class SyncAccountTradesJob implements ShouldQueue
     protected $referral_code;
     protected $ib_user_id;
     protected $ib_acc_plans = [];
-    protected $batchSize = 400;
+    protected $batchSize = 500;
+    protected $totalOrdersProcessed = 0;
+    protected $startTime = null;
+    protected $maxPagesPerSync;
+    protected $hitPageLimit = false;
+    /**
+     * Get the unique ID for the job to prevent concurrent executions for same accounts.
+     */
+    public function uniqueId()
+    {
+        $sortedIds = collect($this->accountIds)->sort()->join('-');
+        return "sync-account-trades-{$sortedIds}";
+    }
+
     /**
      * Create a new job instance.
      */
-    public function __construct($accountIds, $referral_code, $ib_user_id, $ib_acc_plans)
+    public function __construct($accountIds, $referral_code, $ib_user_id, $ib_acc_plans, $maxPagesPerSync = null)
     {
         // Support both single account ID (backward compatibility) and array of IDs
         $this->accountIds = is_array($accountIds) ? $accountIds : [$accountIds];
         $this->referral_code = $referral_code;
         $this->ib_user_id = $ib_user_id;
         $this->ib_acc_plans = $ib_acc_plans;
+        $this->maxPagesPerSync = $maxPagesPerSync ?? config('sync-all-trades.batch_sync.max_pages_per_sync', 20);
         $this->onQueue('syncaccountstrades');
     }
     protected function calculateLotSize($volumeInitialExt, $contractSize)
@@ -61,19 +99,48 @@ class SyncAccountTradesJob implements ShouldQueue
      */
     public function handle(): void
     {
+        $this->startTime = microtime(true);
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
 
             // The QueueSafeMT5Service handles connection management internally
-            // Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts");
+            // Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts", [
+            //     'account_ids' => $this->accountIds,
+            //     'referral_code' => $this->referral_code,
+            // ]);
 
-
-            // Process each account
+            // Process each account with retry logic for socket errors
             foreach ($this->accountIds as $accountId) {
-                $this->processAccount($accountId);
+                $accountStartTime = microtime(true);
+                try {
+                    $this->processAccountWithRetry($accountId);
+                } catch (\Exception $e) {
+                    Log::error("Failed to process account after retries: {$accountId}", [
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                    ]);
+                }
+                $accountDuration = microtime(true) - $accountStartTime;
+                // Log::debug("Completed processing account {$accountId}", [
+                //     'duration_seconds' => round($accountDuration, 2),
+                //     'total_orders_processed' => $this->totalOrdersProcessed,
+                // ]);
             }
+
+            $totalDuration = microtime(true) - $this->startTime;
+            // Log::info("SyncAccountTradesJob: Completed successfully", [
+            //     'duration_seconds' => round($totalDuration, 2),
+            //     'total_orders_processed' => $this->totalOrdersProcessed,
+            //     'accounts_processed' => count($this->accountIds),
+            // ]);
         } catch (\Exception $e) {
-            Log::error("SyncAccountTradesJob failed: " . $e->getMessage());
+            Log::error("SyncAccountTradesJob failed: " . $e->getMessage(), [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'total_orders_processed' => $this->totalOrdersProcessed,
+                'elapsed_seconds' => round(microtime(true) - $this->startTime, 2),
+            ]);
             throw $e; // Ensure the job registers as failed
         }
     }
@@ -99,18 +166,29 @@ class SyncAccountTradesJob implements ShouldQueue
                     $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
                     $symbolMappings[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
                 } catch (Exception $e) {
-                    Log::error('Error fetching symbol: ' . $e->getMessage());
+                    Log::error('Error fetching symbol: ' . $e->getMessage(), [
+                        'symbol' => $symbolWithoutP,
+                        'error' => $e->getMessage(),
+                    ]);
                     $symbolMappings[$symbolWithoutP] = 'error/path';
                 }
             }
 
             // Check if commission already exists
-            $exists = Ib1Commission::where('code', $this->account->code)
-                ->where('order_id', $order->Order)
-                ->exists();
+            try {
+                $exists = Ib1Commission::where('code', $this->account->code)
+                    ->where('order_id', $order->Order)
+                    ->exists();
 
-            if ($exists) {
-                return null;
+                if ($exists) {
+                    return null;
+                }
+            } catch (Exception $e) {
+                Log::warning('Error checking existing commission: ' . $e->getMessage(), [
+                    'order_id' => $order->Order,
+                    'code' => $this->account->code ?? 'unknown',
+                ]);
+                // Continue anyway, duplicate constraint will catch this in insert
             }
 
             $symbolpath = $symbolMappings[$symbolWithoutP];
@@ -135,15 +213,20 @@ class SyncAccountTradesJob implements ShouldQueue
                 'updated_at' => now()
             ];
         } catch (\Exception $e) {
-            Log::error("Error processing order for IB commission: " . $e->getMessage());
+            Log::error("Error processing order for IB commission: " . $e->getMessage(), [
+                'order_id' => $order->Order ?? 'unknown',
+                'error' => $e->getMessage(),
+                'account_code' => $this->account->code ?? 'unknown',
+            ]);
             return null;
         }
     }
 
     protected function processAccount($accountId): void
     {
+        $accountStartTime = microtime(true);
         if ($accountId == 'a0382ba7-7977-4914-865f-2b306e549c9e') {
-            Log::info('processing sync for 794195');
+            Log::debug('processing sync for 794195');
         }
         try {
             $this->account = Cache::remember("account:{$accountId}", now()->addMinutes(10), function () use ($accountId) {
@@ -155,90 +238,169 @@ class SyncAccountTradesJob implements ShouldQueue
                 return;
             }
 
-            // Log::info('Syncing account trades for account: ' . $this->account->code);
+            // Log::info('Syncing account trades for account: ' . $this->account->code, [
+            //     'account_id' => $accountId,
+            //     'account_code' => $this->account->code,
+            // ]);
+
             $login = $this->account->code;
             $from = 'September 01,2024';
             $to = 'March 31,2080';
             $total = 0;
 
             // Get total number of trades using universal service
+            $getTotal_start = microtime(true);
             $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $from, $to, &$total) {
                 return $api->HistoryGetTotal($login, $from, $to, $total);
             });
+            $getTotal_duration = microtime(true) - $getTotal_start;
 
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("Failed to get total trades for account {$login}: " . MTRetCode::GetError($error_code));
+                Log::error("Failed to get total trades for account {$login}: " . MTRetCode::GetError($error_code), [
+                    'error_code' => $error_code,
+                    'account_id' => $accountId,
+                ]);
+                if ($error_code == MTRetCode::MT_RET_ERR_NOTFOUND) {
+                    //soft delete account as not found on mt5
+                    $this->account->update([
+                        'deletion_type' => 'not_found_on_mt5',
+                    ]);
+
+                    $this->account->delete();
+                }
                 return;
             }
 
+            // Log::info("Retrieved total trade count for account {$login}", [
+            //     'total_trades' => $total,
+            //     'duration_seconds' => round($getTotal_duration, 2),
+            //     'account_id' => $accountId,
+            // ]);
+
             if ($total == 0) {
-                // Log::info("No trades found for account {$login}");
+                // Log::info("No trades found for account {$login}", [
+                //     'account_id' => $accountId,
+                // ]);
                 return;
             }
 
             // Use pagination to get all trades
             $orders = [];
-            $pageSize = 1000; // Fetch 1000 orders at a time
+            $pageSize = 100; // MT5 API returns max 100 records per page
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
+            $pagination_start = microtime(true);
+
             // Log::info("orders for account trades: " . json_encode($orders));
             while (count($orders) < $total) {
+                // PAGE_LIMIT: Check if we've hit the maximum pages per sync
+                if ($pageCount >= $this->maxPagesPerSync && count($orders) < $total) {
+                    Log::info("PAGE_LIMIT: Hit maximum pages per sync, stopping pagination", [
+                        'account_id' => $accountId,
+                        'account_code' => $login,
+                        'pages_synced' => $pageCount,
+                        'max_pages_allowed' => $this->maxPagesPerSync,
+                        'orders_synced' => count($orders),
+                        'total_orders' => $total,
+                    ]);
+                    $this->hitPageLimit = true;
+                    break;
+                }
                 $pageCount++;
                 $currentPageSize = min($pageSize, $total - count($orders));
                 $position = count($orders);
 
+                $pageStart = microtime(true);
                 $pageOrders = [];
                 $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $from, $to, $position, $currentPageSize, &$pageOrders) {
                     return $api->HistoryGetPage($login, $from, $to, $position, $currentPageSize, $pageOrders);
                 });
+                $pageDuration = microtime(true) - $pageStart;
 
                 if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get trades page for account {$login}: " . MTRetCode::GetError($error_code));
+                    Log::error("Failed to get trades page for account {$login}: " . MTRetCode::GetError($error_code), [
+                        'error_code' => $error_code,
+                        'page_number' => $pageCount,
+                        'position' => $position,
+                        'account_id' => $accountId,
+                    ]);
                     break;
                 }
 
                 if (count($pageOrders) === 0) {
-                    Log::warning("Got 0 orders on page {$pageCount}, stopping pagination");
+                    Log::warning("Got 0 orders on page {$pageCount}, stopping pagination", [
+                        'account_id' => $accountId,
+                    ]);
                     break;
                 }
 
                 // Process orders in batches for better performance
                 $ibCommissionBatch = [];
+                $insertedCount = 0;
                 foreach ($pageOrders as $order) {
-                    // Log::info("order for account trades: ".json_encode($order));
-                    $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
-                    if ($ibCommission) {
-                        $ibCommissionBatch[] = $ibCommission;
-                    }
-
-                    // Insert in batches of batchSize
-                    if (count($ibCommissionBatch) == $this->batchSize) {
-                        try {
-                            Ib1Commission::insert($ibCommissionBatch);
-                            // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
-                            $this->newTrades = true;
-                            $ibCommissionBatch = [];
-                        } catch (Exception $e) {
-                            $this->newTrades = false;
-                            Log::error('Error logging IB commissions batch: ' . $e->getMessage());
+                    try {
+                        // Log::info("order for account trades: ".json_encode($order));
+                        $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
+                        if ($ibCommission) {
+                            $ibCommissionBatch[] = $ibCommission;
                         }
+
+                        // Insert in batches of batchSize
+                        if (count($ibCommissionBatch) == $this->batchSize) {
+                            try {
+                                Ib1Commission::insert($ibCommissionBatch);
+                                $insertedCount += count($ibCommissionBatch);
+                                // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
+                                $this->newTrades = true;
+                                $ibCommissionBatch = [];
+                            } catch (Exception $e) {
+                                $this->newTrades = false;
+                                Log::error('Error logging IB commissions batch: ' . $e->getMessage(), [
+                                    'batch_size' => count($ibCommissionBatch),
+                                    'page_number' => $pageCount,
+                                    'account_id' => $accountId,
+                                    'error' => $e->getMessage(),
+                                ]);
+                            }
+                        }
+                    } catch (Exception $e) {
+                        Log::error('Error processing order: ' . $e->getMessage(), [
+                            'order_id' => $order->Order ?? 'unknown',
+                            'page_number' => $pageCount,
+                            'account_id' => $accountId,
+                        ]);
+                        continue;
                     }
                 }
 
                 // Insert any remaining records
                 if (!empty($ibCommissionBatch)) {
-
                     try {
                         Ib1Commission::insert($ibCommissionBatch);
+                        $insertedCount += count($ibCommissionBatch);
                         // Log::info('Inserting IB commissions: ' . json_encode($ibCommissionBatch));
                     } catch (Exception $e) {
                         $this->newTrades = false;
-                        Log::error('Error logging IB commissions batch: ' . $e->getMessage());
+                        Log::error('Error logging final IB commissions batch: ' . $e->getMessage(), [
+                            'batch_size' => count($ibCommissionBatch),
+                            'page_number' => $pageCount,
+                            'account_id' => $accountId,
+                        ]);
                     }
                 }
 
+                // Log::debug("Completed page {$pageCount} of {$totalPages}", [
+                //     'page_number' => $pageCount,
+                //     'total_pages' => $totalPages,
+                //     'orders_on_page' => count($pageOrders),
+                //     'inserted_count' => $insertedCount,
+                //     'duration_seconds' => round($pageDuration, 2),
+                //     'account_id' => $accountId,
+                // ]);
+
                 $orders = array_merge($orders, $pageOrders);
+                $this->totalOrdersProcessed += count($pageOrders);
 
                 // Small delay between pages to avoid overwhelming MT5
                 if (count($orders) < $total) {
@@ -246,15 +408,47 @@ class SyncAccountTradesJob implements ShouldQueue
                 }
             }
 
-            // Log::info("Successfully processed " . count($orders) . " orders for account {$login}");
-            DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+            $pagination_duration = microtime(true) - $pagination_start;
+            // Log::info("Successfully processed " . count($orders) . " orders for account {$login}", [
+            //     'total_orders' => count($orders),
+            //     'pagination_duration_seconds' => round($pagination_duration, 2),
+            //     'hit_page_limit' => $this->hitPageLimit,
+            //     'account_id' => $accountId,
+            // ]);
+
+            // Dispatch DistributeIbCommissionJob with duplicate check and queue limit
+            $this->dispatchIbCommissionJobIfAllowed($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
+
+            // AUTO_REQUEUE: If we hit page limit, dispatch another job to continue syncing remaining pages
+            if ($this->hitPageLimit && count($orders) < $total) {
+                Log::info("AUTO_REQUEUE: Dispatching continuation job to sync remaining trades", [
+                    'account_id' => $accountId,
+                    'account_code' => $login,
+                    'orders_synced_so_far' => count($orders),
+                    'total_orders' => $total,
+                    'remaining_orders' => $total - count($orders),
+                ]);
+                // Dispatch a new job instance to continue syncing from next page
+                static::dispatch(
+                    $this->accountIds,
+                    $this->referral_code,
+                    $this->ib_user_id,
+                    $this->ib_acc_plans,
+                    $this->maxPagesPerSync
+                )->delay(now()->addSeconds(5));
+            }
             // Dispatch the IB commission job if we had new trades
             // if ($this->newTrades) {
             //     // Log::info("Dispatching DistributeIbCommissionJob for account: {$this->account->id}");
             //     DistributeIbCommissionJob::dispatch($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
             // }
         } catch (\Exception $e) {
-            Log::error("Error processing account {$accountId}: " . $e->getMessage());
+            Log::error("Error processing account {$accountId}: " . $e->getMessage(), [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'elapsed_seconds' => round(microtime(true) - $accountStartTime, 2),
+            ]);
             throw $e;
         }
     }
@@ -295,6 +489,7 @@ class SyncAccountTradesJob implements ShouldQueue
             'close_time' => null,
             'code' => $account->code,
             'comment' => $order->Comment ?? '',
+            'commission' => 0,
             'created_at' => now(),
             'open_price' => $order->PriceCurrent,
             'open_time' => date('Y-m-d H:i:s', $order->TimeDone),
@@ -304,6 +499,7 @@ class SyncAccountTradesJob implements ShouldQueue
             'sl' => $order->PriceSL,
             'state' => $order->State,
             'status' => 'open',
+            'swap' => 0,
             'symbol' => $order->Symbol,
             'tp' => $order->PriceTP,
             'type' => $order->Type,
@@ -332,12 +528,82 @@ class SyncAccountTradesJob implements ShouldQueue
             'state' => $closeOrder->State,
             'comment' => $openOrder->Comment,
             'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->Volume / 10000000) * $openOrder->ContractSize,
+            'swap' => 0,
+            'commission' => 0,
             'status' => 'closed',
             'code' => $account->code,
             'updated_at' => now(),
             'created_at' => now(),
         ];
     }
+
+    /**
+     * Dispatch DistributeIbCommissionJob only if queue limit not exceeded and no duplicate exists
+     * 
+     * This prevents the distributeibcommission queue from backing up exponentially by:
+     * 1. Limiting pending jobs to 50 maximum
+     * 2. Checking for duplicate jobs for the same referral_code using Redis set
+     * 3. Only dispatching when conditions are met
+     */
+    private function dispatchIbCommissionJobIfAllowed($referral_code, $ib_user_id, $ib_acc_plans, $accountId): void
+    {
+        try {
+            $queueName = 'distributeibcommission';
+            $maxPendingJobs = 50;
+            $redisPrefix = env('HORIZON_PREFIX', 'laravel_horizon:');
+
+            // Count pending jobs in the distributeibcommission queue
+            // Redis key format: {prefix}queues:{queue_name}
+            $queueKey = $redisPrefix . "queues:{$queueName}";
+            $pendingCount = Redis::zcard($queueKey);
+
+            if ($pendingCount >= $maxPendingJobs) {
+                Log::warning("DistributeIbCommissionJob queue limit reached", [
+                    'pending_jobs' => $pendingCount,
+                    'max_allowed' => $maxPendingJobs,
+                    'referral_code' => $referral_code,
+                    'account_id' => $accountId,
+                ]);
+                return;
+            }
+
+            // Use Redis set to track queued referral codes for duplicate detection
+            // This is more reliable than parsing job payloads
+            $queuedSetKey = $redisPrefix . "queued_referral_codes:distributeibcommission";
+
+            // Check if this referral_code is already queued
+            if (Redis::sismember($queuedSetKey, $referral_code)) {
+                Log::warning("Duplicate DistributeIbCommissionJob found for referral_code, skipping dispatch", [
+                    'referral_code' => $referral_code,
+                    'account_id' => $accountId,
+                    'pending_jobs' => $pendingCount,
+                ]);
+                return;
+            }
+
+            // All checks passed, dispatch the job
+            DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
+
+            // Add referral_code to the queued set with a TTL of 1 hour (3600 seconds)
+            // This allows the same referral_code to be queued again after processing
+            Redis::setex("$queuedSetKey:$referral_code", 3600, 1);
+            Redis::sadd($queuedSetKey, $referral_code);
+
+            Log::info("Dispatched DistributeIbCommissionJob", [
+                'referral_code' => $referral_code,
+                'account_id' => $accountId,
+                'pending_jobs' => $pendingCount,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error in dispatchIbCommissionJobIfAllowed: " . $e->getMessage(), [
+                'referral_code' => $referral_code,
+                'account_id' => $accountId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Don't dispatch as fallback - better to skip than to queue duplicates
+        }
+    }
+
     protected function processBatch(array $trades)
     {
         try {
@@ -350,5 +616,54 @@ class SyncAccountTradesJob implements ShouldQueue
         }
 
         // Log::info("Completed SyncTrades job for account ID: {$this->account->code}");
+    }
+
+    /**
+     * Process account with retry logic for socket errors
+     */
+    protected function processAccountWithRetry($accountId): void
+    {
+        $maxAttempts = 3;
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt < $maxAttempts) {
+            try {
+                $attempt++;
+                $this->processAccount($accountId);
+                return; // Success
+            } catch (\Exception $e) {
+                $lastException = $e;
+
+                // Check if it's a socket/connection error that should be retried
+                $isSocketError = stripos($e->getMessage(), 'broken pipe') !== false ||
+                    stripos($e->getMessage(), 'connection reset') !== false ||
+                    stripos($e->getMessage(), 'connection refused') !== false ||
+                    stripos($e->getMessage(), 'unable to write to socket') !== false ||
+                    stripos($e->getMessage(), 'connection timed out') !== false ||
+                    stripos($e->getMessage(), 'transport endpoint') !== false ||
+                    stripos($e->getMessage(), 'socket error') !== false;
+
+                if (!$isSocketError || $attempt >= $maxAttempts) {
+                    throw $e;
+                }
+
+                // Log the retry attempt
+                Log::warning("Socket/Connection error in SyncAccountTradesJob, retrying (attempt {$attempt}/{$maxAttempts})", [
+                    'account_id' => $accountId,
+                    'error_message' => $e->getMessage(),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                ]);
+
+                // Exponential backoff: 1s, 2s, 4s
+                $sleepSeconds = 1 * (2 ** ($attempt - 1));
+                sleep($sleepSeconds);
+            }
+        }
+
+        if ($lastException) {
+            throw $lastException;
+        }
     }
 }
