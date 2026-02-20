@@ -71,7 +71,7 @@ class MTConnect
       return MTRetCode::MT_RET_ERR_NETWORK;
     }
     //--- try create connection to server
-    if (!socket_connect($this->m_connect, $this->m_ip_mt5, $this->m_port_mt5)) {
+    if (!@socket_connect($this->m_connect, $this->m_ip_mt5, $this->m_port_mt5)) {
       if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::ERROR, "socket connect failed to " . $this->m_ip_mt5 . ":" . $this->m_port_mt5 . ", " . $this->GetSocketError());
       return MTRetCode::MT_RET_ERR_CONNECTION;
     }
@@ -146,85 +146,88 @@ class MTConnect
    * @return bool
    */
   public function Send($command, $data, $first_request = false)
-    {
-        // Log::debug("Starting Send()", ['command' => $command, 'first_request' => $first_request]);
+  {
+    // Log::debug("Starting Send()", ['command' => $command, 'first_request' => $first_request]);
 
-        if (!$this->m_connect) {
-            Log::error("Connection closed.");
-            return false;
-        }
-
-        //--- number packet
-        $this->m_client_command++;
-        // Log::debug("Client command incremented.", ['m_client_command' => $this->m_client_command]);
-
-        //--- packet max, than first
-        if ($this->m_client_command > self::MAX_CLIENT_COMMAND) {
-            $this->m_client_command = 1;
-            // Log::debug("Client command reset to 1.");
-        }
-
-        $q = $command;
-        $body_request = '';
-
-        if (!empty($data)) {
-            $q .= "|";
-            foreach ($data as $param => $value) {
-                if ($param == MTProtocolConsts::WEB_PARAM_BODYTEXT) {
-                    $body_request = $value;
-                    // Log::debug("Body request found.");
-                } else {
-                    $q .= $param . '=' . MTUtils::Quotes($value) . '|';
-                    // Log::debug("Appending parameter.", ['param' => $param, 'value' => $value]);
-                }
-            }
-            $q .= "\r\n";
-            if (!empty($body_request)) {
-                $q .= $body_request;
-                // Log::debug("Appending body request.");
-            }
-        } else {
-            $q .= "|\r\n";
-            // Log::debug("No data provided, added empty query.");
-        }
-
-        // Log::debug("Final query before encoding.", ['query' => $q]);
-
-        $query_body = mb_convert_encoding($q, "utf-16le", "utf-8");
-        // Log::debug("Query encoded to UTF-16LE.");
-
-        if ($command != MTProtocolConsts::WEB_CMD_AUTH_START && $command != MTProtocolConsts::WEB_CMD_AUTH_ANSWER && $this->is_crypt) {
-            $query_body = $this->CryptPacket($query_body, strlen($query_body), $len_query);
-            // Log::debug("Query encrypted.", ['length' => $len_query]);
-        } else {
-            $len_query = strlen($query_body);
-            // Log::debug("Query not encrypted.", ['length' => $len_query]);
-        }
-
-        if ($first_request) {
-            $header = sprintf(MTProtocolConsts::WEB_PREFIX_WEBAPI, $len_query, $this->m_client_command);
-        } else {
-            $header = sprintf(MTProtocolConsts::WEB_PACKET_FORMAT, $len_query, $this->m_client_command);
-        }
-
-        $query = $header . '0' . $query_body;
-        $query_len = strlen($header) + 1 + $len_query;
-
-        // Log::debug("Prepared final query.", ['length' => $query_len]);
-
-        // Log query content in hex to avoid issues with binary data
-        // Log::debug("Sending query (hex): " . bin2hex($querdy));
-
-        $send_data = socket_write($this->m_connect, $query, $query_len);
-        if (!$send_data) {
-            Log::error("Send failed.", ['error' => $this->GetSocketError()]);
-            return false;
-        }
-
-        // Log::debug("Send successful.", ['bytes_written' => $send_data]);
-
-        return true;
+    if (!$this->m_connect) {
+      Log::error("Connection closed.");
+      return false;
     }
+
+    //--- number packet
+    $this->m_client_command++;
+    // Log::debug("Client command incremented.", ['m_client_command' => $this->m_client_command]);
+
+    //--- packet max, than first
+    if ($this->m_client_command > self::MAX_CLIENT_COMMAND) {
+      $this->m_client_command = 1;
+      // Log::debug("Client command reset to 1.");
+    }
+
+    $q = $command;
+    $body_request = '';
+
+    if (!empty($data)) {
+      $q .= "|";
+      foreach ($data as $param => $value) {
+        if ($param == MTProtocolConsts::WEB_PARAM_BODYTEXT) {
+          $body_request = $value;
+          // Log::debug("Body request found.");
+        } else {
+          $q .= $param . '=' . MTUtils::Quotes($value) . '|';
+          // Log::debug("Appending parameter.", ['param' => $param, 'value' => $value]);
+        }
+      }
+      $q .= "\r\n";
+      if (!empty($body_request)) {
+        $q .= $body_request;
+        // Log::debug("Appending body request.");
+      }
+    } else {
+      $q .= "|\r\n";
+      // Log::debug("No data provided, added empty query.");
+    }
+
+    // Log::debug("Final query before encoding.", ['query' => $q]);
+
+    $query_body = mb_convert_encoding($q, "utf-16le", "utf-8");
+    // Log::debug("Query encoded to UTF-16LE.");
+
+    if ($command != MTProtocolConsts::WEB_CMD_AUTH_START && $command != MTProtocolConsts::WEB_CMD_AUTH_ANSWER && $this->is_crypt) {
+      $query_body = $this->CryptPacket($query_body, strlen($query_body), $len_query);
+      // Log::debug("Query encrypted.", ['length' => $len_query]);
+    } else {
+      $len_query = strlen($query_body);
+      // Log::debug("Query not encrypted.", ['length' => $len_query]);
+    }
+
+    if ($first_request) {
+      $header = sprintf(MTProtocolConsts::WEB_PREFIX_WEBAPI, $len_query, $this->m_client_command);
+    } else {
+      $header = sprintf(MTProtocolConsts::WEB_PACKET_FORMAT, $len_query, $this->m_client_command);
+    }
+
+    $query = $header . '0' . $query_body;
+    $query_len = strlen($header) + 1 + $len_query;
+
+    // Log::debug("Prepared final query.", ['length' => $query_len]);
+
+    // Log query content in hex to avoid issues with binary data
+    // Log::debug("Sending query (hex): " . bin2hex($querdy));
+
+    // Suppress warnings and handle socket errors gracefully
+    $send_data = @socket_write($this->m_connect, $query, $query_len);
+    if (!$send_data) {
+      $socketError = $this->GetSocketError();
+      Log::error("Send failed. Connection may be broken.", ['error' => $socketError]);
+      // Return early to prevent cascading errors
+      return false;
+    }
+
+    // Log::debug("Send successful.", ['bytes_written' => $send_data]);
+
+    return true;
+  }
 
 
   /**
@@ -394,9 +397,9 @@ class MTConnect
     $header = null;
     //---
     try {
-      $count_read = socket_recv($this->m_connect, $header_data, MTHeaderProtocol::HEADER_LENGTH, MSG_WAITALL);
+      // Suppress warnings - handle errors gracefully
+      $count_read = @socket_recv($this->m_connect, $header_data, MTHeaderProtocol::HEADER_LENGTH, MSG_WAITALL);
     } catch (\Throwable $th) {
-
       Log::error("Unable to connect to MT5 " . $th->getMessage() . " on " . $this->m_ip_mt5 . ":" . $this->m_port_mt5);
       return null;
     }
@@ -422,12 +425,18 @@ class MTConnect
     $data         = '';
     $count_packet = 0;
     while ($read_len < $need_len) {
-      $count_read = socket_recv($this->m_connect, $temp_data, $need_len - $read_len, MSG_WAITALL); //socket_read($this->m_connect, $need_len - $read_len, PHP_BINARY_READ);
+      // Suppress warnings - socket may be broken
+      $count_read = @socket_recv($this->m_connect, $temp_data, $need_len - $read_len, MSG_WAITALL);
       //--- check data
-      if ($temp_data === false) {
+      if ($temp_data === false || $count_read === false) {
         $error_code = socket_last_error($this->m_connect);
         $error_msg  = socket_strerror($error_code);
         if (MTLogger::getIsWriteLog()) MTLogger::write(MTLoggerType::DEBUG, 'socket error [' . $error_code . '] ' . $error_msg);
+        Log::warning("Socket read failed - connection may be broken", [
+          'error_code' => $error_code,
+          'error_msg' => $error_msg,
+          'server' => $this->m_ip_mt5 . ':' . $this->m_port_mt5
+        ]);
         return null;
       }
       //--- try get all data

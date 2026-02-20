@@ -198,12 +198,12 @@ return [
             'queue' => ['syncaccountstrades'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_COMMISSION_PROCESSES', 5), // Reduced from 30
+            'maxProcesses' => env('SYNC_MAX_TRADES_PROCESSES', 25), // Increased for large queue backlog
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 256,
+            'memory' => 512, // Increased from 256 to handle larger batches
             'tries' => 1,
-            'timeout' => 1200,
+            'timeout' => 2700, // 45 minutes - for large trade volumes
             'nice' => 0,
         ],
         'supervisor-3' => [
@@ -211,12 +211,12 @@ return [
             'queue' => ['distributeibcommission'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 3), // Reduced from 10
+            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 30), // Increased from 15 with optimized job performance
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 256,
+            'memory' => 512, // Increased from 256 for better performance
             'tries' => 1,
-            'timeout' => 600,
+            'timeout' => 1200, // Increased from 600 to handle complex commission distribution
             'nice' => 0,
         ],
         'supervisor-4' => [
@@ -262,10 +262,14 @@ return [
             'connection' => 'redis',
             'queue' => ['priority-sync-trades'],
             'balance' => 'auto',
-            'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 10),
-            'memory' => 256,
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 20), // Increased from 10
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 512, // Increased from 256
             'tries' => 1,
-            'timeout' => 300,
+            'timeout' => 1200, // Increased from 300 to prevent timeouts
+            'nice' => 0,
         ],
         'supervisor-high-volume-sync' => [
             'connection' => 'redis',
