@@ -959,6 +959,32 @@ class Transaction extends Controller
                             //     'withdraw_amount' => $depositAmount,
                             // ]);
                         });
+                    } elseif($responseData->result == 'error'){
+                        // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
+                        DB::transaction(function () use ($request, $response, $responseData, $transaction) {
+                            // Update wallet_withdraw table with response and set status to 0 (error state)
+                            TradeWithdrawals::where('id', $transaction->id)
+                                ->orWhere(DB::raw('id'), '=', $request->did)
+                                ->update([
+                                    'payout_res' => $response->body(),
+                                    'payout_req' => json_encode($responseData),
+                                    'status' => 3,
+                                    'admin_remark' => $responseData->reason
+                                ]);
+
+                            // Delete total_balance entry
+                            // TotalBalance::where('id', $transaction->id)->delete();
+                        });
+                        $comment = 'Cancelled Withdrawal';
+                        $ticket = null;
+                        $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+
+                        if ($errorCode != MTRetCode::MT_RET_OK) {
+                            $error = MTRetCode::GetError($errorCode);
+                        } else {
+                            return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                        }
+
                     } else {
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
                         DB::transaction(function () use ($request, $response, $responseData, $transaction) {
