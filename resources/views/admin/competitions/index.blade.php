@@ -658,8 +658,10 @@
                     data: 'enc_id',
                     defaultContent: '',
                     render: function (data, type, row) {
-                        return '<button class="btn btn-primary grp-action me-1" data-id="' + data + '"><i class="fa fa-ellipsis-h"></i></button>' +
-                               '<button class="btn btn-primary send-reminder" data-id="' + row.id + '" data-name="' + row.ac_name + '" title="Send Reminder Email"><i class="fa fa-envelope"></i></button>';
+                        return '<button class="btn btn-primary grp-action me-1" data-id="' + data + '"><i class="fa fa-ellipsis-h"></i></button>'
+                        // +
+                        //        '<button class="btn btn-primary send-reminder" data-id="' + row.id + '" data-name="' + row.ac_name + '" title="Send Reminder Email"><i class="fa fa-envelope"></i></button>'
+                               ;
                     },
                     orderable: false,
                     searchable: false
@@ -691,69 +693,69 @@
         });
 
         // Send reminder email button handler for ended competitions
-        $('#tableEndedCompetitions tbody').on('click', '.send-reminder', function (e) {
-            e.stopPropagation();
-            var competitionId = $(this).data('id');
-            var competitionName = $(this).data('name');
+        // $('#tableEndedCompetitions tbody').on('click', '.send-reminder', function (e) {
+        //     e.stopPropagation();
+        //     var competitionId = $(this).data('id');
+        //     var competitionName = $(this).data('name');
 
-            Swal.fire({
-                title: 'Send Reminder Email',
-                text: 'Are you sure you want to send a reminder email to all participants of "' + competitionName + '"?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Send Emails',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#0d6efd',
-                cancelButtonColor: '#6c757d'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Show loading
-                    Swal.fire({
-                        title: 'Sending Emails...',
-                        text: 'Please wait while we send reminder emails to all participants.',
-                        icon: 'info',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+        //     Swal.fire({
+        //         title: 'Send Reminder Email',
+        //         text: 'Are you sure you want to send a reminder email to all participants of "' + competitionName + '"?',
+        //         icon: 'question',
+        //         showCancelButton: true,
+        //         confirmButtonText: 'Yes, Send Emails',
+        //         cancelButtonText: 'Cancel',
+        //         confirmButtonColor: '#0d6efd',
+        //         cancelButtonColor: '#6c757d'
+        //     }).then((result) => {
+        //         if (result.isConfirmed) {
+        //             // Show loading
+        //             Swal.fire({
+        //                 title: 'Sending Emails...',
+        //                 text: 'Please wait while we send reminder emails to all participants.',
+        //                 icon: 'info',
+        //                 allowOutsideClick: false,
+        //                 allowEscapeKey: false,
+        //                 showConfirmButton: false,
+        //                 didOpen: () => {
+        //                     Swal.showLoading();
+        //                 }
+        //             });
 
-                    // Make AJAX call
-                    $.ajax({
-                        url: "{{ route('admin.competition.sendReminderEmail') }}",
-                        type: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            competition_id: competitionId
-                        },
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: response.message,
-                                    icon: 'success'
-                                });
-                            } else {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: response.message,
-                                    icon: 'error'
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'An error occurred while sending emails. Please try again.',
-                                icon: 'error'
-                            });
-                        }
-                    });
-                }
-            });
-        });
+        //             // Make AJAX call
+        //             $.ajax({
+        //                 url: "{{ route('admin.competition.sendReminderEmail') }}",
+        //                 type: 'POST',
+        //                 data: {
+        //                     _token: '{{ csrf_token() }}',
+        //                     competition_id: competitionId
+        //                 },
+        //                 success: function (response) {
+        //                     if (response.success) {
+        //                         Swal.fire({
+        //                             title: 'Success!',
+        //                             text: response.message,
+        //                             icon: 'success'
+        //                         });
+        //                     } else {
+        //                         Swal.fire({
+        //                             title: 'Error!',
+        //                             text: response.message,
+        //                             icon: 'error'
+        //                         });
+        //                     }
+        //                 },
+        //                 error: function (xhr) {
+        //                     Swal.fire({
+        //                         title: 'Error!',
+        //                         text: 'An error occurred while sending emails. Please try again.',
+        //                         icon: 'error'
+        //                     });
+        //                 }
+        //             });
+        //         }
+        //     });
+        // });
 
 
         $("#groupCreation, #groupUpdateForm").submit(function (e) {
