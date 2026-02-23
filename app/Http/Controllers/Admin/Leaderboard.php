@@ -27,6 +27,7 @@ use App\Http\Controllers\Controller;
 use App\Services\CompetitionService;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Services\MailService as MailService;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LeaderboardExport;
 
@@ -392,7 +393,8 @@ class Leaderboard extends Controller
             "title_right" => "",
             "subtitle_right" => "Your " . $type . " Competition is Ready!",
             "acc_type" => $new_user->type,
-            "content" => $content
+            "content" => $content,
+            'settings' => $settings
         ];
 
         Log::alert("message " . $toEmail);
@@ -586,5 +588,137 @@ class Leaderboard extends Controller
             ]);
             return back()->with('error', 'Unable to export leaderboard data. Please try again.');
         }
+    }
+
+    /**
+     * Send reminder email to competition participants
+     */
+    public function sendReminderEmail(Request $request)
+    {
+        $competitionId = $request->input('competition_id');
+
+        // Validate request
+        if (!$competitionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Competition ID is required'
+            ], 400);
+        }
+
+        // Get competition
+        $competition = AccountType::where('id', $competitionId)->first();
+        if (!$competition) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Competition not found'
+            ], 404);
+        }
+
+        // Get all accounts for this competition with user relationship
+        $accounts = Account::where('competition_product_id', $competitionId)
+            ->with('user')
+            ->get();
+
+        if ($accounts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No participants found for this competition'
+            ], 404);
+        }
+
+        // Get unique users with valid emails
+        $usersWithEmails = $accounts->map(function ($account) {
+            return $account->user;
+        })->filter(function ($user) {
+            return $user && $user->email && filter_var($user->email, FILTER_VALIDATE_EMAIL);
+        })->unique('email')->values();
+
+        if ($usersWithEmails->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid email addresses found for participants'
+            ], 404);
+        }
+
+        // Send emails using MailService (queues via ScheduleMailJob)
+        $sentCount = 0;
+        $failedCount = 0;
+        $competitionName = $competition->ac_name;
+        $settings = settings();
+
+        foreach ($usersWithEmails as $user) {
+            try {
+                $toEmail = $user->email;
+                $from = $settings['email_from_address'];
+                $emailSubject = ($settings['admin_title'] ?? '1xTrade') . ' - Competition Reminder: ' . $competitionName . ' is Underway';
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= 'From:' . ($settings['admin_title'] ?? '1xTrade') . '<' . $from . '>' . "\r\n";
+
+                $content = "
+                    <div style='font-family: Montserrat, sans-serif; color: #000000;'>
+                        <p style='color: #000000;'>This is a reminder that the {$competitionName} is already underway. Your competition account credentials have been sent to the email address used during registration. Please check your inbox so you can access your account and start trading if you haven't done so yet.</p>
+                        <p style='color: #000000;'>To access the dashboard, log in at <a href='https://my.1xtrade.com'>my.1xtrade.com</a>. You can also view the competition overview page here: <a href='https://my.1xtrade.com/competitions-overview'>my.1xtrade.com/competitions-overview</a></p>
+                        <p style='color: #000000;'>If you do not see the credentials email, please check your spam or junk folder. If you need any assistance, please contact our support team.</p>
+                    </div>
+                ";
+
+                $templateVars = [
+                    'name' => $user->fullname ?? $user->name ?? 'Trader',
+                    'type' => 'Competition Reminder',
+                    'competitionName' => $competitionName,
+                    'server_name' => $settings['mt5_company_name'] ?? '',
+                    'email' => $settings['email_from_address'] ?? '',
+                    'title_right' => '',
+                    'subtitle_right' => $competitionName . ' Reminder',
+                    'acc_type' => 'Demo',
+                    'content' => $content,
+                    'settings' => $settings
+                ];
+
+                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+                $sentCount++;
+            } catch (\Exception $e) {
+                Log::error('Failed to send competition reminder email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'competition_id' => $competitionId,
+                    'error' => $e->getMessage()
+                ]);
+                $failedCount++;
+            }
+        }
+
+        // Log the action
+        $adminUser = auth()->guard('admin')->user();
+        Log::info('Competition reminder emails sent', [
+            'competition_id' => $competitionId,
+            'competition_name' => $competitionName,
+            'admin_user_id' => $adminUser ? $adminUser->id : null,
+            'admin_user_email' => $adminUser ? $adminUser->email : null,
+            'total_recipients' => $usersWithEmails->count(),
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+            'timestamp' => now()->toDateTimeString()
+        ]);
+
+        // Activity log
+        if ($adminUser) {
+            activity()
+                ->causedBy($adminUser)
+                ->withProperties([
+                    'competition_id' => $competitionId,
+                    'competition_name' => $competitionName,
+                    'total_recipients' => $usersWithEmails->count(),
+                    'sent_count' => $sentCount,
+                    'failed_count' => $failedCount
+                ])
+                ->log('Competition reminder emails sent');
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Reminder emails sent successfully to {$sentCount} participants" . ($failedCount > 0 ? ", {$failedCount} failed" : '')
+        ]);
     }
 }

@@ -374,6 +374,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/recovery-codes', [TwoFactorAuthController::class, 'showRecoveryCodes'])->name('two-factor.recovery-codes.show');
         });
 
+        Route::post('/competition/send-reminder-email', [Leaderboard::class, 'sendReminderEmail'])->name('competition.sendReminderEmail');
+
+
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
             ->middleware('check.permissions:wallet_deposit:viewAny');

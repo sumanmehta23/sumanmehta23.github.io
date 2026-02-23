@@ -25,11 +25,12 @@ class ScheduleMailJob implements ShouldQueue
      */
     public function __construct(array $data, $toEmail, $subject)
     {
+
         $this->data = $data;
         $this->toEmail = $toEmail;
         $this->subject = $subject;
         $this->apiKey = config('services.brevo.api_key');
-        // dd($this);
+        // dd($this->data);
     }
 
     /**
@@ -40,8 +41,6 @@ class ScheduleMailJob implements ShouldQueue
         $settings = settings();
         $maildriver = config('mail.default') ?? 'smtp';
         try {
-
-
             if (strpos($this->subject, 'Competition Registration') !== false) {
                 $template = 'emails.competition_registration';
             } else if (strpos($this->subject, 'Competition Activated') !== false) {
@@ -68,6 +67,8 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.resendAccountDetails';
             } elseif ((strpos($this->subject, 'Competition Account Details') !== false)) {
                 $template = 'emails.issueCompetitionAccount';
+            } elseif (strpos($this->subject, 'Competition Reminder') !== false) {
+                $template = 'emails.competition_reminder';
             } elseif (strpos($this->subject, 'Password Reset') !== false) {
                 $template = 'emails.resetPassword';
             } elseif (strpos($this->subject, 'Export Started') !== false) {
