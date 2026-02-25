@@ -6,6 +6,7 @@ use App\Events\AccountTradesDepositEvent;
 use App\Events\IbCreated;
 use App\Events\IbStatusChanged;
 use App\Events\KycVerifiedEvent;
+use App\Events\TradeOpenedEvent;
 use App\Listeners\GoHighLevelMainIbListener;
 use App\Listeners\OmnisendEventsListener;
 use Illuminate\Auth\Events\Registered;
@@ -32,6 +33,10 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         AccountTradesDepositEvent::class => [
+            OmnisendEventsListener::class,
+        ],
+
+        TradeOpenedEvent::class => [
             OmnisendEventsListener::class,
         ],
 

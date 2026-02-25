@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\TradeOpenedEvent;
 use App\Models\Trade;
 use App\Models\Deal;
 use App\Models\Account;
@@ -180,6 +181,7 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
                     // Process in batches
                     if (count($tradesToUpsert) >= 50) {
                         $this->processBatch($tradesToUpsert);
+                        $this->fireTradeOpenedEventsForBatch($account, $tradesToUpsert);
                         $tradesToUpsert = [];
                     }
                 }
@@ -188,6 +190,7 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
             // Process remaining trades
             if (!empty($tradesToUpsert)) {
                 $this->processBatch($tradesToUpsert);
+                $this->fireTradeOpenedEventsForBatch($account, $tradesToUpsert);
             }
 
             $this->updateSyncStatus($account, 'success', $savedCount);
@@ -305,6 +308,36 @@ class EnhancedBatchSyncTradesJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error("Error processing trade batch: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Fire TradeOpenedEvent for each open trade in the batch (upsert does not fire model events).
+     */
+    protected function fireTradeOpenedEventsForBatch(Account $account, array $tradesToUpsert): void
+    {
+        $openPositionIds = collect($tradesToUpsert)
+            ->filter(fn ($t) => ($t['status'] ?? '') === 'open')
+            ->pluck('position_id')
+            ->unique()
+            ->values();
+
+        if ($openPositionIds->isEmpty()) {
+            return;
+        }
+
+        $user = $account->user;
+        if (!$user || empty($user->email)) {
+            return;
+        }
+
+        $trades = Trade::where('account_id', $account->id)
+            ->whereIn('position_id', $openPositionIds->all())
+            ->where('status', 'open')
+            ->get();
+
+        foreach ($trades as $trade) {
+            event(new TradeOpenedEvent($user, $trade));
         }
     }
 
