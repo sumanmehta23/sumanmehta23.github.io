@@ -285,6 +285,13 @@
                                             @endif
 
                                         </div>
+                                        @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
+                                        <div data-v-97e32e5a="" class="row g-3 mb-3">
+                                            <div data-v-97e32e5a="" class="col-sm-12">
+                                                <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
+                                            </div>
+                                        </div>
+                                        @endif
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button data-v-97e32e5a=""
@@ -411,6 +418,9 @@
         </div>
     </div>
 
+    @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <script>
         function handlePaste(event) {
             const pasteData = event.clipboardData.getData('text');

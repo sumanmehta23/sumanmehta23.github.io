@@ -507,7 +507,9 @@ class LoginController extends Controller
             return redirect()->route('dashboard');
         }
         $countries = Country::all();
-        return view('auth.register', compact('countries'));
+        $turnstileEnabled = (bool) config('services.turnstile.enabled', false);
+        $turnstileSiteKey = (string) config('services.turnstile.site_key', '');
+        return view('auth.register', compact('countries', 'turnstileEnabled', 'turnstileSiteKey'));
     }
     public function addUser(Request $request)
     {
