@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\TradeOpenedEvent;
 use App\Models\Trade;
 use Exception;
 use App\Models\Ib1;
@@ -472,12 +473,44 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
 
             if (count($tradesToUpsert) >= $this->batchSize) {
                 $this->processBatch($tradesToUpsert);
+                $this->fireTradeOpenedEventsForBatch($account, $tradesToUpsert);
                 $tradesToUpsert = [];
             }
         }
 
         if (!empty($tradesToUpsert)) {
             $this->processBatch($tradesToUpsert);
+            $this->fireTradeOpenedEventsForBatch($account, $tradesToUpsert);
+        }
+    }
+
+    /**
+     * Fire TradeOpenedEvent for each open trade in the batch (upsert does not fire model events).
+     */
+    protected function fireTradeOpenedEventsForBatch(Account $account, array $tradesToUpsert): void
+    {
+        $openPositionIds = collect($tradesToUpsert)
+            ->filter(fn ($t) => ($t['status'] ?? '') === 'open')
+            ->pluck('position_id')
+            ->unique()
+            ->values();
+
+        if ($openPositionIds->isEmpty()) {
+            return;
+        }
+
+        $user = $account->user;
+        if (!$user || empty($user->email)) {
+            return;
+        }
+
+        $trades = Trade::where('account_id', $account->id)
+            ->whereIn('position_id', $openPositionIds->all())
+            ->where('status', 'open')
+            ->get();
+
+        foreach ($trades as $trade) {
+            event(new TradeOpenedEvent($user, $trade));
         }
     }
 

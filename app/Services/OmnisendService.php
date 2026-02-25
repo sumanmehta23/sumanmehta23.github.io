@@ -270,6 +270,12 @@ class OmnisendService
                 : $contactData['last_deposit_at'];
         }
 
+        if (!empty($contactData['last_open_trade_at'])) {
+            $customProperties['last_open_trade_at'] = is_numeric($contactData['last_open_trade_at'])
+                ? date('Y-m-d H:i:s', $contactData['last_open_trade_at'])
+                : $contactData['last_open_trade_at'];
+        }
+
         if (!empty($customProperties)) {
             $payload['customProperties'] = $customProperties;
         }
@@ -280,6 +286,19 @@ class OmnisendService
         }
 
         return $payload;
+    }
+
+    /**
+     * Send one "Trades Opened" event with all trades collected for the user (batched).
+     */
+    public function trackBatchTradesOpened(string $email, $userId, array $trades): bool
+    {
+        $eventData = [
+            'user_id' => (string) $userId,
+            'trades_count' => count($trades),
+            'trades' => $trades,
+        ];
+        return $this->trackEvent($email, 'Trades Opened', $eventData);
     }
 
     /**
