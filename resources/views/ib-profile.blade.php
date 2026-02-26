@@ -285,15 +285,31 @@
                                                 data-clipboard-target="#pc-clipboard-1"><i
                                                     class="feather icon-copy"></i></button></div>
                                     </div>
-                                    <div class="mb-4 col-12">
-                                        <form id="referral-form" action="{{ route('ib-update-referral') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="referral_code" id="hidden-referral-code"
-                                                value="{{ $ib->referral_code }}">
-                                            <input type="hidden" name="ib1_id" value="{{ $ib->id }}">
-                                            <button type="submit" class="btn btn-primary">Submit</button>
-                                        </form>
+
+                                    <div class="gap-3 mt-4 d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between">
+
+                                        <!-- Button side -->
+                                        <div>
+                                            <form id="referral-form" action="{{ route('ib-update-referral') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="referral_code" id="hidden-referral-code"
+                                                    value="{{ $ib->referral_code }}">
+                                                <input type="hidden" name="ib1_id" value="{{ $ib->id }}">
+                                                <button type="submit" class="btn btn-primary">
+                                                    Submit
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Instruction side -->
+                                        <div class="text-muted text-sm-start text-sm-end">
+                                            <span class="fw-semibold text-dark">Note:</span><br class="d-sm-none">
+                                            Generate a new referral link,<br class="d-none d-sm-block">
+                                            then click <strong class="text-primary">Submit</strong> to apply the changes.
+                                        </div>
+
                                     </div>
+
                                 </div>
                             </div>
                             <div class="card">
