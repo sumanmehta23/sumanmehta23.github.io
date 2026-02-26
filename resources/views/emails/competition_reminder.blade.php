@@ -192,13 +192,32 @@
                                 <td>
                                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
                                         <tbody>
+                                            {{-- <tr>
+                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
+                                                    <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                        <tr>
+                                                            <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
+                                                                <div align="center" class="alignment" style="line-height:10px">
+                                                                    <div class="fullWidth">
+                                                                        <img
+                                                                            alt=""
+                                                                            src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email.png' }}"
+                                                                            style="display:block;"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr> --}}
                                             <tr>
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="image_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="width:100%;padding-right:0px;padding-left:0px;">
                                                                 <div align="center" class="alignment" style="line-height:10px">
-                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/email_banner_5.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
+                                                                    <div class="fullWidth" style="max-width: 600px;"><img alt="" height="auto" src="{{ $settings['copyright_site_name_text'] . '/assets/images/default_email_1.png' }}" style="display: block; height: auto; border: 0; width: 100%;" title="" width="600" /></div>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -238,6 +257,7 @@
                             </tr>
                         </tbody>
                     </table>
+
                     <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-5" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
                         <tbody>
                             <tr>
@@ -249,26 +269,21 @@
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
-                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:150%;text-align:justify;mso-line-height-alt:22px;">
-                                                                    <p style="margin: 0; margin-bottom: 12px;"><strong>Welcome to LQH Markets!</strong></p>
-                                                                    <p style="margin: 0;">We have received a request to reset the password associated with your account. If you made this request, please click the link below to reset your password.</p>
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
+                                                                    <p style="margin: 0;">{!! $content !!}</p>
                                                                 </div>
                                                             </td>
                                                         </tr>
                                                     </table>
-                                                    <table border="0" cellpadding="10" cellspacing="0" class="button_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
-                                                        <tr>
-                                                            <td class="pad">
-                                                                <div align="center" class="alignment"><!--[if mso]>
-<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"   style="height:42px;width:256px;v-text-anchor:middle;" arcsize="72%" fillcolor="#00b98e">
-<v:stroke dashstyle="Solid" weight="0px" color="#00b98e"/>
-<w:anchorlock/>
-<v:textbox inset="0px,0px,0px,0px">
-<center dir="false" style="color:#ffffff;font-family:sans-serif;font-size:16px">
-<![endif]--><a href="{{ $site_link }}" style="color:#ffffff;text-decoration:none;" target="_blank"><span class="button" href="{{ $site_link }}" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">Reset Password →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
+                                                    @if (isset($btn_text))
+                                                        <table border="0" cellpadding="10" cellspacing="0" class="button_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                            <tr>
+                                                                <td class="pad">
+                                                                    <div align="center" class="alignment"><a href="{{ $site_link }}" style="color:#ffffff;text-decoration:none;" target="_blank"><span class="button" href="{{ $site_link }}" style="background-color: #00b98e; border-bottom: 0px solid transparent; border-left: 0px solid transparent; border-radius: 30px; border-right: 0px solid transparent; border-top: 0px solid transparent; color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 400; mso-border-alt: none; padding-bottom: 5px; padding-top: 5px; padding-left: 60px; padding-right: 60px; text-align: center; width: auto; word-break: keep-all; letter-spacing: normal;"><span style="word-break: break-word; line-height: 32px;">{{ $btn_text }} →</span></span><!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    @endif
                                                     <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad">
@@ -298,19 +313,19 @@
                                         <tbody>
                                             <tr>
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
-                                                    <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
+                                                    {{-- <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:10px;padding-left:25px;padding-right:25px;padding-top:15px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;">If you did not request a password change, please disregard this email, and no further action is required.</p>
                                                                     <p style="margin: 0; margin-bottom: 16px;">If you have any questions or need assistance, feel free to reach out to our support team.</p>
-                                                                    <p style="margin: 0; margin-bottom: 16px;">Best regards,</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">Best regards</p>
                                                                     <p style="margin: 0;">The LQH Markets Team</p>
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                    </table>
-                                                    <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
+                                                    </table> --}}
+                                                    {{-- <table border="0" cellpadding="10" cellspacing="0" class="divider_block block-2" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
                                                         <tr>
                                                             <td class="pad">
                                                                 <div align="center" class="alignment">
@@ -322,23 +337,7 @@
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row row-6" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;" width="100%">
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" class="row-content stack" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; border-radius: 0; color: #000000; width: 600px; margin: 0 auto;" width="600">
-                                        <tbody>
-                                            <tr>
-                                                <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-top: 5px; vertical-align: top;" width="100%">
+                                                    </table> --}}
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:5px;padding-left:25px;padding-right:25px;padding-top:10px;">

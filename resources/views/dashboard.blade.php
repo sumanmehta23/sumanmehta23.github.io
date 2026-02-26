@@ -165,7 +165,8 @@
                                                                         @endif
                                                                         <p class="mb-0 text-muted ms-2 f-12">
                                                                             <span
-                                                                                class="text-truncate w-100">{{ $liveAccount->accountType->ac_name }}</span>
+                                                                                class="text-truncate w-100">{{ $liveAccount->accountType->ac_name }}
+                                                                            </span>
                                                                         </p>
                                                                     </div>
                                                                 </div>
@@ -194,7 +195,7 @@
                                                             </td> --}}
                                                             <td class="text-end f-w-200">
                                                                 @if ($liveAccount->code && $liveAccount->code != 'Rejected')
-                                                                    <div class="d-flex align-items-center gap-2">
+                                                                    <div class="gap-2 d-flex align-items-center">
                                                                         <button class="btn btn-sm btn-outline-secondary d-grid me-2">
                                                                             <a href="{{ route('view-account-details', $liveAccount->id) }}">
                                                                             <span class="">View <svg class="pc-icon">
@@ -296,6 +297,11 @@
                                                                             <span
                                                                                 class="text-truncate w-100">{{ $demoAccount->account_type }}</span>
                                                                         </p>
+                                                                        <h6 class="pl-2 mb-0 text-muted ms-2 f-12">
+                                                                            <span class="text-truncate w-100">
+                                                                                {{ $demoAccount->accountType ?$demoAccount->accountType->ac_name : '' }}
+                                                                            </span>
+                                                                        </h6>
                                                                     </div>
                                                                 </div>
                                                             </td>

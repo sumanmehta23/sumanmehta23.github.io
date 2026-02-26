@@ -254,10 +254,37 @@ class BalanceSyncService
                     'bonus_currency' => 'USD',
                 ]);
 
-                // Log::debug("BatchBalanceSyncJob: Updating bonus used amounts");
-                $accountPromoBonus->update([
-                    'bonus_used' => \DB::raw('bonus_amount')
-                ]);
+                $promoBonuses = $accountPromoBonus
+                                ->orderBy('created_at', 'asc')
+                                ->get();
+
+                $remainingDeduction = $deduction;
+
+                foreach ($promoBonuses as $bonusRow) {
+
+                    if ($remainingDeduction <= 0) {
+                        break;
+                    }
+
+                    $available = $bonusRow->bonus_amount - $bonusRow->bonus_used;
+
+                    if ($available <= 0) {
+                        continue;
+                    }
+
+                    $useAmount = min($available, $remainingDeduction);
+
+                    $bonusRow->update([
+                        'bonus_used' => $bonusRow->bonus_used + $useAmount
+                    ]);
+
+                    $remainingDeduction -= $useAmount;
+                }
+
+                // // Log::debug("BatchBalanceSyncJob: Updating bonus used amounts");
+                // $accountPromoBonus->update([
+                //     'bonus_used' => \DB::raw('bonus_amount')
+                // ]);
 
                 $account->bonus_payoff_sync_at = now();
                 $account->save();
