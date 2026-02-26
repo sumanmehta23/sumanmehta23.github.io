@@ -79,6 +79,11 @@ class MT5Accounts extends Controller
 
         $results = Account::where('user_id', auth()->user()->id)
             ->where('demo', true)
+            ->whereHas('accountType', function ($q) {
+                $q->whereNull('competition_start_date')
+                ->whereNull('competition_end_date');
+            })
+            ->with('accountType')
             ->orderBy('id', 'desc')
             ->get();
         return view('demo_accounts', compact('results'));
@@ -311,6 +316,7 @@ class MT5Accounts extends Controller
                 ->where('id', $account->id)
                 ->first();
             $accountSwap = $getUser->accountType ? $getUser->accountType->ac_swap : null;
+            $x9GroupName = $this->x9Service->getClientGroupName($account->accountType->x9_group_id ?? 1);
         } catch (\Exception $e) {
             Log::error('X9 Account Details Exception: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             session()->flash('error', 'Unable to fetch account details from X9: ' . $e->getMessage());
@@ -332,7 +338,6 @@ class MT5Accounts extends Controller
             // Get X9 group name for display
             $x9GroupName = $this->x9Service->getClientGroupName($account->accountType->x9_group_id ?? 1);
         }
-
         return view('view-account-details', compact('results', 'code', 'type', 'settings', 'account', 'getUser', 'equity', 'balance', 'margin', 'marginlevel', 'accountSwap', 'freemargin', 'profit', 'x9GroupName'));
     }
 

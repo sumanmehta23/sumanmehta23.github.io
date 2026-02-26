@@ -25,12 +25,12 @@
                                 <h5 class="mb-0">My Competition Accounts</h5>
                                 <div class="dropdown">
                                     <a class="avtar avtar-s btn-link-secondary dropdown-toggle arrow-none"
-                                        href="/liveAccounts#" data-bs-toggle="dropdown" aria-haspopup="true"
+                                        href="#" data-bs-toggle="dropdown" aria-haspopup="true"
                                         aria-expanded="false">
                                         <i class="ti ti-dots-vertical f-18"></i>
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-end">
-                                        <a class="dropdown-item" href="/liveAccounts#">Open New Account</a>
+                                        <a class="dropdown-item" href="{{ route('showCompetitionForm') }}">Join Competition</a>
                                     </div>
                                 </div>
                             </div>
