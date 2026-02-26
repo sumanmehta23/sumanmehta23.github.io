@@ -204,7 +204,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">
-                                                            @if ($type != 'demo' && !$account->isZapierAccount() && ($account->competition_month == NULL))
+                                                            @if ($account->demo == 0 && !$account->isZapierAccount() && ($account->competition_month == NULL))
                                                                 <a href="/trade-deposit"
                                                                     class="btn btn-outline-light btn-print-invoice"
                                                                     onmouseover="this.style.color='white';"onmouseout="this.style.color='inherit';">Quick Deposit</a>
@@ -412,23 +412,25 @@
                                     <div class="col-sm-6">
                                         <div class="mt-3 row">
                                             @if(!$account->isZapierAccount())
-                                            <div class="col-sm-6">
-                                                <a href="{{ url('/trade-deposit') }}"
-                                                    class="card bg-primary available-balance-card">
-                                                    <div class="p-3 card-body">
-                                                        <div class="d-flex align-items-center justify-content-between">
-                                                            <div>
-                                                                <h4 class="mb-0 text-white">Deposit</h4>
-                                                                <p class="mb-0 text-white text-opacity-75">Fund your account
-                                                                </p>
+                                                @if ($account->demo == 0)
+                                                    <div class="col-sm-6">
+                                                        <a href="{{ url('/trade-deposit') }}"
+                                                            class="card bg-primary available-balance-card">
+                                                            <div class="p-3 card-body">
+                                                                <div class="d-flex align-items-center justify-content-between">
+                                                                    <div>
+                                                                        <h4 class="mb-0 text-white">Deposit</h4>
+                                                                        <p class="mb-0 text-white text-opacity-75">Fund your account
+                                                                        </p>
+                                                                    </div>
+                                                                    <div class="avtar">
+                                                                        <i class="ph-duotone ph-credit-card f-24"></i>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div class="avtar">
-                                                                <i class="ph-duotone ph-credit-card f-24"></i>
-                                                            </div>
-                                                        </div>
+                                                        </a>
                                                     </div>
-                                                </a>
-                                            </div>
+                                                @endif
                                             @endif
                                             @if(!$account->demo)
                                             <div class="col-sm-6">
