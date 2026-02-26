@@ -12,7 +12,6 @@
     </header>
     <div name="content ">
         <h6 class="mt-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-            {{-- {{ dd($enabled) }} --}}
             @if ($enabled)
                 @if ($showingConfirmation)
                     {{ __('Finish enabling two factor authentication.') }}
@@ -29,6 +28,12 @@
                 {{ __('When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone\'s Google Authenticator application.') }}
             </p>
         </div>
+
+        <!-- Loading State -->
+        <div x-show="isLoading" class="mt-4">
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ __('Loading...') }}</p>
+        </div>
+
         @if ($enabled)
             @if ($showingQrCode)
                 <div class="max-w-xl mt-4 text-sm text-gray-600 dark:text-gray-400">
@@ -55,12 +60,13 @@
                     <div class="mt-4">
                         <label for="code">Code</label>
 
-                        <input id="code" type="text" name="code"class="form-control block w-25 mt-1"
+                        <input id="code" type="text" name="code" class="block mt-1 form-control w-25"
                             inputmode="numeric" autofocus autocomplete="one-time-code" x-model="code"
-                            x-on:keydown.enter="confirmTwoFactorAuthentication" />
+                            x-on:keydown.enter="confirmTwoFactorAuthentication()" />
 
-                        {{-- <x-input-error for="code" class="mt-2"
-                            messages="The provided two factor authentication code was invalid." x-show="invalidCode" /> --}}
+                        <p x-show="invalidCode" class="mt-2 text-sm text-red-600 dark:text-red-400" style="display: none;">
+                            {{ __('The provided two factor authentication code was invalid.') }}
+                        </p>
                     </div>
                 @endif
             @endif
@@ -72,7 +78,7 @@
                     </p>
                 </div>
 
-                <div class="flex max-w-xl gap-1 px-4 py-4 mt-4 font-mono text-sm bg-gray-100 rounded-lg dark:bg-gray-900 dark:text-gray-100">
+                <div class="flex flex-wrap max-w-xl gap-2 px-4 py-4 mt-4 font-mono text-sm bg-gray-100 rounded-lg dark:bg-gray-900 dark:text-gray-100">
                     @foreach (json_decode(decrypt(auth()->user()->two_factor_recovery_codes), true) as $code)
                         <div>{{ $code }}</div>
                     @endforeach
@@ -80,20 +86,22 @@
             @endif
         @endif
 
-        <div class="mt-5 mb-5 d-flex justify-content-between align-items-center gap-3">
+        <div class="gap-3 mt-5 mb-5 d-flex justify-content-between align-items-center">
             @if (!$enabled)
-                <Button type="submit" class="btn btn-primary me-3" wire:loading.attr="disabled"
-                    @click="enableTwoFactorAuthentication()" x-show="enableButtonVisible" x-cloak>
+                <Button type="button" class="btn btn-primary me-3"
+                    @click="enableTwoFactorAuthentication()"
+                    x-show="!showPasswordConfirmation && !isLoading"
+                    x-cloak>
                     {{ __('Enable') }}
                 </Button>
             @else
                 @if ($showingRecoveryCodes)
-                    <Button type="button" class="btn btn-primary me-3" wire:loading.attr="disabled"
+                    <Button type="button" class="btn btn-primary me-3"
                         @click="regenerateRecoveryCodes()">
                         {{ __('Regenerate Recovery Codes') }}
                     </Button>
                 @elseif ($showingConfirmation)
-                    <Button type="button" class="btn btn-primary me-3" wire:loading.attr="disabled"
+                    <Button type="button" class="btn btn-primary me-3"
                         @click="confirmTwoFactorAuthentication()">
                         {{ __('Confirm') }}
                     </Button>
@@ -104,150 +112,300 @@
                 @endif
 
                 @if ($showingConfirmation)
-                    <Button wire:loading.attr="disabled" class="btn btn-primary me-3" @click="disableTwoFactorAuthentication()">
+                    <Button class="btn btn-primary me-3" @click="cancelEnable()">
                         {{ __('Cancel') }}
                     </Button>
                 @else
-                    <Button class="btn btn-primary" wire:loading.attr="disabled" @click="disableTwoFactorAuthentication()">
+                    <Button class="btn btn-primary" @click="disableTwoFactorAuthentication()">
                         {{ __('Disable') }}
                     </Button>
                 @endif
 
             @endif
         </div>
-        <div id='password_confirmation' x-show="showPasswordConfirmation">
-            <form id="password-confirm-form" method="POST">
-                @csrf
-                <div>
-                    <label for="password">Password</label>
-                    <input id="password" class="form-control block w-80 mt-1" type="password" name="password" required autocomplete="current-password">
+
+        <!-- Password Confirmation Modal -->
+        <div id='password_confirmation' x-show="showPasswordConfirmation" x-cloak style="display: none;">
+            <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                    <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                        <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4 dark:bg-gray-800">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mt-3 text-center sm:mt-0 sm:text-left">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100" id="modal-title">
+                                        {{ __('Confirm Password') }}
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ __('Please confirm your password before continuing.') }}
+                                        </p>
+                                        <div class="mt-4">
+                                            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Password') }}</label>
+                                            <input id="password" class="block mt-1 form-control w-100" type="password" name="password" required autocomplete="current-password" x-model="password">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse dark:bg-gray-700">
+                            <Button type="button" class="btn btn-primary me-3" @click="confirmPassword()" :disabled="isLoading">
+                                <span x-show="!isLoading">{{ __('Confirm') }}</span>
+                                <span x-show="isLoading">{{ __('Processing...') }}</span>
+                            </Button>
+                            <Button type="button" class="btn btn-secondary" @click="showPasswordConfirmation = false" :disabled="isLoading">
+                                {{ __('Cancel') }}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-end mt-4">
-                    <Button class="btn btn-primary me-3" type="button" @click="confirmPassword()">
-                        {{ __('Confirm') }}
-                    </Button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </section>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+
 <script>
     let twoFA = () => {
         return {
             invalidCode: false,
             showPasswordConfirmation: false,
             code: '',
+            password: '',
             enableButtonVisible: true,
-            confirmPassword() {
-                const password = document.getElementById("password").value;
-                const formData = new FormData();
-                formData.append("password", password);
+            isLoading: false,
+            errorMessage: '',
 
-                axios.post("{{ route('admin.password.confirm') }}", formData)
-                    .then(response => {
-                        console.log("Password confirmed:", response.data);
-                        this.showPasswordConfirmation = false;
-                        this.enableButtonVisible = true;
-                        axios.post("{{ route('admin.two-factor.enable') }}");
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error("Error:", error);
-                        let errorMessage = 'Something went wrong. Please try again.';
-                        if (error.response && error.response.data) {
-                            if (error.response.data.error) {
-                                errorMessage = error.response.data.error;
-                            } else if (error.response.data.message) {
-                                errorMessage = error.response.data.message;
-                            }
+            async confirmPassword() {
+                if (this.isLoading) return;
+                this.isLoading = true;
+                this.errorMessage = '';
+
+                try {
+                    const formData = new FormData();
+                    formData.append("password", this.password);
+
+                    const response = await axios.post("{{ route('admin.password.confirm') }}", formData);
+                    console.log("Password confirmed:", response.data);
+
+                    this.showPasswordConfirmation = false;
+                    this.password = '';
+
+                    // Now enable 2FA after password confirmation
+                    await this.enableTwoFactorAuthentication();
+                } catch (error) {
+                    console.error("Password confirmation error:", error);
+                    let errorMessage = 'Something went wrong. Please try again.';
+                    if (error.response && error.response.data) {
+                        if (error.response.data.message) {
+                            errorMessage = error.response.data.message;
+                        } else if (error.response.data.error) {
+                            errorMessage = error.response.data.error;
                         }
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Authentication Failed',
-                            text: errorMessage,
-                        });
-                    });
-            },
-            confirmTwoFactorAuthentication() {
-                console.log('confirmTwoFactorAuthentication');
-                axios.post('{{ route('admin.two-factor.confirm') }}', {
-                    code: this.code
-                }).then(response => {
-                    if (response.data.errors == undefined) {
-                        location.reload();
-                    } else {
-                        this.invalidCode = true;
                     }
-                }).catch(error => {
-                    console.log(error.response.data);
 
-                    if(error.response.data.message == "Password confirmation required."){
-                        window.location.href = "{{ route('admin.password.confirm') }}";
-                    }else{
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Authentication Failed',
+                        text: errorMessage,
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            async enableTwoFactorAuthentication() {
+                console.log('enableTwoFactorAuthentication');
+                this.isLoading = true;
+                this.errorMessage = '';
+
+                try {
+                    const response = await axios.post("{{ route('admin.two-factor.enable') }}");
+                    console.log("2FA enabled:", response.data);
+
+                    if (response.data.success) {
+                        // Reload to show QR code and confirmation
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error("Enable 2FA error:", error);
+
+                    if (error.response && error.response.status === 403) {
+                        // Password confirmation required
+                        this.showPasswordConfirmation = true;
+                        this.enableButtonVisible = false;
+                    } else if (error.response && error.response.data && error.response.data.message) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: error.response.data.message || 'Something went wrong. Please try again.',
-                        });
-                    }
-                });
-            },
-            enableTwoFactorAuthentication() {
-                console.log('enableTwoFactorAuthentication');
-                axios.post('{{ route('two-factor.enable') }}').then(response => {
-                    location.reload();
-                    window.location.href = '{{ route('user-profile') }}';
-                }).catch(error => {
-                    console.log(error.response.data.message);
-                    if (error.response.data.message === "Unauthenticated.") {
-                        this.showPasswordConfirmation = true;
-                        this.$nextTick(() => {
-                            this.enableButtonVisible = false; // Move it inside nextTick
+                            text: error.response.data.message,
                         });
                     } else {
-                        window.location.href = '{{ route('admin.ui-settings.view') }}';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to enable two factor authentication. Please try again.',
+                        });
                     }
-                });
+                } finally {
+                    this.isLoading = false;
+                }
             },
-            regenerateRecoveryCodes() {
+
+            async confirmTwoFactorAuthentication() {
+                console.log('confirmTwoFactorAuthentication');
+                this.isLoading = true;
+                this.invalidCode = false;
+                this.errorMessage = '';
+
+                try {
+                    const response = await axios.post("{{ route('admin.two-factor.confirm') }}", {
+                        code: this.code
+                    });
+
+                    console.log("2FA confirmed:", response.data);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Two factor authentication has been confirmed successfully!',
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } catch (error) {
+                    console.error("Confirm 2FA error:", error);
+
+                    if (error.response && error.response.status === 403) {
+                        // Password confirmation required
+                        this.showPasswordConfirmation = true;
+                    } else if (error.response && error.response.data && error.response.data.message) {
+                        this.invalidCode = true;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.response.data.message,
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to confirm two factor authentication. Please try again.',
+                        });
+                    }
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            async regenerateRecoveryCodes() {
                 console.log('regenerateRecoveryCodes');
-                axios.post('{{ route('admin.two-factor.recovery-codes') }}').then(response => {
-                    location.reload();
-                }).catch(error => {
-                    console.log(error.response.data);
-                    location.reload();
-                });
+                this.isLoading = true;
+
+                try {
+                    const response = await axios.post("{{ route('admin.two-factor.recovery-codes') }}");
+                    console.log("Recovery codes regenerated:", response.data);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Recovery codes have been regenerated!',
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } catch (error) {
+                    console.error("Regenerate recovery codes error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to regenerate recovery codes. Please try again.',
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
             },
-            showRecoveryCodes() {
+
+            async showRecoveryCodes() {
                 console.log('showRecoveryCodes');
-                axios.get('{{ route('two-factor.recovery-codes') }}').then(response => {
-                    location.reload();
-                }).catch(error => {
-                    console.log(error.response.data);
-                });
+                this.isLoading = true;
+
+                try {
+                    const response = await axios.get("{{ route('admin.two-factor.recovery-codes.show') }}");
+                    console.log("Recovery codes:", response.data);
+
+                    window.location.reload();
+                } catch (error) {
+                    console.error("Show recovery codes error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to retrieve recovery codes. Please try again.',
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
             },
-            disableTwoFactorAuthentication() {
+
+            async disableTwoFactorAuthentication() {
                 console.log('disableTwoFactorAuthentication');
-                axios.delete('{{ route('admin.two-factor.disable') }}', {
-                    action: 'cancel'
-                }).then(response => {
-                    location.reload();
-                }).catch(error => {
-                    console.log(error.response.data);
-                    this.showPasswordConfirmation = true;
+
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Are you sure you want to disable two factor authentication?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, disable it!',
+                    cancelButtonText: 'Cancel'
                 });
+
+                if (!result.isConfirmed) return;
+
+                this.isLoading = true;
+
+                try {
+                    const response = await axios.delete("{{ route('admin.two-factor.disable') }}");
+                    console.log("2FA disabled:", response.data);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Two factor authentication has been disabled!',
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } catch (error) {
+                    console.error("Disable 2FA error:", error);
+
+                    if (error.response && error.response.status === 403) {
+                        // Password confirmation required
+                        this.showPasswordConfirmation = true;
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to disable two factor authentication. Please try again.',
+                        });
+                    }
+                } finally {
+                    this.isLoading = false;
+                }
             },
+
+            async cancelEnable() {
+                // Cancel the 2FA setup by disabling it
+                try {
+                    await axios.delete("{{ route('admin.two-factor.disable') }}");
+                    window.location.reload();
+                } catch (error) {
+                    console.error("Cancel enable error:", error);
+                    window.location.reload();
+                }
+            }
         }
     }
-    document.addEventListener("DOMContentLoaded", function () {
-        let form = document.getElementById("password-confirm-form");
-
-        form.addEventListener("submit", function (event) {
-            // console.log('abhay');
-            event.preventDefault();
-            twoFA().confirmPassword();
-        });
-    });
-
 </script>
