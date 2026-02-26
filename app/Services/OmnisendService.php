@@ -138,7 +138,7 @@ class OmnisendService
         $payload = [
             'email' => $email,
             'eventName' => $eventName,
-            'fields' => $eventData,
+           'fields' => array_merge(['Origin' => 'api'], $eventData),
             'createdAt' => now()->toIso8601String()
         ];
 
