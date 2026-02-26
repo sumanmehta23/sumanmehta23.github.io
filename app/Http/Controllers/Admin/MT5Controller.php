@@ -592,8 +592,7 @@ class MT5Controller extends Controller
 
             $settings = settings();
             $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
-            $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
-      <div><b>Transaction Details</b></div>';
+            $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>';
             $templateVars = [
                 'name' => $user->fullname,
                 'site_link' => settings()['copyright_site_name_text'],
@@ -894,19 +893,17 @@ class MT5Controller extends Controller
 
             $settings = settings();
             $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
-            $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>
-      <div><b>Transaction Details</b></div>
-      <div><b>Amount: </b>$' . $amount . '</div>
-      <div><b>Account ID: </b>' . $code . '</div>
-      <div><b>Transaction ID: </b>' . $transid . '</div>
-      <div><b>Deposited Date: </b>' . date("Y-m-d H:i:s") . '</div>
-      <div><b>Deposit Type </b>' . $deposit_type . '</div>';
+            $content = '<div>We are pleased to inform you that funds have been successfully deposited into your account.</div>';
             $templateVars = [
                 'name' => $user->fullname,
                 'site_link' => settings()['copyright_site_name_text'],
                 "btn_text" => "Go To Dashboard",
                 'email' => settings()['email_from_address'],
                 "content" => $content,
+                'amount' => $amount,
+                'code' => $code,
+                'date' => now()->format('Y-m-d H:i:s'),
+                'type' => $deposit_type,
                 "title_right" => "Fund",
                 "subtitle_right" => "Deposit"
             ];

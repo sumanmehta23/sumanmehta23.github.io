@@ -93,7 +93,7 @@ class Payment extends Controller
             }
 
             // Get payment log
-            $paymentLog = PaymentLog::where('id', $payment_id)->with('user')->first();
+            $paymentLog = PaymentLog::where('id', $payment_id)->with('user', 'account')->first();
             if (!$paymentLog) {
                 Log::error('Invalid Payment ID: ' . $payment_id, ['responsedata' => $responsedata]);
                 return redirect('/trade-deposit')->with('error', 'Invalid Payment ID. Please contact support with reference: ' . $payment_id);
@@ -1071,35 +1071,23 @@ class Payment extends Controller
         $settings = settings();
         $from = $settings['email_from_address'];
         $transid = $tradedeposit->id;
-        $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
+        $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '
-                        <p style="font-size: 16px; color: #000000;">
-                            We are pleased to inform you that your transaction has been <b>successful</b>.
-                        </p>
-                        <p style="font-size: 16px; color: #000000;">
-                            The approved amount has been deposited into your account <b>' . $tradedeposit->code . '</b>.
-                        </p>
-
-                        <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
-                        <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
-                            <li><b>Approved Amount:</b> $' . $tradedeposit->deposit_amount . '</li>
-                            <li><b>Reference ID:</b> ' . $tradedeposit->id . '</li>
-                            <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $transid . '</span></li>
-                            <li><b>Deposited Date:</b> ' . $tradedeposit->deposted_date . '</li>
-                            <li><b>Payment Type:</b> ' . $tradedeposit->deposit_type . '</li>
-                        </ol>
-                    ';
-
-
+        $content = '<p style="font-size: 16px; color: #000000;">
+                        We are pleased to inform you that funds have been successfully deposited into your account..
+                    </p>';
 
         $templateVars = [
             'name' => $user->fullname,
             'site_link' => $settings['copyright_site_name_text'],
             'email' => $settings['email_from_address'],
             "content" => $content,
+            'amount' => $amount,
+            'code' => $tradedeposit->code,
+            'date' => now()->format('Y-m-d H:i:s'),
+            'type' => $tradedeposit->deposit_type,
             "title_right" => "Transaction",
             "subtitle_right" => "Successful",
             "btn_text" => "Go To Dashboard",
@@ -1113,23 +1101,23 @@ class Payment extends Controller
         $settings = settings();
         $from = $settings['email_from_address'];
         $transid = "WDID" . $lastInsertId;
-        $emailSubject = $settings['admin_title'] . ' - Transaction Successful';
+        $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
-        $content = '<div>We are pleased to inform you that your transaction has been successful.</div>
-          <div>The approved amount has been deposited into your wallet.</div>
-          <div><b>Transaction Details</b></div>
-          <div><b>Approved Amount: </b>$' . $paymentLog->payment_amount . '</div>
-          <div><b>Reference ID: </b>' . $paymentLog->payment_reference_id . '</div>
-          <div><b>Transaction ID: </b>' . $transid . '</div>
-          <div><b>Deposited Date: </b>' . $paymentLog->created_at . '</div>
-          <div><b>Payment Type: </b>' . $paymentLog->payment_type . '</div>';
+        $content = '<p style="font-size: 16px; color: #000000;">
+                        We are pleased to inform you that funds have been successfully deposited into your account..
+                    </p>';
+
         $templateVars = [
             'name' => $paymentLog->fullname,
             'site_link' => $settings['copyright_site_name_text'],
             'email' => $settings['email_from_address'],
             "content" => $content,
+            'amount' => $paymentLog->payment_amount,
+            'code' => $paymentLog->account ? $paymentLog->account->code : 'N/A',
+            'date' => $paymentLog->created_at,
+            'type' => $paymentLog->payment_type,
             "title_right" => "Transaction",
             "subtitle_right" => "Successful",
             "btn_text" => "Go To Dashboard",
