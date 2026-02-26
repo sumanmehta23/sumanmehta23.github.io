@@ -1399,36 +1399,26 @@ class Wallet extends Controller
                                 $settings = settings();
 
                                 $toEmail = $user->email;
-                                $type = 'Transaction Successful';
+                                $type = 'Fund Deposit';
                                 $from = $settings['email_from_address'];
                                 $emailSubject = $settings['admin_title'] . ' - ' . $type;
                                 $headers = "MIME-Version: 1.0" . "\r\n";
                                 $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
                                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
 
-                                $content = '
-                                                <p style="font-size: 16px; color: #000000;">
-                                                    We are pleased to inform you that your transaction has been <b>successful</b>.
-                                                </p>
-                                                <p style="font-size: 16px; color: #000000;">
-                                                    The approved amount has been deposited into your account <b>' . $tradeDeposit->code . '</b>.
-                                                </p>
-
-                                                <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
-                                                <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
-                                                    <li><b>Approved Amount:</b> $' . $amount . '</li>
-                                                    <li><b>Reference ID:</b> ' . $tradeDeposit->id . '</li>
-                                                    <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $tradeDeposit->transaction_id . '</span></li>
-                                                    <li><b>Deposited Date:</b> ' . $tradeDeposit->deposted_date . '</li>
-                                                    <li><b>Payment Type:</b> ' . $tradeDeposit->deposit_type . '</li>
-                                                </ol>
-                                            ';
+                                $content = '<p style="font-size: 16px; color: #000000;">
+                                                We are pleased to inform you that funds have been successfully deposited into your account..
+                                            </p>';
 
                                 $templateVars = [
                                     'name' => $user->fullname,
                                     'site_link' => $settings['copyright_site_name_text'],
                                     'email' => $settings['email_from_address'],
                                     "content" => $content,
+                                    'amount' => $amount,
+                                    'code' => $tradeDeposit->code,
+                                    'date' => $tradeDeposit->deposted_date,
+                                    'type' => $tradeDeposit->deposit_type,
                                     "title_right" => "Transaction",
                                     "subtitle_right" => "Successful",
                                     "btn_text" => "Go To Dashboard",
