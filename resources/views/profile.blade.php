@@ -401,7 +401,7 @@
                                                                         <th>Wallet Name</th>
                                                                         <th>Currency</th>
                                                                         <th>Network</th>
-                                                                        <th>Address</th>
+                                                                        <th>Crypto Address</th>
                                                                         <th class="text-center">Wallet Details</th>
                                                                         <th class="text-center">Status / Action</th>
                                                                     </tr>
