@@ -353,6 +353,11 @@
         address = address.trim();
         var length = address.length;
 
+        // Check for spaces in the address
+        if (address.includes(' ')) {
+            return 'Wallet address cannot contain spaces. Please remove any spaces from the address.';
+        }
+
         switch (network) {
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
