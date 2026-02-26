@@ -19,9 +19,9 @@ class SendOmnisendTradesBatchJob implements ShouldQueue
     public $timeout = 30;
     public $tries = 2;
 
-    protected int $userId;
+    protected string $userId;
 
-    public function __construct(int $userId)
+    public function __construct(string $userId)
     {
         $this->userId = $userId;
     }
