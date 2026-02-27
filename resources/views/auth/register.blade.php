@@ -287,7 +287,7 @@
                                         </div>
                                         @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
                                         <div data-v-97e32e5a="" class="row g-3 mb-3">
-                                            <div data-v-97e32e5a="" class="col-sm-12">
+                                            <div data-v-97e32e5a="" class="col-sm-12 d-flex justify-content-center">
                                                 <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
                                             </div>
                                         </div>
