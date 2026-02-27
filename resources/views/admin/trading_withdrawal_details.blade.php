@@ -282,6 +282,8 @@
                                                             <span class="badge bg-success">{{ ($details->admin_remark=='draft' || $details->admin_remark=='new') ? 'Processing (Cryptochill Draft)' : $details->admin_remark }}</span>
                                                             <?php } elseif ($details->status == 2) { ?>
                                                             <span class="badge bg-danger">CANCELLED BY ADMIN</span>
+                                                            <?php } elseif ($details->status == 3) { ?>
+                                                            <span class="badge bg-danger">CANCELLED</span>
                                                             <?php } elseif ($details->status == 0) { ?>
                                                             <span class="badge bg-primary">WAITING FOR APPROVAL</span>
                                                             <?php } ?>
