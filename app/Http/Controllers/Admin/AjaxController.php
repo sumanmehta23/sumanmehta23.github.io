@@ -792,39 +792,8 @@ class AjaxController extends Controller
 
     public function getLiveAccountsList(Request $request)
     {
-        // dump( session('userData'));
-        $role = session('userData')['userRole'];
-        $alogin = session('userData')['id'];
-        $userGroups = explode(',', session('user_groups'));
-        // dd($alogin);
-        // Base query
-        $rmCondition = Account::where('demo', false)
-            ->select('accounts.*')
-            ->withTrashed()
-            ->where('account_request_status', 1)
-            ->with(['user', 'accountType'])
-            ->withCount([
-                'tradeDeposits as successful_trade_deposits_count' => function ($query) {
-                    $query->where('status', 1);
-                },
-                'trades as trades_count',
-            ]);
-
-        if ($role !== "Super Admin") {
-            $rmCondition->whereHas('user');
-        }
-
-        // if ($role === "Relationship Manager") {
-        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-        //         $query->where('rm_id', $alogin);
-        //     });
-        // }
-
-        if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
-                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
-            });
-        }
+        $rmCondition = $this->buildLiveAccountsBaseQuery();
+        $this->applyLiveAccountsFilters($rmCondition, $request);
 
         $rmCondition->orderBy('id', 'desc');
 
@@ -835,11 +804,11 @@ class AjaxController extends Controller
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('code', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            $q->where('accounts.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.email', 'LIKE', "%{$searchValue}%")
                                 // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhereRaw("DATE_FORMAT(accounts.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1044,6 +1013,131 @@ class AjaxController extends Controller
 
         return response()->json(['message' => 'Invalid request'], 400);
     }
+
+    private function buildLiveAccountsBaseQuery()
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
+
+        $query = Account::query()
+            ->where('demo', false)
+            ->select('accounts.*')
+            ->withTrashed()
+            ->where('account_request_status', 1)
+            ->with(['user', 'accountType'])
+            ->withCount([
+                'tradeDeposits as successful_trade_deposits_count' => function ($q) {
+                    $q->where('status', 1);
+                },
+                'trades as trades_count',
+            ]);
+
+        if ($role !== "Super Admin") {
+            $query->whereHas('user');
+        }
+
+        if ($role === "Relationship Manager") {
+            $query->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin);
+            });
+        }
+
+        return $query;
+    }
+
+    private function applyLiveAccountsFilters($query, Request $request): void
+    {
+        $status = $request->get('filter_status');
+        if ($status === 'active') {
+            $query->whereNull('accounts.deleted_at');
+        } elseif ($status === 'deleted') {
+            $query->whereNotNull('accounts.deleted_at');
+        }
+
+        $leverage = $request->get('filter_leverage');
+        if ($leverage !== null && $leverage !== '') {
+            $query->where('accounts.leverage', $leverage);
+        }
+
+        $balanceMin = $request->get('balance_min');
+        if ($balanceMin !== null && $balanceMin !== '' && is_numeric($balanceMin)) {
+            $query->where('accounts.balance', '>=', (float) $balanceMin);
+        }
+
+        $balanceMax = $request->get('balance_max');
+        if ($balanceMax !== null && $balanceMax !== '' && is_numeric($balanceMax)) {
+            $query->where('accounts.balance', '<=', (float) $balanceMax);
+        }
+
+        $hasBalance = $request->get('has_balance');
+        if ($hasBalance === 'yes') {
+            $query->where('accounts.balance', '>', 0);
+        } elseif ($hasBalance === 'no') {
+            $query->where('accounts.balance', '<=', 0);
+        }
+
+        $registeredFrom = $request->get('registered_from');
+        if (!empty($registeredFrom)) {
+            $query->whereDate('accounts.created_at', '>=', $registeredFrom);
+        }
+
+        $registeredTo = $request->get('registered_to');
+        if (!empty($registeredTo)) {
+            $query->whereDate('accounts.created_at', '<=', $registeredTo);
+        }
+
+        $daysMin = $request->get('days_since_last_trade_min');
+        if ($daysMin !== null && $daysMin !== '' && is_numeric($daysMin)) {
+            $query->whereNotNull('accounts.last_trade_at')
+                ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) >= ?', [(int) $daysMin]);
+        }
+
+        $daysMax = $request->get('days_since_last_trade_max');
+        if ($daysMax !== null && $daysMax !== '' && is_numeric($daysMax)) {
+            $query->whereNotNull('accounts.last_trade_at')
+                ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) <= ?', [(int) $daysMax]);
+        }
+
+        $activityStatus = $request->get('activity_status');
+        if (!empty($activityStatus)) {
+            if ($activityStatus === 'no_trades') {
+                $query->whereNull('accounts.last_trade_at');
+            } elseif ($activityStatus === 'lt_20') {
+                $query->whereNotNull('accounts.last_trade_at')
+                    ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) < 20');
+            } elseif ($activityStatus === 'between_20_40') {
+                $query->whereNotNull('accounts.last_trade_at')
+                    ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) BETWEEN 20 AND 40');
+            } elseif ($activityStatus === 'gt_40') {
+                $query->whereNotNull('accounts.last_trade_at')
+                    ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) > 40');
+            }
+        }
+
+        $hasSuccessfulDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deleted_at IS NULL
+        )";
+
+        $hasTradesSql = "(accounts.last_trade_at IS NOT NULL OR EXISTS (
+            SELECT 1
+            FROM trades tr
+            WHERE tr.account_id = accounts.id
+              AND tr.deleted_at IS NULL
+        ))";
+
+        $depositedNotTraded = $request->get('deposited_not_traded');
+        if ($depositedNotTraded === 'yes') {
+            $query->whereRaw($hasSuccessfulDepositSql)
+                ->whereRaw("NOT {$hasTradesSql}");
+        } elseif ($depositedNotTraded === 'no') {
+            $query->whereRaw("NOT ({$hasSuccessfulDepositSql} AND NOT {$hasTradesSql})");
+        }
+    }
+
     public function getDemoAccountsList(Request $request)
     {
         $role = session('userData')['userRole'];
@@ -4550,7 +4644,7 @@ class AjaxController extends Controller
     {
         $fileName = 'Live_Accounts_' . date('Y-m-d') . '.csv';
 
-        return Response::streamDownload(function () {
+        return Response::streamDownload(function () use ($request) {
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
@@ -4573,15 +4667,10 @@ class AjaxController extends Controller
 
             $chunkCount = 0;
 
-            Account::with('user', 'accountType')
-                ->withTrashed()
-                ->where('demo', 0)
-                ->withCount([
-                    'tradeDeposits as successful_trade_deposits_count' => function ($query) {
-                        $query->where('status', 1);
-                    },
-                    'trades as trades_count',
-                ])
+            $query = $this->buildLiveAccountsBaseQuery();
+            $this->applyLiveAccountsFilters($query, $request);
+
+            $query->orderBy('accounts.id', 'desc')
                 ->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
@@ -4591,8 +4680,9 @@ class AjaxController extends Controller
                         $lastTradeAt = $account->last_trade_at;
 
                         if ($lastTradeAt !== null) {
-                            $lastTradeDate = $lastTradeAt->format('Y-m-d H:i:s');
-                            $days = $lastTradeAt->diffInDays(now());
+                            $lastTradeAtCarbon = Carbon::parse($lastTradeAt);
+                            $lastTradeDate = $lastTradeAtCarbon->format('Y-m-d H:i:s');
+                            $days = $lastTradeAtCarbon->diffInDays(now());
                             $daysSinceLastTrade = max(0, (int) $days);
                         } else {
                             $lastTradeDate = '—';
