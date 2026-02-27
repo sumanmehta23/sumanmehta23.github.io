@@ -206,6 +206,7 @@
     @endif
 
     <!-- Add your scripts here -->
+    @stack('scripts')
     @include('components.google-translate')
 </body>
 
