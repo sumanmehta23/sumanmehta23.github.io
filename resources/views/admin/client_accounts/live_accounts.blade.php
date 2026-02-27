@@ -38,13 +38,16 @@
                                             <td>Leverage</td>
                                             <td>Balance</td>
                                             <td>Registered Date</td>
+                                            <td>Last Trade Date</td>
+                                            <td>Days Since Last Trade</td>
+                                            <td>Dep. Not Traded</td>
+                                            <td>Status</td>
                                             <td>Name</td>
                                             <td>Email</td>
                                             <td>Account Code</td>
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
-                                            <td>Status</td>
                                             @can('account:update')
                                                 <td>Actions</td>
                                             @endcan
@@ -217,45 +220,56 @@
                     orderable: false
                 },
                 {
+                    data: 'last_trade_date',
+                    name: 'last_trade_date',
+                },
+                {
+                    data: 'days_since_last_trade',
+                    name: 'days_since_last_trade',
+                },
+                {
+                    data: 'deposited_not_traded',
+                    name: 'deposited_not_traded',
+                },
+                {
+                    data: 'account_status',
+                    name: 'account_status',
+                },
+                {
                     data: 'fullname',
                     name: 'fullname',
                     visible: false,
-
+                    
                 },
                 {
                     data: 'fullemail',
                     name: 'fullemail',
                     visible: false,
-
+                    
                 },
                 {
                     data: 'account_code',
                     name: 'account_code',
                     visible: false,
-
+                    
                 },
                 {
                     data: 'account_group',
                     name: 'account_group',
                     visible: false,
-
+                    
                 },
                 {
                     data: 'created_date',
                     name: 'created_date',
                     visible: false,
-
+                    
                 },
                 {
                     data: 'created_time',
                     name: 'created_time',
                     visible: false,
-
-                },
-                {
-                    data: 'account_status',
-                    name: 'account_status',
-
+                    
                 },
                 {
                     data: 'actions',
@@ -283,7 +297,7 @@
                     text: 'Export to Excel',
                     filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
                     exportOptions: {
-                        columns: [5, 6, 7, 8, 2, 3, 9, 10, 11] // Updated column indices to match your use case
+                        columns: [9, 10, 11, 12, 2, 3, 13, 14, 4, 5, 6, 7, 8] // Name, Email, Code, Group, Leverage, Balance, Date, Time, Registered, Last Trade Date, Days, Status, Dep. Not Traded
                     }
                 },
                 {

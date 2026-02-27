@@ -802,7 +802,13 @@ class AjaxController extends Controller
             ->select('accounts.*')
             ->withTrashed()
             ->where('account_request_status', 1)
-            ->with(['user', 'accountType']);
+            ->with(['user', 'accountType'])
+            ->withCount([
+                'tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                    $query->where('status', 1);
+                },
+                'trades as trades_count',
+            ]);
 
         if ($role !== "Super Admin") {
             $rmCondition->whereHas('user');
@@ -890,6 +896,70 @@ class AjaxController extends Controller
                 ->addColumn('balance', function ($row) {
                     return $row->balance;
                 })
+                ->addColumn('last_trade_date', function ($row) {
+                    $lastTradeAt = $row->last_trade_at;
+                    if (!$lastTradeAt) {
+                        return '—';
+                    }
+
+                    return Carbon::parse($lastTradeAt)->addHours(3)->format('Y-m-d');
+                })
+                ->addColumn('days_since_last_trade', function ($row) {
+                    $lastTradeAt = $row->last_trade_at;
+
+                    // Use same source as Last Trade Date: only show days when we have a real last trade timestamp
+                    if ($lastTradeAt === null) {
+                        return "<span class='text-muted'>No trades</span>";
+                    }
+
+                    $days = Carbon::parse($lastTradeAt)->diffInDays(now());
+                    $days = max(0, (int) $days);
+
+                    if ($days < 20) {
+                        $class = 'text-success fw-medium';
+                    } elseif ($days <= 40) {
+                        $class = 'text-warning fw-medium';
+                    } else {
+                        $class = 'text-danger fw-medium';
+                    }
+
+                    return "<span class='{$class}'>{$days} days</span>";
+                })
+                ->addColumn('deposited_not_traded', function ($row) {
+                    $hasDeposits = $row->successful_trade_deposits_count > 0;
+                    $hasTrades = $row->last_trade_at !== null || ($row->trades_count ?? 0) > 0;
+
+                    $isDepositedNotTraded = $hasDeposits && !$hasTrades;
+
+                    // Use Yes badge size for both (compact: px-2 py-1)
+                    $badgeStyle = 'padding:0.35rem 0.5rem';
+                    if ($isDepositedNotTraded) {
+                        $orange = 'rgb(247, 86, 49)';
+                        return "
+                            <span class='badge rounded-pill border border-2 d-inline-flex align-items-center justify-content-center gap-1' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='{$orange}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                    <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                    <path d='M12 9v4' />
+                                    <path d='M12 17v.01' />
+                                    <path d='M5 19h14l-7 -13z' />
+                                </svg>
+                                <span class='fw-bold' style='color:{$orange}'>Yes</span>
+                            </span>
+                        ";
+                    }
+
+                    return "
+                        <span class='badge rounded-pill border border-success d-inline-flex align-items-center justify-content-center gap-1'
+                              style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                 fill='none' stroke='#00b894' stroke-width='2.4' stroke-linecap='round'
+                                 stroke-linejoin='round'>
+                                <polyline points='5 12 10 17 19 7' />
+                            </svg>
+                            <span class='fw-bold' style='color:#00b894'>No</span>
+                        </span>
+                    ";
+                })
                 ->addColumn('created_at', function ($row) {
                     // $date = date('Y-m-d', strtotime($row->created_at));
                     $date = Carbon::parse($row->created_at)->addHours(3)->format('Y-m-d');
@@ -947,7 +1017,28 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
+                ->orderColumn('last_trade_date', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ' . $order)
+                        ->orderBy('accounts.last_trade_at', $order);
+                })
+                ->orderColumn('days_since_last_trade', function ($query, $order) {
+                    if (strtolower($order) === 'asc') {
+                        $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ASC')
+                            ->orderBy('accounts.last_trade_at', 'DESC');
+                    } else {
+                        $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END DESC')
+                            ->orderBy('accounts.last_trade_at', 'ASC');
+                    }
+                })
+                ->orderColumn('deposited_not_traded', function ($query, $order) {
+                    $query->orderByRaw("
+                        CASE
+                            WHEN successful_trade_deposits_count > 0 AND accounts.last_trade_at IS NULL THEN 0
+                            ELSE 1
+                        END {$order}
+                    ");
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
                 ->make(true);
         }
 
@@ -4463,16 +4554,55 @@ class AjaxController extends Controller
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance', 'Equity', 'Status', 'Date', 'Time']);
+            fputcsv($handle, [
+                'ID',
+                'Name',
+                'Email',
+                'Code',
+                'Account Group',
+                'Leverage',
+                'Balance',
+                'Equity',
+                'Last Trade Date',
+                'Days Since Last Trade',
+                'Deposited but Not Traded',
+                'Status',
+                'Date',
+                'Time',
+            ]);
 
             $chunkCount = 0;
 
-            Account::with('user', 'accountType')->withTrashed()->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+            Account::with('user', 'accountType')
+                ->withTrashed()
+                ->where('demo', 0)
+                ->withCount([
+                    'tradeDeposits as successful_trade_deposits_count' => function ($query) {
+                        $query->where('status', 1);
+                    },
+                    'trades as trades_count',
+                ])
+                ->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
 
                 foreach ($accounts as $account) {
                     try {
+                        $lastTradeAt = $account->last_trade_at;
+
+                        if ($lastTradeAt !== null) {
+                            $lastTradeDate = $lastTradeAt->format('Y-m-d H:i:s');
+                            $days = $lastTradeAt->diffInDays(now());
+                            $daysSinceLastTrade = max(0, (int) $days);
+                        } else {
+                            $lastTradeDate = '—';
+                            $daysSinceLastTrade = 'No trades';
+                        }
+
+                        $hasDeposits = $account->successful_trade_deposits_count > 0;
+                        $hasTrades = $lastTradeAt !== null || ($account->trades_count ?? 0) > 0;
+                        $depositedNotTraded = $hasDeposits && !$hasTrades ? 'Yes' : 'No';
+
                         fputcsv($handle, [
                             $account->id,
                             $account->user->fullname ?? '',
@@ -4482,6 +4612,9 @@ class AjaxController extends Controller
                             $account->leverage,
                             $account->balance,
                             $account->equity,
+                            $lastTradeDate,
+                            $daysSinceLastTrade,
+                            $depositedNotTraded,
                             $account->deleted_at ? 'Deleted' : 'Active',
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
