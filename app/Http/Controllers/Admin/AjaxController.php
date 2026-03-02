@@ -792,33 +792,8 @@ class AjaxController extends Controller
 
     public function getLiveAccountsList(Request $request)
     {
-        // dump( session('userData'));
-        $role = session('userData')['userRole'];
-        $alogin = session('userData')['id'];
-        $userGroups = explode(',', session('user_groups'));
-        // dd($alogin);
-        // Base query
-        $rmCondition = Account::where('demo', false)
-            ->select('accounts.*')
-            ->withTrashed()
-            ->where('account_request_status', 1)
-            ->with(['user', 'accountType']);
-
-        if ($role !== "Super Admin") {
-            $rmCondition->whereHas('user');
-        }
-
-        // if ($role === "Relationship Manager") {
-        //     $rmCondition->whereHas('relationshipManager', function ($query) use ($alogin) {
-        //         $query->where('rm_id', $alogin);
-        //     });
-        // }
-
-        if ($role === "Relationship Manager") {
-            $rmCondition->whereHas('user.employee', function ($query) use ($alogin) {
-                $query->where('relationship_manager.rm_id', $alogin); // Filter based on rm_id in pivot
-            });
-        }
+        $rmCondition = $this->buildLiveAccountsBaseQuery();
+        $this->applyLiveAccountsFilters($rmCondition, $request);
 
         $rmCondition->orderBy('id', 'desc');
 
@@ -829,11 +804,11 @@ class AjaxController extends Controller
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('code', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            $q->where('accounts.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.email', 'LIKE', "%{$searchValue}%")
                                 // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhereRaw("DATE_FORMAT(accounts.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -889,6 +864,70 @@ class AjaxController extends Controller
                 // })
                 ->addColumn('balance', function ($row) {
                     return $row->balance;
+                })
+                ->addColumn('last_trade_date', function ($row) {
+                    $lastTradeAt = $row->last_trade_at;
+                    if (!$lastTradeAt) {
+                        return '—';
+                    }
+
+                    return Carbon::parse($lastTradeAt)->addHours(3)->format('Y-m-d');
+                })
+                ->addColumn('days_since_last_trade', function ($row) {
+                    $lastTradeAt = $row->last_trade_at;
+
+                    // Use same source as Last Trade Date: only show days when we have a real last trade timestamp
+                    if ($lastTradeAt === null) {
+                        return "<span class='text-muted'>No trades</span>";
+                    }
+
+                    $days = Carbon::parse($lastTradeAt)->diffInDays(now());
+                    $days = max(0, (int) $days);
+
+                    if ($days < 20) {
+                        $class = 'text-success fw-medium';
+                    } elseif ($days <= 40) {
+                        $class = 'text-warning fw-medium';
+                    } else {
+                        $class = 'text-danger fw-medium';
+                    }
+
+                    return "<span class='{$class}'>{$days} days</span>";
+                })
+                ->addColumn('deposited_not_traded', function ($row) {
+                    $hasDeposits = $row->successful_trade_deposits_count > 0;
+                    $hasTrades = $row->last_trade_at !== null || ($row->trades_count ?? 0) > 0;
+
+                    $isDepositedNotTraded = $hasDeposits && !$hasTrades;
+
+                    // Use Yes badge size for both (compact: px-2 py-1)
+                    $badgeStyle = 'padding:0.35rem 0.5rem';
+                    if ($isDepositedNotTraded) {
+                        $orange = 'rgb(247, 86, 49)';
+                        return "
+                            <span class='badge rounded-pill border border-2 d-inline-flex align-items-center justify-content-center gap-1' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='{$orange}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                    <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+                                    <path d='M12 9v4' />
+                                    <path d='M12 17v.01' />
+                                    <path d='M5 19h14l-7 -13z' />
+                                </svg>
+                                <span class='fw-bold' style='color:{$orange}'>Yes</span>
+                            </span>
+                        ";
+                    }
+
+                    return "
+                        <span class='badge rounded-pill border border-success d-inline-flex align-items-center justify-content-center gap-1'
+                              style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                 fill='none' stroke='#00b894' stroke-width='2.4' stroke-linecap='round'
+                                 stroke-linejoin='round'>
+                                <polyline points='5 12 10 17 19 7' />
+                            </svg>
+                            <span class='fw-bold' style='color:#00b894'>No</span>
+                        </span>
+                    ";
                 })
                 ->addColumn('created_at', function ($row) {
                     // $date = date('Y-m-d', strtotime($row->created_at));
@@ -947,12 +986,158 @@ class AjaxController extends Controller
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
+                ->orderColumn('last_trade_date', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ' . $order)
+                        ->orderBy('accounts.last_trade_at', $order);
+                })
+                ->orderColumn('days_since_last_trade', function ($query, $order) {
+                    if (strtolower($order) === 'asc') {
+                        $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ASC')
+                            ->orderBy('accounts.last_trade_at', 'DESC');
+                    } else {
+                        $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END DESC')
+                            ->orderBy('accounts.last_trade_at', 'ASC');
+                    }
+                })
+                ->orderColumn('deposited_not_traded', function ($query, $order) {
+                    $query->orderByRaw("
+                        CASE
+                            WHEN successful_trade_deposits_count > 0 AND accounts.last_trade_at IS NULL THEN 0
+                            ELSE 1
+                        END {$order}
+                    ");
+                })
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
                 ->make(true);
         }
 
         return response()->json(['message' => 'Invalid request'], 400);
     }
+
+    private function buildLiveAccountsBaseQuery()
+    {
+        $role = session('userData')['userRole'];
+        $alogin = session('userData')['id'];
+
+        $query = Account::query()
+            ->where('demo', false)
+            ->select('accounts.*')
+            ->withTrashed()
+            ->where('account_request_status', 1)
+            ->with(['user', 'accountType'])
+            ->withCount([
+                'tradeDeposits as successful_trade_deposits_count' => function ($q) {
+                    $q->where('status', 1);
+                },
+                'trades as trades_count',
+            ]);
+
+        if ($role !== "Super Admin") {
+            $query->whereHas('user');
+        }
+
+        if ($role === "Relationship Manager") {
+            $query->whereHas('user.employee', function ($q) use ($alogin) {
+                $q->where('relationship_manager.rm_id', $alogin);
+            });
+        }
+
+        return $query;
+    }
+
+    private function applyLiveAccountsFilters($query, Request $request): void
+    {
+        $status = $request->get('filter_status');
+        if ($status === 'active') {
+            $query->whereNull('accounts.deleted_at');
+        } elseif ($status === 'deleted') {
+            $query->whereNotNull('accounts.deleted_at');
+        }
+
+        $leverage = $request->get('filter_leverage');
+        if ($leverage !== null && $leverage !== '') {
+            $query->where('accounts.leverage', $leverage);
+        }
+
+        $balanceMin = $request->get('balance_min');
+        if ($balanceMin !== null && $balanceMin !== '' && is_numeric($balanceMin)) {
+            $query->where('accounts.balance', '>=', (float) $balanceMin);
+        }
+
+        $balanceMax = $request->get('balance_max');
+        if ($balanceMax !== null && $balanceMax !== '' && is_numeric($balanceMax)) {
+            $query->where('accounts.balance', '<=', (float) $balanceMax);
+        }
+
+        $hasBalance = $request->get('has_balance');
+        if ($hasBalance === 'yes') {
+            $query->where('accounts.balance', '>', 0);
+        } elseif ($hasBalance === 'no') {
+            $query->where('accounts.balance', '<=', 0);
+        }
+
+        $registeredFrom = $request->get('registered_from');
+        if (!empty($registeredFrom)) {
+            $query->whereDate('accounts.created_at', '>=', $registeredFrom);
+        }
+
+        $registeredTo = $request->get('registered_to');
+        if (!empty($registeredTo)) {
+            $query->whereDate('accounts.created_at', '<=', $registeredTo);
+        }
+
+        $daysMin = $request->get('days_since_last_trade_min');
+        if ($daysMin !== null && $daysMin !== '' && is_numeric($daysMin)) {
+            $query->whereNotNull('accounts.last_trade_at')
+                ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) >= ?', [(int) $daysMin]);
+        }
+
+        $daysMax = $request->get('days_since_last_trade_max');
+        if ($daysMax !== null && $daysMax !== '' && is_numeric($daysMax)) {
+            $query->whereNotNull('accounts.last_trade_at')
+                ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) <= ?', [(int) $daysMax]);
+        }
+
+        $activityStatus = $request->get('activity_status');
+        if (!empty($activityStatus)) {
+            if ($activityStatus === 'no_trades') {
+                $query->whereNull('accounts.last_trade_at');
+            } elseif ($activityStatus === 'lt_20') {
+                $query->whereNotNull('accounts.last_trade_at')
+                    ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) < 20');
+            } elseif ($activityStatus === 'between_20_40') {
+                $query->whereNotNull('accounts.last_trade_at')
+                    ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) BETWEEN 20 AND 40');
+            } elseif ($activityStatus === 'gt_40') {
+                $query->whereNotNull('accounts.last_trade_at')
+                    ->whereRaw('DATEDIFF(CURDATE(), DATE(accounts.last_trade_at)) > 40');
+            }
+        }
+
+        $hasSuccessfulDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deleted_at IS NULL
+        )";
+
+        $hasTradesSql = "(accounts.last_trade_at IS NOT NULL OR EXISTS (
+            SELECT 1
+            FROM trades tr
+            WHERE tr.account_id = accounts.id
+              AND tr.deleted_at IS NULL
+        ))";
+
+        $depositedNotTraded = $request->get('deposited_not_traded');
+        if ($depositedNotTraded === 'yes') {
+            $query->whereRaw($hasSuccessfulDepositSql)
+                ->whereRaw("NOT {$hasTradesSql}");
+        } elseif ($depositedNotTraded === 'no') {
+            $query->whereRaw("NOT ({$hasSuccessfulDepositSql} AND NOT {$hasTradesSql})");
+        }
+    }
+
     public function getDemoAccountsList(Request $request)
     {
         $role = session('userData')['userRole'];
@@ -4459,20 +4644,55 @@ class AjaxController extends Controller
     {
         $fileName = 'Live_Accounts_' . date('Y-m-d') . '.csv';
 
-        return Response::streamDownload(function () {
+        return Response::streamDownload(function () use ($request) {
             $handle = fopen('php://output', 'w');
 
             // Add CSV headers
-            fputcsv($handle, ['ID', 'Name', 'Email', 'Code', 'Account Group', 'Leverage', 'Balance', 'Equity', 'Status', 'Date', 'Time']);
+            fputcsv($handle, [
+                'ID',
+                'Name',
+                'Email',
+                'Code',
+                'Account Group',
+                'Leverage',
+                'Balance',
+                'Equity',
+                'Last Trade Date',
+                'Days Since Last Trade',
+                'Deposited but Not Traded',
+                'Status',
+                'Date',
+                'Time',
+            ]);
 
             $chunkCount = 0;
 
-            Account::with('user', 'accountType')->withTrashed()->where('demo', 0)->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
+            $query = $this->buildLiveAccountsBaseQuery();
+            $this->applyLiveAccountsFilters($query, $request);
+
+            $query->orderBy('accounts.id', 'desc')
+                ->chunk(500, function ($accounts) use ($handle, &$chunkCount) {
                 $chunkCount++;
                 Log::info("Processing chunk: {$chunkCount}, accounts count: " . $accounts->count());
 
                 foreach ($accounts as $account) {
                     try {
+                        $lastTradeAt = $account->last_trade_at;
+
+                        if ($lastTradeAt !== null) {
+                            $lastTradeAtCarbon = Carbon::parse($lastTradeAt);
+                            $lastTradeDate = $lastTradeAtCarbon->format('Y-m-d H:i:s');
+                            $days = $lastTradeAtCarbon->diffInDays(now());
+                            $daysSinceLastTrade = max(0, (int) $days);
+                        } else {
+                            $lastTradeDate = '—';
+                            $daysSinceLastTrade = 'No trades';
+                        }
+
+                        $hasDeposits = $account->successful_trade_deposits_count > 0;
+                        $hasTrades = $lastTradeAt !== null || ($account->trades_count ?? 0) > 0;
+                        $depositedNotTraded = $hasDeposits && !$hasTrades ? 'Yes' : 'No';
+
                         fputcsv($handle, [
                             $account->id,
                             $account->user->fullname ?? '',
@@ -4482,6 +4702,9 @@ class AjaxController extends Controller
                             $account->leverage,
                             $account->balance,
                             $account->equity,
+                            $lastTradeDate,
+                            $daysSinceLastTrade,
+                            $depositedNotTraded,
                             $account->deleted_at ? 'Deleted' : 'Active',
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
