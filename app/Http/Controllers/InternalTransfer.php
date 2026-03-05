@@ -80,22 +80,16 @@ class InternalTransfer extends Controller
         // Check if the user has exceeded the rate limit
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many requests',
-                'error' => "Please wait {$retryAfter} seconds before trying again.",
-            ], 429); // HTTP 429 Too Many Requests
+
+            redirect()->back()->with('error', "Too many requests.Please wait {$retryAfter} seconds before trying again.");
         }
 
         // Increment the rate limiter
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         if (!$this->ensureMT5Connection()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'MT5 connection failed',
-                'error' => 'Unable to connect to trading server'
-            ], 500);
+
+            redirect()->back()->with('error', "Unable to connect to trading server. Please trying again.");
         }
         $validated = $request->validate([
             'fromAccount' => 'required',
@@ -361,7 +355,6 @@ class InternalTransfer extends Controller
 
             return redirect()->back()->with('error', 'Transfer failed: ' . $th->getMessage());
         }
-        RateLimiter::clear($key);
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');
     }
 }
