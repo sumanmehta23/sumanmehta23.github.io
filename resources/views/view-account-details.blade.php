@@ -151,11 +151,13 @@
                                                             </h2>
                                                             @if($account->demo)
                                                                 <span class="mt-1 text-white badge bg-danger rounded-pill">Demo Account</span>
+                                                            @elseif($account->demo == 0)
+                                                                <span class="mt-1 text-white badge bg-success rounded-pill">Live Account</span>
                                                             @endif
                                                             @if($account->platform === 'x9' && isset($x9GroupName))
-                                                                <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
+                                                                <h6 class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</h6>
                                                             @elseif($getUser && $getUser->accountType)
-                                                                <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
+                                                                <h6 class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</h6>
                                                             @endif
                                                         </div>
                                                         @if ($account->account_nick_name)
