@@ -658,7 +658,7 @@ class Leaderboard extends Controller
                 $content = "
                     <div style='font-family: Montserrat, sans-serif; color: #000000;'>
                         <p style='color: #000000;'>This is a reminder that the {$competitionName} is already underway. Your competition account credentials have been sent to the email address used during registration. Please check your inbox so you can access your account and start trading if you haven't done so yet.</p>
-                        <p style='color: #000000;'>To access the dashboard, log in at <a href='https://my.1xtrade.com'>my.1xtrade.com</a>. You can also view the competition overview page here: <a href='https://my.1xtrade.com/competitions-overview'>my.1xtrade.com/competitions-overview</a></p>
+                        <p style='color: #000000;'>To access the dashboard, log in at <a href='https://my.lqhmarkets.com'>my.lqhmarkets.com</a>. You can also view the competition overview page here: <a href='https://my.lqhmarkets.com/competitions-overview'>my.lqhmarkets.com/competitions-overview</a></p>
                         <p style='color: #000000;'>If you do not see the credentials email, please check your spam or junk folder. If you need any assistance, please contact our support team.</p>
                     </div>
                 ";
