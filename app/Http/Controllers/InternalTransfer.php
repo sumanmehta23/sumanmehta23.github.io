@@ -155,6 +155,8 @@ class InternalTransfer extends Controller
         //       dd($transferable_amount);
         $email = auth()->user()->email;
         $ticket = NULL;
+        $ticket1 = NULL;
+
         activity()->causedBy(auth()->user()->id)
             ->withProperties(
                 [
@@ -168,126 +170,196 @@ class InternalTransfer extends Controller
             )
             ->event('create')
             ->log('Internal Transfer');
-        // Withdraw from the first account
-        $errorCode = $this->api->TradeBalance($fromAccount->code, $type = MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
-        if ($errorCode != MTRetCode::MT_RET_OK) {
-            $error = MTRetCode::GetError($errorCode);
-            return redirect()->back()->with('error', 'Failed to withdraw from the account.');
-        } else {
 
-            try {
-                DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount) {
-                    $customerID = auth()->user()->id;
-                    TradeWithdrawals::create([
-                        'email' => $email,
+        // Track which API operations succeeded for potential rollback
+        $apiOperations = [
+            'source_withdraw' => false,
+            'source_bonus' => false,
+            'dest_bonus' => false,
+            'dest_deposit' => false,
+        ];
+
+        try {
+            // Step 1: Withdraw from source account (BEFORE DB transaction)
+            $errorCode = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                throw new \Exception('Failed to withdraw from the account: ' . MTRetCode::GetError($errorCode));
+            }
+            $apiOperations['source_withdraw'] = true;
+
+            // Step 2: Apply source account bonus deduction if applicable (BEFORE DB transaction)
+            $sourceBonusAmount = 0;
+            if ($fromAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
+                $multiplier = $transferable_amount;
+                if ($multiplier > 250) {
+                    $multiplier = 250;
+                }
+                $sourceBonusAmount = -abs(-9 * $multiplier);
+
+                $bonus_left = BonusTransaction::where('account_id', $fromAccount->id)
+                    ->where(function ($query) {
+                        $query->where('bonus_type', 'Bonus In')
+                            ->orWhere('bonus_type', 'Bonus Out');
+                    })
+                    ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage', 'Bonus Pay Off', 'Promo Bonus', 'Promo Deduction', 'Promo Addition'])
+                    ->sum('bonus_amount');
+
+                if (isset($bonus_left) && $bonus_left > 1) {
+                    $error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $sourceBonusAmount, '10x Trader Leverage', $ticket, true);
+                    if ($error_code !== MTRetCode::MT_RET_OK) {
+                        throw new \Exception('Failed to apply source bonus deduction: ' . MTRetCode::GetError($error_code));
+                    }
+                    $apiOperations['source_bonus'] = true;
+                }
+            }
+
+            // Step 3: Apply destination account bonus credit if applicable (BEFORE DB transaction)
+            $destBonusAmount = 0;
+            if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
+                if ($transferable_amount > 250) {
+                    $destBonusAmount = 9 * 250;
+                } else {
+                    $destBonusAmount = 9 * $transferable_amount;
+                }
+
+                $error_code1 = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, $destBonusAmount, '10x Trader Leverage', $ticket1, true);
+                if ($error_code1 !== MTRetCode::MT_RET_OK) {
+                    throw new \Exception('Failed to apply destination bonus credit: ' . MTRetCode::GetError($error_code1));
+                }
+                $apiOperations['dest_bonus'] = true;
+            }
+
+            // Step 4: Deposit to destination account (BEFORE DB transaction)
+            $errorCode = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                throw new \Exception('Failed to deposit to the account: ' . MTRetCode::GetError($errorCode));
+            }
+            $apiOperations['dest_deposit'] = true;
+
+            // Step 5: All API operations succeeded, now execute DB transaction
+            DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount, $sourceBonusAmount, $destBonusAmount) {
+                $customerID = auth()->user()->id;
+
+                // Create withdrawal record
+                TradeWithdrawals::create([
+                    'email' => $email,
+                    'user_id' => $customerID,
+                    'account_id' => $fromAccount->id,
+                    'withdrawal_amount' => $transferable_amount,
+                    'withdraw_type' => 'Internal Transfer',
+                    'withdraw_to' => $toAccount->id,
+                    'withdraw_date' => now(),
+                    'status' => 1
+                ]);
+
+                // Log source account bonus deduction if it was applied
+                if ($sourceBonusAmount != 0) {
+                    BonusTransaction::create([
+                        'email' => $fromAccount->email,
                         'user_id' => $customerID,
                         'account_id' => $fromAccount->id,
-                        'withdrawal_amount' => $transferable_amount,
-                        'withdraw_type' => 'Internal Transfer',
-                        'withdraw_to' => $toAccount->id,
-                        'withdraw_date' => now(),
-                        'status' => 1
+                        'code' => $fromAccount->code,
+                        'bonus_amount' => $sourceBonusAmount,
+                        'bonus_type' => 'Bonus Out',
+                        'status' => 1,
+                        'admin_remark' => '10x Trader Leverage',
+                        'bonus_currency' => 'USD',
                     ]);
-                    if ($fromAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B') {
+                }
 
-                        $multiplier = $transferable_amount;
+                // Log destination account bonus credit if it was applied
+                if ($destBonusAmount != 0) {
+                    BonusTransaction::create([
+                        'email' => $email,
+                        'user_id' => $customerID,
+                        'account_id' => $toAccount->id,
+                        'code' => $toAccount->code,
+                        'bonus_amount' => $destBonusAmount,
+                        'bonus_type' => 'Bonus In',
+                        'status' => 1,
+                        'admin_remark' => '10x Trader Leverage',
+                        'bonus_currency' => 'USD',
+                    ]);
+                }
 
-                        if ($multiplier > 250) {
-                            $multiplier = 250;
-                        }
-                        $bonusamount = -abs(-9 * $multiplier);
+                // Create deposit records
+                TradeDeposit::create([
+                    'user_id' => auth()->user()->id,
+                    'account_id' => $toAccount->id,
+                    'email' => $email,
+                    'code' => $toAccount->code,
+                    'deposit_amount' => $transferable_amount,
+                    'deposit_type' => 'Internal Transfer',
+                    'deposit_from' => $fromAccount->id,
+                    'status' => 1,
+                    'callback_code' => 'success'
+                ]);
 
-                        // if($account->code==817752){
-                        //     dump($account_balance);
-                        //     dump($total_deposit_amount);
-                        //     dump($accountProfit);
-                        //     dump($multiplier);
-                        //     dump($bonusamount);
-                        // }
+                TotalBalance::create([
+                    'user_id' => auth()->user()->id,
+                    'account_id' => $toAccount->id,
+                    'email' => $email,
+                    'code' => $toAccount->code,
+                    'trading_deposited' => $transferable_amount,
+                    'deposit_type' => 'Internal Transfer',
+                ]);
+            });
+        } catch (\Throwable $th) {
+            Log::error('Internal transfer failed - attempting API rollback', [
+                'message' => $th->getMessage(),
+                'from_account' => $fromAccount->code,
+                'to_account' => $toAccount->code,
+                'transfer_amount' => $transferable_amount,
+                'user_id' => auth()->user()->id,
+                'api_operations' => $apiOperations
+            ]);
 
-                        $bonus_left = BonusTransaction::where('account_id', $fromAccount->id)
-                            ->where(function ($query) {
-                                $query->where('bonus_type', 'Bonus In')
-                                    ->orWhere('bonus_type', 'Bonus Out');
-                            })
-                            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage', 'Bonus Pay Off', 'Promo Bonus', 'Promo Deduction', 'Promo Addition'])
-                            ->sum('bonus_amount');
-
-                        if (isset($bonus_left) && $bonus_left > 1) {
-                            if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
-                                return redirect()->back()->with('error', MTRetCode::GetError($error_code));
-                            } else {
-                                $deposit_details = BonusTransaction::create([
-                                    'email' => $fromAccount->email,
-                                    'user_id' => $customerID,
-                                    'account_id' => $fromAccount->id,
-                                    'code' => $fromAccount->code,
-                                    'bonus_amount' => $bonusamount,
-                                    'bonus_type' => 'Bonus Out',
-                                    'status' => 1,
-                                    'admin_remark' => '10x Trader Leverage',
-                                    'bonus_currency' => 'USD',
-                                    // 'created_by' => session('alogin')
-                                ]);
-                            }
-                        }
-                    }
-                    if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
-
-                        if ($transferable_amount > 250) {
-                            $bonusamount = 9 * 250;
-                        } else {
-                            $bonusamount = 9 * $transferable_amount;
-                        }
-
-                        if (($error_code1 = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket1, true)) !== MTRetCode::MT_RET_OK) {
-                            return redirect()->back()->with('error', MTRetCode::GetError($error_code1));
-                        } else {
-                            $deposit_details = BonusTransaction::create([
-                                'email' => $email,
-                                'user_id' => $customerID,
-                                'account_id' => $toAccount->id,
-                                'code' => $toAccount->code,
-                                'bonus_amount' => $bonusamount,
-                                'bonus_type' => 'Bonus In',
-                                'status' => 1,
-                                'admin_remark' => '10x Trader Leverage',
-                                'bonus_currency' => 'USD',
-                            ]);
-                        }
-                    }
-                    // Deposit to the second account
-                    $errorCode = $this->api->TradeBalance($toAccount->code, $type = MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
-                    if ($errorCode != MTRetCode::MT_RET_OK) {
-                        $error = MTRetCode::GetError($errorCode);
-                        return redirect()->back()->with('error', 'Deposit Failed.');
-                    } else {
-                        // Log deposit
-                        TradeDeposit::create([
-                            'user_id' => auth()->user()->id,
-                            'account_id' => $toAccount->id,
-                            'email' => $email,
-                            'code' => $toAccount->code,
-                            'deposit_amount' => $transferable_amount,
-                            'deposit_type' => 'Internal Transfer',
-                            'deposit_from' => $fromAccount->id,
-                            'status' => 1,
-                            'callback_code' => 'success'
-                        ]);
-                        TotalBalance::create([
-                            'user_id' => auth()->user()->id,
-                            'account_id' => $toAccount->id,
-                            'email' => $email,
-                            'code' => $toAccount->code,
-                            'trading_deposited' => $transferable_amount,
-                            'deposit_type' => 'Internal Transfer',
-                        ]);
-                    }
-                });
-            } catch (\Throwable $th) {
-                Log::error('Transaction failed: ' . $th->getMessage());
-                return redirect()->back()->with('error', 'Transaction Failed.');
+            // Reverse API operations in reverse order (compensating transactions)
+            if ($apiOperations['dest_deposit']) {
+                $rollbackErrorCode = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'rollback deposit', $ticket, true);
+                if ($rollbackErrorCode != MTRetCode::MT_RET_OK) {
+                    Log::critical('CRITICAL: Failed to reverse deposit - destination account may be inconsistent', [
+                        'code' => $toAccount->code,
+                        'amount' => $transferable_amount,
+                        'error' => MTRetCode::GetError($rollbackErrorCode)
+                    ]);
+                }
             }
+
+            if ($apiOperations['dest_bonus']) {
+                $rollbackErrorCode = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BONUS, -$destBonusAmount, 'rollback bonus', $ticket1, true);
+                if ($rollbackErrorCode != MTRetCode::MT_RET_OK) {
+                    Log::critical('CRITICAL: Failed to reverse destination bonus - destination account may be inconsistent', [
+                        'code' => $toAccount->code,
+                        'bonus_amount' => $destBonusAmount,
+                        'error' => MTRetCode::GetError($rollbackErrorCode)
+                    ]);
+                }
+            }
+
+            if ($apiOperations['source_bonus']) {
+                $rollbackErrorCode = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, -$sourceBonusAmount, 'rollback bonus', $ticket, true);
+                if ($rollbackErrorCode != MTRetCode::MT_RET_OK) {
+                    Log::critical('CRITICAL: Failed to reverse source bonus - source account may be inconsistent', [
+                        'code' => $fromAccount->code,
+                        'bonus_amount' => $sourceBonusAmount,
+                        'error' => MTRetCode::GetError($rollbackErrorCode)
+                    ]);
+                }
+            }
+
+            if ($apiOperations['source_withdraw']) {
+                $rollbackErrorCode = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'rollback withdraw', $ticket, true);
+                if ($rollbackErrorCode != MTRetCode::MT_RET_OK) {
+                    Log::critical('CRITICAL: Failed to reverse withdrawal - source account may be inconsistent', [
+                        'code' => $fromAccount->code,
+                        'amount' => $transferable_amount,
+                        'error' => MTRetCode::GetError($rollbackErrorCode)
+                    ]);
+                }
+            }
+
+            return redirect()->back()->with('error', 'Transfer failed: ' . $th->getMessage());
         }
         RateLimiter::clear($key);
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');
