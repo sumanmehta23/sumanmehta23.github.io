@@ -1007,30 +1007,25 @@ class Transaction extends Controller
                         });
                     } elseif($responseData->result == 'error'){
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
-                        DB::transaction(function () use ($request, $response, $responseData, $transaction) {
+                        if($responseData->reason == 'InvalidAddress'){
+                            $status = 3; // Set status to 3 for invalid address
+                        }else{
+                            $status = 0; // Set status to 0 for other errors
+                        }
+                        DB::transaction(function () use ($request, $response, $responseData, $transaction, $status) {
                             // Update wallet_withdraw table with response and set status to 0 (error state)
                             TradeWithdrawals::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
                                 ->update([
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($responseData),
-                                    'status' => 0,
+                                    'status' => $status,
                                     'admin_remark' => $responseData->reason
                                 ]);
 
                             // Delete total_balance entry
                             // TotalBalance::where('id', $transaction->id)->delete();
                         });
-                        // $comment = 'Cancelled Withdrawal';
-                        // $ticket = null;
-                        // $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
-
-                        // if ($errorCode != MTRetCode::MT_RET_OK) {
-                        //     $error = MTRetCode::GetError($errorCode);
-                        // } else {
-                        //     return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
-                        // }
-
                         if($responseData->reason == 'InvalidAddress') {
                             $from = $settings['email_from_address'];
                             // $transid = "WDID" . $payout_res;
@@ -1071,8 +1066,17 @@ class Transaction extends Controller
                                 'btn_text' => 'Go To Dashboard',
                             ];
                             $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
-                        }
 
+                            $comment = 'Cancelled Withdrawal';
+                            $ticket = null;
+                            $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+
+                            if ($errorCode != MTRetCode::MT_RET_OK) {
+                                $error = MTRetCode::GetError($errorCode);
+                            } else {
+                                return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                            }
+                        }
                         return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
 
                     } else {
