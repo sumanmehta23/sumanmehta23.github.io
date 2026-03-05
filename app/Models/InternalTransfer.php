@@ -18,7 +18,7 @@ class InternalTransfer extends Model
 
     /**
      * Get internal transfers using a query builder approach (replaces the view)
-     * 
+     *
      * @return \Illuminate\Database\Query\Builder
      */
     public static function query()
@@ -59,7 +59,7 @@ class InternalTransfer extends Model
 
     /**
      * Get internal transfers with relationships loaded
-     * 
+     *
      * @param string|null $email
      * @param array $types
      * @param int|null $status
@@ -117,7 +117,8 @@ class InternalTransfer extends Model
 
         // Filter by withdrawal types
         $withdrawalTypes = $types ? array_intersect($types, ['Internal Transfer', 'Wallet Withdrawal']) : ['Internal Transfer', 'Wallet Withdrawal'];
-        $withdrawals->whereIn('withdraw_type', $withdrawalTypes);
+        // $withdrawals->whereIn('withdraw_type', $withdrawalTypes);
+        $withdrawals->whereIn('withdraw_type', $withdrawalTypes)->where('withdraw_type', '!=', 'Internal Transfer');
 
         // Union the queries and get results as arrays for backward compatibility with views
         $transfers = $deposits->union($withdrawals)->orderBy('raw_id', 'desc')->get();
@@ -139,7 +140,6 @@ class InternalTransfer extends Model
             // Return as Fluent object (supports both $obj->prop and $obj['prop'])
             return new Fluent($data);
         });
-
         return $transfers;
     }
 

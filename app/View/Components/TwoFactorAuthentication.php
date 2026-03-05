@@ -2,15 +2,19 @@
 
 namespace App\View\Components;
 
-use Illuminate\Support\Facades\Auth;
+use Closure;
+use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 use Laravel\Fortify\Features;
+use Illuminate\Http\Request;
 
 use function PHPUnit\Framework\isNull;
+
 
 class TwoFactorAuthentication extends Component
 {
@@ -39,17 +43,23 @@ class TwoFactorAuthentication extends Component
         $this->showingQrCode = true;
         $this->showingConfirmation = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm');
         $this->showingRecoveryCodes = !$this->showingConfirmation;
+
+        return true;
     }
 
-    public function confirmTwoFactorAuthentication(ConfirmTwoFactorAuthentication $confirm)
+    public function confirmTwoFactorAuthentication(Request $request, ConfirmTwoFactorAuthentication $confirm)
     {
+        $code = $request->input('code');
+
         if (Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')) {
             $this->ensurePasswordIsConfirmed();
         }
-        $confirm(Auth::user(), $this->code);
+        $confirm(Auth::user(), $code);
         $this->showingQrCode = false;
         $this->showingConfirmation = false;
         $this->showingRecoveryCodes = true;
+
+        return true;
     }
 
     public function showRecoveryCodes()
@@ -61,6 +71,8 @@ class TwoFactorAuthentication extends Component
     {
         $generate(Auth::user());
         $this->showingRecoveryCodes = true;
+
+        return true;
     }
 
     public function disableTwoFactorAuthentication(DisableTwoFactorAuthentication $disable)
@@ -73,6 +85,8 @@ class TwoFactorAuthentication extends Component
         $this->showingQrCode = false;
         $this->showingConfirmation = false;
         $this->showingRecoveryCodes = false;
+
+        return true;
     }
 
     public function user()
