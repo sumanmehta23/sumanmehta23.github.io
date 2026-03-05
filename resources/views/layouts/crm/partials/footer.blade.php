@@ -2,12 +2,12 @@
         <div class="py-5">
             <div class="row">
             <!-- Logo & Company Info -->
-            <div class="col-md-4 mb-4">
-                <a href="/" class="d-inline-block mb-3">
+            <div class="mb-4 col-md-4">
+                <a href="/" class="mb-3 d-inline-block">
                 <img src="/{{ $settings['admin_sidebar_logo'] }}"
                     alt="LQH Markets Logo" class="img-fluid" style="max-height: 40px;">
                 </a>
-                <p class="text-muted mb-1">
+                <p class="mb-1 text-muted">
                 LQH Integrated Ltd <br>
                 Hamchako, Mutsamudu, Autonomous Island of Anjouan, Union of Comoros.
                 </p>
@@ -18,8 +18,8 @@
             </div>
 
             <!-- Explore -->
-            <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Explore</h6>
+            <div class="mb-4 col-6 col-md-2">
+                <h6 class="mb-3 fw-bold">Explore</h6>
                 <ul class="list-unstyled">
                 <li><a href="https://www.lqhmarkets.com/" class="text-decoration-none text-dark">Home</a></li>
                 <li><a href="https://www.lqhmarkets.com/mt5" class="text-decoration-none text-dark">MetaTrader 5</a></li>
@@ -30,8 +30,8 @@
             </div>
 
             <!-- Disclosures -->
-            <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3 footer-link-capitalize">Disclosures</h6>
+            <div class="mb-4 col-6 col-md-2">
+                <h6 class="mb-3 fw-bold footer-link-capitalize">Disclosures</h6>
                 <ul class="list-unstyled">
                 <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark footer-link-capitalize">Risk Disclaimer</a></li>
                 <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark footer-link-capitalize">Terms &amp; Conditions</a></li>
@@ -40,8 +40,8 @@
             </div>
 
             <!-- Company -->
-            <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3 footer-link-capitalize">Company</h6>
+            <div class="mb-4 col-6 col-md-2">
+                <h6 class="mb-3 fw-bold footer-link-capitalize">Company</h6>
                 <ul class="list-unstyled">
                 <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark footer-link-capitalize">About</a></li>
                 <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark footer-link-capitalize">Contact</a></li>
@@ -49,9 +49,9 @@
             </div>
 
             <!-- Social Media -->
-            <div class="col-6 col-md-2 mb-4">
-                <h6 class="fw-bold mb-3">Social Media</h6>
-                <div class="d-flex flex-column gap-2">
+            <div class="mb-4 col-6 col-md-2">
+                <h6 class="mb-3 fw-bold">Social Media</h6>
+                <div class="gap-2 d-flex flex-column">
                 <a href="https://discord.gg/lqhmarkets" target="_blank" class="d-flex align-items-center text-decoration-none text-dark">
                     <img src="https://cdn.prod.website-files.com/66d6faa07d7bd55c6f3ca508/683d55e6248e95183cea86a5_icons8-discord-500.png"
                         alt="Discord" style="height: 20px; width: 20px;" class="me-2">
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Legal & Risk Section -->
-        <div class="border-top py-4">
+        <div class="py-4 border-top">
             <div class="text-muted small">
             <p><strong>Legal:</strong> LQH Integrated Ltd is LQHMarkets.com and the LQH Markets brand and trademark is owned by LQH Integrated Ltd.</p>
             <p>LQH Integrated Ltd holds an International Brokerage and Clearing House License in Comoros with license number L15833/LIL.</p>
@@ -273,8 +273,10 @@
                                     <option value="USDT-TRX">USDT/TRC20</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label class="form-label">Wallet Address</label><input
-                                    type="text" class="form-control" name="wallet_address" required></div>
+                            <div class="form-group"><label class="form-label">Crypto Wallet Address</label><input
+                                    type="text" class="form-control" name="wallet_address" id="walletAddressInput" required>
+                                <div class="invalid-feedback" id="walletAddressError" style="display: none;"></div>
+                            </div>
                             <div class="form-group"><label class="form-label">Status</label>
                                 <select id="my-select" class="form-control" name="status" required>
                                     <option value="1">Active</option>
@@ -321,7 +323,9 @@
                                 </select>
                             </div>
                             <div class="form-group"><label class="form-label">Wallet Address</label><input
-                                    type="text" class="form-control" name="wallet_address" required></div>
+                                    type="text" class="form-control" name="wallet_address" id="editWalletAddressInput" required>
+                                <div class="invalid-feedback" id="editWalletAddressError" style="display: none;"></div>
+                            </div>
                             <div class="form-group"><label class="form-label">Status</label>
                                 <select id="my-select" class="form-control" name="status" required>
                                     <option value="1">Active</option>
@@ -349,17 +353,22 @@
         address = address.trim();
         var length = address.length;
 
+        // Check for spaces in the address
+        if (address.includes(' ')) {
+            return 'Wallet address cannot contain spaces. Please remove any spaces from the address.';
+        }
+
         switch (network) {
             case 'BTC':
                 // BTC: Must start with 1, 3, or bc1, length 26-62
-                var startsWithValid = address.startsWith('1') || 
-                                     address.startsWith('3') || 
+                var startsWithValid = address.startsWith('1') ||
+                                     address.startsWith('3') ||
                                      address.startsWith('bc1');
-                
+
                 if (!startsWithValid) {
                     return 'BTC address must start with 1, 3, or bc1.';
                 }
-                
+
                 if (length < 26 || length > 62) {
                     return 'BTC address must be between 26 and 62 characters long.';
                 }
@@ -370,7 +379,7 @@
                 if (!address.startsWith('0x')) {
                     return 'USDT ERC20 address must start with 0x.';
                 }
-                
+
                 if (length !== 42) {
                     return 'USDT ERC20 address must be exactly 42 characters long.';
                 }
@@ -381,7 +390,7 @@
                 if (!address.startsWith('T')) {
                     return 'USDT TRC20 address must start with T.';
                 }
-                
+
                 if (length !== 34) {
                     return 'USDT TRC20 address must be exactly 34 characters long.';
                 }
@@ -394,12 +403,99 @@
         return null; // Valid
     }
 
+    // Real-time validation for addBankModal2
+    $(document).ready(function() {
+        var $walletAddressInput = $('#walletAddressInput');
+        var $walletNetworkSelect = $('select[name="wallet_network"]');
+        var $errorDiv = $('#walletAddressError');
+
+        function validateAndShowError() {
+            var address = $walletAddressInput.val();
+            var network = $walletNetworkSelect.val();
+
+            // Only validate if there's input
+            if (address.trim() === '') {
+                $walletAddressInput.removeClass('is-invalid');
+                $errorDiv.hide();
+                return;
+            }
+
+            var error = validateWalletAddress(address, network);
+            if (error) {
+                $walletAddressInput.addClass('is-invalid');
+                $errorDiv.text(error).show();
+            } else {
+                $walletAddressInput.removeClass('is-invalid');
+                $errorDiv.hide();
+            }
+        }
+
+        // Validate on address input
+        $walletAddressInput.on('input', validateAndShowError);
+
+        // Validate on network change
+        $walletNetworkSelect.on('change', validateAndShowError);
+
+        // Clear validation when modal is closed
+        $('#addBankModal2').on('hidden.bs.modal', function() {
+            $walletAddressInput.val('').removeClass('is-invalid');
+            $errorDiv.hide();
+        });
+
+        // Reset network to default when modal opens
+        $('#addBankModal2').on('shown.bs.modal', function() {
+            $walletNetworkSelect.val('BTC');
+            $walletAddressInput.removeClass('is-invalid');
+            $errorDiv.hide();
+        });
+    });
+
+    // Real-time validation for editBankModal2
+    $(document).ready(function() {
+        var $editWalletAddressInput = $('#editWalletAddressInput');
+        var $editWalletNetworkSelect = $('#editBankModal2 select[name="wallet_network"]');
+        var $editErrorDiv = $('#editWalletAddressError');
+
+        function validateEditWalletAndShowError() {
+            var address = $editWalletAddressInput.val();
+            var network = $editWalletNetworkSelect.val();
+
+            // Only validate if there's input
+            if (address.trim() === '') {
+                $editWalletAddressInput.removeClass('is-invalid');
+                $editErrorDiv.hide();
+                return;
+            }
+
+            var error = validateWalletAddress(address, network);
+            if (error) {
+                $editWalletAddressInput.addClass('is-invalid');
+                $editErrorDiv.text(error).show();
+            } else {
+                $editWalletAddressInput.removeClass('is-invalid');
+                $editErrorDiv.hide();
+            }
+        }
+
+        // Validate on address input
+        $editWalletAddressInput.on('input', validateEditWalletAndShowError);
+
+        // Validate on network change
+        $editWalletNetworkSelect.on('change', validateEditWalletAndShowError);
+
+        // Clear validation when modal is closed
+        $('#editBankModal2').on('hidden.bs.modal', function() {
+            $editWalletAddressInput.val('').removeClass('is-invalid');
+            $editErrorDiv.hide();
+        });
+    });
+
     $("#bankDetailsForm").submit(function(e) {
         e.preventDefault();
-        
+
         var walletAddress = $("input[name='wallet_address']", this).val();
         var walletNetwork = $("select[name='wallet_network']", this).val();
-        
+
         // Client-side validation
         var validationError = validateWalletAddress(walletAddress, walletNetwork);
         if (validationError) {
@@ -410,7 +506,7 @@
             });
             return false;
         }
-        
+
         $.ajax({
             url: "{{ route('wallet.store') }}",
             type: "POST",
@@ -450,10 +546,10 @@
     })
     $("#editDetailsForm").submit(function(e) {
         e.preventDefault();
-        
+
         var walletAddress = $("input[name='wallet_address']", this).val();
         var walletNetwork = $("select[name='wallet_network']", this).val();
-        
+
         // Client-side validation
         var validationError = validateWalletAddress(walletAddress, walletNetwork);
         if (validationError) {
@@ -464,7 +560,7 @@
             });
             return false;
         }
-        
+
         $.ajax({
             url: "{{ route('wallet.verify_edit') }}",
             type: "POST",
@@ -510,12 +606,12 @@
         // Decide which KYC provider to use based on settings shared to views
         var provider = "{{ $settings['kyc_provider'] ?? 'sumsub' }}";
         var cardBody = $(this).closest(".card-body");
-        
+
         if (provider === 'veriff') {
             // Show loader inside KYC section
             var loader = `
-                <div class="text-center py-5" id="veriff-loader">
-                    <div class="d-flex justify-content-center mb-4">
+                <div class="py-5 text-center" id="veriff-loader">
+                    <div class="mb-4 d-flex justify-content-center">
                         <div class="spinner-border" style="width: 50px; height: 50px; color: #00b2a9;" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -525,7 +621,7 @@
                 </div>
             `;
             cardBody.html(loader);
-            
+
             // Small delay to show loader, then redirect to Veriff
             setTimeout(function() {
                 window.location.href = '/veriff';

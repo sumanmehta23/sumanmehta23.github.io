@@ -860,4 +860,10 @@ class SettingsController extends Controller
 
         return redirect()->back()->with('success', 'KYC provider updated to ' . ucfirst($provider) . ' successfully.');
     }
+
+    public function twoFactorAuthenticationAdmin()
+    {
+        // $settings = Setting::whereIn('name', ['2fa_sms_enabled', '2fa_email_enabled', '2fa_authenticator_enabled'])->pluck('value', 'name')->toArray();
+        return view('admin.admin2fa');
+    }
 }

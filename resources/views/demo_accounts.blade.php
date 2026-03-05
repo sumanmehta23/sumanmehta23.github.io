@@ -94,11 +94,11 @@
                                                                         {{ $acc->email }}
                                                                     </span>
                                                                 </p>
-                                                                <h6 class="pl-2 mb-0 text-muted ms-2 f-12">
+                                                                {{-- <p class="mb-0 text-muted ms-2 f-12">
                                                                     <span class="text-truncate w-100">
                                                                         {{ $acc->accountType->ac_name }}
                                                                     </span>
-                                                                </h>
+                                                                </p> --}}
                                                             </div>
                                                         </div>
                                                     </td>
@@ -126,11 +126,13 @@
                                                                                 </svg></span>
                                                                         </a>
                                                                     </button>
-                                                                    <a href="{{ url('/trade-deposit') }}"
-                                                                        class="btn btn-sm btn-outline-secondary d-grid">
-                                                                        <span class="">Deposit <i
-                                                                                class="ti ti-database-import"></i></span>
-                                                                    </a>
+                                                                    @if($acc->demo == 0)
+                                                                        <a href="{{ url('/trade-deposit') }}"
+                                                                            class="btn btn-sm btn-outline-secondary d-grid">
+                                                                            <span class="">Deposit <i
+                                                                                    class="ti ti-database-import"></i></span>
+                                                                        </a>
+                                                                    @endif
                                                                     {{-- <a href="#" class="btn btn-sm btn-outline-secondary d-grid"
                                                                         data-bs-toggle="modal" data-bs-target="#changeLeverage"
                                                                         data-id="{{ $acc->account_type_id }}"

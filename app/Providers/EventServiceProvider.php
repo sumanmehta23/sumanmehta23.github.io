@@ -6,7 +6,6 @@ use App\Events\AccountTradesDepositEvent;
 use App\Events\IbCreated;
 use App\Events\IbStatusChanged;
 use App\Events\KycVerifiedEvent;
-use App\Listeners\GoHighLevelEventsListener;
 use App\Listeners\GoHighLevelMainIbListener;
 use App\Listeners\OmnisendEventsListener;
 use Illuminate\Auth\Events\Registered;
@@ -25,7 +24,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
             OmnisendEventsListener::class,
-            GoHighLevelEventsListener::class,
+            // GoHighLevelEventsListener removed - Only Main IB should be sent to GHL, not Referred IB
         ],
 
         KycVerifiedEvent::class => [
