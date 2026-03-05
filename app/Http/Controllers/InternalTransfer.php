@@ -63,9 +63,9 @@ class InternalTransfer extends Controller
             $query->where('status', 1);
         }])
             ->where('account_request_status', "!=", "0")
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('created_from')
-                      ->orWhere('created_from', '!=', 'zapier');
+                    ->orWhere('created_from', '!=', 'zapier');
             })
             ->get();
         // dd($liveaccount_details[8]->BonusTransaction->sum('bonus_amount'));
@@ -104,12 +104,13 @@ class InternalTransfer extends Controller
         ]);
         $fromAccountId = $request->input('fromAccount');
         $toAccountId = $request->input('toAccount');
-        $userId = auth()->user()->id;
+        $user = auth()->user();
+        $userId = $user->id;
         $fromAccount = Account::where(['id' => $fromAccountId, 'user_id' => $userId])->firstOrFail();
         $toAccount = Account::where(['id' => $toAccountId, 'user_id' => $userId])->withCount(['tradeDeposits as successful_trade_deposits_count' => function ($query) {
             $query->where('status', 1);
         }])->firstOrFail();
-        
+
         // Block Zapier accounts from internal transfer
         if ($fromAccount->isZapierAccount() || $toAccount->isZapierAccount()) {
             return redirect()->back()->with('error', 'Internal transfer is not available for promotional accounts.');
@@ -118,17 +119,32 @@ class InternalTransfer extends Controller
         //         dd($toAccount->accountType->ac_group);
 
 
-        Artisan::call('app:sync-account-balances', [
-            '--accounts' => $fromAccount->code,
-            '--force' => true
+        // Get current balance from API
+        $apiAccountData =  AccountHelper::getAccount($fromAccount->code);
+
+        if (!isset($apiAccountData['balance'])) {
+            Log::error('Failed to get current balance from API', [
+                'account' => $fromAccount->code,
+                'user_id' => $user->id
+            ]);
+            return redirect()->back()->with('error', 'Unable to verify account balance. Please try again.');
+        }
+
+        // Store the latest balance and equity from API
+        $fromAccount->update([
+            'balance' => $apiAccountData['balance'],
+            'equity' => $apiAccountData['equity'] ?? $apiAccountData['balance'],
         ]);
+
+        // Refresh model instance to get updated values
+        $fromAccount->refresh();
 
         $total_bonus = BonusTransaction::where('account_id', $fromAccount->id)
             ->where(function ($query) {
                 $query->where('bonus_type', 'Bonus In')
                     ->orWhere('bonus_type', 'Bonus Out');
             })
-            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage','Bonus Pay Off','Promo Bonus','Promo Deduction','Promo Addition'])
+            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage', 'Bonus Pay Off', 'Promo Bonus', 'Promo Deduction', 'Promo Addition'])
             ->sum('bonus_amount');
 
         $transferable_amount = $request->input('transferable_amount');
@@ -190,14 +206,14 @@ class InternalTransfer extends Controller
                         // }
 
                         $bonus_left = BonusTransaction::where('account_id', $fromAccount->id)
-                                ->where(function ($query) {
-                                    $query->where('bonus_type', 'Bonus In')
-                                        ->orWhere('bonus_type', 'Bonus Out');
-                                })
-                                ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage','Bonus Pay Off','Promo Bonus','Promo Deduction','Promo Addition'])
-                                ->sum('bonus_amount');
+                            ->where(function ($query) {
+                                $query->where('bonus_type', 'Bonus In')
+                                    ->orWhere('bonus_type', 'Bonus Out');
+                            })
+                            ->whereNotIn('admin_remark', ['Credit', '10x Trader Leverage', 'Bonus Pay Off', 'Promo Bonus', 'Promo Deduction', 'Promo Addition'])
+                            ->sum('bonus_amount');
 
-                        if(isset($bonus_left) && $bonus_left > 1){
+                        if (isset($bonus_left) && $bonus_left > 1) {
                             if (($error_code = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BONUS, $bonusamount, '10x Trader Leverage', $ticket, true)) !== MTRetCode::MT_RET_OK) {
                                 return redirect()->back()->with('error', MTRetCode::GetError($error_code));
                             } else {
@@ -215,7 +231,6 @@ class InternalTransfer extends Controller
                                 ]);
                             }
                         }
-
                     }
                     if ($toAccount->accountType->ac_group == 'LM\B-Book\10x\DF-B' && $toAccount->successful_trade_deposits_count == 0) {
 
