@@ -159,7 +159,7 @@
                         LQH Integrated Ltd <br> Ground Floor, Rodney Court Building, Rodney Bay, Gros Islet, Saint Lucia.
                     </p>
                     <p class="mb-1">Email: <a href="mailto:support@lqhmarkets.com" class="text-success text-decoration-none">support@lqhmarkets.com</a></p>
-                    <p class="mb-0 text-muted">© 2026 LQH Markets | All rights reserved.</p>
+                    <p class="mb-0 text-muted">© {{ date('Y') }} LQH Markets | All rights reserved.</p>
                 </div>
 
                 <!-- Explore -->
@@ -232,7 +232,7 @@
                 <p><strong>Restricted Regions:</strong> LQH Integrated Limited does not provide services for
                     citizens/residents of the United States, Cuba, Iran, Myanmar, North Korea, Sudan, China, Singapore and to
                     jurisdictions on the FATF, OFAC and EU/UN sanctions lists.</p>
-                <p class="mb-0">© 2026 LQH Markets. All rights reserved.</p>
+                <p class="mb-0">© {{ date('Y') }} LQH Markets. All rights reserved.</p>
             </div>
         </div>
     </div>

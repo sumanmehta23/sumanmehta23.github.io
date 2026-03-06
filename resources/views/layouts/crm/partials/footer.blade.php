@@ -14,7 +14,7 @@
                 <p class="mb-1">
                 Email: <a href="mailto:support@lqhmarkets.com" class="text-success">support@lqhmarkets.com</a>
                 </p>
-                <p class="mb-0 text-muted">© 2026 LQH Markets | All rights reserved.</p>
+                <p class="mb-0 text-muted">© {{ date('Y') }} LQH Markets | All rights reserved.</p>
             </div>
 
             <!-- Explore -->
@@ -76,7 +76,7 @@
             <p><strong>Risk Warning:</strong> An investment in derivatives may mean investors may lose an amount even greater than their original investment. Anyone wishing to invest in any of the products mentioned in
                 <a href="https://www.LQHMarkets.com" class="text-success">www.LQHMarkets.com</a> should seek their own financial or professional advice…</p>
             <p><strong>Restricted Regions:</strong> LQH Integrated Limited does not provide services for citizens/residents of the United States, Cuba, Iran, Myanmar, North Korea, Sudan, China, Singapore and to jurisdictions on the FATF, OFAC and EU/UN sanctions lists.</p>
-            <p class="mb-0">© 2026 LQH Markets. All rights reserved.</p>
+            <p class="mb-0">© {{ date('Y') }} LQH Markets. All rights reserved.</p>
             </div>
         </div>
     </div>
