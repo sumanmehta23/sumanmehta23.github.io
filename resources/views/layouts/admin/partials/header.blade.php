@@ -641,6 +641,12 @@ if (app()->environment('local') || app()->environment('development')) {
                                         </a>
                                     </li>
 
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{ route('admin.learn-content.index') }}" class="side-menu__item ">
+                                            Learn Content
+                                        </a>
+                                    </li>
+
                                 </ul>
                             </li>
                         @endcan
