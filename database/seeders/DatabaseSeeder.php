@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             Mt5GroupsSeeder::class,
             AccountTypesSeeder::class,
             LeverageSeeder::class,
+            LearnContentSeeder::class,
             // UserSeeder::class,
             // AccountSeeder::class,
             

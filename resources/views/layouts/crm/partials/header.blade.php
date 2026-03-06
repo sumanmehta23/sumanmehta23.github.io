@@ -499,6 +499,17 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 </ul>
                             </li>
 
+                            <li class="pc-item">
+                                <a href="{{ route('learn') }}" class="pc-link">
+                                    <span class="pc-micon">
+                                        <svg class="pc-icon">
+                                            <use xlink:href="#custom-level"></use>
+                                        </svg>
+                                    </span>
+                                    <span class="pc-mtext">Learn</span>
+                                </a>
+                            </li>
+
 
 
 
