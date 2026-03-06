@@ -156,7 +156,7 @@
                         <img src="/{{ $settings['admin_sidebar_logo'] }}" alt="LQH Markets Logo" class="img-fluid" style="max-height: 45px;">
                     </a>
                     <p class="mb-1 text-muted">
-                        LQH Integrated Ltd <br> Hamchako, Mutsamudu, Autonomous Island of Anjouan, Union of Comoros.
+                        LQH Integrated Ltd <br> Ground Floor, Rodney Court Building, Rodney Bay, Gros Islet, Saint Lucia.
                     </p>
                     <p class="mb-1">Email: <a href="mailto:support@lqhmarkets.com" class="text-success text-decoration-none">support@lqhmarkets.com</a></p>
                     <p class="mb-0 text-muted">© 2026 LQH Markets | All rights reserved.</p>

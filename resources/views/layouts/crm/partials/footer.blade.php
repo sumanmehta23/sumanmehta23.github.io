@@ -9,7 +9,7 @@
                 </a>
                 <p class="mb-1 text-muted">
                 LQH Integrated Ltd <br>
-                Hamchako, Mutsamudu, Autonomous Island of Anjouan, Union of Comoros.
+                Ground Floor, Rodney Court Building, Rodney Bay, Gros Islet, Saint Lucia.
                 </p>
                 <p class="mb-1">
                 Email: <a href="mailto:support@lqhmarkets.com" class="text-success">support@lqhmarkets.com</a>
