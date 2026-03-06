@@ -163,7 +163,7 @@
                                                             {{-- <p class="mb-0 text-muted f-12"><span
                                                                     class="text-truncate w-100"></span></p> --}}
                                                         @endif
-                                                        <button class="btn btn-sm btn-primary w-25 updateNickName" onclick="editNickname()">Edit Nick Name</button>
+                                                        <button class="btn btn-sm btn-primary w-auto updateNickName" onclick="editNickname()">Edit Nick Name</button>
                                                     </div>
 
                                                 </div>
