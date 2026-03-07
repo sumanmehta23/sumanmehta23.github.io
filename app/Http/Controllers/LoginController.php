@@ -466,7 +466,7 @@ class LoginController extends Controller
                 return view('auth.reset-password', ['user' => $user]); // Return view
             }
         } else {
-            return redirect()->route('login')->with('error', 'Password reset verification token expires, please resend again.');
+            return redirect()->route('login')->with('error', 'This password reset link is no longer valid. Please request a new one.');
         }
     }
 
