@@ -905,7 +905,7 @@ class AjaxController extends Controller
                     if ($isDepositedNotTraded) {
                         $orange = 'rgb(247, 86, 49)';
                         return "
-                            <span class='badge rounded-pill border border-2 d-inline-flex align-items-center justify-content-center gap-1' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
+                            <span class='gap-1 border border-2 badge rounded-pill d-inline-flex align-items-center justify-content-center' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
                                 <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='{$orange}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
                                     <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
                                     <path d='M12 9v4' />
@@ -918,7 +918,7 @@ class AjaxController extends Controller
                     }
 
                     return "
-                        <span class='badge rounded-pill border border-success d-inline-flex align-items-center justify-content-center gap-1'
+                        <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
                               style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
                             <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
                                  fill='none' stroke='#00b894' stroke-width='2.4' stroke-linecap='round'
@@ -940,6 +940,12 @@ class AjaxController extends Controller
                             <div class='lh-2 text-muted'>
                                 $time
                             </div>";
+                })
+                ->addColumn('total_deposit', function ($row) {
+                    return $row->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count();
+                })
+                ->addColumn('total_withdraw', function ($row) {
+                    return $row->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count();
                 })
                 ->addColumn('fullname', function ($row) {
                     return $row->user ? $row->user->fullname : 'Unknown';
@@ -4661,6 +4667,8 @@ class AjaxController extends Controller
                 'Days Since Last Trade',
                 'Deposited but Not Traded',
                 'Status',
+                'Total Deposit',
+                'Total Withdrawal',
                 'Date',
                 'Time',
             ]);
@@ -4706,6 +4714,8 @@ class AjaxController extends Controller
                             $daysSinceLastTrade,
                             $depositedNotTraded,
                             $account->deleted_at ? 'Deleted' : 'Active',
+                            $account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count(),
+                            $account->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count(),
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
                         ]);

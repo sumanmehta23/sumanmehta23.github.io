@@ -75,8 +75,8 @@
                 <div class="col-xl-12">
                     <div class="card custom-card live-account-filters">
                         <div class="card-header justify-content-between">
-                            <div class="card-title mb-0">Filters</div>
-                            <div class="d-flex gap-2">
+                            <div class="mb-0 card-title">Filters</div>
+                            <div class="gap-2 d-flex">
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="reset-filters-btn">Reset All</button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-filters-btn">
                                     <span id="toggle-filters-icon">▲</span> <span id="toggle-filters-text">Collapse</span>
@@ -124,7 +124,7 @@
                                 </div>
                             </div>
 
-                            <div class="row g-3 mt-1">
+                            <div class="mt-1 row g-3">
                                 <div class="col-12">
                                     <div class="section-title">Registration Date</div>
                                 </div>
@@ -149,7 +149,7 @@
                                 </div>
                             </div>
 
-                            <div class="row g-3 mt-1">
+                            <div class="mt-1 row g-3">
                                 <div class="col-12">
                                     <div class="section-title">Trading Activity</div>
                                 </div>
@@ -181,7 +181,7 @@
                                 </div>
                             </div>
 
-                            <div class="row mt-3">
+                            <div class="mt-3 row">
                                 <div class="col-12">
                                     <button type="button" class="btn btn-primary btn-sm" id="apply-filters-btn">Apply Filters</button>
                                 </div>
@@ -212,6 +212,8 @@
                                             <td>Days Since Last Trade</td>
                                             <td>Dep. Not Traded</td>
                                             <td>Status</td>
+                                            <td>Total Dep.</td>
+                                            <td>Total Withdraw</td>
                                             <td>Name</td>
                                             <td>Email</td>
                                             <td>Account Code</td>
@@ -238,7 +240,7 @@
     <div id="live-accounts-overlay" class="live-account-overlay">
         <div class="live-account-overlay-content">
             <img class="live-account-overlay-logo" src="{{ $liveAccountsLoaderLogo }}" alt="Logo">
-            <div class="fw-semibold mb-2">Pulling the data. This page will load once everything is retrieved.</div>
+            <div class="mb-2 fw-semibold">Pulling the data. This page will load once everything is retrieved.</div>
             <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
         </div>
     </div>
@@ -548,40 +550,50 @@
                     name: 'account_status',
                 },
                 {
+                    data: 'total_deposit',
+                    name: 'total_deposit',
+                    orderable: false
+                },
+                {
+                    data: 'total_withdraw',
+                    name: 'total_withdraw',
+                    orderable: false
+                },
+                {
                     data: 'fullname',
                     name: 'fullname',
                     visible: false,
-                    
+
                 },
                 {
                     data: 'fullemail',
                     name: 'fullemail',
                     visible: false,
-                    
+
                 },
                 {
                     data: 'account_code',
                     name: 'account_code',
                     visible: false,
-                    
+
                 },
                 {
                     data: 'account_group',
                     name: 'account_group',
                     visible: false,
-                    
+
                 },
                 {
                     data: 'created_date',
                     name: 'created_date',
                     visible: false,
-                    
+
                 },
                 {
                     data: 'created_time',
                     name: 'created_time',
                     visible: false,
-                    
+
                 },
                 {
                     data: 'actions',
@@ -615,7 +627,7 @@
                         }
                     },
                     exportOptions: {
-                        columns: [9, 10, 11, 12, 2, 3, 13, 14, 4, 5, 6, 7, 8] // Name, Email, Code, Group, Leverage, Balance, Date, Time, Registered, Last Trade Date, Days, Status, Dep. Not Traded
+                        columns: [11, 12, 2, 3, 13, 14, 4, 5, 6, 7, 8, 9, 10] // Name, Email, Code, Group, Leverage, Balance, Date, Time, Registered, Last Trade Date, Days, Status, Dep. Not Traded
                     }
                 },
                 {
