@@ -905,7 +905,7 @@ class AjaxController extends Controller
                     if ($isDepositedNotTraded) {
                         $orange = 'rgb(247, 86, 49)';
                         return "
-                            <span class='badge rounded-pill border border-2 d-inline-flex align-items-center justify-content-center gap-1' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
+                            <span class='gap-1 border border-2 badge rounded-pill d-inline-flex align-items-center justify-content-center' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
                                 <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='{$orange}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
                                     <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
                                     <path d='M12 9v4' />
@@ -918,7 +918,7 @@ class AjaxController extends Controller
                     }
 
                     return "
-                        <span class='badge rounded-pill border border-success d-inline-flex align-items-center justify-content-center gap-1'
+                        <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
                               style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
                             <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
                                  fill='none' stroke='#00b894' stroke-width='2.4' stroke-linecap='round'
@@ -5518,7 +5518,7 @@ class AjaxController extends Controller
                 $data[] = [
                     'created_on' => Carbon::parse($wallet->created_at)->format('Y-m-d H:i:s'),
                     'wallet_name' => $wallet->wallet_name,
-                    'wallet_currency' => $wallet->wallet_currency,
+                    'wallet_currency' => ($wallet->wallet_network == 'BTC') ? 'BTC' : $wallet->wallet_currency,
                     'wallet_network' => $wallet->wallet_network,
                     'wallet_address' => $wallet->wallet_address,
                     'verified' => $verifiedBadge,
