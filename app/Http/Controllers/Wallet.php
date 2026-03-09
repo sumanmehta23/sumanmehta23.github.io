@@ -365,7 +365,7 @@ class Wallet extends Controller
         $templateVars = [
             'name' => $user->fullname,
             'server_name' => $settings['mt5_company_name'],
-            'site_link' => $settings['copyright_site_name_text'] . "wallet_address_verify?id={$user->id}&clientWallet_id=$ClientWallet->id",
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_address_verify?id={$user->id}&clientWallet_id=$ClientWallet->id",
             'email' => $from,
             "content" => $content,
             "title_right" => "Activate",
@@ -419,7 +419,7 @@ class Wallet extends Controller
             'name' => $user->fullname,
             'server_name' => $settings['mt5_company_name'],
             'site_link' => htmlspecialchars($settings['copyright_site_name_text'], ENT_QUOTES, 'UTF-8') .
-                "wallet_address_verify?id={$user->id}&clientWallet_id={$ClientWallet->id}",
+                "/wallet_address_verify?id={$user->id}&clientWallet_id={$ClientWallet->id}",
             'email' => $from,
             'content' => $content,
             'title_right' => 'Activate',
