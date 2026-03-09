@@ -347,13 +347,13 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
     /**
      * IMPROVED SYNC STRATEGY: Calculate optimal sync time range based on database state
-     * 
+     *
      * Instead of always syncing 7+ days of data, intelligently determine:
      * - What trades we already have
      * - What new dates we need to check
      * - How far back to look based on account activity patterns
      * - IMPORTANT: Check for open positions that need continuous monitoring
-     * 
+     *
      * Returns: ['from' => Carbon, 'strategy' => string]
      */
     protected function getSmartSyncTimeRange(Account $account, Carbon $fallbackFromTime): array
@@ -914,6 +914,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
 
             $tradesToUpsert = [];
             $savedCount = 0;
+            $maxTradeTime = null;
             $allDeals = []; // Initialize for fallback MT5 API path (no deals optimization here)
             $timings['orders_processing'] = round((microtime(true) - $phaseStart) * 1000, 2);
 
@@ -923,7 +924,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $skippedTradesCount = 0; // Track skipped trades with invalid position_id
 
             foreach ($ordersByPosition as $positionId => $positionOrders) {
-                // Ensure $positionOrders is a collection for method calls  
+                // Ensure $positionOrders is a collection for method calls
                 if (!($positionOrders instanceof \Illuminate\Support\Collection)) {
                     $positionOrders = collect($positionOrders);
                 }
@@ -989,6 +990,13 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                         $tradeData = $this->prepareOpenTrade($account, $positionId, $positionOrders->first(), $actualSwap, $actualCommission);
                         if ($tradeData !== null) {
                             $tradesToUpsert[] = $tradeData;
+                            // Track max trade time for account update
+                            if (!empty($tradeData['open_time'])) {
+                                $tradeTime = $tradeData['open_time'] instanceof \Carbon\Carbon ? $tradeData['open_time'] : $tradeData['open_time'];
+                                if (!$maxTradeTime || $tradeTime > $maxTradeTime) {
+                                    $maxTradeTime = $tradeTime;
+                                }
+                            }
                             $savedCount++;
                         } else {
                             $skippedTradesCount++;
@@ -1005,6 +1013,13 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                             $closedTradeData['id'] = $existingTrade->id; // Update existing
                         }
                         $tradesToUpsert[] = $closedTradeData;
+                        // Track max trade time for account update
+                        if (!empty($closedTradeData['open_time'])) {
+                            $tradeTime = $closedTradeData['open_time'] instanceof \Carbon\Carbon ? $closedTradeData['open_time'] : $closedTradeData['open_time'];
+                            if (!$maxTradeTime || $tradeTime > $maxTradeTime) {
+                                $maxTradeTime = $tradeTime;
+                            }
+                        }
                         $savedCount++;
                     } else {
                         $skippedTradesCount++;
@@ -1040,6 +1055,11 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 $this->updateSyncStatus($account, 'partial_sync', $savedCount, "Partial sync - page limit reached. Remaining data will be synced in next batch.");
             } else {
                 $this->updateSyncStatus($account, 'success', $savedCount);
+            }
+
+            // Update account's last_trade_at with the most recent trade time
+            if ($maxTradeTime) {
+                $account->update(['last_trade_at' => $maxTradeTime]);
             }
 
             // Invalidate cache since we've updated trades
@@ -1564,6 +1584,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
         $processedTrades = 0;
         $newTrades = 0;
         $updatedTrades = 0;
+        $maxTradeTime = null;
 
         // Group deals by position_id to reconstruct actual positions
         $positionGroups = $deals->groupBy('position_id');
@@ -1619,15 +1640,28 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 // Update existing trade
                 $existingTrade->update($tradeData);
                 $updatedTrades++;
+                // Track max trade time for account update
+                if ($tradeData['open_time'] && (!$maxTradeTime || $tradeData['open_time'] > $maxTradeTime)) {
+                    $maxTradeTime = $tradeData['open_time'];
+                }
                 // Log::debug("DEBUG[{$account->code}]: Updated position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
             } else {
                 // Create new trade
                 Trade::create($tradeData);
                 $newTrades++;
+                // Track max trade time for account update
+                if ($tradeData['open_time'] && (!$maxTradeTime || $tradeData['open_time'] > $maxTradeTime)) {
+                    $maxTradeTime = $tradeData['open_time'];
+                }
                 // Log::debug("DEBUG[{$account->code}]: Created position {$positionId} - State: {$tradeData['state']}, Volume: {$tradeData['volume']}, Profit: {$tradeData['profit']}");
             }
 
             $processedTrades++;
+        }
+
+        // Update account's last_trade_at with the most recent trade time
+        if ($maxTradeTime) {
+            $account->update(['last_trade_at' => $maxTradeTime]);
         }
 
         // Update account sync status
