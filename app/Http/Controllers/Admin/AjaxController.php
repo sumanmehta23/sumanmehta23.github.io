@@ -945,7 +945,7 @@ class AjaxController extends Controller
                     return $row->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count();
                 })
                 ->addColumn('total_withdraw', function ($row) {
-                    return $row->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count();
+                    return $row->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['Trade Withdrawal'])->count();
                 })
                 ->addColumn('fullname', function ($row) {
                     return $row->user ? $row->user->fullname : 'Unknown';
@@ -4715,7 +4715,7 @@ class AjaxController extends Controller
                             $depositedNotTraded,
                             $account->deleted_at ? 'Deleted' : 'Active',
                             $account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count(),
-                            $account->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count(),
+                            $account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->count(),
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
                         ]);
