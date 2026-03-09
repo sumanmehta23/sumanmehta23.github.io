@@ -410,7 +410,7 @@
                                                                     @foreach ($bank_accounts as $acc)
                                                                         <tr>
                                                                             <td>{{ $acc->wallet_name }}</td>
-                                                                            <td>{{ $acc->wallet_currency }}</td>
+                                                                            <td>{{ $acc->wallet_network == 'BTC' ? 'BTC' : $acc->wallet_currency }}</td>
                                                                             <td>{{ $acc->wallet_network }}</td>
                                                                             <td>{{ $acc->wallet_address }}</td>
                                                                             @php
