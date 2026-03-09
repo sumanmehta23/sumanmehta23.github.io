@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\TradeOpenedEvent;
 use App\Models\Trade;
 use App\Models\Account;
 use App\Services\UniversalMT5Service;
@@ -388,6 +389,7 @@ class PositionSyncJob implements ShouldQueue
                 // Batch insert for performance
                 if (count($positionsToUpsert) >= 100) {
                     $this->processBatch($positionsToUpsert);
+                    $this->fireTradeOpenedEventsForBatch($account, $positionsToUpsert);
                     $positionsToUpsert = [];
                 }
             }
@@ -396,9 +398,40 @@ class PositionSyncJob implements ShouldQueue
         // Insert remaining positions
         if (!empty($positionsToUpsert)) {
             $this->processBatch($positionsToUpsert);
+            $this->fireTradeOpenedEventsForBatch($account, $positionsToUpsert);
         }
 
         return $syncedCount;
+    }
+
+    /**
+     * Fire TradeOpenedEvent for each open trade in the batch (upsert does not fire model events).
+     */
+    protected function fireTradeOpenedEventsForBatch(Account $account, array $tradesToUpsert): void
+    {
+        $openPositionIds = collect($tradesToUpsert)
+            ->filter(fn ($t) => ($t['status'] ?? '') === 'open')
+            ->pluck('position_id')
+            ->unique()
+            ->values();
+
+        if ($openPositionIds->isEmpty()) {
+            return;
+        }
+
+        $user = $account->user;
+        if (!$user || empty($user->email)) {
+            return;
+        }
+
+        $trades = Trade::where('account_id', $account->id)
+            ->whereIn('position_id', $openPositionIds->all())
+            ->where('status', 'open')
+            ->get();
+
+        foreach ($trades as $trade) {
+            event(new TradeOpenedEvent($user, $trade));
+        }
     }
 
     protected function prepareTradeFromPosition(Account $account, $positionData, string $status): ?array

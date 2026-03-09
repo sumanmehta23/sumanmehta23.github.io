@@ -4,10 +4,14 @@ namespace App\Listeners;
 
 use App\Events\AccountTradesDepositEvent;
 use App\Events\KycVerifiedEvent;
+use App\Events\TradeOpenedEvent;
+use App\Jobs\SendOmnisendTradesBatchJob;
+use App\Models\Trade;
 use App\Services\OmnisendService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class OmnisendEventsListener implements ShouldQueue
@@ -136,6 +140,8 @@ class OmnisendEventsListener implements ShouldQueue
                     'deposit_at' => now()->toIso8601String(),
                     'currency' => 'USD'
                 ]);
+            } elseif ($event instanceof TradeOpenedEvent) {
+                $this->handleTradeOpened($event, $omnisendService);
             }
 
             Log::info('OmnisendEventsListener: Event handled successfully', [
@@ -152,5 +158,71 @@ class OmnisendEventsListener implements ShouldQueue
             // Re-throw to make queue job fail and see the error
             throw $e;
         }
+    }
+
+    /**
+     * Handle TradeOpenedEvent: update profile with last_open_trade_at, batch trade and dispatch send job.
+     */
+    protected function handleTradeOpened(TradeOpenedEvent $event, OmnisendService $omnisendService): void
+    {
+        $user = $event->user;
+        $trade = $event->trade;
+
+        if (!$user || !$trade || !$trade->isStatusOpen() || empty($user->email)) {
+            Log::warning('OmnisendEventsListener: TradeOpenedEvent skipped (missing user, trade, or email)', [
+                'user_id' => $user?->id,
+                'trade_id' => $trade?->id,
+            ]);
+            return;
+        }
+
+        $user = \App\Models\User::find($user->id);
+        if (!$user) {
+            return;
+        }
+
+        // User's most recent open trade (by open_time) for profile timestamp
+        $latestOpenTrade = Trade::whereHas('account', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })
+            ->where('status', 'open')
+            ->orderByDesc('open_time')
+            ->first();
+
+        $lastOpenTradeAt = $latestOpenTrade && $latestOpenTrade->open_time
+            ? $latestOpenTrade->open_time->timestamp
+            : $trade->open_time?->timestamp ?? now()->timestamp;
+
+        Log::info('Omnisend: updating contact last_open_trade_at', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'last_open_trade_at' => date('Y-m-d H:i:s', $lastOpenTradeAt),
+        ]);
+
+        $contactPayload = [
+            'id' => $user->id,
+            'email' => $user->email,
+            'first_name' => $user->fullname ?? '',
+            'last_name' => '',
+            'last_open_trade_at' => $lastOpenTradeAt,
+        ];
+        $omnisendService->createOrUpdateContact($contactPayload);
+
+        $tradePayload = [
+            'trade_id' => (string) $trade->id,
+            'account_id' => (string) $trade->account_id,
+            'symbol' => $trade->symbol ?? '',
+            'type' => (string) ($trade->type ?? ''),
+            'volume' => (float) $trade->volume,
+            'open_time' => $trade->open_time ? $trade->open_time->toIso8601String() : now()->toIso8601String(),
+        ];
+
+        $cacheKey = 'omnisend_trades_batch:' . $user->id;
+        $batch = Cache::get($cacheKey, []);
+        $batch[] = $tradePayload;
+        Cache::put($cacheKey, $batch, 60);
+
+        Log::info('Omnisend: trade added to batch, job dispatched (5s)', ['user_id' => $user->id, 'batch_size' => count($batch)]);
+        SendOmnisendTradesBatchJob::dispatch($user->id)->delay(now()->addSeconds(5));
     }
 }

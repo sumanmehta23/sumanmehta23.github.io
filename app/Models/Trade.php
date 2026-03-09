@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Deal;
+use App\Events\TradeOpenedEvent;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
@@ -53,6 +54,42 @@ class Trade extends Model
         static::updating(function ($trade) {
             static::validatePositionId($trade, 'updating');
         });
+
+        static::created(function ($trade) {
+            static::fireTradeOpenedEventIfOpen($trade);
+        });
+
+        static::updated(function ($trade) {
+            if ($trade->isStatusOpen() && ($trade->wasChanged('status') || $trade->wasChanged('open_time'))) {
+                static::fireTradeOpenedEventIfOpen($trade);
+            }
+        });
+    }
+
+    /**
+     * Fire TradeOpenedEvent when trade is open and has valid user with email.
+     * (Model events are not fired on Trade::upsert; sync jobs fire events manually after batch.)
+     */
+    protected static function fireTradeOpenedEventIfOpen(Trade $trade): void
+    {
+        if (!$trade->isStatusOpen()) {
+            return;
+        }
+        $trade->loadMissing('account.user');
+        $user = $trade->account?->user;
+        if (!$user || empty($user->email)) {
+            return;
+        }
+        Log::info('TradeOpenedEvent fired (model)', ['trade_id' => $trade->id, 'user_id' => $user->id, 'email' => $user->email]);
+        event(new TradeOpenedEvent($user, $trade));
+    }
+
+    /**
+     * Whether this trade is open (not closed).
+     */
+    public function isStatusOpen(): bool
+    {
+        return ($this->status ?? '') === 'open';
     }
 
     /**

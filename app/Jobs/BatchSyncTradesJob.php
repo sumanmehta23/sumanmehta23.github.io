@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\TradeOpenedEvent;
 use App\Models\Trade;
 use App\Models\Account;
 use App\Models\Deal;
@@ -1017,6 +1018,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 if (count($tradesToUpsert) >= $batchSize) { // Process in dynamic batches
                     $batchStart = microtime(true);
                     $this->processBatch($tradesToUpsert);
+                    $this->fireTradeOpenedEventsForBatchMultiAccount($tradesToUpsert);
                     $batchProcessingTime += round((microtime(true) - $batchStart) * 1000, 2);
                     $tradesToUpsert = [];
                 }
@@ -1027,6 +1029,7 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
             $phaseStart = microtime(true);
             if (!empty($tradesToUpsert)) {
                 $this->processBatch($tradesToUpsert);
+                $this->fireTradeOpenedEventsForBatchMultiAccount($tradesToUpsert);
             }
             $timings['final_batch'] = round((microtime(true) - $phaseStart) * 1000, 2);
             $timings['total_batch_processing'] = $batchProcessingTime + $timings['final_batch'];
@@ -1373,6 +1376,37 @@ class BatchSyncTradesJob implements ShouldQueue, ShouldBeUnique
                 'stack_trace' => $e->getTraceAsString()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Fire TradeOpenedEvent for each open trade in the batch (upsert does not fire model events).
+     * Batch may contain trades from multiple accounts.
+     */
+    protected function fireTradeOpenedEventsForBatchMultiAccount(array $tradesToUpsert): void
+    {
+        $openTrades = collect($tradesToUpsert)->filter(fn ($t) => ($t['status'] ?? '') === 'open');
+        if ($openTrades->isEmpty()) {
+            return;
+        }
+
+        foreach ($openTrades->groupBy('account_id') as $accountId => $accountTrades) {
+            $account = Account::find($accountId);
+            if (!$account) {
+                continue;
+            }
+            $user = $account->user;
+            if (!$user || empty($user->email)) {
+                continue;
+            }
+            $positionIds = $accountTrades->pluck('position_id')->unique()->values()->all();
+            $trades = Trade::where('account_id', $accountId)
+                ->whereIn('position_id', $positionIds)
+                ->where('status', 'open')
+                ->get();
+            foreach ($trades as $trade) {
+                event(new TradeOpenedEvent($user, $trade));
+            }
         }
     }
 
