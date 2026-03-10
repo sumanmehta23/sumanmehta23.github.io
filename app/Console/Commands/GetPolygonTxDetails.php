@@ -40,7 +40,6 @@ class GetPolygonTxDetails extends Command
             'params' => [$hash],
             'id' => 1,
         ]);
-
         if ($rpcResponse->failed() || !isset($rpcResponse['result'])) {
             $this->error('Failed to fetch transaction data from Polygon RPC.');
             return Command::FAILURE;

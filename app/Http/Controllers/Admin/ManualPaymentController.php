@@ -170,6 +170,7 @@ class ManualPaymentController extends Controller
 
             // Check if transaction already exists in trade_deposits
             $existingTransaction = TradeDeposit::where('transaction_id', $pendingPayment->transaction_id)->first();
+
             if ($existingTransaction) {
                 $failedPayments[] = [
                     'id' => $paymentId,
@@ -202,7 +203,9 @@ class ManualPaymentController extends Controller
                 DB::beginTransaction();
 
                 // CRITICAL: Use database locking to prevent race conditions
-                $lockResult = DB::select('SELECT GET_LOCK(?, 10) as lock_acquired', ["manual_payment_{$pendingPayment->transaction_id}"]);
+                // Note: Lock name must be <= 64 characters for MySQL's GET_LOCK
+                $lockName = 'manual_payment_' . substr(md5($pendingPayment->transaction_id), 0, 32);
+                $lockResult = DB::select('SELECT GET_LOCK(?, 10) as lock_acquired', [$lockName]);
                 if (!$lockResult[0]->lock_acquired) {
                     DB::rollBack();
                     $failedPayments[] = [
@@ -216,7 +219,7 @@ class ManualPaymentController extends Controller
                 // Double-check for duplicate after acquiring lock
                 $existingTransaction = TradeDeposit::where('transaction_id', $pendingPayment->transaction_id)->first();
                 if ($existingTransaction) {
-                    DB::select('SELECT RELEASE_LOCK(?)', ["manual_payment_{$pendingPayment->transaction_id}"]);
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
                     DB::rollBack();
                     $failedPayments[] = [
                         'id' => $paymentId,
@@ -249,7 +252,7 @@ class ManualPaymentController extends Controller
                 $errorCode = $this->mt5Service->tradeBalance($pendingPayment->account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
 
                 if ($errorCode != MTRetCode::MT_RET_OK) {
-                    DB::select('SELECT RELEASE_LOCK(?)', ["manual_payment_{$pendingPayment->transaction_id}"]);
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
                     DB::rollBack();
                     throw new Exception('MT5 deposit failed: ' . MTRetCode::GetError($errorCode));
                 }
@@ -286,7 +289,7 @@ class ManualPaymentController extends Controller
                     ]);
 
                 // Release the lock before committing
-                DB::select('SELECT RELEASE_LOCK(?)', ["manual_payment_{$pendingPayment->transaction_id}"]);
+                DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
 
                 DB::commit();
 
@@ -304,7 +307,7 @@ class ManualPaymentController extends Controller
                 $processedCount++;
             } catch (PlatformConnectionException $e) {
                 try {
-                    DB::select('SELECT RELEASE_LOCK(?)', ["manual_payment_{$pendingPayment->transaction_id}"]);
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
                 } catch (Exception $lockError) {
                     // Ignore lock release errors
                 }
@@ -320,7 +323,7 @@ class ManualPaymentController extends Controller
                 ];
             } catch (Exception $e) {
                 try {
-                    DB::select('SELECT RELEASE_LOCK(?)', ["manual_payment_{$pendingPayment->transaction_id}"]);
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
                 } catch (Exception $lockError) {
                     // Ignore lock release errors
                 }
