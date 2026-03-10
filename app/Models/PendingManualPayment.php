@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Casts\SnowflakeToString;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -37,11 +36,6 @@ class PendingManualPayment extends Model
     ];
 
     protected $casts = [
-        'id' => SnowflakeToString::class,
-        'payment_log_id' => SnowflakeToString::class,
-        'user_id' => SnowflakeToString::class,
-        'account_id' => SnowflakeToString::class,
-        'processed_by' => SnowflakeToString::class,
         'coin_amount' => 'decimal:8',
         'usd_value' => 'decimal:2',
         'initial_requested_amount' => 'decimal:2',
