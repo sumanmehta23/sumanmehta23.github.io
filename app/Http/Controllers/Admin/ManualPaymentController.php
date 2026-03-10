@@ -113,7 +113,6 @@ class ManualPaymentController extends Controller
 
             $output = Artisan::output();
             $payment->polygon_response = $output;
-
             // Try to parse the JSON output
             if (preg_match('/\{[\s\S]*\}/', $output, $matches)) {
                 $jsonData = json_decode($matches[0], true);
