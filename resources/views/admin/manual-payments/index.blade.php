@@ -344,38 +344,58 @@
                 // Process selected
                 $('#processSelectedBtn').on('click', function () {
                     if ($('.payment-checkbox:checked').length === 0) {
-                        alert('Please select at least one payment to process');
+                        Swal.fire({
+                            title: 'Warning',
+                            text: 'Please select at least one payment to process',
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
                         return;
                     }
 
-                    if (confirm('Are you sure you want to process the selected payments?')) {
-                        // Create form dynamically
-                        const $form = $('<form>', {
-                            method: 'POST',
-                            action: '{{ url("/admin/manual-payments/process") }}'
-                        });
+                    Swal.fire({
+                        title: 'Confirm Process',
+                        text: 'Are you sure you want to process the selected payments?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, process them!',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Create form dynamically
+                            const $form = $('<form>', {
+                                method: 'POST',
+                                action: '{{ url("/admin/manual-payments/process") }}'
+                            });
 
-                        // Add CSRF token
-                        $form.append('@csrf');
+                            // Add CSRF token
+                            $form.append('@csrf');
 
-                        // Add selected payment IDs
-                        $('.payment-checkbox:checked').each(function () {
-                            $form.append($('<input>', {
-                                type: 'hidden',
-                                name: 'payment_ids[]',
-                                value: $(this).val()
-                            }));
-                        });
+                            // Add selected payment IDs
+                            $('.payment-checkbox:checked').each(function () {
+                                $form.append($('<input>', {
+                                    type: 'hidden',
+                                    name: 'payment_ids[]',
+                                    value: $(this).val()
+                                }));
+                            });
 
-                        // Submit form
-                        $form.appendTo('body').submit();
-                    }
+                            // Submit form
+                            $form.appendTo('body').submit();
+                        }
+                    });
                 });
 
                 // Reject selected
                 $('#rejectSelectedBtn').on('click', function () {
                     if ($('.payment-checkbox:checked').length === 0) {
-                        alert('Please select at least one payment to reject');
+                        Swal.fire({
+                            title: 'Warning',
+                            text: 'Please select at least one payment to reject',
+                            icon: 'warning',
+                            confirmButtonText: 'OK'
+                        });
                         return;
                     }
 
@@ -398,62 +418,85 @@
                     const $icon = $btn.find('i');
                     const $row = $btn.closest('tr');
 
-                    if (!confirm('Refresh USD value for transaction ' + transactionId + '?')) {
-                        return;
-                    }
+                    Swal.fire({
+                        title: 'Refresh USD Value',
+                        text: 'Refresh USD value for transaction ' + transactionId + '?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, refresh it!',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Disable button and show loading state
+                            $btn.prop('disabled', true);
+                            $icon.addClass('fa-spin');
 
-                    // Disable button and show loading state
-                    $btn.prop('disabled', true);
-                    $icon.addClass('fa-spin');
+                            $.ajax({
+                                url: '{{ url("/admin/manual-payments") }}/' + paymentId + '/refresh-usd',
+                                type: 'POST',
+                                data: {
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function (response) {
+                                    if (response.success) {
+                                        // Update the USD value cell
+                                        const usdCell = $row.find('td').eq(8); // Actual USD column
+                                        usdCell.html('<strong>$' + parseFloat(response.usd_value).toFixed(2) + '</strong>');
 
-                    $.ajax({
-                        url: '{{ url("/admin/manual-payments") }}/' + paymentId + '/refresh-usd',
-                        type: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function (response) {
-                            if (response.success) {
-                                // Update the USD value cell
-                                const usdCell = $row.find('td').eq(8); // Actual USD column
-                                usdCell.html('<strong>$' + parseFloat(response.usd_value).toFixed(2) + '</strong>');
+                                        // Update the difference cell
+                                        const diffCell = $row.find('td').eq(9);
+                                        const requestedAmount = parseFloat(response.requested_amount);
+                                        const actualAmount = parseFloat(response.usd_value);
+                                        const diff = actualAmount - requestedAmount;
+                                        const diffPercent = (diff / requestedAmount) * 100;
 
-                                // Update the difference cell
-                                const diffCell = $row.find('td').eq(9);
-                                const requestedAmount = parseFloat(response.requested_amount);
-                                const actualAmount = parseFloat(response.usd_value);
-                                const diff = actualAmount - requestedAmount;
-                                const diffPercent = (diff / requestedAmount) * 100;
+                                        let badgeClass = diff > 0 ? 'success' : (diff < 0 ? 'danger' : 'secondary');
+                                        let sign = diff > 0 ? '+' : '';
 
-                                let badgeClass = diff > 0 ? 'success' : (diff < 0 ? 'danger' : 'secondary');
-                                let sign = diff > 0 ? '+' : '';
+                                        diffCell.html(
+                                            '<span class="badge bg-' + badgeClass + '">' +
+                                            sign + '$' + Math.abs(diff).toFixed(2) + ' ' +
+                                            '(' + sign + diffPercent.toFixed(1) + '%)' +
+                                            '</span>'
+                                        );
 
-                                diffCell.html(
-                                    '<span class="badge bg-' + badgeClass + '">' +
-                                    sign + '$' + Math.abs(diff).toFixed(2) + ' ' +
-                                    '(' + sign + diffPercent.toFixed(1) + '%)' +
-                                    '</span>'
-                                );
+                                        // Remove the refresh button if USD value is now set
+                                        $btn.remove();
 
-                                // Remove the refresh button if USD value is now set
-                                $btn.remove();
-
-                                // Show success message
-                                alert('USD value refreshed successfully!');
-                            } else {
-                                alert('Error: ' + (response.message || 'Failed to refresh USD value'));
-                                $btn.prop('disabled', false);
-                                $icon.removeClass('fa-spin');
-                            }
-                        },
-                        error: function (xhr) {
-                            let errorMsg = 'Failed to refresh USD value';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMsg = xhr.responseJSON.message;
-                            }
-                            alert('Error: ' + errorMsg);
-                            $btn.prop('disabled', false);
-                            $icon.removeClass('fa-spin');
+                                        // Show success message
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: 'USD value refreshed successfully!',
+                                            icon: 'success',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: response.message || 'Failed to refresh USD value',
+                                            icon: 'error',
+                                            confirmButtonText: 'OK'
+                                        });
+                                        $btn.prop('disabled', false);
+                                        $icon.removeClass('fa-spin');
+                                    }
+                                },
+                                error: function (xhr) {
+                                    let errorMsg = 'Failed to refresh USD value';
+                                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                                        errorMsg = xhr.responseJSON.message;
+                                    }
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: errorMsg,
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
+                                    $btn.prop('disabled', false);
+                                    $icon.removeClass('fa-spin');
+                                }
+                            });
                         }
                     });
                 });
@@ -461,7 +504,13 @@
 
             function copyToClipboard(text) {
                 navigator.clipboard.writeText(text).then(function () {
-                    alert('Transaction ID copied to clipboard!');
+                    Swal.fire({
+                        title: 'Copied!',
+                        text: 'Transaction ID copied to clipboard!',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                 });
             }
         </script>
