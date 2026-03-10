@@ -1154,6 +1154,7 @@ class AjaxController extends Controller
             FROM trade_deposits td
             WHERE td.account_id = accounts.id
               AND td.status = 1
+              AND td.deposit_type IN ('CryptoChill', 'CreditCardPayissa', 'RagaPay')
               AND td.deleted_at IS NULL
         )";
 
