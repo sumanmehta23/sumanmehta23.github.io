@@ -4,6 +4,7 @@ namespace App\MT5;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\MT5RestAPIConnectionPool;
 
 //--- web api version
 define("WebAPIVersion", 2361);
@@ -49,12 +50,16 @@ class MTWebAPI
   private $m_agent = '';
   //--- is set crypt connection
   private $m_is_crypt = true;
+  //--- REST API connection pool
+  private $connectionPool = null;
 
   public function __construct($agent = 'WebAPI', $file_path = '/tmp/', $is_crypt = true)
   {
     $this->m_agent    = $agent;
     $this->m_is_crypt = $is_crypt;
     MTLogger::Init($agent, true, $file_path);
+    // Initialize REST API connection pool
+    $this->connectionPool = MT5RestAPIConnectionPool::getInstance();
   }
 
   /**
@@ -1149,13 +1154,16 @@ class MTWebAPI
      */
     private function processArchiveResponse($response, int $login): bool
     {
+        // Store raw response before decoding for logging
+        $rawResponse = is_string($response) ? $response : json_encode($response);
+
         // Decode JSON if needed
         if (is_string($response)) {
             $response = json_decode($response, true);
             if (!$response) {
                 Log::warning('MT5RestAPI: Invalid JSON response for archive', [
                     'login' => $login,
-                    'raw_response' => substr($response, 0, 500)
+                    'raw_response' => substr($rawResponse, 0, 500)
                 ]);
                 return false;
             }
