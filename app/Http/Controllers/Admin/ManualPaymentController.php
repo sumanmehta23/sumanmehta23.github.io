@@ -501,7 +501,7 @@ class ManualPaymentController extends Controller
         $settings = settings();
         $from = $settings['email_from_address'];
         $transid = $tradeDeposit->transaction_id;
-        $emailSubject = $settings['admin_title'] . ' - Manual Payment Deposit Successful';
+        $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
         $headers = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
         $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
@@ -513,25 +513,20 @@ class ManualPaymentController extends Controller
         </p>
         <p style="font-size: 16px; color: #000000;">
             The approved amount has been deposited into your account <b>' . $tradeDeposit->code . '</b>.
-        </p>
-
-        <p style="font-size: 16px; font-weight: bold; color: #000000;">Transaction Details:</p>
-        <ol style="font-size: 16px; padding-left: 20px; color: #000000;">
-            <li><b>Approved Amount:</b> $' . $tradeDeposit->deposit_amount . '</li>
-            <li><b>Reference ID:</b> ' . $tradeDeposit->id . '</li>
-            <li><b>Transaction ID:</b> <span style="word-break: break-all;">' . $transid . '</span></li>
-            <li><b>Deposited Date:</b> ' . $tradeDeposit->deposted_date . '</li>
-            <li><b>Payment Type:</b> ' . $depositType . '</li>
-        </ol>';
+        </p>';
 
         $templateVars = [
             'name' => $user->fullname,
             'site_link' => $settings['copyright_site_name_text'],
             'email' => $settings['email_from_address'],
             "content" => $content,
-            "title_right" => "Transaction",
-            "subtitle_right" => "Successful",
+            "title_right" => "Fund",
+            "subtitle_right" => "Deposit",
             "btn_text" => "Go To Dashboard",
+            'amount' => $tradeDeposit->deposit_amount,
+            'code' => $tradeDeposit->code,
+            'date' => $tradeDeposit->deposted_date,
+            'type' => $depositType,
         ];
 
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
