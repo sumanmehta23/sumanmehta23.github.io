@@ -942,10 +942,10 @@ class AjaxController extends Controller
                             </div>";
                 })
                 ->addColumn('total_deposit', function ($row) {
-                    return $row->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count();
+                    return number_format($row->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2);
                 })
                 ->addColumn('total_withdraw', function ($row) {
-                    return $row->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['Trade Withdrawal'])->count();
+                    return number_format($row->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['Trade Withdrawal'])->sum(DB::raw('transaction_fee + withdrawal_amount')), 2);
                 })
                 ->addColumn('fullname', function ($row) {
                     return $row->user ? $row->user->fullname : 'Unknown';
@@ -4714,8 +4714,8 @@ class AjaxController extends Controller
                             $daysSinceLastTrade,
                             $depositedNotTraded,
                             $account->deleted_at ? 'Deleted' : 'Active',
-                            $account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->count(),
-                            $account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->count(),
+                            number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
+                            number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
                             $account->created_at->format('Y-m-d'),
                             $account->created_at->format('H:i:s'),
                         ]);
