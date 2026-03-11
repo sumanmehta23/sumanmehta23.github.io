@@ -926,7 +926,7 @@ class AjaxController extends Controller
                         </span>
                     ";
                 })
-                ->addColumn('not_traded', function ($row) {
+                ->addColumn('traded', function ($row) {
                     $hasTrades = $row->last_trade_at !== null || ($row->trades_count ?? 0) > 0;
                     $isNotTraded = !$hasTrades;
 
@@ -941,7 +941,7 @@ class AjaxController extends Controller
                                     <path d='M12 17v.01' />
                                     <path d='M5 19h14l-7 -13z' />
                                 </svg>
-                                <span class='fw-bold' style='color:{$orange}'>Yes</span>
+                                <span class='fw-bold' style='color:{$orange}'>No</span>
                             </span>
                         ";
                     }
@@ -954,7 +954,7 @@ class AjaxController extends Controller
                                  stroke-linejoin='round'>
                                 <polyline points='5 12 10 17 19 7' />
                             </svg>
-                            <span class='fw-bold' style='color:#00b894'>No</span>
+                            <span class='fw-bold' style='color:#00b894'>Yes</span>
                         </span>
                     ";
                 })
@@ -1042,7 +1042,7 @@ class AjaxController extends Controller
                         END {$order}
                     ");
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions','deposited','not_traded'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions','deposited','traded'])
                 ->make(true);
         }
 
@@ -1174,11 +1174,11 @@ class AjaxController extends Controller
         }
 
         // Separate Not Traded filter
-        $notTraded = $request->get('not_traded');
-        if ($notTraded === 'yes') {
-            $query->whereRaw("NOT {$hasTradesSql}");
-        } elseif ($notTraded === 'no') {
+        $Traded = $request->get('traded');
+        if ($Traded === 'yes') {
             $query->whereRaw($hasTradesSql);
+        } elseif ($Traded === 'no') {
+            $query->whereRaw("NOT {$hasTradesSql}");
         }
     }
 
@@ -4704,7 +4704,7 @@ class AjaxController extends Controller
                 'Last Trade Date',
                 'Days Since Last Trade',
                 'Deposited',
-                'Not Traded',
+                'Traded',
                 'Status',
                 'Total Deposit',
                 'Total Withdrawal',
@@ -4739,7 +4739,7 @@ class AjaxController extends Controller
                         $hasDeposits = $account->successful_trade_deposits_count > 0;
                         $hasTrades = $lastTradeAt !== null || ($account->trades_count ?? 0) > 0;
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
-                        $isNotTraded = !$hasTrades ? 'Yes' : 'No';
+                        $Traded = $hasTrades ? 'Yes' : 'No';
 
                         fputcsv($handle, [
                         $account->id,
@@ -4753,7 +4753,7 @@ class AjaxController extends Controller
                         $lastTradeDate,
                         $daysSinceLastTrade,
                         $isDeposited,
-                        $isNotTraded,
+                        $Traded,
                         $account->deleted_at ? 'Deleted' : 'Active',
                         number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
                         number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
