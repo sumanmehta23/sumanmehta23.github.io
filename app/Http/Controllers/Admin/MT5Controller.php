@@ -646,7 +646,7 @@ class MT5Controller extends Controller
             $account->deletion_type = 'soft';
             $account->save();
             $account->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Soft Deleted Successfully');
+            return redirect()->back()->with('success', 'X9 Account Soft Deleted Successfully');
         } elseif ($platform === 'mt5') {
             $trade_user = NULL;
             if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
@@ -668,7 +668,7 @@ class MT5Controller extends Controller
             $account->deletion_type = 'soft';
             $account->save();
             $account->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Soft Deleted Successfully');
+            return redirect()->back()->with('success', 'MT5 Account Soft Deleted Successfully');
         }
     }
 
@@ -776,7 +776,7 @@ class MT5Controller extends Controller
             $account->deletion_type = null;
             $account->save();
             $account->restore();
-            return redirect()->route('admin.dashboard')->with('success', 'X9 Account Restored Successfully');
+            return redirect()->back()->with('success', 'X9 Account Restored Successfully');
         } elseif ($platform === 'mt5') {
             // $trade_user = NULL;
             // if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
@@ -800,7 +800,7 @@ class MT5Controller extends Controller
             $account->deletion_type = null;
             $account->save();
             $account->restore();
-            return redirect()->route('admin.dashboard')->with('success', 'MT5 Account Restored Successfully');
+            return redirect()->back()->with('success', 'MT5 Account Restored Successfully');
         }
     }
 
