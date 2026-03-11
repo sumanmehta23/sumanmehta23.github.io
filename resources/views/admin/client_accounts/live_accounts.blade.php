@@ -219,7 +219,7 @@
                                             <td>Last Trade Date</td>
                                             <td>Days Since Last Trade</td>
                                             <td>Deposited</td>
-                                            <td>Not Traded</td>
+                                            <td>Traded</td>
                                             <td>Status</td>
                                             <td>Total Dep.</td>
                                             <td>Total Withdraw</td>
