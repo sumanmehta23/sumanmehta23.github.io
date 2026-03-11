@@ -163,11 +163,11 @@
                                                                                 {{ 'Pending' }}
                                                                             </h4>
                                                                         @endif
-                                                                        <p class="mb-0 text-muted ms-2 f-12">
+                                                                        <h6 class="mb-0 text-muted ms-2 f-12">
                                                                             <span
                                                                                 class="text-truncate w-100">{{ $liveAccount->accountType->ac_name }}
                                                                             </span>
-                                                                        </p>
+                                                                        </h6>
                                                                     </div>
                                                                 </div>
                                                             </td>

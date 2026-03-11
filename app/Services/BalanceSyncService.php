@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\BonusTransaction;
+use App\Models\Trade;
 use Illuminate\Support\Facades\Log;
 use App\Services\UniversalMT5Service;
 
@@ -174,6 +175,9 @@ class BalanceSyncService
         }
 
         $account->update($updateData);
+
+        // Update last trade info for the account
+        $this->updateLastTradeInfo($account);
 
         $bonusPayoffSyncAt = now();
 
@@ -444,5 +448,36 @@ class BalanceSyncService
             })
             ->orderBy('last_balance_changed_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Update the last trade info for an account from the trades table
+     *
+     * @param Account $account
+     */
+    protected function updateLastTradeInfo(Account $account): void
+    {
+        try {
+            // Get the latest trade for this account, ordered by open_time descending
+            $latestTrade = Trade::where('account_id', $account->id)
+                ->orderBy('open_time', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($latestTrade && $latestTrade->open_time) {
+                // Update last_trade_at with the trade's open_time timestamp
+                $account->update(['last_trade_at' => $latestTrade->open_time]);
+
+                Log::debug("Updated last_trade_at for account {$account->code}", [
+                    'position_id' => $latestTrade->position_id,
+                    'open_time' => $latestTrade->open_time
+                ]);
+            } else {
+                // No trades found for this account, set to null
+                $account->update(['last_trade_at' => null]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to update last_trade_at for account {$account->code}: " . $e->getMessage());
+        }
     }
 }

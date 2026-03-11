@@ -103,6 +103,11 @@ if ($getUser) {
                                                             data-bs-target="#accountRestoreModal">Restore Account
                                                                 <i class="ti ti-database-import"></i>
                                                             </span>
+                                                        @elseif($account->deleted_at && $account->deletion_type == 'archive')
+                                                            <span class="badge btn btn-success" data-bs-toggle="modal"
+                                                            data-bs-target="#accountRestoreModal">Restore Account
+                                                                <i class="ti ti-database-import"></i>
+                                                            </span>
                                                         @elseif($account->deleted_at && $account->deletion_type == null)
                                                             <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
                                                         @elseif($account->deleted_at && $account->deletion_type == 'delete')
@@ -114,10 +119,17 @@ if ($getUser) {
                                                                     <i class="ti ti-database-import"></i>
                                                                 </span>
                                                                 @if ($account->demo == 0)
-                                                                    <span class="mt-3 badge btn btn-danger" data-bs-toggle="modal"
+                                                                    @if ($account->trade_platform == 'MetaTrader5' && $account->deletion_type != 'archive')
+                                                                        <span class="mt-3 badge btn btn-warning" data-bs-toggle="modal"
+                                                                        data-bs-target="#accountArchiveModal">Archive Account
+                                                                            <i class="ti ti-archive"></i>
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="mt-3 badge btn btn-danger" data-bs-toggle="modal"
                                                                         data-bs-target="#accountDeleteModal">Delete Account
-                                                                        <i class="ti ti-database-import"></i>
-                                                                    </span>
+                                                                            <i class="ti ti-database-import"></i>
+                                                                        </span>
+                                                                    @endif
                                                                 @endif
                                                             </div>
                                                         @endif

@@ -98,4 +98,10 @@ return [
         'api_key' => env('GHL_API_KEY', ''),
         'location_id' => env('GHL_LOCATION_ID', ''),
     ],
+
+    'turnstile' => [
+        'enabled' => env('TURNSTILE_ENABLED', false),
+        'site_key' => env('TURNSTILE_SITE_KEY', ''),
+        'secret_key' => env('TURNSTILE_SECRET_KEY', ''),
+    ],
 ];
