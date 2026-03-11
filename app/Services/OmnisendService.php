@@ -136,7 +136,7 @@ class OmnisendService
         $payload = [
             'email' => $email,
             'eventName' => $eventName,
-            'fields' => array_merge(['Origin' => 'api'], $eventData),
+            'fields' => array_merge(['Origin' => 'trading-platform'], $eventData),
             'createdAt' => now()->toIso8601String()
         ];
 
@@ -287,16 +287,72 @@ class OmnisendService
     }
 
     /**
-     * Send one "Trades Opened" event with all trades collected for the user (batched).
+     * Send one "trades_opened" event with required v5 payload format.
+     * This method is intentionally separate so only trade-opened uses this format.
      */
     public function trackBatchTradesOpened(string $email, $userId, array $trades): bool
     {
-        $eventData = [
-            'user_id' => (string) $userId,
-            'trades_count' => count($trades),
-            'trades' => $trades,
+        if (!$this->hasValidCredentials()) {
+            Log::warning('Omnisend credentials not configured. Skipping trades_opened event tracking.', [
+                'email' => $email,
+            ]);
+            return false;
+        }
+
+        if (empty($email)) {
+            Log::warning('Cannot track Omnisend trades_opened event: email is missing', [
+                'user_id' => (string) $userId,
+            ]);
+            return false;
+        }
+
+        $payload = [
+            'eventName' => 'trades_opened',
+            'origin' => 'trading-platform',
+            'contact' => [
+                'email' => $email,
+            ],
+            'properties' => [
+                'trades_count' => count($trades),
+                'user_id' => (string) $userId,
+                'account_id' => (string) (($trades[0]['account_id'] ?? '') ?: ''),
+                'trades' => $trades,
+            ],
         ];
-        return $this->trackEvent($email, 'Trades Opened', $eventData);
+
+        Log::info('Omnisend trades_opened payload', [
+            'email' => $email,
+            'payload' => $payload,
+        ]);
+
+        try {
+            $url = "{$this->apiUrl}/events";
+            $response = Http::withHeaders([
+                'X-API-KEY' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+
+            if ($response->successful()) {
+                Log::info('Omnisend trades_opened event tracked successfully', [
+                    'email' => $email,
+                    'trades_count' => count($trades),
+                ]);
+                return true;
+            }
+
+            Log::error('Failed to track Omnisend trades_opened event', [
+                'email' => $email,
+                'response_status' => $response->status(),
+                'response_body' => $response->body(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Omnisend trades_opened API request failed', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
     }
 
     /**
