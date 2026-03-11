@@ -180,8 +180,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label" for="filter-not-traded">Not Traded</label>
-                                    <select class="form-select" id="filter-not-traded">
+                                    <label class="form-label" for="filter-traded">Traded</label>
+                                    <select class="form-select" id="filter-traded">
                                         <option value="">All</option>
                                         <option value="yes">Yes</option>
                                         <option value="no">No</option>
@@ -379,7 +379,7 @@
             days_since_last_trade_max: $('#filter-days-max').val(),
             activity_status: $('#filter-activity-status').val(),
             deposited: $('#filter-deposited').val(),
-            not_traded: $('#filter-not-traded').val()
+            traded: $('#filter-traded').val()
         };
     }
 
@@ -476,7 +476,7 @@
             $('#filter-days-max').val('');
             $('#filter-activity-status').val('');
             $('#filter-deposited').val('');
-            $('#filter-not-traded').val('');
+            $('#filter-traded').val('');
 
             showLiveAccountsOverlay();
             dTtable.ajax.reload();
@@ -557,8 +557,8 @@
                     name: 'deposited',
                 },
                 {
-                    data: 'not_traded',
-                    name: 'not_traded',
+                    data: 'traded',
+                    name: 'traded',
                 },
                 {
                     data: 'account_status',
