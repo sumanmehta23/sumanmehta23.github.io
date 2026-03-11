@@ -757,6 +757,7 @@ class MT5Controller extends Controller
         ]);
 
         $platform = $request->input('platform');
+
         if ($platform === 'x9') {
             $response = $this->x9Service->getUserDetails($login);
 
@@ -779,24 +780,24 @@ class MT5Controller extends Controller
             $account->restore();
             return redirect()->route('admin.dashboard')->with('success', 'X9 Account Restored Successfully');
         } elseif ($platform === 'mt5') {
-            $trade_user = NULL;
-            if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
-                return redirect()->back()->with('error', 'MT5 Account Restoration Failed. Account not present in mt5 server. '. MTRetCode::GetError($error_code));
-            }
-            if ($trade_user) {
+            // $trade_user = NULL;
+            // if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
+            //     return redirect()->back()->with('error', 'MT5 Account Restoration Failed. Account not present in mt5 server. '. MTRetCode::GetError($error_code));
+            // }
+            // if ($trade_user) {
                 // MT5 deletion logic
                 if($account->deletion_type === 'archive'){
-                    $error_code = $this->api->restoreUser($login);
-                    if (!$error_code['status']) {
-                        return redirect()->back()->with('error', 'MT5 Account Restoring Failed: ' . $error_code['message']);
+                    $success = $this->api->restoreUser($login);
+                    if (!$success) {
+                        return redirect()->back()->with('error', 'MT5 Account Restoring Failed');
                     }
                 }elseif($account->deletion_type === 'soft'){
-                    $error_code = $this->api->EnableTrading($login);
-                    if (!$error_code['status']) {
-                        return redirect()->back()->with('error', 'MT5 Account Restoring Failed: ' . $error_code['message']);
+                    $success = $this->api->EnableTrading($login);
+                    if (!$success) {
+                        return redirect()->back()->with('error', 'MT5 Account Restoring Failed');
                     }
                 }
-            }
+            // }
             // Delete from local database
             $account->deletion_type = null;
             $account->save();
@@ -818,7 +819,6 @@ class MT5Controller extends Controller
         ]);
 
         $platform = $request->input('platform');
-
         if ($platform === 'x9') {
             $response = $this->x9Service->getUserDetails($login);
 
@@ -844,6 +844,7 @@ class MT5Controller extends Controller
         } elseif ($platform === 'MetaTrader5') {
 
             $trade_user = NULL;
+
             if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
                 return redirect()->back()->with('error', 'MT5 Account Archive Failed: ' . MTRetCode::GetError($error_code));
             }
@@ -853,10 +854,11 @@ class MT5Controller extends Controller
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account before archiving.');
                 }
             }
+
             // MT5 archive logic - disable trading
-            $error_code = $this->api->archiveUser($login);
-            if (!$error_code['status']) {
-                return redirect()->back()->with('error', 'MT5 Account Archive Failed during cleanup: ' . $error_code['message']);
+            $success = $this->api->archiveUser($login);
+            if ($success != true) {
+                return redirect()->back()->with('error', 'MT5 Account Archive Failed during cleanup');
             }
 
             // Archive in local database

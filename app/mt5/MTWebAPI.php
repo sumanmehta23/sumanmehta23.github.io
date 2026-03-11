@@ -1059,6 +1059,7 @@ class MTWebAPI
     public function archiveUser(int $login): bool
     {
         $apiRequest = $this->connectionPool->getConnection();
+
         if (!$apiRequest) {
             Log::error('MT5RestAPI: Failed to get connection from pool for archive', ['login' => $login]);
             return false;
@@ -1068,7 +1069,6 @@ class MTWebAPI
             // Make POST request to archive API endpoint
             // API documentation shows: POST /api/user/archive/add?login=login
             $result = $apiRequest->Post('/api/user/archive/add?login=' . (int)$login, '');
-
             if ($result === false) {
                 Log::warning('MT5RestAPI: Archive request failed', ['login' => $login]);
                 $this->connectionPool->reportConnectionError($apiRequest);
@@ -1207,7 +1207,6 @@ class MTWebAPI
                     return false;
                 }
             }
-
             // If we still need to fetch (fallback to account get if archive fails)
             if (empty($userData)) {
                 $result = $apiRequest->Post('/api/user/account/get', json_encode(['login' => (int)$login]));
