@@ -543,6 +543,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/deleteAccount", [MT5Controller::class, 'deleteAccount'])->name('deleteAccount')->middleware('check.permissions:account:delete');
         Route::post("/softDeleteAccount", [MT5Controller::class, 'softDeleteAccount'])->name('softDeleteAccount')->middleware('check.permissions:account:delete');
         Route::post("/restoreAccount", [MT5Controller::class, 'restoreAccount'])->name('restoreAccount')->middleware('check.permissions:account:delete');
+        Route::post('/archiveAccount', [MT5Controller::class, 'archiveAccount'])->name('archiveAccount')->middleware('check.permissions:account:delete');
         Route::post("/depositToCellexpertAccount", [MT5Controller::class, 'depositToCellexpertAccount'])->name('depositToCellexpertAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
         Route::post("/withdrawFromCellexpertAccount", [MT5Controller::class, 'withdrawFromCellexpertAccount'])->name('withdrawFromCellexpertAccount')->middleware('check.permissions:trade_withdrawals:create');
