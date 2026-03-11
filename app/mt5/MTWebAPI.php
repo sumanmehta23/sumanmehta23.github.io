@@ -4,6 +4,7 @@ namespace App\MT5;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Services\MT5RestAPIConnectionPool;
 
 //--- web api version
 define("WebAPIVersion", 2361);
@@ -49,12 +50,16 @@ class MTWebAPI
   private $m_agent = '';
   //--- is set crypt connection
   private $m_is_crypt = true;
+  //--- REST API connection pool
+  private $connectionPool = null;
 
   public function __construct($agent = 'WebAPI', $file_path = '/tmp/', $is_crypt = true)
   {
     $this->m_agent    = $agent;
     $this->m_is_crypt = $is_crypt;
     MTLogger::Init($agent, true, $file_path);
+    // Initialize REST API connection pool
+    $this->connectionPool = MT5RestAPIConnectionPool::getInstance();
   }
 
   /**
@@ -1043,6 +1048,250 @@ class MTWebAPI
         }
 
         return $summary;
+    }
+
+    /**
+     * Archive MT5 user to archive database
+     *
+     * @param int $login MT5 login ID
+     * @return bool True on success, false on failure
+     */
+    public function archiveUser(int $login): bool
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+
+        if (!$apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool for archive', ['login' => $login]);
+            return false;
+        }
+
+        try {
+            // Make POST request to archive API endpoint
+            // API documentation shows: POST /api/user/archive/add?login=login
+            $result = $apiRequest->Post('/api/user/archive/add?login=' . (int)$login, '');
+            if ($result === false) {
+                Log::warning('MT5RestAPI: Archive request failed', ['login' => $login]);
+                $this->connectionPool->reportConnectionError($apiRequest);
+                return false;
+            }
+
+            // Process and validate response
+            return $this->processArchiveResponse($result, $login);
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception in archiveUser', [
+                'login' => $login,
+                'error' => $e->getMessage()
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+            return false;
+        }
+    }
+
+    /**
+     * Get archived user data from archive database
+     *
+     * @param int $login MT5 login ID
+     * @return array|false User data if found, false if not found or error
+     */
+    public function getArchivedUser(int $login): array|false
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (!$apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool for archive check', ['login' => $login]);
+            return false;
+        }
+
+        try {
+            // Make request to archive get endpoint
+            $result = $apiRequest->Get("/api/user/archive/get?login={$login}");
+
+            if ($result === false) {
+                Log::warning('MT5RestAPI: Failed to fetch archived user', ['login' => $login]);
+                $this->connectionPool->reportConnectionError($apiRequest);
+                return false;
+            }
+
+            // Parse the response
+            $response = is_string($result) ? json_decode($result, true) : $result;
+
+            if (!$response) {
+                Log::warning('MT5RestAPI: Invalid JSON response for archive get', ['login' => $login]);
+                return false;
+            }
+
+            // Check for API error
+            if (isset($response['retcode']) && $response['retcode'] !== "0 Done") {
+                Log::warning('MT5RestAPI: User not found in archive', [
+                    'login' => $login,
+                    'retcode' => $response['retcode'] ?? 'Unknown',
+                    'retmsg' => $response['retmsg'] ?? 'Unknown error'
+                ]);
+                return false;
+            }
+
+            // Return archived user data
+            if (isset($response['answer'])) {
+                Log::info('MT5RestAPI: User found in archive', ['login' => $login]);
+                return $response['answer'];
+            }
+
+            return false;
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception checking archived user', [
+                'login' => $login,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Process archive response from REST API
+     *
+     * @param mixed $response The API response
+     * @param int $login The login ID being archived
+     * @return bool True if archive was successful
+     */
+    private function processArchiveResponse($response, int $login): bool
+    {
+        // Store raw response before decoding for logging
+        $rawResponse = is_string($response) ? $response : json_encode($response);
+
+        // Decode JSON if needed
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (!$response) {
+                Log::warning('MT5RestAPI: Invalid JSON response for archive', [
+                    'login' => $login,
+                    'raw_response' => substr($rawResponse, 0, 500)
+                ]);
+                return false;
+            }
+        }
+
+        // Check for API error
+        if (isset($response['retcode']) && $response['retcode'] !== "0 Done") {
+            Log::warning('MT5RestAPI: Archive API error', [
+                'login' => $login,
+                'retcode' => $response['retcode'] ?? 'Unknown',
+                'retmsg' => $response['retmsg'] ?? 'Unknown error'
+            ]);
+            return false;
+        }
+
+        Log::info('MT5RestAPI: User successfully archived', ['login' => $login]);
+        return true;
+    }
+
+    /**
+     * Restore MT5 user from archive database
+     *
+     * @param int $login MT5 login ID
+     * @param array $userData User data to restore (Optional - will fetch from archive if not provided)
+     * @return bool True on success, false on failure
+     */
+    public function restoreUser(int $login, array $userData = []): bool
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (!$apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool for restore', ['login' => $login]);
+            return false;
+        }
+
+        try {
+            // If user data not provided, fetch it first from archive
+            if (empty($userData)) {
+                $userData = $this->getArchivedUser($login);
+                if ($userData === false) {
+                    Log::warning('MT5RestAPI: User not found in archive, cannot restore', ['login' => $login]);
+                    return false;
+                }
+            }
+            // If we still need to fetch (fallback to account get if archive fails)
+            if (empty($userData)) {
+                $result = $apiRequest->Post('/api/user/account/get', json_encode(['login' => (int)$login]));
+
+                if ($result === false) {
+                    Log::warning('MT5RestAPI: Failed to fetch user data for restore', ['login' => $login]);
+                    $this->connectionPool->reportConnectionError($apiRequest);
+                    return false;
+                }
+
+                // Parse the response to extract user data
+                $response = is_string($result) ? json_decode($result, true) : $result;
+
+                if (!isset($response['answer'])) {
+                    Log::warning('MT5RestAPI: Invalid response when fetching user for restore', ['login' => $login]);
+                    return false;
+                }
+
+                $userData = $response['answer'];
+            }
+
+            // Ensure login is set correctly in user data
+            if (is_array($userData)) {
+                $userData['Login'] = (int)$login;
+            } else {
+                Log::warning('MT5RestAPI: User data is not array', ['login' => $login]);
+                return false;
+            }
+
+            // Make POST request to restore API endpoint
+            // API documentation shows: POST /api/user/restore with user data
+            $restorePayload = json_encode($userData);
+            $result = $apiRequest->Post('/api/user/restore', $restorePayload);
+
+            if ($result === false) {
+                Log::warning('MT5RestAPI: Restore request failed', ['login' => $login]);
+                $this->connectionPool->reportConnectionError($apiRequest);
+                return false;
+            }
+
+            // Process and validate response
+            return $this->processRestoreResponse($result, $login);
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception in restoreUser', [
+                'login' => $login,
+                'error' => $e->getMessage()
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+            return false;
+        }
+    }
+
+    /**
+     * Process restore response from REST API
+     *
+     * @param mixed $response The API response
+     * @param int $login The login ID being restored
+     * @return bool True if restore was successful
+     */
+    private function processRestoreResponse($response, int $login): bool
+    {
+        // Decode JSON if needed
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (!$response) {
+                Log::warning('MT5RestAPI: Invalid JSON response for restore', [
+                    'login' => $login,
+                    'raw_response' => substr($response, 0, 500)
+                ]);
+                return false;
+            }
+        }
+
+        // Check for API error
+        if (isset($response['retcode']) && $response['retcode'] !== "0 Done") {
+            Log::warning('MT5RestAPI: Restore API error', [
+                'login' => $login,
+                'retcode' => $response['retcode'] ?? 'Unknown',
+                'retmsg' => $response['retmsg'] ?? 'Unknown error'
+            ]);
+            return false;
+        }
+
+        Log::info('MT5RestAPI: User successfully restored', ['login' => $login]);
+        return true;
     }
 
     /**

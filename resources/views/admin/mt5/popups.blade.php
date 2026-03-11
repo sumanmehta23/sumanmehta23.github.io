@@ -88,6 +88,37 @@
     </div>
 </div>
 
+<div class="modal fade" id="accountArchiveModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="accountArchiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{ route('admin.archiveAccount') }}" id="archiveAccountForm" method="POST">
+                @csrf
+                <input type="hidden" name="client_id" id="client_id" value="{{ $getUser->user_id }}">
+                <input type="hidden" name="account_id" id="account_id" value="{{ $getUser->id ?? '' }}">
+                <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
+                <input type="hidden" name="login" id="login" value="{{ $getUser->code ?? '' }}">
+                <input type="hidden" name="platform" id="platform" value="{{ $getUser->trade_platform ?? '' }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountArchiveModalLabel">Archive Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="mb-3">
+                        This will move the account to the archive database on MT5.
+                        The account will no longer be active for trading but will be preserved in the archive.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Archive Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="depositModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
     aria-labelledby="depositModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
