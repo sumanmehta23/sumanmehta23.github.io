@@ -809,9 +809,9 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('success', 'Your Wallet Address is now Verified');
+                return redirect()->route('trade-withdrawal')->with('success', 'Your wallet address is now verified');
             } else {
-                return redirect()->route('dashboard')->with('error', 'Sorry! Wallet Address is already Verified');
+                return redirect()->route('dashboard')->with('error', 'Sorry, your wallet address is already verified');
             }
         } else {
             return redirect()->route('dashboard')->with('error', 'Sorry! No Adress Found. Signup here');
