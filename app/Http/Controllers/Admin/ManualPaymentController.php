@@ -509,10 +509,7 @@ class ManualPaymentController extends Controller
         $depositType = $tradeDeposit->deposit_type == "CreditCardPayissa" ? "Credit Card" : $tradeDeposit->deposit_type;
 
         $content = '<p style="font-size: 16px; color: #000000;">
-            We are pleased to inform you that your manual payment deposit has been <b>successful</b>.
-        </p>
-        <p style="font-size: 16px; color: #000000;">
-            The approved amount has been deposited into your account <b>' . $tradeDeposit->code . '</b>.
+            We are pleased to inform you that funds have been successfully deposited into your account..
         </p>';
 
         $templateVars = [

@@ -658,7 +658,6 @@ class MT5Controller extends Controller
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
                 }
             }
-
             // MT5 deletion logic
             $error_code = $this->api->DisableTrading($login);
             if (!$error_code['status']) {
