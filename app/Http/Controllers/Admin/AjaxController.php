@@ -5528,7 +5528,7 @@ class AjaxController extends Controller
                 $data[] = [
                     'created_on' => Carbon::parse($wallet->created_at)->format('Y-m-d H:i:s'),
                     'wallet_name' => $wallet->wallet_name,
-                    'wallet_currency' => $wallet->wallet_currency,
+                    'wallet_currency' => ($wallet->wallet_network == 'BTC') ? 'BTC' : $wallet->wallet_currency,
                     'wallet_network' => $wallet->wallet_network,
                     'wallet_address' => $wallet->wallet_address,
                     'verified' => $verifiedBadge,
