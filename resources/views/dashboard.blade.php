@@ -85,6 +85,17 @@
                     </div>
                 </div>
             </div>
+            <div class="pb-0 mb-0 page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title h2">
+                        <h4 class="mb-0">Dashboard</h4>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12 col-lg-9">
                     <div class="card">
@@ -194,7 +205,7 @@
                                                             </td> --}}
                                                             <td class="text-end f-w-200">
                                                                 @if ($liveAccount->code && $liveAccount->code != 'Rejected')
-                                                                    <div class="d-flex align-items-center gap-2">
+                                                                    <div class="gap-2 d-flex align-items-center">
                                                                         <button class="btn btn-sm btn-outline-secondary d-grid me-2">
                                                                             <a href="{{ route('view-account-details', $liveAccount->id) }}">
                                                                             <span class="">View <svg class="pc-icon">
