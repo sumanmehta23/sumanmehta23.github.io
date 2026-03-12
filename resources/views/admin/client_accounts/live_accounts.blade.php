@@ -172,8 +172,16 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label" for="filter-deposited-not-traded">Deposited But Not Traded</label>
-                                    <select class="form-select" id="filter-deposited-not-traded">
+                                    <label class="form-label" for="filter-deposited">Deposited</label>
+                                    <select class="form-select" id="filter-deposited">
+                                        <option value="">All</option>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" for="filter-traded">Traded</label>
+                                    <select class="form-select" id="filter-traded">
                                         <option value="">All</option>
                                         <option value="yes">Yes</option>
                                         <option value="no">No</option>
@@ -210,7 +218,8 @@
                                             <td>Registered Date</td>
                                             <td>Last Trade Date</td>
                                             <td>Days Since Last Trade</td>
-                                            <td>Dep. Not Traded</td>
+                                            <td>Deposited</td>
+                                            <td>Traded</td>
                                             <td>Status</td>
                                             <td>Total Dep.</td>
                                             <td>Total Withdraw</td>
@@ -370,7 +379,8 @@
             days_since_last_trade_min: $('#filter-days-min').val(),
             days_since_last_trade_max: $('#filter-days-max').val(),
             activity_status: $('#filter-activity-status').val(),
-            deposited_not_traded: $('#filter-deposited-not-traded').val()
+            deposited: $('#filter-deposited').val(),
+            traded: $('#filter-traded').val()
         };
     }
 
@@ -466,7 +476,8 @@
             $('#filter-days-min').val('');
             $('#filter-days-max').val('');
             $('#filter-activity-status').val('');
-            $('#filter-deposited-not-traded').val('');
+            $('#filter-deposited').val('');
+            $('#filter-traded').val('');
 
             showLiveAccountsOverlay();
             dTtable.ajax.reload();
@@ -543,8 +554,12 @@
                     name: 'days_since_last_trade',
                 },
                 {
-                    data: 'deposited_not_traded',
-                    name: 'deposited_not_traded',
+                    data: 'deposited',
+                    name: 'deposited',
+                },
+                {
+                    data: 'traded',
+                    name: 'traded',
                 },
                 {
                     data: 'account_status',
@@ -635,7 +650,7 @@
                         }
                     },
                     exportOptions: {
-                        columns: [11, 12, 17, 2, 3, 13, 14, 4, 5, 6, 7, 8, 9, 10] // Name, Email, Country, Code, Group, Leverage, Balance, Date, Time, Registered, Last Trade Date, Days, Status, Dep. Not Traded
+                        columns: [12, 13, 2, 3, 18, 14, 15, 16, 17, 5, 6, 7, 8, 9] // Name, Email, Code, Group, Country, Leverage, Balance, Date, Time, Last Trade Date, Days, Deposited, Not Traded, Status
                     }
                 },
                 {
