@@ -220,6 +220,7 @@
                                             <td>Account Group</td>
                                             <td>Date</td>
                                             <td>Time</td>
+                                            <td>Country</td>
                                             @can('account:update')
                                                 <td>Actions</td>
                                             @endcan
@@ -596,6 +597,13 @@
 
                 },
                 {
+                    data: 'user_country',
+                    name: 'user_country',
+                    visible: false,
+                    orderable: false,
+                    searchable: false,
+                },
+                {
                     data: 'actions',
                     name: 'actions',
                     orderable: false,
@@ -627,7 +635,7 @@
                         }
                     },
                     exportOptions: {
-                        columns: [11, 12, 2, 3, 13, 14, 4, 5, 6, 7, 8, 9, 10] // Name, Email, Code, Group, Leverage, Balance, Date, Time, Registered, Last Trade Date, Days, Status, Dep. Not Traded
+                        columns: [11, 12, 17, 2, 3, 13, 14, 4, 5, 6, 7, 8, 9, 10] // Name, Email, Country, Code, Group, Leverage, Balance, Date, Time, Registered, Last Trade Date, Days, Status, Dep. Not Traded
                     }
                 },
                 {
