@@ -985,6 +985,9 @@ class AjaxController extends Controller
                 ->addColumn('account_code', function ($row) {
                     return $row->code;
                 })
+                ->addColumn('user_country', function ($row) {
+                    return $row->user ? $row->user->country : '';
+                })
                 ->addColumn('account_group', function ($row) {
                     return $row->accountType ? $row->accountType->ac_group : 'N/A';
                 })
@@ -1042,7 +1045,7 @@ class AjaxController extends Controller
                         END {$order}
                     ");
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions','deposited','traded'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions', 'deposited','traded', 'user_country'])
                 ->make(true);
         }
 
@@ -4709,6 +4712,7 @@ class AjaxController extends Controller
                 'ID',
                 'Name',
                 'Email',
+                'Country',
                 'Code',
                 'Account Group',
                 'Leverage',
@@ -4758,6 +4762,7 @@ class AjaxController extends Controller
                         $account->id,
                         $account->user->fullname ?? '',
                         $account->email,
+                        $account->user->country ?? '',
                         $account->code,
                         $account->accountType->ac_group ?? '',
                         $account->leverage,
