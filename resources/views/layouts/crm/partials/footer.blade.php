@@ -14,7 +14,7 @@
                 <p class="mb-1">
                 Email: <a href="mailto:support@lqhmarkets.com" class="text-success">support@lqhmarkets.com</a>
                 </p>
-                <p class="mb-0 text-muted">© {{ date('Y') }} LQH Markets | All rights reserved.</p>
+                <p class="mb-0 text-muted notranslate">© {{ date('Y') }} LQH Markets | All rights reserved.</p>
             </div>
 
             <!-- Explore -->
