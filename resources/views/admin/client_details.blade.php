@@ -1086,7 +1086,7 @@
                                                                                                 class="form-label">Password:</label>
                                                                                             <input type="password"
                                                                                                 class="form-control"
-                                                                                                name="password">
+                                                                                                name="password" id="editUserPassword">
                                                                                         </div>
                                                                                         <div class="col-6">
                                                                                             <label for="input-label"
@@ -1095,7 +1095,7 @@
                                                                                             <input type="password"
                                                                                                 class="form-control"
                                                                                                 id="input"
-                                                                                                name="confirm_password">
+                                                                                                name="confirm_password" id="editUserConfirmPassword">
                                                                                         </div>
 
                                                                                         <div
@@ -1111,10 +1111,14 @@
                                                                                                     Notification Email</label>
                                                                                             </div>
                                                                                         </div>
+
+                                                                                        <div class="my-2 col-12">
+                                                                                            @include('partials.password-validation-rules-admin', ['prefix' => 'edit-'])
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div class="modal-footer">
-                                                                                    <button type="submit" name="updateUser"
+                                                                                    <button type="submit" id="editUserSubmitBtn" name="updateUser"
                                                                                         value="update"
                                                                                         class="btn btn-primary">Update</button>
                                                                                 </div>
