@@ -174,7 +174,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" name="updateUser" value="update" class="btn btn-primary" id="editUserSubmitBtn" disabled>Update</button>
+                        <button type="submit" name="updateUser" value="update" class="btn btn-primary" id="editUserSubmitBtn">Update</button>
                     </div>
                 </form>
             </div>
