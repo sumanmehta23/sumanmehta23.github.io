@@ -176,7 +176,6 @@ class BalanceSyncService
 
         $account->update($updateData);
 
-        // Update last trade info for the account
         $this->updateLastTradeInfo($account);
 
         $bonusPayoffSyncAt = now();
@@ -457,27 +456,12 @@ class BalanceSyncService
      */
     protected function updateLastTradeInfo(Account $account): void
     {
-        try {
-            // Get the latest trade for this account, ordered by open_time descending
-            $latestTrade = Trade::where('account_id', $account->id)
-                ->orderBy('open_time', 'desc')
-                ->orderBy('id', 'desc')
-                ->first();
+        $latestOpenTime = Trade::where('account_id', $account->id)
+            ->orderByDesc('open_time')
+            ->value('open_time');
 
-            if ($latestTrade && $latestTrade->open_time) {
-                // Update last_trade_at with the trade's open_time timestamp
-                $account->update(['last_trade_at' => $latestTrade->open_time]);
-
-                Log::debug("Updated last_trade_at for account {$account->code}", [
-                    'position_id' => $latestTrade->position_id,
-                    'open_time' => $latestTrade->open_time
-                ]);
-            } else {
-                // No trades found for this account, set to null
-                $account->update(['last_trade_at' => null]);
-            }
-        } catch (\Exception $e) {
-            Log::error("Failed to update last_trade_at for account {$account->code}: " . $e->getMessage());
+        if ($latestOpenTime && $latestOpenTime != $account->last_trade_at) {
+            $account->update(['last_trade_at' => $latestOpenTime]);
         }
     }
 }
