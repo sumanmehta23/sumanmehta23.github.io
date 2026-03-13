@@ -4758,6 +4758,7 @@ class AjaxController extends Controller
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
                         $Traded = $hasTrades ? 'Yes' : 'No';
 
+                        
                         fputcsv($handle, [
                         $account->id,
                         $account->user->fullname ?? '',
