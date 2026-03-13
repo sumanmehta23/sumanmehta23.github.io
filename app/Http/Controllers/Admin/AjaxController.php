@@ -4763,7 +4763,6 @@ class AjaxController extends Controller
                         $account->id,
                         $account->user->fullname ?? '',
                         $account->email,
-                        $account->user->country ?? '',
                         $account->code,
                         $account->accountType->ac_group ?? '',
                         $account->leverage,
