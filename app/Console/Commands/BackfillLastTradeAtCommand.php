@@ -121,10 +121,47 @@ class BackfillLastTradeAtCommand extends Command
         $this->info('Running bulk UPDATE...');
 
         try {
-            if ($specificCodes) {
-                // Build safe placeholders for the code list
+            // MySQL does not allow LIMIT on multi-table UPDATE … JOIN.
+            // When a limit is set we first SELECT the target IDs (respecting
+            // the limit), then UPDATE only those IDs — still just 2 queries.
+            if ($limit > 0) {
+                $idQuery = DB::table('accounts as a')
+                    ->join(
+                        DB::raw('(SELECT account_id, MAX(open_time) AS latest_open_time FROM trades GROUP BY account_id) t'),
+                        't.account_id', '=', 'a.id'
+                    )
+                    ->where('a.trade_platform', 'MetaTrader5')
+                    ->whereNull('a.last_trade_at')
+                    ->whereNotNull('a.code')
+                    ->whereNotNull('t.latest_open_time');
+
+                if ($specificCodes) {
+                    $idQuery->whereIn('a.code', $specificCodes);
+                }
+
+                $limitedIds = $idQuery->limit($limit)->pluck('a.id')->all();
+
+                if (empty($limitedIds)) {
+                    $rowsAffected = 0;
+                } else {
+                    $idPlaceholders = implode(',', array_fill(0, count($limitedIds), '?'));
+
+                    $rowsAffected = DB::affectingStatement("
+                        UPDATE accounts a
+                        JOIN (
+                            SELECT t.account_id, MAX(t.open_time) AS latest_open_time
+                            FROM trades t
+                            WHERE t.account_id IN ({$idPlaceholders})
+                            GROUP BY t.account_id
+                        ) agg ON agg.account_id = a.id
+                        SET a.last_trade_at = agg.latest_open_time
+                        WHERE a.id IN ({$idPlaceholders})
+                          AND a.trade_platform = 'MetaTrader5'
+                          AND a.last_trade_at IS NULL
+                    ", array_merge($limitedIds, $limitedIds));
+                }
+            } elseif ($specificCodes) {
                 $codePlaceholders = implode(',', array_fill(0, count($specificCodes), '?'));
-                $limitClause      = $limit > 0 ? "LIMIT {$limit}" : '';
 
                 $rowsAffected = DB::affectingStatement("
                     UPDATE accounts a
@@ -143,11 +180,8 @@ class BackfillLastTradeAtCommand extends Command
                     WHERE a.trade_platform = 'MetaTrader5'
                       AND a.last_trade_at IS NULL
                       AND a.code IN ({$codePlaceholders})
-                    {$limitClause}
                 ", array_merge($specificCodes, $specificCodes));
             } else {
-                $limitClause = $limit > 0 ? "LIMIT {$limit}" : '';
-
                 $rowsAffected = DB::affectingStatement("
                     UPDATE accounts a
                     JOIN (
@@ -163,7 +197,6 @@ class BackfillLastTradeAtCommand extends Command
                     SET a.last_trade_at = agg.latest_open_time
                     WHERE a.trade_platform = 'MetaTrader5'
                       AND a.last_trade_at IS NULL
-                    {$limitClause}
                 ");
             }
 
