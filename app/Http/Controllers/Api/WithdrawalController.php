@@ -92,7 +92,9 @@ class WithdrawalController extends Controller
                 $q->where('cell_tracking', 1);
             })
             ->whereIn('withdraw_type', ['Trade Withdrawal', 'CRM'])
-            ->whereIn('admin_remark', ['complete','Manually Approved'])
+            ->when(request('withdraw_type') != 'CRM', function ($q) {
+                $q->whereIn('admin_remark', ['complete','Manually Approved']);
+            })
             ->where('status',1); // Only include trade withdrawals with cell_tracking = 1
 
         // Apply date filters
