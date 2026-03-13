@@ -1418,6 +1418,7 @@ class MT5Controller extends Controller
                 'admin_remark' => $description,
                 'Status' => 1,
                 'created_by' => session('alogin'),
+                'code' => $code,
             ];
 
             // Add cell_tracking only for Cellexpert accounts (cxd)
