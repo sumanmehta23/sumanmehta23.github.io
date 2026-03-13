@@ -52,7 +52,7 @@ class BalanceSyncService
             }
 
             // Get accounts to sync
-            $accounts = $this->getAccountsForBalanceSync($accountCodes, $forceSync, $intelligentInterval);
+            $accounts = $this->getAccountsForBalanceSync(            php artisan accounts:backfill-last-trade-at --limit=100, $forceSync, $intelligentInterval);
 
             if ($accounts->isEmpty()) {
                 Log::info("No accounts require balance sync");
