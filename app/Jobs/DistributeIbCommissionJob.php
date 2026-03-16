@@ -428,9 +428,9 @@ class DistributeIbCommissionJob implements ShouldQueue
 
                         $symbolpath = $symbolMappings[$symbolWithoutP];
                         $commission = preg_match('/Forex|Metals/', $symbolpath) ? $commission : 0;
-                        if(in_array($this->referral_code, ['xyB6LV'])){
-                            $commission = preg_match('/Forex|Energy/', $symbolpath) ? .01 : $commission;
-                        }
+                        // if(in_array($this->referral_code, ['xyB6LV'])){
+                        //     $commission = preg_match('/Forex|Energy/', $symbolpath) ? .01 : $commission;
+                        // }
 
                         log::info('Calculated commission for trade', [
                             'trade_id' => $ca->id,
