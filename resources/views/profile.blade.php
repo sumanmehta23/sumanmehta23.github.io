@@ -315,32 +315,37 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane" id="security" role="tabpanel" aria-labelledby="profile-tab-4">
-                                    <form id="changePasswordForm" method="post">
+                                    <form id="changePasswordForm" method="post" action="{{ route('password.change') }}">
                                         @csrf
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5>Change Password</h5>
                                             </div>
                                             <div class="card-body">
+                                                <!-- Success Message -->
+                                                <div id="passwordSuccessMessage" class="alert alert-success d-none"></div>
+                                                <!-- Error Message -->
+                                                <div id="passwordErrorMessage" class="alert alert-danger d-none"></div>
+
                                                 <div class="row">
                                                     <div class="col-sm-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Current Password</label>
                                                             <input type="password" name="current_password" required
-                                                                class="form-control">
+                                                                class="form-control" id="current_password">
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">New Password</label>
                                                             <input type="password" class="form-control"
-                                                                name="new_password" required>
+                                                                name="new_password" required id="new_password">
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">Confirm Password</label>
                                                             <input type="password" name="new_password_confirmation"
-                                                                required class="form-control">
+                                                                required class="form-control" id="new_password_confirmation">
                                                         </div>
                                                     </div>
-                                                    <div class="col-sm-6">
+                                                    {{-- <div class="col-sm-6">
                                                         <h5>New Password Must Contain:</h5>
                                                         <ul class="list-group list-group-flush">
                                                             <li class="list-group-item"><i
@@ -362,12 +367,18 @@
                                                                     class="ti ti-circle-minus text-danger f-16 me-2"></i>Passwords
                                                                 do not match</li>
                                                         </ul>
+                                                    </div> --}}
+
+                                                    <div class="col-sm-6">
+                                                        @include('partials.password-validation-rules')
                                                     </div>
+
                                                 </div>
                                             </div>
                                             <div class="card-footer text-end btn-page">
                                                 <div class="btn btn-outline-secondary">Cancel</div>
                                                 <button type="submit" name="password_changed"
+                                                    id="password_changed"
                                                     class="btn btn-primary">Update
                                                     Password</button>
                                             </div>
@@ -544,35 +555,64 @@
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
 
+            // Clear previous messages
+            $('#passwordSuccessMessage').addClass('d-none').text('');
+            $('#passwordErrorMessage').addClass('d-none').text('');
+
             $.ajax({
                 type: "POST",
-                url: "{{ route('password.change') }}",
+                url: $(this).attr('action'),
                 data: $(this).serialize(),
                 success: function(response) {
                     console.log("Success Response:", response);
+                    $('#passwordSuccessMessage').removeClass('d-none').text(response.success);
                     Swal.fire({
                         icon: 'success',
                         title: response.success,
                     }).then(() => {
-                        location.reload();
+                        // Clear form after successful password change
+                        $('#changePasswordForm')[0].reset();
+                        // Reset validation UI
+                        $('.rule-icon').removeClass('ti-check text-success').addClass('ti-x text-red-500');
+                        $('#rule-length, #rule-uppercase, #rule-lowercase, #rule-digit, #rule-special, #rule-no-spaces, #rule-match')
+                            .removeClass('text-success').addClass('text-red-500');
                     });
                 },
                 error: function(xhr) {
                     console.log("Error Response:", xhr);
                     let errorMessage = "Something went wrong";
+
                     if (xhr.responseJSON?.errors) {
-                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join(
-                            "");
-                        errorMessage =
-                            `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        // Handle array of errors from controller
+                        const errors = xhr.responseJSON.errors;
+                        if (Array.isArray(errors)) {
+                            let errorList = errors.map(error => `<li>${error}</li>`).join("");
+                            errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        } else {
+                            // Handle object errors
+                            let errorList = '';
+                            for (const [key, value] of Object.entries(xhr.responseJSON.errors)) {
+                                if (Array.isArray(value)) {
+                                    value.forEach(msg => {
+                                        errorList += `<li>${msg}</li>`;
+                                    });
+                                } else {
+                                    errorList += `<li>${value}</li>`;
+                                }
+                            }
+                            errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        }
                     } else if (xhr.responseJSON?.message) {
                         errorMessage = xhr.responseJSON.message;
                     }
 
+                    // Show error in both SweetAlert and inline message
+                    $('#passwordErrorMessage').removeClass('d-none').html(errorMessage);
+
                     Swal.fire({
                         icon: 'error',
                         title: "Password Requirements Not Met",
-                        html: errorMessage, // Use `html` instead of `text` for bullet formatting
+                        html: errorMessage,
                     });
                 }
             });
@@ -838,5 +878,81 @@
             });
         }
 
+    </script>
+
+    {{-- Remove broken include and replace with inline validation --}}
+
+    <script>
+        // Initialize password validation for profile password form
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const submitBtn = document.getElementById('password_changed');
+
+            if (!passwordInput) return;
+
+            // Function to check password rules
+            function checkPasswordRules(password, confirmPassword) {
+                return {
+                    length: password.length >= 8,
+                    lowercase: /[a-z]/.test(password),
+                    uppercase: /[A-Z]/.test(password),
+                    digit: /\d/.test(password),
+                    special: /[\W_]/.test(password),
+                    noSpaces: !/\s/.test(password),
+                    match: confirmPassword ? password === confirmPassword : null
+                };
+            }
+
+            // Function to update rule UI
+            function updateRuleUI(ruleId, isValid) {
+                const ruleElement = document.getElementById(ruleId);
+                if (!ruleElement) return;
+
+                const icon = ruleElement.querySelector('.rule-icon');
+                if (isValid === true) {
+                    ruleElement.classList.remove('text-red-500');
+                    ruleElement.classList.add('text-success');
+                    if (icon) {
+                        icon.classList.remove('ti-x', 'text-red-500');
+                        icon.classList.add('ti-check', 'text-success');
+                    }
+                } else if (isValid === false) {
+                    ruleElement.classList.remove('text-success');
+                    ruleElement.classList.add('text-red-500');
+                    if (icon) {
+                        icon.classList.remove('ti-check', 'text-success');
+                        icon.classList.add('ti-x', 'text-red-500');
+                    }
+                }
+            }
+
+            // Listen for password input changes
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const rules = checkPasswordRules(password, confirmPassword);
+
+                updateRuleUI('rule-length', rules.length);
+                updateRuleUI('rule-uppercase', rules.uppercase);
+                updateRuleUI('rule-lowercase', rules.lowercase);
+                updateRuleUI('rule-digit', rules.digit);
+                updateRuleUI('rule-special', rules.special);
+                updateRuleUI('rule-no-spaces', rules.noSpaces);
+                updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+            });
+
+            // Listen for confirm password input changes
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function () {
+                    const password = passwordInput.value;
+                    const confirmPassword = this.value;
+                    const rules = checkPasswordRules(password, confirmPassword);
+
+                    updateRuleUI('rule-match', rules.match);
+                });
+            }
+        });
+    </script>
     </script>
 @endsection
