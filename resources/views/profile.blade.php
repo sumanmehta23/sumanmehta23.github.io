@@ -954,5 +954,4 @@
             }
         });
     </script>
-    </script>
 @endsection

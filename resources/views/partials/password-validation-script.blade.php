@@ -19,17 +19,29 @@
         const iconElement = ruleElement.querySelector('.rule-icon');
 
         if (isSatisfied === null) {
-            // Reset state
-            ruleElement.classList.remove('satisfied');
-            iconElement.className = 'ti ti-x absolute start-0 top-0 text-danger rule-icon';
+            // Reset state - neutral gray
+            ruleElement.classList.remove('valid');
+            ruleElement.classList.add('invalid');
+            if (iconElement) {
+                iconElement.classList.remove('valid');
+                iconElement.classList.add('invalid');
+            }
         } else if (isSatisfied) {
-            // Satisfied - green checkmark
-            ruleElement.classList.add('satisfied');
-            iconElement.className = 'ti ti-check absolute start-0 top-0 text-success rule-icon';
+            // Satisfied - green
+            ruleElement.classList.remove('invalid');
+            ruleElement.classList.add('valid');
+            if (iconElement) {
+                iconElement.classList.remove('invalid');
+                iconElement.classList.add('valid');
+            }
         } else {
-            // Not satisfied - red X
-            ruleElement.classList.remove('satisfied');
-            iconElement.className = 'ti ti-x absolute start-0 top-0 text-danger rule-icon';
+            // Not satisfied - red
+            ruleElement.classList.remove('valid');
+            ruleElement.classList.add('invalid');
+            if (iconElement) {
+                iconElement.classList.remove('valid');
+                iconElement.classList.add('invalid');
+            }
         }
     };
 
