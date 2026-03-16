@@ -4,20 +4,11 @@
 
 namespace App\Console\Commands;
 
-use Exception;
 use App\Models\Ib1;
-use App\Models\User;
-use App\Models\Symbol;
-use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Models\IbWallet;
-use Illuminate\Support\Str;
-use App\Services\UniversalMT5Service;
-use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use Illuminate\Console\Command;
 use App\Jobs\SyncAccountTradesJob;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 
