@@ -195,7 +195,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             $symbolpath = $symbolMappings[$symbolWithoutP];
             $b = preg_match('/Energy|Indices|Cryptocurrencies/', $symbolpath) ? 0.00001 : 0.0001;
             // Calculate lot size
-            $lotSize = $this->calculateLotSize($order->VolumeInitialExt, $order->ContractSize ?? 100000);
+            // $lotSize = $this->calculateLotSize($order->VolumeInitialExt, $order->ContractSize ?? 100000);
 
             // Prepare IB commission data
             return [
