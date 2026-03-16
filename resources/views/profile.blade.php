@@ -418,7 +418,7 @@
                                                                                     $verification = 'Pending';
                                                                                     $tdClass = 'varification-pending';
                                                                                 } else {
-                                                                                    $verification = 'Approved';
+                                                                                    $verification = 'Verified';
                                                                                     $tdClass = 'varification-plus';
                                                                                 }
                                                                             @endphp
