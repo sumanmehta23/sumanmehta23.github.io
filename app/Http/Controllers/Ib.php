@@ -6,19 +6,15 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Ib1;
 use App\Models\User;
-use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\Setting;
 use App\Models\IbWallet;
-use App\Models\LiveAccount;
 use App\MT5\MTEnDealAction;
 use Illuminate\Support\Str;
 use App\Models\TradeDeposit;
 use Illuminate\Http\Request;
-use App\Models\Ib1Commission;
-use App\Models\IbPlanDetails;
 use App\Helpers\AccountHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +22,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\RateLimiter;
 
 class Ib extends Controller

@@ -490,7 +490,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
     protected function fireTradeOpenedEventsForBatch(Account $account, array $tradesToUpsert): void
     {
         $openPositionIds = collect($tradesToUpsert)
-            ->filter(fn ($t) => ($t['status'] ?? '') === 'open')
+            ->filter(fn($t) => ($t['status'] ?? '') === 'open')
             ->pluck('position_id')
             ->unique()
             ->values();
@@ -656,7 +656,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
      */
     protected function processAccountWithRetry($accountId): void
     {
-        $maxAttempts = 3;
+        $maxAttempts = 1;
         $attempt = 0;
         $lastException = null;
 
