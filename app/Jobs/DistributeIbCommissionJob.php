@@ -413,20 +413,9 @@ class DistributeIbCommissionJob implements ShouldQueue
                         }
                         //TEMP FIX: Allocate commission for forex and metal only and set 0 commission for any other . Determine if forex or metal by checking the path in symbols table for the current symbol and if it contains "forex" or "metal" then allocate commission otherwise set to 0
                         $symbolWithoutP = $ca->symbol;
-                        log::info('Processing trade for commission calculation', [
-                            'trade_id' => $ca->id,
-                            'symbol' => $ca->symbol,
-                            'referral_code' => $this->referral_code,
-                            'level' => $i,
-                        ]);
                         if (!isset($symbolMappings[$symbolWithoutP])) {
                             try {
                                 $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
-                                log::info('Fetched symbol for trade', [
-                                    'trade_id' => $ca->id,
-                                    'symbol' => $ca->symbol,
-                                    'symbol_path' => $symbol ? $symbol->path : 'not found',
-                                ]);
                                 $symbolMappings[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
                             } catch (Exception $e) {
                                 Log::error('Error fetching symbol: ' . $e->getMessage(), [
@@ -439,12 +428,17 @@ class DistributeIbCommissionJob implements ShouldQueue
 
                         $symbolpath = $symbolMappings[$symbolWithoutP];
                         $commission = preg_match('/Forex|Metals/', $symbolpath) ? $commission : 0;
+                        if(in_array($this->referral_code, ['xyB6LV'])){
+                            $commission = preg_match('/Forex|Energy/', $symbolpath) ? .01 : $commission;
+                        }
+
                         log::info('Calculated commission for trade', [
                             'trade_id' => $ca->id,
                             'symbol' => $ca->symbol,
                             'symbol_path' => $symbolpath,
-                            'commission_before' => $commission,
-                            'final_commission' => $commission,
+                            'commission' => $commission,
+                            'referral_code' => $this->referral_code,
+                            'level' => $i,
                         ]);
 
                         $ibWalletAmount = ((float) $commission) * $ca->volume;
