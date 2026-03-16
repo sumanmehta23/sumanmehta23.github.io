@@ -2,26 +2,18 @@
 
 namespace App\Console\Commands;
 
-use Exception;
 use App\Models\Ib1;
 use App\Models\User;
-use App\Models\Symbol;
 use App\MT5\MTRetCode;
 use App\Models\Account;
-use App\Models\IbWallet;
 use App\Models\AccountType;
 use App\Models\DemoDeposit;
 use App\MT5\MTEnDealAction;
-use Illuminate\Support\Str;
 use App\Services\UniversalMT5Service;
-use App\Models\Ib1Commission;
-use App\Models\IbPlanDetails;
 use App\Services\MailService;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class ActivateCompetitionAccounts extends Command
 {

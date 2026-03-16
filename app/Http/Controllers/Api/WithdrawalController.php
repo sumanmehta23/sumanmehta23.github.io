@@ -80,7 +80,7 @@ class WithdrawalController extends Controller
             $walletQuery->where('admin_remark', $productId);
         }
 
-        // Build trade withdrawals query
+        // Build trade withdrawal query
         $tradeQuery = TradeWithdrawals::query()->with('account:id,user_id,currency')
             ->whereHas('account', function ($q) {
                 $q->where('demo', 0);
@@ -88,11 +88,16 @@ class WithdrawalController extends Controller
             ->whereHas('user', function ($q) {
                 $q->whereNotNull('cxd');
             })
-            ->when(request('withdraw_type') === 'CRM', function ($q) {
-                $q->where('cell_tracking', 1);
+            ->where(function ($q) {
+                $q->where(function ($q) {
+                    $q->where('withdraw_type', 'Trade Withdrawal')
+                        ->whereIn('admin_remark', ['complete', 'Manually Approved']);
+                })->orWhere(function ($q2) {
+                    $q2->where('withdraw_type', 'CRM')
+                        ->where('cell_tracking', 1);
+                });
             })
-            ->whereIn('withdraw_type', ['Trade Withdrawal', 'CRM'])
-            ->where('status',1); // Only include trade withdrawals with cell_tracking = 1
+            ->where('status', 1);
 
         // Apply date filters
         if (!empty($dateFrom) && !empty($dateTo)) {

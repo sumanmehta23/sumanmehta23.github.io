@@ -85,6 +85,17 @@
                     </div>
                 </div>
             </div>
+            <div class="pb-0 mb-0 page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title h2">
+                        <h4 class="mb-0">Dashboard</h4>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12 col-lg-9">
                     <div class="card">
@@ -163,11 +174,11 @@
                                                                                 {{ 'Pending' }}
                                                                             </h4>
                                                                         @endif
-                                                                        <p class="mb-0 text-muted ms-2 f-12">
+                                                                        <h6 class="mb-0 text-muted ms-2 f-12">
                                                                             <span
                                                                                 class="text-truncate w-100">{{ $liveAccount->accountType->ac_name }}
                                                                             </span>
-                                                                        </p>
+                                                                        </h6>
                                                                     </div>
                                                                 </div>
                                                             </td>

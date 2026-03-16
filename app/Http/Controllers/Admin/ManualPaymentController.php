@@ -9,8 +9,9 @@ use App\Models\Promocode;
 use App\Models\PaymentLog;
 use App\Models\TotalBalance;
 use App\Models\TradeDeposit;
+use App\MT5\MTRetCode;
+use App\MT5\MTEnDealAction;
 use Illuminate\Http\Request;
-use App\DTOs\TradingAccountDTO;
 use App\Models\BonusTransaction;
 use App\Models\PendingManualPayment;
 use Illuminate\Support\Facades\DB;
@@ -19,14 +20,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
-use App\Services\TradingAccountService;
+use App\Services\UniversalMT5Service;
+use App\Services\MailService as MailService;
 use App\Helpers\AccountHelper;
 use App\Events\AccountTradesDepositEvent;
-use App\Notifications\FundDepositNotification;
 use App\Exceptions\PlatformConnectionException;
 
 class ManualPaymentController extends Controller
 {
+    protected $mt5Service;
+    protected $mailService;
+
+    public function __construct(UniversalMT5Service $mt5Service, MailService $mailService)
+    {
+        $this->mt5Service = $mt5Service;
+        $this->mailService = $mailService;
+    }
+
     /**
      * Display a listing of pending manual payments.
      */
@@ -103,7 +113,6 @@ class ManualPaymentController extends Controller
 
             $output = Artisan::output();
             $payment->polygon_response = $output;
-
             // Try to parse the JSON output
             if (preg_match('/\{[\s\S]*\}/', $output, $matches)) {
                 $jsonData = json_decode($matches[0], true);
@@ -141,7 +150,7 @@ class ManualPaymentController extends Controller
     /**
      * Process selected pending payments.
      */
-    public function processPayments(Request $request, TradingAccountService $tradingAccountService)
+    public function processPayments(Request $request)
     {
         $request->validate([
             'payment_ids' => 'required|array',
@@ -161,6 +170,7 @@ class ManualPaymentController extends Controller
 
             // Check if transaction already exists in trade_deposits
             $existingTransaction = TradeDeposit::where('transaction_id', $pendingPayment->transaction_id)->first();
+
             if ($existingTransaction) {
                 $failedPayments[] = [
                     'id' => $paymentId,
@@ -190,18 +200,36 @@ class ManualPaymentController extends Controller
                     ]);
                 }
 
-                // Process promo code if exists (before deposit to handle leverage update)
-                if ($pendingPayment->promocode) {
-                    $this->processPromoCode($pendingPayment, $amount, $tradingAccountService);
-                }
-
-                // Deposit to trading account
-                $accountDTO = TradingAccountDTO::fromModel($tradingAccountService->getPlatform(), $pendingPayment->account);
-                $tradingAccountService->deposit($accountDTO, $amount);
-
                 DB::beginTransaction();
 
-                // Create trade deposit record
+                // CRITICAL: Use database locking to prevent race conditions
+                // Note: Lock name must be <= 64 characters for MySQL's GET_LOCK
+                $lockName = 'manual_payment_' . substr(md5($pendingPayment->transaction_id), 0, 32);
+                $lockResult = DB::select('SELECT GET_LOCK(?, 10) as lock_acquired', [$lockName]);
+                if (!$lockResult[0]->lock_acquired) {
+                    DB::rollBack();
+                    $failedPayments[] = [
+                        'id' => $paymentId,
+                        'email' => $pendingPayment->email,
+                        'reason' => 'Could not acquire lock',
+                    ];
+                    continue;
+                }
+
+                // Double-check for duplicate after acquiring lock
+                $existingTransaction = TradeDeposit::where('transaction_id', $pendingPayment->transaction_id)->first();
+                if ($existingTransaction) {
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+                    DB::rollBack();
+                    $failedPayments[] = [
+                        'id' => $paymentId,
+                        'email' => $pendingPayment->email,
+                        'reason' => 'Transaction already exists in trade_deposits',
+                    ];
+                    continue;
+                }
+
+                // Create trade deposit record (status 0 initially, will update to 1 after MT5 success)
                 $tradeDeposit = TradeDeposit::create([
                     'user_id' => $pendingPayment->user_id,
                     'account_id' => $pendingPayment->account_id,
@@ -210,13 +238,32 @@ class ManualPaymentController extends Controller
                     'deposit_amount' => $amount,
                     'deposit_type' => 'CreditCardPayissa',
                     'deposit_from' => 'CreditCardPayissa',
-                    'status' => 1,
+                    'status' => 0,
                     'deposit_currency' => 'USD',
                     'transaction_id' => $pendingPayment->transaction_id,
                     'deposted_date' => $pendingPayment->deposit_date ?? now(),
                     'callback_data' => $pendingPayment->polygon_response,
-                    'callback_code' => 'success',
+                    'callback_code' => 'pending',
                 ]);
+
+                // Main deposit to MT5
+                $comment = 'Manual Payment Deposit';
+                $ticket = NULL;
+                $errorCode = $this->mt5Service->tradeBalance($pendingPayment->account->code, MTEnDealAction::DEAL_BALANCE, $amount, $comment, $ticket, true);
+
+                if ($errorCode != MTRetCode::MT_RET_OK) {
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+                    DB::rollBack();
+                    throw new Exception('MT5 deposit failed: ' . MTRetCode::GetError($errorCode));
+                }
+
+                // Process promo code AFTER the main deposit is successful
+                if ($pendingPayment->promocode) {
+                    $this->processPromoCode($pendingPayment, $amount, $tradeDeposit);
+                }
+
+                // Update deposit status to success after all MT5 operations succeed
+                $tradeDeposit->update(['status' => 1, 'callback_code' => 'success']);
 
                 // Update total balance
                 TotalBalance::create([
@@ -241,20 +288,16 @@ class ManualPaymentController extends Controller
                         'processed_at' => now(),
                     ]);
 
+                // Release the lock before committing
+                DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+
                 DB::commit();
 
                 // Trigger deposit event
                 event(new AccountTradesDepositEvent($pendingPayment->user, $amount));
 
-                // Send notification to user
-                $settings = settings();
-                $pendingPayment->user->notify(new FundDepositNotification(
-                    $settings,
-                    $pendingPayment->user,
-                    $tradeDeposit,
-                    $pendingPayment->transaction_id,
-                    'CreditCardPayissa'
-                ));
+                // Send success email using MailService
+                $this->sendSuccessEmail($pendingPayment->email, $amount, $tradeDeposit);
 
                 // Clear cache
                 Cache::forget("user:{$pendingPayment->user_id}:trade_balance");
@@ -263,6 +306,11 @@ class ManualPaymentController extends Controller
 
                 $processedCount++;
             } catch (PlatformConnectionException $e) {
+                try {
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+                } catch (Exception $lockError) {
+                    // Ignore lock release errors
+                }
                 DB::rollBack();
                 Log::error('Platform connection error processing manual payment: ' . implode(" ", $e->getErrors()), [
                     'payment_id' => $paymentId,
@@ -274,6 +322,11 @@ class ManualPaymentController extends Controller
                     'reason' => 'Platform error: ' . implode(" ", $e->getErrors()),
                 ];
             } catch (Exception $e) {
+                try {
+                    DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+                } catch (Exception $lockError) {
+                    // Ignore lock release errors
+                }
                 DB::rollBack();
                 Log::error('Failed to process manual payment: ' . $e->getMessage(), [
                     'payment_id' => $paymentId,
@@ -355,8 +408,9 @@ class ManualPaymentController extends Controller
 
     /**
      * Process promo code for a payment.
+     * Note: This method is called AFTER the main deposit is successful (like secureProcessPayment in Wallet.php)
      */
-    private function processPromoCode($pendingPayment, $amount, TradingAccountService $tradingAccountService)
+    private function processPromoCode($pendingPayment, $amount, $tradeDeposit = null)
     {
         $promo = Promocode::where('code', $pendingPayment->promocode)->first();
 
@@ -377,10 +431,16 @@ class ManualPaymentController extends Controller
         }
 
         try {
-            $accountDTO = TradingAccountDTO::fromModel($tradingAccountService->getPlatform(), $pendingPayment->account);
-            $methodName = 'promoCreditIn';
-            $deposit = $tradingAccountService->$methodName($accountDTO, $bonus_amount);
+            // Apply bonus credit to MT5 account
+            $ticket = NULL;
+            $errorCode = $this->mt5Service->tradeBalance($pendingPayment->account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
 
+            if ($errorCode !== MTRetCode::MT_RET_OK) {
+                Log::error('Failed to apply promo bonus: ' . MTRetCode::GetError($errorCode));
+                // Don't throw here, continue with leverage update
+            }
+
+            // Create bonus transaction record
             BonusTransaction::create([
                 'email' => $pendingPayment->email,
                 'user_id' => $pendingPayment->user_id,
@@ -395,27 +455,77 @@ class ManualPaymentController extends Controller
                 'promocode_id' => $promo->id
             ]);
 
-            // Update leverage (same as Payment controller)
-            $trade_user = AccountHelper::getAccount($pendingPayment->code);
+            // Update trade deposit with promo code info if provided
+            if ($tradeDeposit) {
+                $tradeDeposit->promocode_percentage = $promo->promo_percentage;
+                $tradeDeposit->promocode_code = $promo->code;
+                $tradeDeposit->save();
+            }
+
+            // Update leverage after promo bonus (using MT5 user data like secureProcessPayment)
+            $trade_user = NULL;
+            $this->mt5Service->userGet($pendingPayment->account->code, $trade_user);
+
             if ($trade_user) {
                 Log::info("account->leverage " . json_encode($pendingPayment->account->leverage));
-                Log::info("balance " . json_encode($trade_user->balance));
-                Log::info("trading_account_balance " . json_encode($trade_user->trading_account_balance['credit']));
+                Log::info("balance " . json_encode($trade_user->Balance));
+                Log::info("trading_account_balance " . json_encode($trade_user->Credit));
 
-                $leverage = round($trade_user->leverage * ($amount / ($trade_user->balance + $trade_user->trading_account_balance['credit'])), 2);
+                $leverage = round($trade_user->Leverage * ($amount / ($trade_user->Balance + $trade_user->Credit)), 2);
 
                 Log::info("calculated leverage " . json_encode($leverage));
 
-                $accountDTO = TradingAccountDTO::fromModel($tradingAccountService->getPlatform(), $pendingPayment->account);
                 try {
-                    $accountDTO = $tradingAccountService->updateLeverage($accountDTO, $leverage);
+                    $trade_user->Leverage = $leverage;
+                    $updated_user = "";
+                    $error_code = $this->mt5Service->userUpdate($trade_user, $updated_user);
+                    if ($error_code != MTRetCode::MT_RET_OK) {
+                        Log::error('Failed to update leverage: ' . MTRetCode::GetError($error_code));
+                    }
                 } catch (\Throwable $th) {
                     Log::error('Failed to update leverage: ' . $th->getMessage());
                 }
             }
-        } catch (PlatformConnectionException $e) {
-            Log::error('Failed to process promo code: ' . implode(" ", $e->getErrors()));
+        } catch (Exception $e) {
+            Log::error('Failed to process promo code: ' . $e->getMessage());
             throw $e; // Re-throw to handle in main try-catch
         }
+    }
+
+    /**
+     * Send success email for manual payment deposit
+     */
+    private function sendSuccessEmail($toEmail, $amount, $tradeDeposit)
+    {
+        $user = User::where('id', $tradeDeposit->user_id)->first();
+        $settings = settings();
+        $from = $settings['email_from_address'];
+        $transid = $tradeDeposit->transaction_id;
+        $emailSubject = $settings['admin_title'] . ' - Fund Deposit';
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+        $depositType = $tradeDeposit->deposit_type == "CreditCardPayissa" ? "Credit Card" : $tradeDeposit->deposit_type;
+
+        $content = '<p style="font-size: 16px; color: #000000;">
+            We are pleased to inform you that funds have been successfully deposited into your account.
+        </p>';
+
+        $templateVars = [
+            'name' => $user->fullname,
+            'site_link' => $settings['copyright_site_name_text'],
+            'email' => $settings['email_from_address'],
+            "content" => $content,
+            "title_right" => "Fund",
+            "subtitle_right" => "Deposit",
+            "btn_text" => "Go To Dashboard",
+            'amount' => $tradeDeposit->deposit_amount,
+            'code' => $tradeDeposit->code,
+            'date' => $tradeDeposit->deposted_date,
+            'type' => $depositType,
+        ];
+
+        $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
     }
 }

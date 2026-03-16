@@ -410,7 +410,7 @@
                                                                     @foreach ($bank_accounts as $acc)
                                                                         <tr>
                                                                             <td>{{ $acc->wallet_name }}</td>
-                                                                            <td>{{ $acc->wallet_currency }}</td>
+                                                                            <td>{{ $acc->wallet_network == 'BTC' ? 'BTC' : $acc->wallet_currency }}</td>
                                                                             <td>{{ $acc->wallet_network }}</td>
                                                                             <td>{{ $acc->wallet_address }}</td>
                                                                             @php
@@ -418,7 +418,7 @@
                                                                                     $verification = 'Pending';
                                                                                     $tdClass = 'varification-pending';
                                                                                 } else {
-                                                                                    $verification = 'Approved';
+                                                                                    $verification = 'Verified';
                                                                                     $tdClass = 'varification-plus';
                                                                                 }
                                                                             @endphp
@@ -605,7 +605,24 @@
                             icon: "success",
                             title: "Wallet Address Status Updated"
                         }).then((val) => {
-                            location.reload();
+                            // Dynamically update the toggle icon and classes
+                            var $toggleBtn = $(".wallet-action[data-toggle='" + trans + "']");
+                            var $icon = $toggleBtn.find('i');
+                            var $container = $toggleBtn.parent();
+
+                            // Toggle between left and right icons
+                            if ($icon.hasClass('ti-toggle-left')) {
+                                $icon.removeClass('ti-toggle-left').addClass('ti-toggle-right');
+                                $toggleBtn.attr('title', 'Active Wallet Address');
+                                $container.removeClass('text-warning').addClass('text-success');
+                            } else {
+                                $icon.removeClass('ti-toggle-right').addClass('ti-toggle-left');
+                                $toggleBtn.attr('title', 'Inactive Wallet Address');
+                                $container.removeClass('text-success').addClass('text-warning');
+                            }
+
+                            // Reinitialize tooltip
+                            $toggleBtn.tooltip('dispose').tooltip();
                         });
                     } else {
                         swal.fire({

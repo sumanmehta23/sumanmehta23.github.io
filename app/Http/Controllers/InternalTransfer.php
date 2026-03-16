@@ -80,22 +80,16 @@ class InternalTransfer extends Controller
         // Check if the user has exceeded the rate limit
         if (RateLimiter::tooManyAttempts($key, 1)) {
             $retryAfter = RateLimiter::availableIn($key);
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many requests',
-                'error' => "Please wait {$retryAfter} seconds before trying again.",
-            ], 429); // HTTP 429 Too Many Requests
+
+            redirect()->back()->with('error', "Too many requests.Please wait {$retryAfter} seconds before trying again.");
         }
 
         // Increment the rate limiter
         RateLimiter::hit($key, 10); // Lock for 10 seconds
 
         if (!$this->ensureMT5Connection()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'MT5 connection failed',
-                'error' => 'Unable to connect to trading server'
-            ], 500);
+
+            redirect()->back()->with('error', "Unable to connect to trading server. Please trying again.");
         }
         $validated = $request->validate([
             'fromAccount' => 'required',
@@ -180,8 +174,10 @@ class InternalTransfer extends Controller
         ];
 
         try {
+            $Comment = 'Internal T- O:' . $fromAccount->code . ' - D:' . $toAccount->code;
+
             // Step 1: Withdraw from source account (BEFORE DB transaction)
-            $errorCode = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BALANCE, -$transferable_amount, 'withdraw', $ticket, true);
+            $errorCode = $this->api->TradeBalance($fromAccount->code, MTEnDealAction::DEAL_BALANCE, -$transferable_amount, $Comment, $ticket, true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 throw new \Exception('Failed to withdraw from the account: ' . MTRetCode::GetError($errorCode));
             }
@@ -230,7 +226,7 @@ class InternalTransfer extends Controller
             }
 
             // Step 4: Deposit to destination account (BEFORE DB transaction)
-            $errorCode = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BALANCE, $transferable_amount, 'deposit', $ticket, true);
+            $errorCode = $this->api->TradeBalance($toAccount->code, MTEnDealAction::DEAL_BALANCE, $transferable_amount, $Comment, $ticket, true);
             if ($errorCode != MTRetCode::MT_RET_OK) {
                 throw new \Exception('Failed to deposit to the account: ' . MTRetCode::GetError($errorCode));
             }
@@ -361,7 +357,6 @@ class InternalTransfer extends Controller
 
             return redirect()->back()->with('error', 'Transfer failed: ' . $th->getMessage());
         }
-        RateLimiter::clear($key);
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');
     }
 }

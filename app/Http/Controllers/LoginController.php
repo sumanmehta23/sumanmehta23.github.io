@@ -466,7 +466,7 @@ class LoginController extends Controller
                 return view('auth.reset-password', ['user' => $user]); // Return view
             }
         } else {
-            return redirect()->route('login')->with('error', 'Password reset verification token expires, please resend again.');
+            return redirect()->route('login')->with('error', 'This password reset link is no longer valid. Please request a new one.');
         }
     }
 
@@ -720,7 +720,7 @@ class LoginController extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('login')->with('status', 'Your Account is Now Activated');
+                return redirect()->route('login')->with('status', 'Your account has been activated');
             } else {
                 return redirect()->route('login')->with('error', 'Sorry! Your Account is already Activated');
             }

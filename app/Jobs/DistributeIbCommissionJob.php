@@ -6,6 +6,7 @@ use App\Models\Ib1;
 use App\Models\Ib1Commission;
 use App\Models\IbPlanDetails;
 use App\Models\IbWallet;
+use App\Models\Symbol;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -272,9 +273,16 @@ class DistributeIbCommissionJob implements ShouldQueue
         ]);
     }
 
+    protected function getSymbolMappings()
+    {
+        return Cache::remember('symbol_mappings', now()->addMinutes(30), function () {
+            return Symbol::pluck('path', 'symbol')->toArray();
+        });
+    }
     protected function processTrades($trades, $i): void
     {
         try {
+            $symbolMappings = $this->getSymbolMappings();
             $processStart = microtime(true);
 
             // Convert array to collection if needed
@@ -397,12 +405,41 @@ class DistributeIbCommissionJob implements ShouldQueue
                             ? 3
                             : ($ibAccPlans[$accountTypeId][$ibLevel]["d$i"] ?? null);
                         if ($commission) {
-                            $commission = in_array($this->referral_code, ['K08EjL', 'EzHMpw', 'dhMKco', '4uStWn', 'ZiVehO', 'ubFUp7', 'HGvsS1', 'JV4a0Q', 'hvzla', 'zOhX4z', 'jDZVem', 'g6ofHI', 'zzLXS5', 'jMKn9O', 'W0V2I5', 'MPE8QF', 'bNiFv5', 'viQJWM', 'B0AG0Q', '2uDAEC', 'n8veXm', 'MREUR', 'bonus', 'LoTDGy', 'r5rY60', 'l1ILDq', '0D7QTR', 'NfMdsB', '5I6KMP', 'BnqfyN', 'aAWtvV', 'n19Nvf', 'NMdvcb', 'hlS4W0'])
+                            $commission = in_array($this->referral_code, ['K08EjL', 'EzHMpw', 'dhMKco', '4uStWn', 'ZiVehO', 'ubFUp7', 'HGvsS1', 'JV4a0Q', 'hvzla', 'zOhX4z', 'jDZVem', 'g6ofHI', 'zzLXS5', 'jMKn9O', 'W0V2I5', 'MPE8QF', 'bNiFv5', 'viQJWM', 'B0AG0Q', '2uDAEC', 'n8veXm', 'MREUR', 'bonus', 'LoTDGy', 'r5rY60', 'l1ILDq', '0D7QTR', 'NfMdsB', '5I6KMP', 'BnqfyN', 'aAWtvV', 'n19Nvf', 'NMdvcb', 'hlS4W0', 'Chinner', 'zym6oK', 'xh8Ule', 'FmL7M0', 'IvkCZH', 'o7Bzs5', 'fpate08'])
                                 ? 6
                                 : $commission;
                         } else {
                             continue;
                         }
+                        //TEMP FIX: Allocate commission for forex and metal only and set 0 commission for any other . Determine if forex or metal by checking the path in symbols table for the current symbol and if it contains "forex" or "metal" then allocate commission otherwise set to 0
+                        $symbolWithoutP = $ca->symbol;
+                        if (!isset($symbolMappings[$symbolWithoutP])) {
+                            try {
+                                $symbol = Symbol::where('symbol', $symbolWithoutP)->first();
+                                $symbolMappings[$symbolWithoutP] = $symbol ? $symbol->path : 'default/path';
+                            } catch (Exception $e) {
+                                Log::error('Error fetching symbol: ' . $e->getMessage(), [
+                                    'symbol' => $symbolWithoutP,
+                                    'error' => $e->getMessage(),
+                                ]);
+                                $symbolMappings[$symbolWithoutP] = 'error/path';
+                            }
+                        }
+
+                        $symbolpath = $symbolMappings[$symbolWithoutP];
+                        $commission = preg_match('/Forex|Metals/', $symbolpath) ? $commission : 0;
+                        if(in_array($this->referral_code, ['xyB6LV'])){
+                            $commission = preg_match('/Forex|Energy/', $symbolpath) ? .01 : $commission;
+                        }
+
+                        log::info('Calculated commission for trade', [
+                            'trade_id' => $ca->id,
+                            'symbol' => $ca->symbol,
+                            'symbol_path' => $symbolpath,
+                            'commission' => $commission,
+                            'referral_code' => $this->referral_code,
+                            'level' => $i,
+                        ]);
 
                         $ibWalletAmount = ((float) $commission) * $ca->volume;
                         $formattedIbWallet = number_format($ibWalletAmount, 10, '.', '');

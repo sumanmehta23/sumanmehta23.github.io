@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Leaderboard;
+use App\Http\Controllers\Admin\LearnContentController;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\MT5Controller;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Ib;
 use App\Http\Controllers\InternalTransfer;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\KycSyncController;
+use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MT5Accounts;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
@@ -167,6 +169,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
+    Route::get('/learn', [LearnController::class, 'index'])->name('learn');
     Route::get('/joinCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
     Route::post('/joinCompetition', [CompetitionController::class, 'createCompetition'])->name('joinCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
@@ -359,6 +362,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
+        Route::post('/competition/send-reminder-email', [Leaderboard::class, 'sendReminderEmail'])->name('competition.sendReminderEmail');
+
         // Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
         // Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');
         // Route::post('/two-factor/confirm', [AdminTwoFactorAuthentication::class, 'confirmTwoFactorAuthentication'])->name('two-factor.confirm');
@@ -373,9 +378,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/recovery-codes', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
             Route::get('/recovery-codes', [TwoFactorAuthController::class, 'showRecoveryCodes'])->name('two-factor.recovery-codes.show');
         });
-
-        Route::post('/competition/send-reminder-email', [Leaderboard::class, 'sendReminderEmail'])->name('competition.sendReminderEmail');
-
 
         Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
         Route::get('/transactions/wallet-deposit', [Transaction::class, 'wallet_deposit'])->name('transactions.wallet-deposit')
@@ -541,6 +543,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post("/deleteAccount", [MT5Controller::class, 'deleteAccount'])->name('deleteAccount')->middleware('check.permissions:account:delete');
         Route::post("/softDeleteAccount", [MT5Controller::class, 'softDeleteAccount'])->name('softDeleteAccount')->middleware('check.permissions:account:delete');
         Route::post("/restoreAccount", [MT5Controller::class, 'restoreAccount'])->name('restoreAccount')->middleware('check.permissions:account:delete');
+        Route::post('/archiveAccount', [MT5Controller::class, 'archiveAccount'])->name('archiveAccount')->middleware('check.permissions:account:delete');
         Route::post("/depositToCellexpertAccount", [MT5Controller::class, 'depositToCellexpertAccount'])->name('depositToCellexpertAccount')->middleware('check.permissions:trade_deposit:create');
         Route::post("/withdrawFromAccount", [MT5Controller::class, 'withdrawFromAccount'])->name('withdrawFromAccount')->middleware('check.permissions:trade_withdrawals:create');
         Route::post("/withdrawFromCellexpertAccount", [MT5Controller::class, 'withdrawFromCellexpertAccount'])->name('withdrawFromCellexpertAccount')->middleware('check.permissions:trade_withdrawals:create');
@@ -563,6 +566,18 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
             Route::put('/{task}', [TaskController::class, 'update'])->name('update');
             Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::prefix('/learn-content')->name('learn-content.')->group(function () {
+            Route::get('/', [LearnContentController::class, 'index'])->name('index');
+
+            Route::post('/sections', [LearnContentController::class, 'storeSection'])->name('sections.store');
+            Route::put('/sections/{learnSection}', [LearnContentController::class, 'updateSection'])->name('sections.update');
+            Route::delete('/sections/{learnSection}', [LearnContentController::class, 'destroySection'])->name('sections.destroy');
+
+            Route::post('/videos', [LearnContentController::class, 'storeVideo'])->name('videos.store');
+            Route::put('/videos/{learnVideo}', [LearnContentController::class, 'updateVideo'])->name('videos.update');
+            Route::delete('/videos/{learnVideo}', [LearnContentController::class, 'destroyVideo'])->name('videos.destroy');
         });
 
         // Sync Monitor Dashboard Routes

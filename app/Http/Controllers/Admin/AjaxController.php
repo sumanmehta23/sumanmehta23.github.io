@@ -894,38 +894,67 @@ class AjaxController extends Controller
 
                     return "<span class='{$class}'>{$days} days</span>";
                 })
-                ->addColumn('deposited_not_traded', function ($row) {
+                ->addColumn('deposited', function ($row) {
                     $hasDeposits = $row->successful_trade_deposits_count > 0;
-                    $hasTrades = $row->last_trade_at !== null || ($row->trades_count ?? 0) > 0;
 
-                    $isDepositedNotTraded = $hasDeposits && !$hasTrades;
-
-                    // Use Yes badge size for both (compact: px-2 py-1)
                     $badgeStyle = 'padding:0.35rem 0.5rem';
-                    if ($isDepositedNotTraded) {
+                    if ($hasDeposits) {
+                        $green = '#00b894';
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#00b894' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <polyline points='5 12 10 17 19 7' />
+                                </svg>
+                                <span class='fw-bold' style='color:#00b894'>Yes</span>
+                            </span>
+                        ";
+                    }
+
+                    return "
+                        <span class='gap-1 border badge rounded-pill border-danger d-inline-flex align-items-center justify-content-center'
+                              style='background-color:rgba(255,0,0,0.08);{$badgeStyle}'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                 fill='none' stroke='#dc3545' stroke-width='2' stroke-linecap='round'
+                                 stroke-linejoin='round'>
+                                <line x1='18' y1='6' x2='6' y2='18' />
+                                <line x1='6' y1='6' x2='18' y2='18' />
+                            </svg>
+                            <span class='fw-bold' style='color:#dc3545'>No</span>
+                        </span>
+                    ";
+                })
+                ->addColumn('traded', function ($row) {
+                    $hasTrades = $row->last_trade_at !== null || ($row->trades_count ?? 0) > 0;
+                    $isNotTraded = !$hasTrades;
+
+                    $badgeStyle = 'padding:0.35rem 0.5rem';
+                    if ($isNotTraded) {
                         $orange = 'rgb(247, 86, 49)';
                         return "
-                            <span class='badge rounded-pill border border-2 d-inline-flex align-items-center justify-content-center gap-1' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
+                            <span class='gap-1 border border-2 badge rounded-pill d-inline-flex align-items-center justify-content-center' style='background-color:rgba(247,86,49,0.12); border-color:#ff0000a3 !important;{$badgeStyle}'>
                                 <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='{$orange}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
                                     <path stroke='none' d='M0 0h24v24H0z' fill='none'/>
                                     <path d='M12 9v4' />
                                     <path d='M12 17v.01' />
                                     <path d='M5 19h14l-7 -13z' />
                                 </svg>
-                                <span class='fw-bold' style='color:{$orange}'>Yes</span>
+                                <span class='fw-bold' style='color:{$orange}'>No</span>
                             </span>
                         ";
                     }
 
                     return "
-                        <span class='badge rounded-pill border border-success d-inline-flex align-items-center justify-content-center gap-1'
+                        <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
                               style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
                             <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
                                  fill='none' stroke='#00b894' stroke-width='2.4' stroke-linecap='round'
                                  stroke-linejoin='round'>
                                 <polyline points='5 12 10 17 19 7' />
                             </svg>
-                            <span class='fw-bold' style='color:#00b894'>No</span>
+                            <span class='fw-bold' style='color:#00b894'>Yes</span>
                         </span>
                     ";
                 })
@@ -941,6 +970,12 @@ class AjaxController extends Controller
                                 $time
                             </div>";
                 })
+                ->addColumn('total_deposit', function ($row) {
+                    return number_format($row->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2);
+                })
+                ->addColumn('total_withdraw', function ($row) {
+                    return number_format($row->tradeWithdrawals()->where('status', 1)->whereIn('withdraw_type', ['Trade Withdrawal'])->sum(DB::raw('transaction_fee + withdrawal_amount')), 2);
+                })
                 ->addColumn('fullname', function ($row) {
                     return $row->user ? $row->user->fullname : 'Unknown';
                 })
@@ -949,6 +984,9 @@ class AjaxController extends Controller
                 })
                 ->addColumn('account_code', function ($row) {
                     return $row->code;
+                })
+                ->addColumn('user_country', function ($row) {
+                    return $row->user ? $row->user->country : '';
                 })
                 ->addColumn('account_group', function ($row) {
                     return $row->accountType ? $row->accountType->ac_group : 'N/A';
@@ -1007,7 +1045,7 @@ class AjaxController extends Controller
                         END {$order}
                     ");
                 })
-                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions'])
+                ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions', 'deposited','traded', 'user_country'])
                 ->make(true);
         }
 
@@ -1027,7 +1065,7 @@ class AjaxController extends Controller
             ->with(['user', 'accountType'])
             ->withCount([
                 'tradeDeposits as successful_trade_deposits_count' => function ($q) {
-                    $q->where('status', 1);
+                    $q->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay']);
                 },
                 'trades as trades_count',
             ]);
@@ -1119,6 +1157,7 @@ class AjaxController extends Controller
             FROM trade_deposits td
             WHERE td.account_id = accounts.id
               AND td.status = 1
+              AND td.deposit_type IN ('CryptoChill', 'CreditCardPayissa', 'RagaPay')
               AND td.deleted_at IS NULL
         )";
 
@@ -1129,12 +1168,20 @@ class AjaxController extends Controller
               AND tr.deleted_at IS NULL
         ))";
 
-        $depositedNotTraded = $request->get('deposited_not_traded');
-        if ($depositedNotTraded === 'yes') {
-            $query->whereRaw($hasSuccessfulDepositSql)
-                ->whereRaw("NOT {$hasTradesSql}");
-        } elseif ($depositedNotTraded === 'no') {
-            $query->whereRaw("NOT ({$hasSuccessfulDepositSql} AND NOT {$hasTradesSql})");
+        // Separate Deposited filter
+        $deposited = $request->get('deposited');
+        if ($deposited === 'yes') {
+            $query->whereRaw($hasSuccessfulDepositSql);
+        } elseif ($deposited === 'no') {
+            $query->whereRaw("NOT {$hasSuccessfulDepositSql}");
+        }
+
+        // Separate Not Traded filter
+        $Traded = $request->get('traded');
+        if ($Traded === 'yes') {
+            $query->whereRaw($hasTradesSql);
+        } elseif ($Traded === 'no') {
+            $query->whereRaw("NOT {$hasTradesSql}");
         }
     }
 
@@ -3714,14 +3761,27 @@ class AjaxController extends Controller
             $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
             $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
 
+            $status = '<span class="badge bg-outline-primary">Pending</span>';
+
+            if ($row->status == 1) {
+                if($row->admin_remark == 'new' || $row->admin_remark == 'draft'){
+                    $status = '<span class="badge bg-outline-danger">Processing (Cryptochill Draft)</span>';
+                } else {
+                    $status = '<div class="badge bg-outline-success">' . $row->admin_remark . '</div>';
+                }
+            } elseif ($row->status == 2) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by Admin</span>';
+            } elseif ($row->status == 3) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by User</span>';
+            }
+
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Cancelled by Admin</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')),
+                'status' => $status,
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
@@ -4657,12 +4717,16 @@ class AjaxController extends Controller
                 'Leverage',
                 'Balance',
                 'Equity',
+                'Status',
+                'Total Deposit',
+                'Total Withdraw',
                 'Last Trade Date',
                 'Days Since Last Trade',
-                'Deposited but Not Traded',
-                'Status',
+                'Deposited',
+                'Traded',
                 'Date',
                 'Time',
+                'Country',
             ]);
 
             $chunkCount = 0;
@@ -4691,24 +4755,30 @@ class AjaxController extends Controller
 
                         $hasDeposits = $account->successful_trade_deposits_count > 0;
                         $hasTrades = $lastTradeAt !== null || ($account->trades_count ?? 0) > 0;
-                        $depositedNotTraded = $hasDeposits && !$hasTrades ? 'Yes' : 'No';
+                        $isDeposited = $hasDeposits ? 'Yes' : 'No';
+                        $Traded = $hasTrades ? 'Yes' : 'No';
 
+                        
                         fputcsv($handle, [
-                            $account->id,
-                            $account->user->fullname ?? '',
-                            $account->email,
-                            $account->code,
-                            $account->accountType->ac_group ?? '',
-                            $account->leverage,
-                            $account->balance,
-                            $account->equity,
-                            $lastTradeDate,
-                            $daysSinceLastTrade,
-                            $depositedNotTraded,
-                            $account->deleted_at ? 'Deleted' : 'Active',
-                            $account->created_at->format('Y-m-d'),
-                            $account->created_at->format('H:i:s'),
-                        ]);
+                        $account->id,
+                        $account->user->fullname ?? '',
+                        $account->email,
+                        $account->code,
+                        $account->accountType->ac_group ?? '',
+                        $account->leverage,
+                        $account->balance,
+                        $account->equity,
+                        $account->deleted_at ? 'Deleted' : 'Active',
+                        number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
+                        number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
+                        $lastTradeDate,
+                        $daysSinceLastTrade,
+                        $isDeposited,
+                        $Traded,
+                        $account->created_at->format('Y-m-d'),
+                        $account->created_at->format('H:i:s'),
+                        $account->user->country ?? '',
+                    ]);
                     } catch (\Exception $e) {
                         Log::error("Error writing account ID {$account->id}: " . $e->getMessage());
                     }
@@ -5518,7 +5588,7 @@ class AjaxController extends Controller
                 $data[] = [
                     'created_on' => Carbon::parse($wallet->created_at)->format('Y-m-d H:i:s'),
                     'wallet_name' => $wallet->wallet_name,
-                    'wallet_currency' => $wallet->wallet_currency,
+                    'wallet_currency' => ($wallet->wallet_network == 'BTC') ? 'BTC' : $wallet->wallet_currency,
                     'wallet_network' => $wallet->wallet_network,
                     'wallet_address' => $wallet->wallet_address,
                     'verified' => $verifiedBadge,

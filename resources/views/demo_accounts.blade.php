@@ -89,16 +89,18 @@
                                                                         {{ 'Pending' }}
                                                                     </h4>
                                                                 @endif
-                                                                <p class="mb-0 text-muted ms-2 f-12">
-                                                                    <span class="text-truncate w-100">
-                                                                        {{ $acc->email }}
-                                                                    </span>
-                                                                </p>
-                                                                <h6 class="pl-2 mb-0 text-muted ms-2 f-12">
+                                                                @if ($acc->demo == 0)
+                                                                    <p class="mb-0 text-muted ms-2 f-12">
+                                                                        <span class="text-truncate w-100">
+                                                                            {{ $acc->email }}
+                                                                        </span>
+                                                                    </p>
+                                                                @endif
+                                                                <h6 class="mb-0 text-muted ms-2 f-12">
                                                                     <span class="text-truncate w-100">
                                                                         {{ $acc->accountType->ac_name }}
                                                                     </span>
-                                                                </h>
+                                                                </h6>
                                                             </div>
                                                         </div>
                                                     </td>

@@ -588,9 +588,13 @@
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Soft Deleted
                                                                                     </div>
-                                                                                @elseif($acc->deleted_at )
+                                                                                @elseif($acc->deleted_at && $acc->deletion_type == 'delete')
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Deleted
+                                                                                    </div>
+                                                                                @elseif($acc->deleted_at && $acc->deletion_type == 'archive')
+                                                                                    <div class="mt-1 fs-18 text-danger fw-bold">
+                                                                                        Archived
                                                                                     </div>
                                                                                 @endif
                                                                             </div>

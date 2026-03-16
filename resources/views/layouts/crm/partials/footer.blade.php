@@ -8,13 +8,13 @@
                     alt="LQH Markets Logo" class="img-fluid" style="max-height: 40px;">
                 </a>
                 <p class="mb-1 text-muted">
-                LQH Integrated Ltd <br>
-                Hamchako, Mutsamudu, Autonomous Island of Anjouan, Union of Comoros.
+                <span class="notranslate">LQH Integrated Ltd </span> <br>
+                Ground Floor, Rodney Court Building, Rodney Bay, Gros Islet, Saint Lucia.
                 </p>
                 <p class="mb-1">
                 Email: <a href="mailto:support@lqhmarkets.com" class="text-success">support@lqhmarkets.com</a>
                 </p>
-                <p class="mb-0 text-muted">© 2025 LQH Markets | All rights reserved.</p>
+                <p class="mb-0 text-muted notranslate">© {{ date('Y') }} LQH Markets | All rights reserved.</p>
             </div>
 
             <!-- Explore -->
@@ -70,13 +70,12 @@
         <!-- Legal & Risk Section -->
         <div class="py-4 border-top">
             <div class="text-muted small">
-            <p><strong>Legal:</strong> LQH Integrated Ltd is LQHMarkets.com and the LQH Markets brand and trademark is owned by LQH Integrated Ltd.</p>
-            <p>LQH Integrated Ltd holds an International Brokerage and Clearing House License in Comoros with license number L15833/LIL.</p>
-            <p>LQH Integrated Ltd holds a license in St. Lucia as an International Business Company with registration number 2023-00570.</p>
+            <p><strong>Legal:</strong> <span class="notranslate">LQH Integrated Ltd</span> is LQHMarkets.com and the LQH Markets brand and trademark is owned by <span class="notranslate">LQH Integrated Ltd</span>.</p>
+            <p><span class="notranslate">LQH Integrated Ltd</span> holds an International Brokerage and Clearing House License in Comoros with license number L15833/LIL.</p>
+            <p><span class="notranslate">LQH Integrated Ltd</span> holds a license in St. Lucia as an International Business Company with registration number 2023-00570.</p>
             <p><strong>Risk Warning:</strong> An investment in derivatives may mean investors may lose an amount even greater than their original investment. Anyone wishing to invest in any of the products mentioned in
                 <a href="https://www.LQHMarkets.com" class="text-success">www.LQHMarkets.com</a> should seek their own financial or professional advice…</p>
-            <p><strong>Restricted Regions:</strong> LQH Integrated Limited does not provide services for citizens/residents of the United States, Cuba, Iran, Myanmar, North Korea, Sudan, China, Singapore and to jurisdictions on the FATF, OFAC and EU/UN sanctions lists.</p>
-            <p class="mb-0">© 2025 LQH Markets. All rights reserved.</p>
+            <p><strong>Restricted Regions:</strong> <span class="notranslate">LQH Integrated Limited</span> does not provide services for citizens/residents of the United States, Cuba, Iran, Myanmar, North Korea, Sudan, China, Singapore and to jurisdictions on the FATF, OFAC and EU/UN sanctions lists.</p>
             </div>
         </div>
     </div>

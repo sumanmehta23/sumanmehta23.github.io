@@ -878,6 +878,53 @@ class Transaction extends Controller
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
 
+            $payoutReq = json_decode($transaction->payout_req, true);
+            if(isset($payoutReq['result']) && $payoutReq['result'] == 'error'){
+                if($payoutReq['reason'] == 'InsufficientFunds') {
+                    // $from = $settings['email_from_address'];
+                    // // $transid = "WDID" . $payout_res;
+                    // $headers = "MIME-Version: 1.0" . "\r\n";
+                    // $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                    // $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                    // $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                    // $content = '<p>
+                    //                 We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                    //             </p>
+                    //             <p>
+                    //                 To complete your withdrawal:
+                    //                 <ol>
+                    //                     <li>Please <b>submit a new request</b></li>
+                    //                     <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
+                    //                     <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
+                    //                     <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
+                    //                 </ol>
+                    //             </p>
+                    //             <p>
+                    //                 Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com" style="color: #00b98e; text-decoration: none;">support@lqhmarkets.com</a>
+                    //             </p>
+                    //             <p>
+                    //                 Thank you for your understanding.
+                    //             </p>
+                    //             <p>
+                    //                 Best regards,<br>
+                    //                 The LQHMarkets Team
+                    //             </p>';
+
+                    // $templateVars = [
+                    //     'name' => $transaction->user->fullname,
+                    //     'site_link' => $settings['copyright_site_name_text'],
+                    //     'email' => $settings['email_from_address'],
+                    //     'content' => $content,
+                    //     'title_right' => 'Transaction',
+                    //     'subtitle_right' => 'Declined',
+                    //     'btn_text' => 'Go To Dashboard',
+                    // ];
+                    // $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    return redirect()->back()->with('error', $payoutReq['reason']);
+                }
+
+            }
+
             $transaction->admin_remark = $rejection_reason;
             $transaction->status = $status;
 
@@ -958,29 +1005,77 @@ class Transaction extends Controller
                         });
                     } elseif($responseData->result == 'error'){
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
-                        DB::transaction(function () use ($request, $response, $responseData, $transaction) {
+                        if($responseData->reason == 'InvalidAddress'){
+                            $status = 3; // Set status to 3 for invalid address
+                        }else{
+                            $status = 0; // Set status to 0 for other errors
+                        }
+                        DB::transaction(function () use ($request, $response, $responseData, $transaction, $status) {
                             // Update wallet_withdraw table with response and set status to 0 (error state)
                             TradeWithdrawals::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
                                 ->update([
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($responseData),
-                                    'status' => 3,
+                                    'status' => $status,
                                     'admin_remark' => $responseData->reason
                                 ]);
 
                             // Delete total_balance entry
                             // TotalBalance::where('id', $transaction->id)->delete();
                         });
-                        $comment = 'Cancelled Withdrawal';
-                        $ticket = null;
-                        $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+                        if($responseData->reason == 'InvalidAddress') {
+                            $from = $settings['email_from_address'];
+                            // $transid = "WDID" . $payout_res;
+                            $headers = "MIME-Version: 1.0" . "\r\n";
+                            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                            $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                            $content = '<p>
+                                            We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                        </p>
+                                        <p>
+                                            To complete your withdrawal:
+                                            <ol>
+                                                <li>Please <b>submit a new request</b></li>
+                                                <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
+                                                <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
+                                                <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
+                                            </ol>
+                                        </p>
+                                        <p>
+                                            Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com" style="color: #00b98e; text-decoration: none;">support@lqhmarkets.com</a>
+                                        </p>
+                                        <p>
+                                            Thank you for your understanding.
+                                        </p>
+                                        <p>
+                                            Best regards,<br>
+                                            The LQHMarkets Team
+                                        </p>';
 
-                        if ($errorCode != MTRetCode::MT_RET_OK) {
-                            $error = MTRetCode::GetError($errorCode);
-                        } else {
-                            return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                            $templateVars = [
+                                'name' => $transaction->user->fullname,
+                                'site_link' => $settings['copyright_site_name_text'],
+                                'email' => $settings['email_from_address'],
+                                'content' => $content,
+                                'title_right' => 'Transaction',
+                                'subtitle_right' => 'Declined',
+                                'btn_text' => 'Go To Dashboard',
+                            ];
+                            $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+                            $comment = 'Cancelled Withdrawal';
+                            $ticket = null;
+                            $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+
+                            if ($errorCode != MTRetCode::MT_RET_OK) {
+                                $error = MTRetCode::GetError($errorCode);
+                            } else {
+                                return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                            }
                         }
+                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
 
                     } else {
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error

@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\BonusTransaction;
+use App\Models\Trade;
 use Illuminate\Support\Facades\Log;
 use App\Services\UniversalMT5Service;
 
@@ -174,6 +175,8 @@ class BalanceSyncService
         }
 
         $account->update($updateData);
+
+        $this->updateLastTradeInfo($account);
 
         $bonusPayoffSyncAt = now();
 
@@ -444,5 +447,21 @@ class BalanceSyncService
             })
             ->orderBy('last_balance_changed_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Update the last trade info for an account from the trades table
+     *
+     * @param Account $account
+     */
+    protected function updateLastTradeInfo(Account $account): void
+    {
+        $latestOpenTime = Trade::where('account_id', $account->id)
+            ->orderByDesc('open_time')
+            ->value('open_time');
+
+        if ($latestOpenTime && $latestOpenTime != $account->last_trade_at) {
+            $account->update(['last_trade_at' => $latestOpenTime]);
+        }
     }
 }
