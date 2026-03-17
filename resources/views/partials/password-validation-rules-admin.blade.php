@@ -39,12 +39,16 @@
         </li>
 
         <li id="{{ $prefix }}rule-special" class="relative mb-1 text-sm ps-4 text-muted">
-            <i class="ti ti-x absolute left-0 top-[-1px] text-base text-red-500 rule-icon"
-                style="font-size: 0.95rem;"></i>
-            <div>
-                <span>At least 1 special character:</span>
-                <div class="p-2 mt-2 text-xs border rounded bg-body-secondary border-secondary font-monospace">
-                    ! @ # $ % ^ &amp; * ( ) , . - ? " : { } | &lt; &gt;
+            <div flex class="gap-1 pl-1 d-flex align-items-start">
+                <div>
+                    <i class="ti ti-x absolute left-0 top-[-1px] text-base text-red-500 rule-icon"
+                    style="font-size: 0.95rem;"></i>
+                </div>
+                <div>
+                    <span>At least 1 special character:</span>
+                    <div class="p-2 mt-2 text-xs border rounded bg-body-secondary border-secondary font-monospace">
+                        ! @ # $ % ^ &amp; * ( ) , . - ? " : { } | &lt; &gt;
+                    </div>
                 </div>
             </div>
         </li>
