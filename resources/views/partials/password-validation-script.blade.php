@@ -25,6 +25,9 @@
             if (iconElement) {
                 iconElement.classList.remove('valid');
                 iconElement.classList.add('invalid');
+                // Reset icon to X
+                iconElement.classList.remove('ti-check');
+                iconElement.classList.add('ti-x');
             }
         } else if (isSatisfied) {
             // Satisfied - green
@@ -33,6 +36,9 @@
             if (iconElement) {
                 iconElement.classList.remove('invalid');
                 iconElement.classList.add('valid');
+                // Change icon to check
+                iconElement.classList.remove('ti-x');
+                iconElement.classList.add('ti-check');
             }
         } else {
             // Not satisfied - red
@@ -41,6 +47,9 @@
             if (iconElement) {
                 iconElement.classList.remove('valid');
                 iconElement.classList.add('invalid');
+                // Reset icon to X
+                iconElement.classList.remove('ti-check');
+                iconElement.classList.add('ti-x');
             }
         }
     };

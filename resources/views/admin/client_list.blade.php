@@ -174,7 +174,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" name="updateUser" value="update" class="btn btn-primary" id="editUserSubmitBtn">Update</button>
+                        <button type="submit" name="updateUser" value="update" class="btn btn-primary" id="editUserSubmitBtn" disabled>Update</button>
                     </div>
                 </form>
             </div>
@@ -1278,17 +1278,32 @@
             }
 
             // Edit User Modal Password Validation
+            const editUserModal = document.getElementById('editUserModal');
             const editUserPasswordInput = document.getElementById('editUserPassword');
             const editUserConfirmInput = document.getElementById('editUserConfirmPassword');
             const editUserSubmitBtn = document.getElementById('editUserSubmitBtn');
 
-            if (editUserPasswordInput && editUserConfirmInput) {
+            if (editUserPasswordInput && editUserConfirmInput && editUserModal) {
+                // Initialize all rules to false
+                window.updateRuleUI('edit-rule-length', false);
+                window.updateRuleUI('edit-rule-uppercase', false);
+                window.updateRuleUI('edit-rule-lowercase', false);
+                window.updateRuleUI('edit-rule-digit', false);
+                window.updateRuleUI('edit-rule-special', false);
+                window.updateRuleUI('edit-rule-no-spaces', false);
+                window.updateRuleUI('edit-rule-match', false);
+
+                // For edit modal, password is optional - enable button by default if no password entered
+                if (editUserSubmitBtn && !editUserPasswordInput.value) {
+                    editUserSubmitBtn.disabled = false;
+                }
+
                 const handleEditUserPasswordInput = () => {
                     const password = editUserPasswordInput.value;
                     const confirmPassword = editUserConfirmInput.value;
 
                     if (!password) {
-                        // Reset all rules when password is empty
+                        // Password is optional for edit - reset rules and enable button
                         window.updateRuleUI('edit-rule-length', false);
                         window.updateRuleUI('edit-rule-uppercase', false);
                         window.updateRuleUI('edit-rule-lowercase', false);
@@ -1296,6 +1311,11 @@
                         window.updateRuleUI('edit-rule-special', false);
                         window.updateRuleUI('edit-rule-no-spaces', false);
                         window.updateRuleUI('edit-rule-match', false);
+
+                        // Enable submit button when password is empty
+                        if (editUserSubmitBtn) {
+                            editUserSubmitBtn.disabled = false;
+                        }
                     } else {
                         const rules = window.checkPasswordRules(password, confirmPassword);
                         window.updateRuleUI('edit-rule-length', rules.length);
@@ -1305,21 +1325,40 @@
                         window.updateRuleUI('edit-rule-special', rules.special);
                         window.updateRuleUI('edit-rule-no-spaces', rules.noSpaces);
                         window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+
+                        // Only enable button if all rules satisfied
+                        const allSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.noSpaces && rules.match === true;
+                        if (editUserSubmitBtn) {
+                            editUserSubmitBtn.disabled = !allSatisfied;
+                        }
                     }
-                    window.checkAllRulesSatisfied('editUserPassword', 'editUserConfirmPassword', 'editUserSubmitBtn');
                 };
 
                 const handleEditUserConfirmInput = () => {
                     const password = editUserPasswordInput.value;
                     const confirmPassword = editUserConfirmInput.value;
 
-                    if (!confirmPassword) {
+                    if (!password) {
+                        // No password entered, no validation needed
                         window.updateRuleUI('edit-rule-match', false);
+                        if (editUserSubmitBtn) {
+                            editUserSubmitBtn.disabled = false;
+                        }
                     } else {
-                        const rules = window.checkPasswordRules(password, confirmPassword);
-                        window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+                        if (!confirmPassword) {
+                            window.updateRuleUI('edit-rule-match', false);
+                        } else {
+                            const rules = window.checkPasswordRules(password, confirmPassword);
+                            window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+
+                            // Check all rules for button state
+                            const allPasswordRules = window.checkPasswordRules(password, '');
+                            const allSatisfied = allPasswordRules.length && allPasswordRules.uppercase && allPasswordRules.lowercase && allPasswordRules.digit && allPasswordRules.special && allPasswordRules.noSpaces && rules.match === true;
+                            if (editUserSubmitBtn) {
+                                editUserSubmitBtn.disabled = !allSatisfied;
+                            }
+                        }
                     }
-                    window.checkAllRulesSatisfied('editUserPassword', 'editUserConfirmPassword', 'editUserSubmitBtn');
                 };
 
                 editUserPasswordInput.addEventListener('input', handleEditUserPasswordInput);
