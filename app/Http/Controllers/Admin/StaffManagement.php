@@ -221,7 +221,7 @@ class StaffManagement extends Controller
             'role_id' => 'required',
             'email' => 'required|email|max:255|unique:emplist,email,' . $userId . ',id',
             'number' => 'required|string|max:15',
-            'password' => $userId ? 'nullable|string' : 'required|string',
+            'password' => $userId ? ['nullable', new \App\Rules\ValidPassword()] : ['required', new \App\Rules\ValidPassword()],
             'company_name' => 'required|string|max:255',
         ]);
         if ($userId) {
