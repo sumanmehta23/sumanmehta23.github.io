@@ -31,13 +31,13 @@
             <div class="auth-wrapper v3">
                 <div class="auth-form">
                     <div class="auth-header row">
-                        <div class="col my-1" style="display: flex; justify-content: center; align-items: center;">
+                        <div class="my-1 col" style="display: flex; justify-content: center; align-items: center;">
                             <a href="{{ url('/login') }}">
                                 <img src="{{ asset($settings['admin_sidebar_logo']) }}" alt="Logo" style="height: 8vh;">
                             </a>
                         </div>
                     </div>
-                    <div class="card my-3">
+                    <div class="my-3 card">
                         <div class="card-body">
                             <ul class="nav nav-tabs d-none" id="myTab" role="tablist">
                                 <li class="nav-item">
@@ -52,7 +52,7 @@
                                     <div class="tab-pane show active" id="auth-4" role="tabpanel"
                                         aria-labelledby="auth-tab-4">
                                         <div class="text-center">
-                                            <h3 class="text-center mb-3">Reset Password</h3>
+                                            <h3 class="mb-3 text-center">Reset Password</h3>
                                             @if (session('status'))
                                                 <div class="alert alert-success">
                                                     {{ session('status') }}
@@ -66,29 +66,34 @@
                                                 </div>
                                             @endif
                                         </div>
-                                        <div class="row mt-4">
+                                        <div class="mt-4 row">
                                             <div class="col-12">
                                                 <div class="form-group">
                                                     <label class="form-label">Password</label>
-                                                    <input name="password" type="password" class="form-control"
+                                                    <input name="password" id="password" type="password" class="form-control"
                                                         placeholder="Password" required>
                                                 </div>
                                             </div>
                                             <div class="col-12">
                                                 <div class="form-group">
                                                     <label class="form-label">Confirm Password</label>
-                                                    <input type="password" class="form-control"
+                                                    <input type="password" id="password_confirmation" class="form-control"
                                                         placeholder="Confirm Password" name="password_confirmation"
                                                         required>
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="mt-2 mb-4">
+                                            <div class="p-3 border shadow-sm w-100 rounded-3">
+                                                @include('partials.password-validation-rules')
+                                            </div>
+                                        </div>
                                         <div class="d-flex justify-content-end">
-                                            <h6 class="text-secondary f-w-400 mb-0">
+                                            <h6 class="mb-0 text-secondary f-w-400">
                                                 <a href="{{ url('/login') }}" class="link-primary">RETURN TO LOGIN</a>
                                             </h6>
                                         </div>
-                                        <div class="row g-3 mt-1">
+                                        <div class="mt-1 row g-3">
                                             <div class="col-sm-12">
                                                 <div class="d-grid">
                                                     <input type="submit" name="resetpassword" value="Reset Your Password"
@@ -102,7 +107,7 @@
                         </div>
                     </div>
                     <div class="auth-footer">
-                        <p class="m-0 w-100 text-center" style="font-size: 11px;">
+                        <p class="m-0 text-center w-100" style="font-size: 11px;">
                             By logging in, you confirm that you have read and agree to {{ $settings['admin_title'] }}'s
                             <a target="_blank" href="#">Privacy Policy,</a>
                             <a target="_blank" href="#">Transaction Policy</a> and
@@ -112,14 +117,14 @@
                 </div>
                 <div  class="auth-sidecontent"
                     style="background: linear-gradient(45deg, rgb(25, 24, 76), rgb(var(--bs-primary-rgb))) !important;">
-                    <div class="p-3 px-lg-5 text-center">
+                    <div class="p-3 text-center px-lg-5">
                         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-inner">
                                 <div class="carousel-item active"><img src="/assets/images/acc-1.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Regulatory Excellence</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Regulatory Excellence</h5>
                                     <p class="text-white text-opacity-50">Compliance Assurance</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star-half-alt text-warning"></i></div>
@@ -131,10 +136,10 @@
                                     </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-02.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Transparent Pricing Policy</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Transparent Pricing Policy</h5>
                                     <p class="text-white text-opacity-50">Clear Cost Commitment</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star-half-alt text-warning"></i></div>
@@ -146,10 +151,10 @@
                                         a seamless trading experience. </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-03.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Swift and Precise Execution</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Swift and Precise Execution</h5>
                                     <p class="text-white text-opacity-50">Precision Trading</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
@@ -162,10 +167,10 @@
                                         market opportunities instantly. </p>
                                 </div>
                                 <div class="carousel-item"><img src="/assets/images/ben-04.png" alt="user-image"
-                                        class="hei-150 mb-3">
-                                    <h5 class="text-white mb-0">Competitive Spreads</h5>
+                                        class="mb-3 hei-150">
+                                    <h5 class="mb-0 text-white">Competitive Spreads</h5>
                                     <p class="text-white text-opacity-50">Cost Efficiency</p>
-                                    <div class="star f-20 my-4"><i class="fas fa-star text-warning"></i><i
+                                    <div class="my-4 star f-20"><i class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
                                             class="fas fa-star text-warning"></i><i
@@ -178,7 +183,7 @@
                                         profitability and minimize trading costs. </p>
                                 </div>
                             </div>
-                            <div class="carousel-indicators position-relative mt-3"><button type="button"
+                            <div class="mt-3 carousel-indicators position-relative"><button type="button"
                                     data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active"
                                     aria-current="true" aria-label="Slide 1"></button><button type="button"
                                     data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1"
@@ -193,5 +198,93 @@
             </div>
         </div>
     </div>
+
+    @include('partials.password-validation-script')
+
+    <script>
+
+
+        // Validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Check if all validation rules are satisfied
+        function validateRegistrationForm() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmpassword');
+            const continueBtn = document.getElementById('continueButton');
+
+            if (!emailInput || !passwordInput || !confirmPasswordInput || !continueBtn) return;
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Check email is valid
+            const isEmailValid = email && isValidEmail(email);
+
+            // Check password rules
+            const rules = window.checkPasswordRules(password, confirmPassword);
+
+            // All rules must be satisfied
+            const allRulesSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.match === true;
+
+            // Enable button only if email is valid AND all password rules are satisfied
+            const isFormValid = isEmailValid && allRulesSatisfied;
+
+            continueBtn.disabled = !isFormValid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmpassword');
+            const continueBtn = document.getElementById('continueButton');
+
+            if (!passwordInput) return;
+            // Email validation
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    validateRegistrationForm();
+                });
+            }
+
+            // Password validation
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const rules = window.checkPasswordRules(password, confirmPassword);
+
+                window.updateRuleUI('rule-length', rules.length);
+                window.updateRuleUI('rule-uppercase', rules.uppercase);
+                window.updateRuleUI('rule-lowercase', rules.lowercase);
+                window.updateRuleUI('rule-digit', rules.digit);
+                window.updateRuleUI('rule-special', rules.special);
+                window.updateRuleUI('rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                validateRegistrationForm();
+            });
+
+            // Confirm password validation
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function () {
+                    const password = passwordInput.value;
+                    const confirmPassword = this.value;
+                    const rules = window.checkPasswordRules(password, confirmPassword);
+
+                    window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                    validateRegistrationForm();
+                });
+            }
+
+            // Initial state - button should be disabled
+            validateRegistrationForm();
+        });
+    </script>
 
 @endsection
