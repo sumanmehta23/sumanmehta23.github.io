@@ -24,9 +24,11 @@
         </li>
         <li id="rule-special" class="list-group-item d-flex align-items-center invalid" style="padding-left: 25px; position: relative;">
             <i class="rule-icon invalid" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%);"></i>
-            <span>At least 1 special character:</span>
-            <div class="p-1 border rounded ms-2 font-monospace">
-                ! @ # $ % ^ & * ( ) , . - ? " : { } | < >
+            <div class="flex-vertical">
+                <div class="mb-2 ">At least 1 special character:</div>
+                <div class="p-1 border rounded font-monospace">
+                    ! @ # $ % ^ & * ( ) , . - ? " : { } | < >
+                </div>
             </div>
         </li>
         <li id="rule-no-spaces" class="list-group-item d-flex align-items-center invalid" style="padding-left: 25px; position: relative;">
