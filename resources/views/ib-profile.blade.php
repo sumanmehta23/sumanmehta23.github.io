@@ -286,10 +286,23 @@
                                                     class="feather icon-copy"></i></button></div>
                                     </div>
 
-                                    <div class="gap-3 mt-4 d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between">
+                                    <div class="gap-3 mt-4 d-flex flex-column align-items-start align-items-sm-left justify-content-left">
+
+                                        <!-- Instruction side -->
+                                        <div class="py-3 mb-0 border-0 alert alert-secondary rounded-3 w-100">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <i class="ti ti-info-circle fs-5"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <span class="fw-semibold">Note:</span>
+                                                    <span class="text-primary">Generate a new referral link, then click <strong class="text-secondary">Submit</strong> to apply the changes.</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <!-- Button side -->
-                                        <div>
+                                        <div class="mt-3 mt-sm-0">
                                             <form id="referral-form" action="{{ route('ib-update-referral') }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="referral_code" id="hidden-referral-code"
@@ -299,13 +312,6 @@
                                                     Submit
                                                 </button>
                                             </form>
-                                        </div>
-
-                                        <!-- Instruction side -->
-                                        <div class="text-muted text-sm-start text-sm-end">
-                                            <span class="fw-semibold text-dark">Note:</span><br class="d-sm-none">
-                                            Generate a new referral link,<br class="d-none d-sm-block">
-                                            then click <strong class="text-primary">Submit</strong> to apply the changes.
                                         </div>
 
                                     </div>
