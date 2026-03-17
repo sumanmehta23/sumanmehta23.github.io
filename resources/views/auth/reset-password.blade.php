@@ -47,7 +47,7 @@
                             </ul>
                             <div class="tab-content">
                                 {{-- action="{{ route('password.reset') }}" --}}
-                                <form method="POST">
+                                <form method="POST" action="{{ url('/reset-password?id=' . request('id') . '&code=' . request('code')) }}">
                                     @csrf
                                     <div class="tab-pane show active" id="auth-4" role="tabpanel"
                                         aria-labelledby="auth-tab-4">
@@ -96,8 +96,8 @@
                                         <div class="mt-1 row g-3">
                                             <div class="col-sm-12">
                                                 <div class="d-grid">
-                                                    <input type="submit" name="resetpassword" value="Reset Your Password"
-                                                        class="btn btn-primary">
+                                                    <input type="submit" name="resetpassword" id="password-submit-btn" value="Reset Your Password"
+                                                        class="btn btn-primary" disabled>
                                                 </div>
                                             </div>
                                         </div>
@@ -202,60 +202,17 @@
     @include('partials.password-validation-script')
 
     <script>
-
-
-        // Validate email format
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        // Check if all validation rules are satisfied
-        function validateRegistrationForm() {
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            const confirmPasswordInput = document.getElementById('confirmpassword');
-            const continueBtn = document.getElementById('continueButton');
-
-            if (!emailInput || !passwordInput || !confirmPasswordInput || !continueBtn) return;
-
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-
-            // Check email is valid
-            const isEmailValid = email && isValidEmail(email);
-
-            // Check password rules
-            const rules = window.checkPasswordRules(password, confirmPassword);
-
-            // All rules must be satisfied
-            const allRulesSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.match === true;
-
-            // Enable button only if email is valid AND all password rules are satisfied
-            const isFormValid = isEmailValid && allRulesSatisfied;
-
-            continueBtn.disabled = !isFormValid;
-        }
-
         document.addEventListener('DOMContentLoaded', function () {
-            const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('password');
-            const confirmPasswordInput = document.getElementById('confirmpassword');
-            const continueBtn = document.getElementById('continueButton');
+            const confirmPasswordInput = document.getElementById('password_confirmation');
+            const submitBtn = document.getElementById('password-submit-btn');
 
-            if (!passwordInput) return;
-            // Email validation
-            if (emailInput) {
-                emailInput.addEventListener('input', function () {
-                    validateRegistrationForm();
-                });
-            }
+            if (!passwordInput || !confirmPasswordInput || !submitBtn) return;
 
             // Password validation
             passwordInput.addEventListener('input', function () {
                 const password = this.value;
-                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const confirmPassword = confirmPasswordInput.value;
                 const rules = window.checkPasswordRules(password, confirmPassword);
 
                 window.updateRuleUI('rule-length', rules.length);
@@ -266,24 +223,35 @@
                 window.updateRuleUI('rule-no-spaces', rules.noSpaces);
                 window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
 
-                validateRegistrationForm();
+                checkFormValidity();
             });
 
             // Confirm password validation
-            if (confirmPasswordInput) {
-                confirmPasswordInput.addEventListener('input', function () {
-                    const password = passwordInput.value;
-                    const confirmPassword = this.value;
-                    const rules = window.checkPasswordRules(password, confirmPassword);
+            confirmPasswordInput.addEventListener('input', function () {
+                const password = passwordInput.value;
+                const confirmPassword = this.value;
+                const rules = window.checkPasswordRules(password, confirmPassword);
 
-                    window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+                window.updateRuleUI('rule-match', rules.match);
 
-                    validateRegistrationForm();
-                });
+                checkFormValidity();
+            });
+
+            // Check if all rules are satisfied
+            function checkFormValidity() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                const rules = window.checkPasswordRules(password, confirmPassword);
+
+                // All rules must be satisfied
+                const allSatisfied = rules.length && rules.uppercase && rules.lowercase &&
+                                    rules.digit && rules.special && rules.noSpaces && rules.match === true;
+
+                submitBtn.disabled = !allSatisfied;
             }
 
-            // Initial state - button should be disabled
-            validateRegistrationForm();
+            // Initial state check
+            checkFormValidity();
         });
     </script>
 
