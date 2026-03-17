@@ -718,7 +718,7 @@ class LoginController extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('login')->with('status', 'Your Account is Now Activated');
+                return redirect()->route('login')->with('status', 'Your account has been activated');
             } else {
                 return redirect()->route('login')->with('error', 'Sorry! Your Account is already Activated');
             }

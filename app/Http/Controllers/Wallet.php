@@ -1379,6 +1379,37 @@ class Wallet extends Controller
 
                                 Log::channel("cryptochillcallback")->info('Transaction confirmed successfully for account: ' . $account->code);
 
+
+                                $settings = settings();
+
+                                $toEmail = $user->email;
+                                $type = 'Fund Deposit';
+                                $from = $settings['email_from_address'];
+                                $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                                $headers = "MIME-Version: 1.0" . "\r\n";
+                                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                                $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+                                $content = '<p style="font-size: 16px; color: #000000;">
+                                                We are pleased to inform you that funds have been successfully deposited into your account..
+                                            </p>';
+
+                                $templateVars = [
+                                    'name' => $user->fullname,
+                                    'site_link' => $settings['copyright_site_name_text'],
+                                    'email' => $settings['email_from_address'],
+                                    "content" => $content,
+                                    'amount' => $amount,
+                                    'code' => $tradeDeposit->code,
+                                    'date' => $tradeDeposit->deposted_date,
+                                    'type' => $tradeDeposit->deposit_type,
+                                    "title_right" => "Transaction",
+                                    "subtitle_right" => "Successful",
+                                    "btn_text" => "Go To Dashboard",
+                                ];
+                                $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+
+
                                 return response()->json(['status' => 'true']);
                             } catch (\Throwable $th) {
                                 DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);

@@ -195,7 +195,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             $symbolpath = $symbolMappings[$symbolWithoutP];
             $b = preg_match('/Energy|Indices|Cryptocurrencies/', $symbolpath) ? 0.00001 : 0.0001;
             // Calculate lot size
-            $lotSize = $this->calculateLotSize($order->VolumeInitialExt, $order->ContractSize ?? 100000);
+            // $lotSize = $this->calculateLotSize($order->VolumeInitialExt, $order->ContractSize ?? 100000);
 
             // Prepare IB commission data
             return [
@@ -490,7 +490,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
     protected function fireTradeOpenedEventsForBatch(Account $account, array $tradesToUpsert): void
     {
         $openPositionIds = collect($tradesToUpsert)
-            ->filter(fn ($t) => ($t['status'] ?? '') === 'open')
+            ->filter(fn($t) => ($t['status'] ?? '') === 'open')
             ->pluck('position_id')
             ->unique()
             ->values();
@@ -656,7 +656,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
      */
     protected function processAccountWithRetry($accountId): void
     {
-        $maxAttempts = 3;
+        $maxAttempts = 1;
         $attempt = 0;
         $lastException = null;
 
