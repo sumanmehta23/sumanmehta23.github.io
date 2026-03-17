@@ -880,78 +880,91 @@
 
     </script>
 
-    {{-- Remove broken include and replace with inline validation --}}
+    @include('partials.password-validation-script')
 
     <script>
-        // Initialize password validation for profile password form
-        document.addEventListener('DOMContentLoaded', function () {
+
+
+        // Validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Check if all validation rules are satisfied
+        function validateRegistrationForm() {
+            const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('new_password');
             const confirmPasswordInput = document.getElementById('new_password_confirmation');
-            const submitBtn = document.getElementById('password_changed');
+            const continueBtn = document.getElementById('password_changed');
+
+            if (!emailInput || !passwordInput || !confirmPasswordInput || !continueBtn) return;
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Check email is valid
+            const isEmailValid = email && isValidEmail(email);
+
+            // Check password rules
+            const rules = window.checkPasswordRules(password, confirmPassword);
+
+            // All rules must be satisfied
+            const allRulesSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.match === true;
+
+            // Enable button only if email is valid AND all password rules are satisfied
+            const isFormValid = isEmailValid && allRulesSatisfied;
+
+            continueBtn.disabled = !isFormValid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const continueBtn = document.getElementById('password_changed');
 
             if (!passwordInput) return;
-
-            // Function to check password rules
-            function checkPasswordRules(password, confirmPassword) {
-                return {
-                    length: password.length >= 8,
-                    lowercase: /[a-z]/.test(password),
-                    uppercase: /[A-Z]/.test(password),
-                    digit: /\d/.test(password),
-                    special: /[\W_]/.test(password),
-                    noSpaces: !/\s/.test(password),
-                    match: confirmPassword ? password === confirmPassword : null
-                };
+            // Email validation
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    validateRegistrationForm();
+                });
             }
 
-            // Function to update rule UI
-            function updateRuleUI(ruleId, isValid) {
-                const ruleElement = document.getElementById(ruleId);
-                if (!ruleElement) return;
-
-                const icon = ruleElement.querySelector('.rule-icon');
-                if (isValid === true) {
-                    ruleElement.classList.remove('text-red-500');
-                    ruleElement.classList.add('text-success');
-                    if (icon) {
-                        icon.classList.remove('ti-x', 'text-red-500');
-                        icon.classList.add('ti-check', 'text-success');
-                    }
-                } else if (isValid === false) {
-                    ruleElement.classList.remove('text-success');
-                    ruleElement.classList.add('text-red-500');
-                    if (icon) {
-                        icon.classList.remove('ti-check', 'text-success');
-                        icon.classList.add('ti-x', 'text-red-500');
-                    }
-                }
-            }
-
-            // Listen for password input changes
+            // Password validation
             passwordInput.addEventListener('input', function () {
                 const password = this.value;
                 const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
-                const rules = checkPasswordRules(password, confirmPassword);
+                const rules = window.checkPasswordRules(password, confirmPassword);
 
-                updateRuleUI('rule-length', rules.length);
-                updateRuleUI('rule-uppercase', rules.uppercase);
-                updateRuleUI('rule-lowercase', rules.lowercase);
-                updateRuleUI('rule-digit', rules.digit);
-                updateRuleUI('rule-special', rules.special);
-                updateRuleUI('rule-no-spaces', rules.noSpaces);
-                updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+                window.updateRuleUI('rule-length', rules.length);
+                window.updateRuleUI('rule-uppercase', rules.uppercase);
+                window.updateRuleUI('rule-lowercase', rules.lowercase);
+                window.updateRuleUI('rule-digit', rules.digit);
+                window.updateRuleUI('rule-special', rules.special);
+                window.updateRuleUI('rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                validateRegistrationForm();
             });
 
-            // Listen for confirm password input changes
+            // Confirm password validation
             if (confirmPasswordInput) {
                 confirmPasswordInput.addEventListener('input', function () {
                     const password = passwordInput.value;
                     const confirmPassword = this.value;
-                    const rules = checkPasswordRules(password, confirmPassword);
+                    const rules = window.checkPasswordRules(password, confirmPassword);
 
-                    updateRuleUI('rule-match', rules.match);
+                    window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                    validateRegistrationForm();
                 });
             }
+
+            // Initial state - button should be disabled
+            validateRegistrationForm();
         });
     </script>
 @endsection
