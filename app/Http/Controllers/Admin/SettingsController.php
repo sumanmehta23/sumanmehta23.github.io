@@ -58,6 +58,11 @@ class SettingsController extends Controller
         return view("admin.ui_settings", compact('enabled', 'showingRecoveryCodes', 'toggle'));
     }
 
+    public function reviewPopupSettings()
+    {
+        return view('admin.review_popup_settings');
+    }
+
     public function logs(Request $request)
     {
         $searchType = $request->input('search_type');
@@ -176,6 +181,11 @@ class SettingsController extends Controller
         }
         alert()->success("Settings Successfully Updated");
         return redirect()->back();
+    }
+
+    public function updateReviewPopupSettings(Request $request)
+    {
+        return $this->store($request);
     }
     public function update_password()
     {
