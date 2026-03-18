@@ -101,21 +101,24 @@
                                             Account</a></div>
                                 </div>
                             </div>
+                            @php
+                                $activeDashboardTab = request('tab') === 'demo' ? 'demo' : 'live';
+                            @endphp
                             <ul class="nav nav-tabs analytics-tab" id="myTab" role="tablist">
-                                <li class="nav-item" role="presentation"><button class="nav-link active"
+                                <li class="nav-item" role="presentation"><button class="nav-link {{ $activeDashboardTab === 'live' ? 'active' : '' }}"
                                         id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#analytics-tab-1-pane"
                                         type="button" role="tab" aria-controls="analytics-tab-1-pane"
-                                        aria-selected="true">Live Accounts</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="analytics-tab-2"
+                                        aria-selected="{{ $activeDashboardTab === 'live' ? 'true' : 'false' }}">Live Accounts</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link {{ $activeDashboardTab === 'demo' ? 'active' : '' }}" id="analytics-tab-2"
                                         data-bs-toggle="tab" data-bs-target="#analytics-tab-2-pane" type="button"
-                                        role="tab" aria-controls="analytics-tab-2-pane" aria-selected="false">Demo
+                                        role="tab" aria-controls="analytics-tab-2-pane" aria-selected="{{ $activeDashboardTab === 'demo' ? 'true' : 'false' }}">Demo
                                         Accounts</button></li>
                             </ul>
                         </div>
                         <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="analytics-tab-1-pane" role="tabpanel"
+                            <div class="tab-pane fade {{ $activeDashboardTab === 'live' ? 'show active' : '' }}" id="analytics-tab-1-pane" role="tabpanel"
                                 aria-labelledby="analytics-tab-1" tabindex="0">
-                                @if ($liveAccountDetails->isNotEmpty())
+                                @if ($liveAccountDetails->count() > 0)
                                     <div>
                                         <div class="d-block d-md-none p-2">
                                             @foreach ($liveAccountDetails as $liveAccount)
@@ -314,6 +317,9 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        <div class="px-3 pb-3">
+                                            {{ $liveAccountDetails->withQueryString()->appends(['tab' => 'live'])->links('pagination::bootstrap-5') }}
+                                        </div>
                                     </div>
                                 @else
                                     <div>
@@ -337,9 +343,9 @@
                                     </div>
                                 @endif
                             </div>
-                            <div class="tab-pane fade" id="analytics-tab-2-pane" role="tabpanel"
+                            <div class="tab-pane fade {{ $activeDashboardTab === 'demo' ? 'show active' : '' }}" id="analytics-tab-2-pane" role="tabpanel"
                                 aria-labelledby="analytics-tab-2" tabindex="0">
-                                @if ($demoAccountDetails->isNotEmpty())
+                                @if ($demoAccountDetails->count() > 0)
                                     <div>
                                         <div class="d-block d-md-none p-2">
                                             @foreach ($demoAccountDetails as $demoAccount)
@@ -457,6 +463,9 @@
                                                     @endforeach
                                                 </tbody>
                                             </table>
+                                        </div>
+                                        <div class="px-3 pb-3">
+                                            {{ $demoAccountDetails->withQueryString()->appends(['tab' => 'demo'])->links('pagination::bootstrap-5') }}
                                         </div>
                                     </div>
                                 @else

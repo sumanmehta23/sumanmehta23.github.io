@@ -237,6 +237,9 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <div class="px-3 pb-3">
+                                    {{ $results->withQueryString()->links('pagination::bootstrap-5') }}
+                                </div>
                             </div>
                         </div>
                     </div>
