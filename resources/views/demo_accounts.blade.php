@@ -36,7 +36,82 @@
                         </div>
                         <div class="tab-content" id="myTabContent">
                             <div>
-                                <div class="table-responsive ps-2">
+                                <div class="d-block d-md-none p-2">
+                                    @foreach ($results as $acc)
+                                        <div class="mb-3 border rounded p-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    @if($acc->platform === 'x9')
+                                                        <img src="/images/x92.png" alt="X9 Platform"
+                                                            class="rounded wid-50 hei-50">
+                                                    @else
+                                                        <img src="/assets/images/mt5.png" alt="MT5 Platform"
+                                                            class="rounded wid-50 hei-50">
+                                                    @endif
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    @if ($acc->code && $acc->code != 'Rejected')
+                                                        <h5 class="mb-1">{{ $acc->code }}</h5>
+                                                    @elseif($acc->code == 'Rejected')
+                                                        <h5 class="mb-1 text-danger">Rejected</h5>
+                                                    @else
+                                                        <h5 class="mb-1 text-warning">Pending</h5>
+                                                    @endif
+                                                    @if ($acc->demo == 0)
+                                                        <p class="mb-0 text-muted f-12">
+                                                            {{ $acc->email }}
+                                                        </p>
+                                                    @endif
+                                                    <p class="mb-0 text-muted f-12">
+                                                        {{ $acc->accountType->ac_name }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3 row g-2">
+                                                <div class="col-6">
+                                                    <p class="mb-1 text-muted f-12">Leverage</p>
+                                                    <p class="mb-0 f-w-400">1:{{ $acc->leverage }}</p>
+                                                </div>
+                                                <div class="col-6 text-end">
+                                                    <p class="mb-1 text-muted f-12">Balance</p>
+                                                    <p class="mb-0 f-w-400">$ {{ number_format($acc->balance, 2) }}</p>
+                                                </div>
+                                                <div class="col-12 text-end">
+                                                    <p class="mb-1 text-muted f-12">Equity</p>
+                                                    <p class="mb-0 f-w-400">$ {{ number_format($acc->equity, 2) }}</p>
+                                                </div>
+                                            </div>
+
+                                            @if ($acc->code && $acc->code != 'Rejected')
+                                                <div class="gap-2 mt-3 d-flex flex-wrap">
+                                                    <a href="{{ route('view-account-details', $acc->id) }}"
+                                                        class="btn btn-sm btn-outline-secondary">
+                                                        <span>View <svg class="pc-icon">
+                                                                <use xlink:href="#custom-login"></use>
+                                                            </svg></span>
+                                                    </a>
+                                                    @if($acc->demo == 0)
+                                                        <a href="{{ url('/trade-deposit') }}"
+                                                            class="btn btn-sm btn-outline-secondary">
+                                                            <span>Deposit <i class="ti ti-database-import"></i></span>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            @elseif ($acc->code && $acc->code == 'Rejected')
+                                                <div class="mt-3">
+                                                    <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                                </div>
+                                            @else
+                                                <div class="mt-3">
+                                                    <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="table-responsive ps-2 d-none d-md-block">
                                     <table class="table">
                                         <thead>
                                             <tr>
