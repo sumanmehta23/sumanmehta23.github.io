@@ -93,12 +93,16 @@
             color: #111827;
             line-height: 1.2;
         }
+
+        .news-page-content {
+            padding-bottom: 36px;
+        }
     </style>
 @endsection
 
 @section('content')
     <div class="pc-container">
-        <div class="pc-content">
+        <div class="pc-content news-page-content">
             <div class="row">
                 <div class="col-12">
                     <div class="card">
@@ -181,7 +185,7 @@
                                     </div>
                                 @endforeach
 
-                                <div class="mt-3 d-flex justify-content-end">
+                                <div class="mt-4 mb-2 d-flex justify-content-end">
                                     {{ $newsItems->links('pagination::bootstrap-5') }}
                                 </div>
                             @endif
