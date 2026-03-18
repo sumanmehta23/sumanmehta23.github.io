@@ -498,6 +498,16 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                     <li><a href="{{ route('pamm.investor') }}">Investor</a></li>
                                 </ul>
                             </li>
+                            <li class="pc-item">
+                                <a href="{{ route('forex-news.index') }}" class="pc-link">
+                                    <span class="pc-micon">
+                                        <svg class="pc-icon">
+                                            <use xlink:href="#custom-status-up"></use>
+                                        </svg>
+                                    </span>
+                                    <span class="pc-mtext">Economic Calendar</span>
+                                </a>
+                            </li>
 
                             <li class="pc-item">
                                 <a href="{{ route('learn') }}" class="pc-link">
