@@ -43,6 +43,7 @@ use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
+use App\Http\Controllers\ForexNewsController;
 use App\Models\Account;
 use App\Models\Ib1;
 use App\Models\Ib1Commission;
@@ -136,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/wallet_withdrawal_verify', [Wallet::class, 'wallet_withdrawal_verify'])->name('wallet_withdrawal_verify');
     // Route::get('/', [Home::class, 'dashboard'])->name('dashboardIndex');
     Route::get('dashboard', [Home::class, 'dashboard'])->name('dashboard');
+    Route::get('/forex-news', [ForexNewsController::class, 'index'])->name('forex-news.index');
     Route::get('/view_account_details', [MT5Accounts::class, 'viewAccountDetails'])->name('view_account_details');
     Route::get('/select_account_deposit', [MT5Accounts::class, 'select_account_deposit'])->name('select_account_deposit');
 
