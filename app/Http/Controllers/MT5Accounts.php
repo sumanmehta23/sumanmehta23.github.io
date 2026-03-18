@@ -70,7 +70,7 @@ class MT5Accounts extends Controller
             ->where('competition_status', NULL)
             ->where('demo', false)
             ->orderBy('id', 'desc')
-            ->get();
+            ->paginate(5);
         return view('live_accounts', compact('results'));
     }
 
@@ -85,7 +85,7 @@ class MT5Accounts extends Controller
             })
             ->with('accountType')
             ->orderBy('id', 'desc')
-            ->get();
+            ->paginate(5);
         return view('demo_accounts', compact('results'));
     }
     public function viewAccountDetails(Account $account)

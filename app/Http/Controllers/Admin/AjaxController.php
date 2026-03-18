@@ -3761,14 +3761,27 @@ class AjaxController extends Controller
             $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
             $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
 
+            $status = '<span class="badge bg-outline-primary">Pending</span>';
+
+            if ($row->status == 1) {
+                if($row->admin_remark == 'new' || $row->admin_remark == 'draft'){
+                    $status = '<span class="badge bg-outline-danger">Processing (Cryptochill Draft)</span>';
+                } else {
+                    $status = '<div class="badge bg-outline-success">' . $row->admin_remark . '</div>';
+                }
+            } elseif ($row->status == 2) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by Admin</span>';
+            } elseif ($row->status == 3) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by User</span>';
+            }
+
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Cancelled by Admin</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')),
+                'status' => $status,
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
@@ -4699,21 +4712,21 @@ class AjaxController extends Controller
                 'ID',
                 'Name',
                 'Email',
-                'Country',
                 'Code',
                 'Account Group',
                 'Leverage',
                 'Balance',
                 'Equity',
+                'Status',
+                'Total Deposit',
+                'Total Withdraw',
                 'Last Trade Date',
                 'Days Since Last Trade',
                 'Deposited',
                 'Traded',
-                'Status',
-                'Total Deposit',
-                'Total Withdrawal',
                 'Date',
                 'Time',
+                'Country',
             ]);
 
             $chunkCount = 0;
@@ -4745,25 +4758,26 @@ class AjaxController extends Controller
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
                         $Traded = $hasTrades ? 'Yes' : 'No';
 
+                        
                         fputcsv($handle, [
                         $account->id,
                         $account->user->fullname ?? '',
                         $account->email,
-                        $account->user->country ?? '',
                         $account->code,
                         $account->accountType->ac_group ?? '',
                         $account->leverage,
                         $account->balance,
                         $account->equity,
+                        $account->deleted_at ? 'Deleted' : 'Active',
+                        number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
+                        number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
                         $lastTradeDate,
                         $daysSinceLastTrade,
                         $isDeposited,
                         $Traded,
-                        $account->deleted_at ? 'Deleted' : 'Active',
-                        number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
-                        number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
                         $account->created_at->format('Y-m-d'),
                         $account->created_at->format('H:i:s'),
+                        $account->user->country ?? '',
                     ]);
                     } catch (\Exception $e) {
                         Log::error("Error writing account ID {$account->id}: " . $e->getMessage());

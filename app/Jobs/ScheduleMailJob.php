@@ -81,11 +81,11 @@ class ScheduleMailJob implements ShouldQueue
                 $template = 'emails.defaultTemplate';
                 // $template = 'emails.template';
             }
-
-            // Use Brevo API only for export emails or when Brevo is explicitly configured
-            // Prefer the application's mail driver (SMTP) unless BREVO_API_KEY or mailer=brevo is set
-            $brevoConfigured = !empty(config('services.brevo.api_key'));
-            if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $brevoConfigured) {
+            Log::info("maildriver".$maildriver);
+            Log::info("api key".$this->apiKey);
+            Log::info("emailsubject".$this->subject);
+            // Always use Brevo API for export emails or if configured
+            if (strpos($this->subject, 'Export') !== false || $maildriver == 'brevo' || $this->apiKey) {
                 $htmlContent = view($template, $this->data)->render();
                 $payload = [
                     'sender' => [

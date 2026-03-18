@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Leaderboard;
+use App\Http\Controllers\Admin\LearnContentController;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\MT5Controller;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Ib;
 use App\Http\Controllers\InternalTransfer;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\KycSyncController;
+use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MT5Accounts;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
@@ -169,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
+    Route::get('/learn', [LearnController::class, 'index'])->name('learn');
     Route::get('/joinCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
     Route::post('/joinCompetition', [CompetitionController::class, 'createCompetition'])->name('joinCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
@@ -248,6 +251,10 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -279,6 +286,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/g86t8', function () {
+            return config('services.omnisend.api_key');
+        });
         Route::get('/ajax', [AjaxController::class, 'index']);
 
         Route::post('/ajax', [AjaxController::class, 'index']);
@@ -392,6 +402,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
             ->middleware('check.permissions:trade_withdrawals:viewAny');
 
+        // All Trades (server-side DataTable)
+        Route::get('/trades', [\App\Http\Controllers\Admin\TradeController::class, 'index'])
+            ->name('trades.index')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/data', [\App\Http\Controllers\Admin\TradeController::class, 'getTradesData'])
+            ->name('trades.data')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/{trade}', [\App\Http\Controllers\Admin\TradeController::class, 'show'])
+            ->name('trades.show')
+            ->middleware('check.permissions:trade_deposit:viewAny');
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
@@ -550,6 +570,18 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
         });
 
+        Route::prefix('/learn-content')->name('learn-content.')->group(function () {
+            Route::get('/', [LearnContentController::class, 'index'])->name('index');
+
+            Route::post('/sections', [LearnContentController::class, 'storeSection'])->name('sections.store');
+            Route::put('/sections/{learnSection}', [LearnContentController::class, 'updateSection'])->name('sections.update');
+            Route::delete('/sections/{learnSection}', [LearnContentController::class, 'destroySection'])->name('sections.destroy');
+
+            Route::post('/videos', [LearnContentController::class, 'storeVideo'])->name('videos.store');
+            Route::put('/videos/{learnVideo}', [LearnContentController::class, 'updateVideo'])->name('videos.update');
+            Route::delete('/videos/{learnVideo}', [LearnContentController::class, 'destroyVideo'])->name('videos.destroy');
+        });
+
         // Sync Monitor Dashboard Routes
         Route::prefix('sync-monitor')->name('sync-monitor.')->group(function () {
             Route::get('/dashboard', [App\Http\Controllers\Admin\SyncMonitorController::class, 'dashboard'])->name('dashboard');
@@ -567,6 +599,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
         });
 
+        // Admin Blog Routes
+        Route::resource('blog', \App\Http\Controllers\Admin\BlogPostController::class)->names([
+            'index' => 'blog.index',
+            'create' => 'blog.create',
+            'store' => 'blog.store',
+            'show' => 'blog.show',
+            'edit' => 'blog.edit',
+            'update' => 'blog.update',
+            'destroy' => 'blog.destroy',
+        ]);
         // Affiliate Management Routes
         Route::prefix('affiliates')->name('affiliates.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('index');

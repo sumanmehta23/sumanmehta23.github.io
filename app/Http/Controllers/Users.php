@@ -63,65 +63,17 @@ class Users extends Controller
     }
     public function changePassword(Request $request)
     {
-        $rules = [
+        $request->validate([
             'current_password' => 'required',
             'new_password' => [
                 'required',
-                'string',
+                new \App\Rules\ValidPassword(),
                 'confirmed',
-                'min:8', // At least 8 characters
-                'regex:/[a-z]/', // At least one lowercase letter
-                'regex:/[A-Z]/', // At least one uppercase letter
-                'regex:/\d/', // At least one number
-                'regex:/[\W_]/', // At least one special character
             ],
-        ];
-
-        $messages = [
-            'new_password.min' => 'The password must be at least 8 characters long.',
-            'new_password.regex' => [
-                'The password must contain at least one lowercase letter.',
-                'The password must contain at least one uppercase letter.',
-                'The password must contain at least one number.',
-                'The password must contain at least one special character.',
-            ],
+        ], [
+            'new_password.required' => 'The new password field is required.',
             'new_password.confirmed' => 'Passwords do not match.',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ($validator->fails()) {
-            $errors = $validator->errors();
-            $filteredErrors = [];
-
-            // Check which specific regex rule failed and return only unmet requirements
-            if ($errors->has('new_password')) {
-                $password = $request->new_password;
-
-                if (!preg_match('/[a-z]/', $password)) {
-                    $filteredErrors[] = 'The password must contain at least one lowercase letter.';
-                }
-                if (!preg_match('/[A-Z]/', $password)) {
-                    $filteredErrors[] = 'The password must contain at least one uppercase letter.';
-                }
-                if (!preg_match('/\d/', $password)) {
-                    $filteredErrors[] = 'The password must contain at least one number.';
-                }
-                if (!preg_match('/[\W_]/', $password)) {
-                    $filteredErrors[] = 'The password must contain at least one special character.';
-                }
-                if (strlen($password) < 8) {
-                    $filteredErrors[] = 'The password must be at least 8 characters long.';
-                }
-                if ($errors->has('new_password.confirmed')) {
-                    $filteredErrors[] = 'Passwords do not match.';
-                }
-            }
-
-            return response()->json([
-                'errors' => $filteredErrors
-            ], 422);
-        }
+        ]);
 
         $user = Auth::user();
         if (!Hash::check($request->current_password, $user->password)) {
@@ -200,9 +152,14 @@ class Users extends Controller
         // Example values (replace with actual values as needed)
         // $appToken = 'prd:o43fXhlRsswSFc3l6s2tnY4u.3fdpqHGAxhVLGObNhJaigfBXjSqSaCAH';
         $appToken = config('services.sumsub.api_token');
-        $apiUrl = '/resources/accessTokens?userId=' . urlencode($user->email) . '&levelName=basic-kyc-level'; // URI of the request
+        $apiUrl = '/resources/accessTokens/sdk'; // URI of the request
         $requestMethod = 'POST'; // HTTP method
-        $requestBody = ''; // Add your request body if needed, empty for this example
+        $requestBody = json_encode(
+            [
+                'userId' => $user->email,
+                'levelName' => 'basic-kyc-level',
+            ]
+        ); // Add your request body if needed, empty for this example
 
         // Create the valueToSign string
         $valueToSign = $timestamp . $requestMethod . $apiUrl;
@@ -230,6 +187,7 @@ class Users extends Controller
             CURLOPT_CUSTOMREQUEST => $requestMethod,
             CURLOPT_POSTFIELDS => $requestBody,
             CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
                 'X-App-Token: ' . $appToken,
                 'X-App-Access-Ts: ' . $timestamp,
                 'X-App-Access-Sig: ' . $signatureHex,
@@ -245,7 +203,6 @@ class Users extends Controller
 
         // Parse the response
         $auth = json_decode($response);
-
         // Close cURL session
         curl_close($curl);
         $token = $auth->token ?? null;
@@ -275,7 +232,6 @@ class Users extends Controller
 
             // Redirect directly to Veriff
             return redirect()->away($sessionUrl);
-
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             Log::error('Veriff connection error', [
                 'error' => $e->getMessage(),
@@ -284,7 +240,6 @@ class Users extends Controller
 
             return redirect()->route('user-profile')
                 ->with('error', 'Unable to connect to verification service. Please try again later.');
-
         } catch (\Exception $e) {
             Log::error('Veriff verification error', [
                 'error' => $e->getMessage(),
@@ -292,7 +247,7 @@ class Users extends Controller
             ]);
 
             $userFriendlyMessage = 'An error occurred while starting verification. Please try again later.';
-            
+
             if (str_contains($e->getMessage(), 'credentials are not configured')) {
                 $userFriendlyMessage = 'Verification service is not properly configured. Please contact support.';
             }

@@ -185,6 +185,13 @@
                                                         name="password_confirmation"><!----></div>
                                             </div>
                                         </div>
+
+                                        <div class="mt-2 mb-4">
+                                            <div class="p-3 border shadow-sm w-100 rounded-3">
+                                                @include('partials.password-validation-rules')
+                                            </div>
+                                        </div>
+
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button id="registration1"
@@ -285,6 +292,13 @@
                                             @endif
 
                                         </div>
+                                        @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
+                                        <div data-v-97e32e5a="" class="row g-3 mb-3">
+                                            <div data-v-97e32e5a="" class="col-sm-12 d-flex justify-content-center">
+                                                <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
+                                            </div>
+                                        </div>
+                                        @endif
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button data-v-97e32e5a=""
@@ -411,6 +425,9 @@
         </div>
     </div>
 
+    @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <script>
         function handlePaste(event) {
             const pasteData = event.clipboardData.getData('text');
@@ -510,5 +527,94 @@
             var option = $("#country_code option[data-flag='" + country + "']").attr("value");
             $("#country_code").val(option).trigger("change")
         }, "jsonp");
+    </script>
+
+
+    @include('partials.password-validation-script')
+
+    <script>
+
+
+        // Validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Check if all validation rules are satisfied
+        function validateRegistrationForm() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmpassword');
+            const continueBtn = document.getElementById('continueButton');
+
+            if (!emailInput || !passwordInput || !confirmPasswordInput || !continueBtn) return;
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Check email is valid
+            const isEmailValid = email && isValidEmail(email);
+
+            // Check password rules
+            const rules = window.checkPasswordRules(password, confirmPassword);
+
+            // All rules must be satisfied
+            const allRulesSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.match === true;
+
+            // Enable button only if email is valid AND all password rules are satisfied
+            const isFormValid = isEmailValid && allRulesSatisfied;
+
+            continueBtn.disabled = !isFormValid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmpassword');
+            const continueBtn = document.getElementById('continueButton');
+
+            if (!passwordInput) return;
+            // Email validation
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    validateRegistrationForm();
+                });
+            }
+
+            // Password validation
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const rules = window.checkPasswordRules(password, confirmPassword);
+
+                window.updateRuleUI('rule-length', rules.length);
+                window.updateRuleUI('rule-uppercase', rules.uppercase);
+                window.updateRuleUI('rule-lowercase', rules.lowercase);
+                window.updateRuleUI('rule-digit', rules.digit);
+                window.updateRuleUI('rule-special', rules.special);
+                window.updateRuleUI('rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                validateRegistrationForm();
+            });
+
+            // Confirm password validation
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function () {
+                    const password = passwordInput.value;
+                    const confirmPassword = this.value;
+                    const rules = window.checkPasswordRules(password, confirmPassword);
+
+                    window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                    validateRegistrationForm();
+                });
+            }
+
+            // Initial state - button should be disabled
+            validateRegistrationForm();
+        });
     </script>
 @endsection
