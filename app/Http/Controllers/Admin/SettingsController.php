@@ -169,7 +169,10 @@ class SettingsController extends Controller
         }
 
         foreach ($req as $key => $value) {
-            Setting::where("name", $key)->update(["value" => $value]);
+            Setting::updateOrCreate(
+                ['name' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
         }
         alert()->success("Settings Successfully Updated");
         return redirect()->back();
