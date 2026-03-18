@@ -505,7 +505,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                             <use xlink:href="#custom-status-up"></use>
                                         </svg>
                                     </span>
-                                    <span class="pc-mtext">Economic Calendar</span>
+                                    <span class="pc-mtext">News</span>
                                 </a>
                             </li>
 
