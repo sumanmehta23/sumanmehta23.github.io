@@ -870,7 +870,7 @@ function updateRagaButtonState() {
                 alert('Please enter a valid amount (minimum $10).');
                 return false;
             }
-        });
+        }); 
 
         // Anti-tampering protection
         setInterval(function() {
