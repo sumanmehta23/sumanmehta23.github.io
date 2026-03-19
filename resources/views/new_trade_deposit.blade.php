@@ -52,15 +52,15 @@
                                                 @endforeach
                                             </div>
                                             {{-- Custom account dropdown --}}
-                                            <div class="dropdown mb-3">
-                                                <button class="btn btn-outline-secondary dropdown-toggle w-100 d-flex justify-content-between align-items-center px-3 py-2" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px;">
-                                                    <span id="accountDropdownLabel" class="text-muted">Select Account</span>
-                                                    <span></span>
+                                            <div class="mb-3 dropdown">
+                                                <button class="px-3 py-3 btn btn-outline-secondary dropdown-toggle w-50 d-flex justify-content-between align-items-center" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px;">
+                                                    <span id="accountDropdownLabel" class="text-muted w-100 text-start">Select Account</span>
+
                                                 </button>
-                                                <ul class="dropdown-menu w-100 shadow" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
+                                                <ul class="shadow dropdown-menu w-50" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
                                                     @foreach ($liveaccount_details as $liveaccount)
                                                         <li>
-                                                            <a class="dropdown-item d-flex justify-content-between align-items-center py-2 account-dropdown-item"
+                                                            <a class="py-2 dropdown-item d-flex justify-content-between align-items-center account-dropdown-item"
                                                                href="#"
                                                                data-account-code="{{ $liveaccount->code }}"
                                                                data-account-balance="{{ number_format($liveaccount->balance - $liveaccount->totalBonusDeposit, 2) }}">
@@ -822,8 +822,19 @@ function updateRagaButtonState() {
             e.preventDefault();
             const accountCode = $(this).data('account-code');
             const balance = $(this).data('account-balance');
-            $('#accountDropdownLabel').html('<img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">' + accountCode + '<span class="ms-3 text-muted">$' + balance + '</span>');
-            $('#accountDropdownLabel').removeClass('text-muted');
+            $('#accountDropdownLabel').html(
+                '<div class="d-flex justify-content-between align-items-center w-100">' +
+                    '<div class="d-flex align-items-center">' +
+                        '<img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">' +
+                        '<span class="text-muted">' + accountCode + '</span>' +
+                    '</div>' +
+                    '<div class="pr-4 d-flex flex-column text-end">' +
+                        '<span class="text-muted">$' + balance + '</span>' +
+                        '<small class="text-muted">Current Balance</small>' +
+                    '</div>' +
+                '</div>'
+            );
+            // $('#accountDropdownLabel').removeClass('text-muted');
             $('#' + accountCode).prop('checked', true).trigger('change');
         });
 
@@ -885,7 +896,7 @@ function updateRagaButtonState() {
                 alert('Please enter a valid amount (minimum $10).');
                 return false;
             }
-        }); 
+        });
 
         // Anti-tampering protection
         setInterval(function() {
