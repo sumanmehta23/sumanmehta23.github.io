@@ -4,8 +4,9 @@
         @media (max-width: 768px) {
 
             /* Adjust breakpoint as needed */
-            .mob_width {
-                width: 150%;
+            .custom-dropdown-toggle,
+            .custom-dropdown-menu {
+                width: 100% !important;
             }
         }
     </style>
