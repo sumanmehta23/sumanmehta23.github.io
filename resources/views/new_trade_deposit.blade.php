@@ -74,8 +74,8 @@
                                             </div>
                                             <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
                                             <div class="row g-1">
-                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' && 
-                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') || 
+                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' &&
+                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') ||
                                                      (isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')))
                                                     <div class="col-6 col-lg-6 col-xl-6">
                                                         <div class="border rounded address-check">
@@ -125,7 +125,7 @@
 
                                             <!-- Credit Services Selection (shown when credit is selected) -->
                                             @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1')
-                                                <div id="credit-services-section" class="row g-1 mt-3" style="display:none;">
+                                                <div id="credit-services-section" class="mt-3 row g-1" style="display:none;">
                                                     <div class="col-12">
                                                         <h6 class="mb-3" style="margin-left: 10px;">SELECT CREDIT SERVICE</h6>
                                                     </div>
@@ -210,9 +210,9 @@
                                                                 </div>
                                                                 <div class="row">
                                                                     <div class="col-lg-4"></div>
-                                                                    <div class="col-lg-8 pb-4">
+                                                                    <div class="pb-4 col-lg-8">
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="ragaWarningCheckbox" name="confirmcryptoCheckbox">
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="ragaWarningCheckbox" name="confirmcryptoCheckbox">
                                                                             <label class="form-check-label" for="ragaWarningCheckbox">
                                                                                 I confirm that I have reviewed the payment details and understand that this transaction will be processed through RagaPay payment gateway. I agree to proceed with this payment.
                                                                             </label>
@@ -281,9 +281,9 @@
                                                                 </div>
                                                                 <div class="row">
                                                                     <div class="col-lg-4"></div>
-                                                                    <div class="col-lg-8 pb-4">
+                                                                    <div class="pb-4 col-lg-8">
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
                                                                             <label class="form-check-label" for="cryptoWarningCheckbox">
                                                                                 Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
                                                                             </label>
@@ -351,15 +351,15 @@
                                                                 </div>
                                                                 <div class="row">
                                                                     <div class="col-lg-4"></div>
-                                                                    <div class="col-lg-8 pb-4">
+                                                                    <div class="pb-4 col-lg-8">
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditWarningCheckbox" name="confirmcryptoCheckbox">
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="creditWarningCheckbox" name="confirmcryptoCheckbox">
                                                                             <label class="form-check-label" for="creditWarningCheckbox">
                                                                                 Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, this option may not be available in your country. In that case, please use cryptocurrency to deposit.
                                                                             </label>
                                                                         </div>
-                                                                         <div class="form-check mt-2">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditusdcCheckbox" name="confirmusdcCheckbox">
+                                                                         <div class="mt-2 form-check">
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="creditusdcCheckbox" name="confirmusdcCheckbox">
                                                                             <label class="form-check-label" for="creditusdcCheckbox">
                                                                                 I understand this credit card option processes payments only in USDC.
                                                                             </label>
@@ -463,11 +463,11 @@
                         </div>
                     </div>
                 @else
-                    <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
-                        <div class="row p-3">
-                            <div class="card-body text-center">
+                    <div class="pb-1 border shadow-none card support-tickets ribbon-box ribbon-fill">
+                        <div class="p-3 row">
+                            <div class="text-center card-body">
                                 <div class="text-center me-4"><a href="/transactions/deposit#"><img src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
-                                <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !</h6>
+                                <h6 class="mt-2 mb-0 mb-3 text-center text-secondary f-w-400 f-16">KYC Not Yet Verified !</h6>
                                 <a id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span class="text-truncate">Verify Now To Proceed</span></button></a>
                             </div>
                         </div>
@@ -517,7 +517,7 @@
         const cryptoPromocodeStatus = $('#promocodeStatus');
         const cryptoVerifyButton = $('#verifyPromocodeBtn');
         let isCryptoPromocodeValid = false;
-        let isCryptoPromocodeEntered = false;        
+        let isCryptoPromocodeEntered = false;
 
         // CreditCard form handling
         const ccPromocodeInput = $('#cc_promocode');
@@ -590,7 +590,7 @@ function updateRagaButtonState() {
     const amount = parseFloat(ragaAmountInput.val());
     const isAmountValid = amount >= minDeposit;
     const isCheckboxChecked = $('#ragaWarningCheckbox').is(':checked');
-    
+
     if (isRagaPromocodeEntered) {
         ragaDepositButton.prop('disabled', !isRagaPromocodeValid || !isAmountValid || !isCheckboxChecked);
         ragaDepositButton.css('opacity', isRagaPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
