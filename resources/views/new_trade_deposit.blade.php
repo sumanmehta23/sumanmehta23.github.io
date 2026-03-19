@@ -39,38 +39,43 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="my-4 divider"><span>SELECT MT5 ACCOUNT</span></div>
-                                            <div class="row g-1">
+                                            {{-- Hidden radio inputs to maintain existing JS behaviour --}}
+                                            <div style="display:none">
                                                 @foreach ($liveaccount_details as $liveaccount)
-                                                    <div class="col-md-3 col-lg-4 col-xl-4">
-                                                        <div class="border rounded address-check">
-                                                            <div class="form-check paycard">
-                                                                <input id="{{ $liveaccount->code }}"
-                                                                    type="radio" name="live-account"
-                                                                    class="select-liveaccount form-check-input input-primary"
-                                                                    data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
-                                                                    data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
-                                                                    data-group="{{ $liveaccount->accountType->ac_group }}"
-                                                                    value="{{ $liveaccount->id }}">
-                                                                <label class="form-check-label d-block" required>
-                                                                    <div class="p-1 my-1">
-                                                                        <span class="row">
-                                                                            <span class="mt-1 col-6">
-                                                                                <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
-                                                                                    <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">{{ $liveaccount->code }}</span>
-                                                                            </span>
-                                                                            <span class="pb-0 mb-0 col-6 text-end pe-3">
-                                                                                <span class="mb-0 h5 d-block f-w-500">
-                                                                                    ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
-                                                                                </span>
-                                                                                <span class="mb-0 text-muted f-10">Current Balance</span>
-                                                                            </span>
-                                                                        </span>
-                                                                    </div>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    <input id="{{ $liveaccount->code }}"
+                                                        type="radio" name="live-account"
+                                                        class="select-liveaccount"
+                                                        data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
+                                                        data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
+                                                        data-group="{{ $liveaccount->accountType->ac_group }}"
+                                                        value="{{ $liveaccount->id }}">
                                                 @endforeach
+                                            </div>
+                                            {{-- Custom account dropdown --}}
+                                            <div class="dropdown mb-3">
+                                                <button class="btn btn-outline-secondary dropdown-toggle w-100 d-flex justify-content-between align-items-center px-3 py-2" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px;">
+                                                    <span id="accountDropdownLabel" class="text-muted">Select Account</span>
+                                                    <span></span>
+                                                </button>
+                                                <ul class="dropdown-menu w-100 shadow" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
+                                                    @foreach ($liveaccount_details as $liveaccount)
+                                                        <li>
+                                                            <a class="dropdown-item d-flex justify-content-between align-items-center py-2 account-dropdown-item"
+                                                               href="#"
+                                                               data-account-code="{{ $liveaccount->code }}"
+                                                               data-account-balance="{{ number_format($liveaccount->balance - $liveaccount->totalBonusDeposit, 2) }}">
+                                                                <span class="d-flex align-items-center">
+                                                                    <img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">
+                                                                    <span class="fw-medium">{{ $liveaccount->code }}</span>
+                                                                </span>
+                                                                <span class="text-end">
+                                                                    <span class="d-block fw-medium">${{ number_format($liveaccount->balance - $liveaccount->totalBonusDeposit, 2) }}</span>
+                                                                    <small class="text-muted">Current Balance</small>
+                                                                </span>
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
                                             </div>
                                             <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
                                             <div class="row g-1">
@@ -810,6 +815,16 @@ function updateRagaButtonState() {
             updateCryptoButtonState();
             updateCcButtonState();
             updateRagaButtonState();
+        });
+
+        // Account dropdown selection handler
+        $(document).on('click', '.account-dropdown-item', function(e) {
+            e.preventDefault();
+            const accountCode = $(this).data('account-code');
+            const balance = $(this).data('account-balance');
+            $('#accountDropdownLabel').html('<img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">' + accountCode + '<span class="ms-3 text-muted">$' + balance + '</span>');
+            $('#accountDropdownLabel').removeClass('text-muted');
+            $('#' + accountCode).prop('checked', true).trigger('change');
         });
 
         // Prevent form submission if no account selected
