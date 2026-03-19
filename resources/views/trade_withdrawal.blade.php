@@ -83,7 +83,7 @@
                                                     </button>
 
                                                     <!-- Custom Dropdown Menu with HTML Options -->
-                                                    <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton" style="width: 100%; max-height: 300px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; margin-top: 5px;">
+                                                    <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton" style="width: 50%; max-height: 300px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; margin-top: 5px;">
                                                         @foreach ($liveaccount_details as $liveaccount)
                                                             <li>
                                                                 <a class="dropdown-item custom-dropdown-item" href="javascript:void(0);"
