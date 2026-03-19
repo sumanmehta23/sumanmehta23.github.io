@@ -99,6 +99,12 @@ return [
         'location_id' => env('GHL_LOCATION_ID', ''),
     ],
 
+    'fxstreet' => [
+        'rss_url' => env('FXSTREET_RSS_URL', 'https://www.fxstreet.com/rss/news'),
+        'cache_ttl' => (int) env('FXSTREET_CACHE_TTL', 900),
+        'rss2json_url' => env('FXSTREET_RSS2JSON_URL', 'https://api.rss2json.com/v1/api.json'),
+        'rss2json_api_key' => env('FXSTREET_RSS2JSON_API_KEY', ''),
+    ],
     'turnstile' => [
         'enabled' => env('TURNSTILE_ENABLED', false),
         'site_key' => env('TURNSTILE_SITE_KEY', ''),

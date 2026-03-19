@@ -112,23 +112,104 @@
                                             Account</a></div>
                                 </div>
                             </div>
+                            @php
+                                $activeDashboardTab = request('tab') === 'demo' ? 'demo' : 'live';
+                            @endphp
                             <ul class="nav nav-tabs analytics-tab" id="myTab" role="tablist">
-                                <li class="nav-item" role="presentation"><button class="nav-link active"
+                                <li class="nav-item" role="presentation"><button class="nav-link {{ $activeDashboardTab === 'live' ? 'active' : '' }}"
                                         id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#analytics-tab-1-pane"
                                         type="button" role="tab" aria-controls="analytics-tab-1-pane"
-                                        aria-selected="true">Live Accounts</button></li>
-                                <li class="nav-item" role="presentation"><button class="nav-link" id="analytics-tab-2"
+                                        aria-selected="{{ $activeDashboardTab === 'live' ? 'true' : 'false' }}">Live Accounts</button></li>
+                                <li class="nav-item" role="presentation"><button class="nav-link {{ $activeDashboardTab === 'demo' ? 'active' : '' }}" id="analytics-tab-2"
                                         data-bs-toggle="tab" data-bs-target="#analytics-tab-2-pane" type="button"
-                                        role="tab" aria-controls="analytics-tab-2-pane" aria-selected="false">Demo
+                                        role="tab" aria-controls="analytics-tab-2-pane" aria-selected="{{ $activeDashboardTab === 'demo' ? 'true' : 'false' }}">Demo
                                         Accounts</button></li>
                             </ul>
                         </div>
                         <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="analytics-tab-1-pane" role="tabpanel"
+                            <div class="tab-pane fade {{ $activeDashboardTab === 'live' ? 'show active' : '' }}" id="analytics-tab-1-pane" role="tabpanel"
                                 aria-labelledby="analytics-tab-1" tabindex="0">
-                                @if ($liveAccountDetails->isNotEmpty())
+                                @if ($liveAccountDetails->count() > 0)
                                     <div>
-                                        <div class="table-responsive ps-2">
+                                        <div class="d-block d-md-none p-2">
+                                            @foreach ($liveAccountDetails as $liveAccount)
+                                                <div class="mb-3 border rounded p-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-2">
+                                                            @if($liveAccount->platform === 'x9')
+                                                                <img src="/images/x92.png" alt="X9 Platform"
+                                                                    class="rounded wid-50 hei-50">
+                                                            @else
+                                                                <img src="/assets/images/mt5.png" alt="MT5 Platform"
+                                                                    class="rounded wid-50 hei-50">
+                                                            @endif
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            @if ($liveAccount->code && $liveAccount->code != 'Rejected')
+                                                                <h5 class="mb-1">{{ $liveAccount->code }}</h5>
+                                                            @elseif($liveAccount->code == 'Rejected')
+                                                                <h5 class="mb-1 text-danger">Rejected</h5>
+                                                            @else
+                                                                <h5 class="mb-1 text-warning">Pending</h5>
+                                                            @endif
+                                                            <p class="mb-0 text-muted f-12">
+                                                                {{ $liveAccount->accountType->ac_name }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3 row g-2">
+                                                        <div class="col-6">
+                                                            <p class="mb-1 text-muted f-12">Nick Name</p>
+                                                            <p class="mb-0 f-w-400">{{ $liveAccount->account_nick_name }}</p>
+                                                        </div>
+                                                        <div class="col-6 text-end">
+                                                            <p class="mb-1 text-muted f-12">Leverage</p>
+                                                            <p class="mb-0 f-w-400">{{ $liveAccount->leverage }}</p>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <p class="mb-1 text-muted f-12">Balance</p>
+                                                            <p class="mb-0 f-w-400">@money($liveAccount->balance ?? '0.00')</p>
+                                                        </div>
+                                                        <div class="col-6 text-end">
+                                                            <p class="mb-1 text-muted f-12">Equity</p>
+                                                            <p class="mb-0 f-w-400">@money($liveAccount->equity)</p>
+                                                        </div>
+                                                    </div>
+
+                                                    @if ($liveAccount->code && $liveAccount->code != 'Rejected')
+                                                        <div class="gap-2 mt-3 d-flex flex-wrap">
+                                                            <a href="{{ route('view-account-details', $liveAccount->id) }}"
+                                                                class="btn btn-sm btn-outline-secondary">
+                                                                <span>View <svg class="pc-icon">
+                                                                        <use xlink:href="#custom-login"></use>
+                                                                    </svg></span>
+                                                            </a>
+                                                            @if(!$liveAccount->isZapierAccount())
+                                                                <a href="{{ url('/trade-deposit') }}"
+                                                                    class="btn btn-sm btn-outline-secondary">
+                                                                    <span>Deposit <i class="ti ti-database-import"></i></span>
+                                                                </a>
+                                                            @endif
+                                                            <a href="{{ route('trade-withdrawal') }}"
+                                                                class="btn btn-sm btn-outline-secondary">
+                                                                <span>Withdraw <i class="ti ti-database-import"></i></span>
+                                                            </a>
+                                                        </div>
+                                                    @elseif ($liveAccount->code && $liveAccount->code == 'Rejected')
+                                                        <div class="mt-3">
+                                                            <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                                        </div>
+                                                    @else
+                                                        <div class="mt-3">
+                                                            <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        <div class="table-responsive ps-2 d-none d-md-block">
                                             <table class="table">
                                                 <thead>
                                                     <tr>
@@ -247,6 +328,9 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        <div class="px-3 pb-3">
+                                            {{ $liveAccountDetails->withQueryString()->appends(['tab' => 'live'])->links('pagination::bootstrap-5') }}
+                                        </div>
                                     </div>
                                 @else
                                     <div>
@@ -270,11 +354,66 @@
                                     </div>
                                 @endif
                             </div>
-                            <div class="tab-pane fade" id="analytics-tab-2-pane" role="tabpanel"
+                            <div class="tab-pane fade {{ $activeDashboardTab === 'demo' ? 'show active' : '' }}" id="analytics-tab-2-pane" role="tabpanel"
                                 aria-labelledby="analytics-tab-2" tabindex="0">
-                                @if ($demoAccountDetails->isNotEmpty())
+                                @if ($demoAccountDetails->count() > 0)
                                     <div>
-                                        <div class="table-responsive ps-2">
+                                        <div class="d-block d-md-none p-2">
+                                            @foreach ($demoAccountDetails as $demoAccount)
+                                                <div class="mb-3 border rounded p-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-2">
+                                                            @if($demoAccount->platform === 'x9')
+                                                                <img src="/images/x92.png" alt="X9 Platform"
+                                                                    class="rounded wid-50 hei-50">
+                                                            @else
+                                                                <img src="/assets/images/mt5.png" alt="MT5 Platform"
+                                                                    class="rounded wid-50 hei-50">
+                                                            @endif
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="mb-1">
+                                                                <span>{{ $demoAccount->code ?? 'Pending' }}</span>
+                                                            </h5>
+                                                            <p class="mb-0 text-muted f-12">
+                                                                {{ $demoAccount->account_type }}
+                                                            </p>
+                                                            <p class="mb-0 text-muted f-12">
+                                                                {{ $demoAccount->accountType ? $demoAccount->accountType->ac_name : '' }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3 row g-2">
+                                                        <div class="col-6">
+                                                            <p class="mb-1 text-muted f-12">Leverage</p>
+                                                            <p class="mb-0 f-w-400">{{ $demoAccount->leverage }}</p>
+                                                        </div>
+                                                        <div class="col-6 text-end">
+                                                            <p class="mb-1 text-muted f-12">Balance</p>
+                                                            <p class="mb-0 f-w-400">@money($demoAccount->balance ?? '0.00')</p>
+                                                        </div>
+                                                        <div class="col-12 text-end">
+                                                            <p class="mb-1 text-muted f-12">Equity</p>
+                                                            <p class="mb-0 f-w-400">@money($demoAccount->equity)</p>
+                                                        </div>
+                                                    </div>
+
+                                                    @if ($demoAccount->code && $demoAccount->code != 'Rejected')
+                                                        <div class="gap-2 mt-3 d-flex flex-wrap">
+                                                            <a href="{{ route('view-account-details', $demoAccount->id) }}"
+                                                                class="btn btn-sm btn-outline-secondary">
+                                                                <span>View <svg class="pc-icon">
+                                                                        <use xlink:href="#custom-login"></use>
+                                                                    </svg></span>
+                                                            </a>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        <div class="table-responsive ps-2 d-none d-md-block">
                                             <table class="table">
                                                 <thead>
                                                     <tr>
@@ -335,6 +474,9 @@
                                                     @endforeach
                                                 </tbody>
                                             </table>
+                                        </div>
+                                        <div class="px-3 pb-3">
+                                            {{ $demoAccountDetails->withQueryString()->appends(['tab' => 'demo'])->links('pagination::bootstrap-5') }}
                                         </div>
                                     </div>
                                 @else
