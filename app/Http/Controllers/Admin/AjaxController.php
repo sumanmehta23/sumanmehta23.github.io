@@ -3017,6 +3017,12 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.code', $order);
                 })
 
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->join('accounts', 'accounts.id', '=', 'trade_withdrawal.account_id')
+                        ->orderBy('accounts.balance', $order)
+                        ->select('trade_withdrawal.*');
+                })
+
                 ->orderColumn('transaction_fee', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.transaction_fee', $order);
                 })
@@ -3046,6 +3052,10 @@ class AjaxController extends Controller
                 ->addColumn('amount', function ($row) {
                     // dd($row);
                     return $row->withdrawal_amount;
+                })
+                ->addColumn('balance', function ($row) {
+                    // dd($row);
+                    return $row->account ? ($row->account->balance <= 0 ? '0.00' : $row->account->balance) : '';
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
