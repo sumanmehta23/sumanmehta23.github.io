@@ -66,7 +66,14 @@ use Illuminate\Support\Str;
 use Laravel\Telescope\Telescope;
 
 use function PHPUnit\Framework\throwException;
+use Carbon\Carbon;
+use Illuminate\Support\Carbon as SupportCarbon;
 
+Route::get('s-time', function () {
+
+    return [Carbon::now()->toDateTimeString(), SupportCarbon::now()->toDateTimeString()];
+    // Perform the redirection to the new URL format
+});
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
 // Change GET → POST
 Route::get('/competitions-overview/leaderboard/{id}', [CompetitionController::class, 'competitionsOverviewLeaderboard'])->name('competitionsOverviewLeaderboard');
