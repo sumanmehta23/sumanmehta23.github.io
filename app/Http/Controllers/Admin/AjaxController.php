@@ -2031,10 +2031,10 @@ class AjaxController extends Controller
                 })
                 ->addColumn('open_time_display', function ($row) {
                     if (!$row->open_time) return '-';
-                    $date = Carbon::parse($row->open_time);
+
                     return '<div class="d-grid">
-                        <div class="date">' . $date->format('Y-m-d') . '</div>
-                        <div class="time text-muted">' . $date->format('H:i:s') . '</div>
+                        <div class="date">' . $row->open_time->copy()->setTimezone('UTC')->format('Y-m-d') . '</div>
+                        <div class="time text-muted">' . $row->open_time->copy()->setTimezone('UTC')->format('H:i:s') . '</div>
                     </div>';
                 })
                 ->addColumn('action', function ($row) {
