@@ -1,5 +1,15 @@
 @extends('layouts.crm.crm')
 @section('content')
+<style>
+@media (max-width: 575.98px) {
+    #accountDropdownBtn {
+        width: 100% !important;
+    }
+    #accountDropdownMenu {
+        width: 100% !important;
+    }
+}
+</style>
     <div class="pc-container">
         <div class="pc-content">
             <div class="pb-0 mb-0 page-header">
@@ -53,11 +63,11 @@
                                             </div>
                                             {{-- Custom account dropdown --}}
                                             <div class="mb-3 dropdown">
-                                                <button class="px-3 py-3 btn btn-outline-secondary dropdown-toggle w-50 d-flex justify-content-between align-items-center" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px;">
+                                                <button class="px-3 py-3 btn btn-outline-secondary dropdown-toggle w-50 d-flex justify-content-between align-items-center" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px; width:50%;">
                                                     <span id="accountDropdownLabel" class="text-muted w-100 text-start">Select Account</span>
 
                                                 </button>
-                                                <ul class="shadow dropdown-menu w-50" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
+                                                <ul class="shadow dropdown-menu w-50 w-sm-100" id="accountDropdownMenu" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
                                                     @foreach ($liveaccount_details as $liveaccount)
                                                         <li>
                                                             <a class="py-2 dropdown-item d-flex justify-content-between align-items-center account-dropdown-item"
