@@ -1004,12 +1004,12 @@ class Transaction extends Controller
                             // ]);
                         });
                     } elseif($responseData->result == 'error'){
-                        // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
                         if($responseData->reason == 'InvalidAddress'){
                             $status = 3; // Set status to 3 for invalid address
                         }else{
                             $status = 0; // Set status to 0 for other errors
                         }
+                        // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
                         DB::transaction(function () use ($request, $response, $responseData, $transaction, $status) {
                             // Update wallet_withdraw table with response and set status to 0 (error state)
                             TradeWithdrawals::where('id', $transaction->id)
