@@ -884,7 +884,7 @@ class Transaction extends Controller
             $payoutReq = json_decode($transaction->payout_req, true);
             if(isset($payoutReq['result']) && $payoutReq['result'] == 'error'){
                 if($payoutReq['reason'] == 'InsufficientFunds') {
-                    return redirect()->back()->with('error', $payoutReq['reason']);
+                    // return redirect()->back()->with('error', $payoutReq['reason']);
                 }
             }
 
