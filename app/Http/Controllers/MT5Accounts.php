@@ -81,7 +81,7 @@ class MT5Accounts extends Controller
             ->where('demo', true)
             ->whereHas('accountType', function ($q) {
                 $q->whereNull('competition_start_date')
-                ->whereNull('competition_end_date');
+                    ->whereNull('competition_end_date');
             })
             ->with('accountType')
             ->orderBy('id', 'desc')
@@ -1319,7 +1319,8 @@ class MT5Accounts extends Controller
                 return redirect()->back()->with('warning', 'X9 Demo account created but initial deposit failed. Please contact support.');
             }
         } else {
-            return redirect()->back()->with('error', 'Failed to create X9 demo account: ' . $response['message']);
+            Log::error('X9 Demo Account Creation Failed: ' . $response['message'] . ' for user ' . $user->id);
+            return redirect()->back()->with('error', 'Failed to create X9 demo account.Please try again later.');
         }
     }
 

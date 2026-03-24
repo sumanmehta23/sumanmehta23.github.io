@@ -240,6 +240,7 @@
                                                                 @else
                                                                     <select name="client_wallet_id" required
                                                                         class="form-control fill" style="color:black;">
+                                                                        <option value="">Select Wallet</option>
                                                                         @foreach ($client_banks as $bank)
                                                                             <option value="{{ $bank->id }}">
                                                                                 {{ $bank->wallet_name }} /

@@ -402,56 +402,59 @@ class LoginController extends Controller
                 //     'password' => 'required|string|confirmed'
                 // ]);
                 // dd($request->all());
-                $validatedData = Validator::make($request->all(), [
-                    'password' => [
-                        'required',
-                        'string',
-                        'confirmed', // At least 8 characters
-                        'regex:/[a-z]/', // At least one lowercase letter
-                        'regex:/[A-Z]/', // At least one uppercase letter
-                        'regex:/\d/', // At least one number
-                        'regex:/[\W_]/', // At least one special character
-                    ],
-                    'password_confirmation' => 'required_with:password|same:password',
+                // $validatedData = Validator::make($request->all(), [
+                //     'password' => [
+                //         'required',
+                //         'string',
+                //         'confirmed', // At least 8 characters
+                //         'regex:/[a-z]/', // At least one lowercase letter
+                //         'regex:/[A-Z]/', // At least one uppercase letter
+                //         'regex:/\d/', // At least one number
+                //         'regex:/[\W_]/', // At least one special character
+                //     ],
+                //     'password_confirmation' => 'required_with:password|same:password',
+                // ]);
+                // if ($validatedData->fails()) {
+                //     $errors = $validatedData->errors();
+                //     $filteredErrors = [];
+                //     // dd($errors);
+                //     // Check which specific regex rule failed and return only unmet requirements
+                //     if ($errors->has('password')) {
+                //         $password = $request->password;
+
+                //         if (!preg_match('/[a-z]/', $password)) {
+                //             $filteredErrors[] = 'The password must contain at least one lowercase letter.';
+                //         }
+                //         if (!preg_match('/[A-Z]/', $password)) {
+                //             $filteredErrors[] = 'The password must contain at least one uppercase letter.';
+                //         }
+                //         if (!preg_match('/\d/', $password)) {
+                //             $filteredErrors[] = 'The password must contain at least one number.';
+                //         }
+                //         if (!preg_match('/[\W_]/', $password)) {
+                //             $filteredErrors[] = 'The password must contain at least one special character.';
+                //         }
+                //         if (strlen($password) < 8) {
+                //             $filteredErrors[] = 'The password must be at least 8 characters long.';
+                //         }
+                //         if ($errors->has('password.confirmed')) {
+                //             $filteredErrors[] = 'Passwords do not match.';
+                //         }
+                //     }
+
+                //     $errorString = '';
+                //     foreach ($filteredErrors as $error) {
+                //         $errorString .= '• ' . $error;
+                //     }
+                //     // dd($errorString);
+                //     $errorString = html_entity_decode($errorString);
+                //     // dd($errorString);
+                //     // return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
+                //     return redirect()->back()->with('error', $errorString);
+                // }
+                $request->validate([
+                    'password' => ['required', 'string', new \App\Rules\ValidPassword(), 'confirmed'],
                 ]);
-                if ($validatedData->fails()) {
-                    $errors = $validatedData->errors();
-                    $filteredErrors = [];
-                    // dd($errors);
-                    // Check which specific regex rule failed and return only unmet requirements
-                    if ($errors->has('password')) {
-                        $password = $request->password;
-
-                        if (!preg_match('/[a-z]/', $password)) {
-                            $filteredErrors[] = 'The password must contain at least one lowercase letter.';
-                        }
-                        if (!preg_match('/[A-Z]/', $password)) {
-                            $filteredErrors[] = 'The password must contain at least one uppercase letter.';
-                        }
-                        if (!preg_match('/\d/', $password)) {
-                            $filteredErrors[] = 'The password must contain at least one number.';
-                        }
-                        if (!preg_match('/[\W_]/', $password)) {
-                            $filteredErrors[] = 'The password must contain at least one special character.';
-                        }
-                        if (strlen($password) < 8) {
-                            $filteredErrors[] = 'The password must be at least 8 characters long.';
-                        }
-                        if ($errors->has('password.confirmed')) {
-                            $filteredErrors[] = 'Passwords do not match.';
-                        }
-                    }
-
-                    $errorString = '';
-                    foreach ($filteredErrors as $error) {
-                        $errorString .= '• ' . $error;
-                    }
-                    // dd($errorString);
-                    $errorString = html_entity_decode($errorString);
-                    // dd($errorString);
-                    // return redirect()->back()->with('error', 'The email you entered is already in use and exists in our system.');
-                    return redirect()->back()->with('error', $errorString);
-                }
                 $password = $request->input('password');
                 // DB::table('aspnetusers')
                 //     ->where('email', $user->email)
@@ -466,7 +469,7 @@ class LoginController extends Controller
                 return view('auth.reset-password', ['user' => $user]); // Return view
             }
         } else {
-            return redirect()->route('login')->with('error', 'Password reset verification token expires, please resend again.');
+            return redirect()->route('login')->with('error', 'This password reset link is no longer valid. Please request a new one.');
         }
     }
 
@@ -718,7 +721,7 @@ class LoginController extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('login')->with('status', 'Your Account is Now Activated');
+                return redirect()->route('login')->with('status', 'Your account has been activated');
             } else {
                 return redirect()->route('login')->with('error', 'Sorry! Your Account is already Activated');
             }

@@ -39,6 +39,25 @@
 
   });
   // CC Payment gateway options Ends
+
+  // Add click handler for ccpay button to check account selection
+  $("#ccpay").on("click", function (event) {
+      const selectedRadio = $('input[name="live-account"]:checked');
+
+      if (!selectedRadio.length) {
+          event.preventDefault();
+          swal.fire({
+              icon: "warning",
+              title: "Live Account Required",
+              text: "Please select a live account before proceeding.",
+              allowEscapeKey: false,
+              allowOutsideClick: false,
+              confirmButtonText: "OK"
+          });
+          return;
+      }
+  });
+
   $("#paynow").attr("disabled", "true");
 //   $("#crypto_deposit_amount").on('change keypress keydown keyup', function() {
 //     if ($(this).val() >= 10) {
@@ -49,6 +68,21 @@
 //     $("#paynow").attr("data-amount", $(this).val());
 //   });
 $("#paynow").on("click", function (event) {
+    const selectedRadio = $('input[name="live-account"]:checked');
+
+    if (!selectedRadio.length) {
+        event.preventDefault();
+        swal.fire({
+            icon: "warning",
+            title: "Live Account Required",
+            text: "Please select a live account before proceeding.",
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            confirmButtonText: "OK"
+        });
+        return;
+    }
+
     var checkboxChecked = $("#cryptoWarningCheckbox").prop("checked");
 
     if (!checkboxChecked) {
@@ -334,9 +368,10 @@ $("#promocode").on('change keyup paste', function() {
     setupCryptoChillWithValues();
 });
 
-// Setup initial values when page loads
+// Setup initial values when page loads - removed to prevent warning on page load
+// Account check will be done when user clicks payment buttons
 $(document).ready(function() {
-    setupCryptoChillWithValues();
+    // Don't call setupCryptoChillWithValues() here to avoid showing warning on page load
 });
 
 // Listen for changes to select-liveaccount

@@ -599,9 +599,10 @@ class MT5Controller extends Controller
                 "btn_text" => "Go To Dashboard",
                 'email' => settings()['email_from_address'],
                 "content" => $content,
-                "code" => $code,
-                "amount" => $amount,
-                "type" => $deposit_type,
+                'amount' => $amount,
+                'code' => $code,
+                'date' => now()->format('Y-m-d H:i:s'),
+                'type' => $deposit_type,
                 "title_right" => "Fund",
                 'date' => date("Y-m-d H:i:s"),
                 "subtitle_right" => "Deposit"
@@ -968,10 +969,10 @@ class MT5Controller extends Controller
                 "btn_text" => "Go To Dashboard",
                 'email' => settings()['email_from_address'],
                 "content" => $content,
-                "code" => $code,
-                "amount" => $amount,
-                "type" => $deposit_type,
-                "date" => date("Y-m-d H:i:s"),
+                'amount' => $amount,
+                'code' => $code,
+                'date' => now()->format('Y-m-d H:i:s'),
+                'type' => $deposit_type,
                 "title_right" => "Fund",
                 "subtitle_right" => "Deposit"
             ];
@@ -1413,6 +1414,7 @@ class MT5Controller extends Controller
                 'admin_remark' => $description,
                 'Status' => 1,
                 'created_by' => session('alogin'),
+                'code' => $code,
             ];
 
             // Add cell_tracking only for Cellexpert accounts (cxd)

@@ -50,7 +50,7 @@
                                     Password</label><input type="password" class="form-control" name="password" required
                                     id="password" placeholder="Password">
                             </div>
-                            <div class="mb-2 row">
+                            {{-- <div class="mb-2 row">
                                 <div class="col-6"><span class="pc-micon me-2"><i class="ti ti-point"></i></span><span
                                         class="pc-mtext f-12">Minimum 8 characters</span><br><span class="pc-micon me-2"><i
                                             class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1 uppercase
@@ -60,10 +60,17 @@
                                         class="pc-mtext f-12">At least 1 special character</span><br><span
                                         class="pc-micon me-2"><i class="ti ti-point"></i></span><span
                                         class="pc-mtext f-12">At least 1 digit</span></div>
-                            </div>
+                            </div> --}}
                             <div class="mb-2 form-group"><label class="form-label" for="exampleInputPassword1">Confirm
                                     Password</label><input type="password" class="form-control" name="confirm_password"
-                                    required id="confirm_password" placeholder="Password"></div>
+                                    required id="confirm_password" placeholder="Password">
+                            </div>
+
+                            <div class="mt-2 mb-4">
+                                <div class="p-3 border shadow-sm w-100 rounded-3">
+                                    @include('partials.password-validation-rules')
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -151,11 +158,13 @@
                                                             </h2>
                                                             @if($account->demo)
                                                                 <span class="mt-1 text-white badge bg-danger rounded-pill">Demo Account</span>
+                                                            @elseif($account->demo == 0)
+                                                                <span class="mt-1 text-white badge bg-success rounded-pill">Live Account</span>
                                                             @endif
                                                             @if($account->platform === 'x9' && isset($x9GroupName))
-                                                                <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
+                                                                <h6 class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</h6>
                                                             @elseif($getUser && $getUser->accountType)
-                                                                <p class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</p>
+                                                                <h6 class="mb-0 text-muted f-12">{{ $getUser->accountType->ac_name }}</h6>
                                                             @endif
                                                         </div>
                                                         @if ($account->account_nick_name)
@@ -163,7 +172,7 @@
                                                             {{-- <p class="mb-0 text-muted f-12"><span
                                                                     class="text-truncate w-100"></span></p> --}}
                                                         @endif
-                                                        <button class="btn btn-sm btn-primary w-auto updateNickName" onclick="editNickname()">Edit Nick Name</button>
+                                                        <button class="w-auto btn btn-sm btn-primary updateNickName" onclick="editNickname()">Edit Nick Name</button>
                                                     </div>
 
                                                 </div>
@@ -580,4 +589,66 @@
         });
 
     </script>
+
+    @include('partials.password-validation-script')
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const modal = document.getElementById('passwordupdatemodal');
+
+        // Listen for password input changes for real-time validation
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const rules = window.checkPasswordRules(password, confirmPassword);
+
+                window.updateRuleUI('rule-length', rules.length);
+                window.updateRuleUI('rule-uppercase', rules.uppercase);
+                window.updateRuleUI('rule-lowercase', rules.lowercase);
+                window.updateRuleUI('rule-digit', rules.digit);
+                window.updateRuleUI('rule-special', rules.special);
+                window.updateRuleUI('rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+                window.checkAllRulesSatisfied('password', 'confirm_password', 'password-submit-btn');
+            });
+        }
+
+        // Listen for confirm password input changes
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', function () {
+                const password = passwordInput.value;
+                const confirmPassword = this.value;
+                const rules = window.checkPasswordRules(password, confirmPassword);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+                window.checkAllRulesSatisfied('password', 'confirm_password', 'password-submit-btn');
+            });
+        }
+
+        // Reset validation UI when modal is opened
+        if (modal) {
+            const observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    if (mutation.attributeName === 'class') {
+                        const isHidden = modal.classList.contains('hidden');
+                        if (!isHidden) {
+                            if (passwordInput) passwordInput.value = '';
+                            if (confirmPasswordInput) confirmPasswordInput.value = '';
+
+                            ['rule-length', 'rule-uppercase', 'rule-lowercase', 'rule-digit', 'rule-special', 'rule-no-spaces', 'rule-match'].forEach(ruleId => {
+                                window.updateRuleUI(ruleId, null);
+                            });
+
+                            window.checkAllRulesSatisfied('password', 'confirm_password', 'password-submit-btn');
+                        }
+                    }
+                });
+            });
+
+            observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+        }
+    });
+</script>
 @endsection

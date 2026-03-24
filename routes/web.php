@@ -352,6 +352,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
+        Route::post('/competition/send-reminder-email', [Leaderboard::class, 'sendReminderEmail'])->name('competition.sendReminderEmail');
+
         // Route::post('/two-factor/enable', [AdminTwoFactorAuthentication::class, 'enableTwoFactorAuthentication'])->name('two-factor.enable');
         // Route::delete('/two-factor/disable', [AdminTwoFactorAuthentication::class, 'disableTwoFactorAuthentication'])->name('two-factor.disable');
         // Route::post('/two-factor/confirm', [AdminTwoFactorAuthentication::class, 'confirmTwoFactorAuthentication'])->name('two-factor.confirm');
@@ -453,6 +455,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::prefix('/ui_settings')->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
             Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
+        });
+
+        Route::prefix('/review-popup-settings')->group(function () {
+            Route::get('/', [SettingsController::class, 'reviewPopupSettings'])->name('review-popup-settings.view')->middleware('check.permissions:setting:viewAny');
+            Route::post('/', [SettingsController::class, 'updateReviewPopupSettings'])->name('review-popup-settings.update')->middleware('check.permissions:setting:update');
         });
 
         Route::post('/payment_gateways/update', [SettingsController::class, 'updatePaymentGateways'])

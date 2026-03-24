@@ -26,6 +26,8 @@ class UniversalWithdrawalResource extends JsonResource
             'transaction_base_currency' => $this->currency_type ?? null,
             'product_id' => $this->admin_remark,
             'withdrawal_source' => $isWalletWithdrawal ? 'wallet' : 'trade',
+            'status' => $this->status,
+            'code' => $this->code ?? null,
             'account_id' => $isWalletWithdrawal ? null : $this->account_id,
         ];
     }

@@ -449,7 +449,7 @@ class ManualPaymentController extends Controller
                 'bonus_amount' => $bonus_amount,
                 'bonus_type' => 'Bonus In',
                 'status' => 1,
-                'admin_remark' => 'Promo Bonus - Manual Payment',
+                'admin_remark' => 'Promo Bonus',
                 'bonus_currency' => 'USD',
                 'transaction_id' => $pendingPayment->transaction_id,
                 'promocode_id' => $promo->id
