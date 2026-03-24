@@ -829,6 +829,11 @@ if (app()->environment('local')) {
                                             UI Settings
                                         </a>
                                     </li>
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{ route('admin.review-popup-settings.view') }}" class="side-menu__item ">
+                                            Review Popup Settings
+                                        </a>
+                                    </li>
                                 @endcan
                                 @can('setting:viewAny')
                                     <li class="slide menu-item-sub">

@@ -58,6 +58,11 @@ class SettingsController extends Controller
         return view("admin.ui_settings", compact('enabled', 'showingRecoveryCodes', 'toggle'));
     }
 
+    public function reviewPopupSettings()
+    {
+        return view('admin.review_popup_settings');
+    }
+
     public function logs(Request $request)
     {
         $searchType = $request->input('search_type');
@@ -169,10 +174,18 @@ class SettingsController extends Controller
         }
 
         foreach ($req as $key => $value) {
-            Setting::where("name", $key)->update(["value" => $value]);
+            Setting::updateOrCreate(
+                ['name' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
         }
         alert()->success("Settings Successfully Updated");
         return redirect()->back();
+    }
+
+    public function updateReviewPopupSettings(Request $request)
+    {
+        return $this->store($request);
     }
     public function update_password()
     {
