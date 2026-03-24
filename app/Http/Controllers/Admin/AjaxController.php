@@ -2031,10 +2031,10 @@ class AjaxController extends Controller
                 })
                 ->addColumn('open_time_display', function ($row) {
                     if (!$row->open_time) return '-';
-                    $date = Carbon::parse($row->open_time);
+
                     return '<div class="d-grid">
-                        <div class="date">' . $date->format('Y-m-d') . '</div>
-                        <div class="time text-muted">' . $date->format('H:i:s') . '</div>
+                        <div class="date">' . $row->open_time->copy()->setTimezone('UTC')->format('Y-m-d') . '</div>
+                        <div class="time text-muted">' . $row->open_time->copy()->setTimezone('UTC')->format('H:i:s') . '</div>
                     </div>';
                 })
                 ->addColumn('action', function ($row) {
@@ -3017,6 +3017,12 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.code', $order);
                 })
 
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->join('accounts', 'accounts.id', '=', 'trade_withdrawal.account_id')
+                        ->orderBy('accounts.balance', $order)
+                        ->select('trade_withdrawal.*');
+                })
+
                 ->orderColumn('transaction_fee', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.transaction_fee', $order);
                 })
@@ -3046,6 +3052,10 @@ class AjaxController extends Controller
                 ->addColumn('amount', function ($row) {
                     // dd($row);
                     return $row->withdrawal_amount;
+                })
+                ->addColumn('balance', function ($row) {
+                    // dd($row);
+                    return $row->account ? ($row->account->balance <= 0 ? '0.00' : $row->account->balance) : '';
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
@@ -4461,7 +4471,6 @@ class AjaxController extends Controller
 
                 // Attempt to fetch the IB record
                 $ibRecord = Ib1::with('user')->find($clientId);
-
                 // If IB record exists, authorize and update
                 if ($ibRecord) {
                     Gate::forUser($admin)->authorize('ib:update', $ibRecord);

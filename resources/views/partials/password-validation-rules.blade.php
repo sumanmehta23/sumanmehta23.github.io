@@ -1,3 +1,35 @@
+
+<style>
+    .password-validation-rules .rule-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        text-align: center;
+        line-height: 16px;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: bold;
+    }
+    /* Default state - show red X */
+    .password-validation-rules .rule-icon::before {
+        content: "✗";
+        color: #dc3545;
+    }
+    .password-validation-rules .rule-icon.valid::before {
+        content: "✓";
+        color: #28a745 !important;
+    }
+    .password-validation-rules .rule-icon.invalid::before {
+        content: "✗";
+        color: #dc3545 !important;
+    }
+    .password-validation-rules li.valid {
+        color: #28a745 !important;
+    }
+    .password-validation-rules li.invalid {
+        color: #6c757d !important;
+    }
+</style>
 <div class="password-validation-rules">
     <h6 class="mb-2">Password Must Contain</h6>
     @if(!empty($additionalInstructions))
@@ -41,35 +73,3 @@
         </li>
     </ul>
 </div>
-
-<style>
-    .password-validation-rules .rule-icon {
-        width: 16px;
-        height: 16px;
-        display: inline-block;
-        text-align: center;
-        line-height: 16px;
-        font-size: 14px;
-        font-style: normal;
-        font-weight: bold;
-    }
-    /* Default state - show red X */
-    .password-validation-rules .rule-icon::before {
-        content: "✗";
-        color: #dc3545;
-    }
-    .password-validation-rules .rule-icon.valid::before {
-        content: "✓";
-        color: #28a745 !important;
-    }
-    .password-validation-rules .rule-icon.invalid::before {
-        content: "✗";
-        color: #dc3545 !important;
-    }
-    .password-validation-rules li.valid {
-        color: #28a745 !important;
-    }
-    .password-validation-rules li.invalid {
-        color: #6c757d !important;
-    }
-</style>

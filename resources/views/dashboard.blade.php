@@ -158,27 +158,27 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="mt-3 row g-2">
-                                                        <div class="col-6">
-                                                            <p class="mb-1 text-muted f-12">Nick Name</p>
+                                                    <div class="mt-3">
+                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Nick Name</p>
                                                             <p class="mb-0 f-w-400">{{ $liveAccount->account_nick_name }}</p>
                                                         </div>
-                                                        <div class="col-6 text-end">
-                                                            <p class="mb-1 text-muted f-12">Leverage</p>
+                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Leverage</p>
                                                             <p class="mb-0 f-w-400">{{ $liveAccount->leverage }}</p>
                                                         </div>
-                                                        <div class="col-6">
-                                                            <p class="mb-1 text-muted f-12">Balance</p>
+                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Balance</p>
                                                             <p class="mb-0 f-w-400">@money($liveAccount->balance ?? '0.00')</p>
                                                         </div>
-                                                        <div class="col-6 text-end">
-                                                            <p class="mb-1 text-muted f-12">Equity</p>
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Equity</p>
                                                             <p class="mb-0 f-w-400">@money($liveAccount->equity)</p>
                                                         </div>
                                                     </div>
 
                                                     @if ($liveAccount->code && $liveAccount->code != 'Rejected')
-                                                        <div class="gap-2 mt-3 d-flex flex-wrap">
+                                                        <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
                                                             <a href="{{ route('view-account-details', $liveAccount->id) }}"
                                                                 class="btn btn-sm btn-outline-secondary">
                                                                 <span>View <svg class="pc-icon">
@@ -384,23 +384,23 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="mt-3 row g-2">
-                                                        <div class="col-6">
-                                                            <p class="mb-1 text-muted f-12">Leverage</p>
+                                                    <div class="mt-3">
+                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Leverage</p>
                                                             <p class="mb-0 f-w-400">{{ $demoAccount->leverage }}</p>
                                                         </div>
-                                                        <div class="col-6 text-end">
-                                                            <p class="mb-1 text-muted f-12">Balance</p>
+                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Balance</p>
                                                             <p class="mb-0 f-w-400">@money($demoAccount->balance ?? '0.00')</p>
                                                         </div>
-                                                        <div class="col-12 text-end">
-                                                            <p class="mb-1 text-muted f-12">Equity</p>
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <p class="mb-0 text-muted f-12">Equity</p>
                                                             <p class="mb-0 f-w-400">@money($demoAccount->equity)</p>
                                                         </div>
                                                     </div>
 
                                                     @if ($demoAccount->code && $demoAccount->code != 'Rejected')
-                                                        <div class="gap-2 mt-3 d-flex flex-wrap">
+                                                        <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
                                                             <a href="{{ route('view-account-details', $demoAccount->id) }}"
                                                                 class="btn btn-sm btn-outline-secondary">
                                                                 <span>View <svg class="pc-icon">
