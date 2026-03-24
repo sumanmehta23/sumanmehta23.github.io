@@ -459,6 +459,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
         });
 
+        Route::prefix('/review-popup-settings')->group(function () {
+            Route::get('/', [SettingsController::class, 'reviewPopupSettings'])->name('review-popup-settings.view')->middleware('check.permissions:setting:viewAny');
+            Route::post('/', [SettingsController::class, 'updateReviewPopupSettings'])->name('review-popup-settings.update')->middleware('check.permissions:setting:update');
+        });
+
         Route::post('/payment_gateways/update', [SettingsController::class, 'updatePaymentGateways'])
             ->name('payment-gateways.update')
             ->middleware('check.permissions:setting:update');

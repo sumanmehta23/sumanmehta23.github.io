@@ -299,9 +299,9 @@ if ($getUser) {
                                                                     <?php
                                                                         // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_profit;
+                                                                            $total_profit = $accountHelper['total_profit'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_profit;
+                                                                            $total_profit = $accountHelper->total_profit ?? null;
                                                                         }
 
                                                                         if (!is_null($total_profit)) {
@@ -330,9 +330,9 @@ if ($getUser) {
                                                                     <?php
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_comission;
+                                                                            $total_comission = $accountHelper['total_comission'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_comission;
+                                                                            $total_comission = $accountHelper->total_comission ?? null;
                                                                         }
                                                                         if (!is_null($total_comission)) {
                                                                             echo "$" . number_format($total_comission, 2);
@@ -360,9 +360,9 @@ if ($getUser) {
                                                                     <?php
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_swap;
+                                                                            $total_swap = $accountHelper['total_swap'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_swap;
+                                                                            $total_swap = $accountHelper->total_swap ?? null;
                                                                         }
                                                                         if (!is_null($total_swap)) {
                                                                             echo "$" . number_format($total_swap, 2);
@@ -390,9 +390,9 @@ if ($getUser) {
                                                                     <?php
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_trades;
+                                                                            $total_trades = $accountHelper['total_trades'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_trades;
+                                                                            $total_trades = $accountHelper->total_trades ?? null;
                                                                         }
                                                                         if (!is_null($total_trades)) {
                                                                             echo "$" . number_format($total_trades, 2);
@@ -945,9 +945,7 @@ if ($getUser) {
                                     <h5 class="p-2 f-w-400"><?= $account->code ?></h5>
                                 </div>
                             </div>
-                            <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your
-                                Investor and
-                                Master passwords for your trading accounts here.</p>
+                            <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your Investor and Master passwords for your trading accounts here.</p>
                             <div class="mt-0 mb-0 row">
                                 <div class="col-lg-6">
                                     <div class="p-3 border card">
@@ -970,10 +968,16 @@ if ($getUser) {
                             </div>
                             <div class="mt-0 mb-0 row">
                                 <div class="form-group"><label class="form-label" for="exampleInputPassword1">New
-                                        Password</label><input type="password" class="form-control" name="password"
-                                        required id="password" placeholder="Password">
+                                        Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" name="password"
+                                            required id="password" placeholder="Password">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="ti ti-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="mt-3 mb-2 row">
+                                {{-- <div class="mt-3 mb-2 row">
                                     <div class="col-6"><span class="pc-micon me-2"><i
                                                 class="ti ti-point"></i></span><span class="pc-mtext f-12">Minimum 8
                                             characters</span><br><span class="pc-micon me-2"><i
@@ -987,13 +991,22 @@ if ($getUser) {
                                             special character</span><br><span class="pc-micon me-2"><i
                                                 class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
                                             digit</span></div>
-                                </div>
+                                </div> --}}
                                 <div class="mb-2 form-group"><label class="form-label"
                                         for="exampleInputPassword1">Confirm
-                                        Password</label><input type="password" class="form-control"
-                                        name="confirm_password" required id="confirm_password" placeholder="Password">
+                                        Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control"
+                                            name="confirm_password" required id="confirm_password" placeholder="Password">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                            <i class="ti ti-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
+                            </div>
+                            <div class="mt-2 col-12">
+                                @include('partials.password-validation-rules-admin', ['prefix' => 'mt5-update-'])
                             </div>
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-primary"
@@ -1006,6 +1019,7 @@ if ($getUser) {
     @endsection
 
     @section('scripts')
+        @include('partials.password-validation-script')
 
         <script>
             const canViewTradeDeposit = @json(auth()->user()->can('trade_deposit:view'));
@@ -1395,5 +1409,86 @@ if ($getUser) {
                 window.location.href = exportUrl;
             });
 
+        </script>
+        <script>
+            // MT5 Update Password Modal Fields Validation
+            const mt5Password = document.getElementById('password');
+            const mt5ConfirmPassword = document.getElementById('confirm_password');
+            const toggleMT5UpdatePassword = document.getElementById('togglePassword');
+            const toggleMT5UpdateConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+            if (mt5Password && mt5ConfirmPassword) {
+                // Initialize all rules to false
+                window.updateRuleUI('mt5-update-rule-length', false);
+                window.updateRuleUI('mt5-update-rule-uppercase', false);
+                window.updateRuleUI('mt5-update-rule-lowercase', false);
+                window.updateRuleUI('mt5-update-rule-digit', false);
+                window.updateRuleUI('mt5-update-rule-special', false);
+                window.updateRuleUI('mt5-update-rule-no-spaces', false);
+                window.updateRuleUI('mt5-update-rule-match', false);
+
+                const handleMT5PasswordInput = () => {
+                    const password = mt5Password.value;
+                    const confirmPassword = mt5ConfirmPassword.value;
+
+                    if (!password) {
+                        // Reset all rules when password is empty
+                        window.updateRuleUI('mt5-update-rule-length', false);
+                        window.updateRuleUI('mt5-update-rule-uppercase', false);
+                        window.updateRuleUI('mt5-update-rule-lowercase', false);
+                        window.updateRuleUI('mt5-update-rule-digit', false);
+                        window.updateRuleUI('mt5-update-rule-special', false);
+                        window.updateRuleUI('mt5-update-rule-no-spaces', false);
+                        window.updateRuleUI('mt5-update-rule-match', false);
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('mt5-update-rule-length', rules.length);
+                        window.updateRuleUI('mt5-update-rule-uppercase', rules.uppercase);
+                        window.updateRuleUI('mt5-update-rule-lowercase', rules.lowercase);
+                        window.updateRuleUI('mt5-update-rule-digit', rules.digit);
+                        window.updateRuleUI('mt5-update-rule-special', rules.special);
+                        window.updateRuleUI('mt5-update-rule-no-spaces', rules.noSpaces);
+                        window.updateRuleUI('mt5-update-rule-match', confirmPassword ? rules.match : null);
+                    }
+                    // Enable/disable submit button based on all rules being satisfied
+                    window.checkAllRulesSatisfied('mt5UpdatePassword', 'mt5UpdateConfirmPassword', 'mt5UpdatePasswordSubmitBtn');
+                };
+
+                const handleMT5ConfirmInput = () => {
+                    const password = mt5Password.value;
+                    const confirmPassword = mt5ConfirmPassword.value;
+
+                    if (!confirmPassword) {
+                        window.updateRuleUI('mt5-update-rule-match', false);
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('mt5-update-rule-match', confirmPassword ? rules.match : null);
+                    }
+                    // Enable/disable submit button based on all rules being satisfied
+                    window.checkAllRulesSatisfied('mt5UpdatePassword', 'mt5UpdateConfirmPassword', 'mt5UpdatePasswordSubmitBtn');
+                };
+
+                mt5Password.addEventListener('input', handleMT5PasswordInput);
+                mt5ConfirmPassword.addEventListener('input', handleMT5ConfirmInput);
+            }
+
+            // Password Visibility Toggles
+            if (toggleMT5UpdatePassword && mt5Password) {
+                toggleMT5UpdatePassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = mt5Password.type === 'password' ? 'text' : 'password';
+                    mt5Password.type = type;
+                    toggleMT5UpdatePassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
+
+            if (toggleMT5UpdateConfirmPassword && mt5ConfirmPassword) {
+                toggleMT5UpdateConfirmPassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = mt5ConfirmPassword.type === 'password' ? 'text' : 'password';
+                    mt5ConfirmPassword.type = type;
+                    toggleMT5UpdateConfirmPassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
         </script>
     @endsection
