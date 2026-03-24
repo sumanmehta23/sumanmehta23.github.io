@@ -1,4 +1,4 @@
-<div class="pc-container">
+
     <div class="pc-content">
         <div class="py-5">
             <div class="row">
