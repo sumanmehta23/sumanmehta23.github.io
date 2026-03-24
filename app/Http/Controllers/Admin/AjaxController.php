@@ -4471,7 +4471,6 @@ class AjaxController extends Controller
 
                 // Attempt to fetch the IB record
                 $ibRecord = Ib1::with('user')->find($clientId);
-
                 // If IB record exists, authorize and update
                 if ($ibRecord) {
                     Gate::forUser($admin)->authorize('ib:update', $ibRecord);
