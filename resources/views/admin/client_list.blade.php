@@ -74,16 +74,20 @@
                             </div>
                             <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Password:</label>
-                                <input type="password" class="form-control" name="password" >
+                                <input type="password" class="form-control" name="password" id="addUserPassword">
                             </div>
                             <div class="mb-3 col-12">
                                 <label for="input-label" class="form-label">Confirm Password:</label>
-                                <input type="password" class="form-control" id="input" name="confirm_password">
+                                <input type="password" class="form-control" id="addUserConfirmPassword" name="confirm_password">
+                            </div>
+
+                            <div class="my-2 col-12">
+                                @include('partials.password-validation-rules-admin', ['prefix' => 'add-'])
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" name="addUser" value="update" class="btn btn-primary">Add</button>
+                        <button type="submit" name="addUser" value="update" class="btn btn-primary" id="addUserSubmitBtn" disabled>Add</button>
                     </div>
                 </form>
             </div>
@@ -145,18 +149,17 @@
                                 </select>
                             </div>
                             <div class="col-6">
-                                <label for="input-label" class="form-label">Affiliate ID:</label>
-                                <input type="text" class="form-control" name="affiliate_id" placeholder="Enter Affiliate ID">
-                            </div>
-                            <div class="col-6">
                                 <label for="input-label" class="form-label">Password:</label>
-                                <input type="password" class="form-control" name="password" >
+                                <input type="password" class="form-control" name="password" id="editUserPassword">
                             </div>
                             <div class="col-6">
                                 <label for="input-label" class="form-label">Confirm Password:</label>
-                                <input type="password" class="form-control" id="input" name="confirm_password">
+                                <input type="password" class="form-control" id="editUserConfirmPassword" name="confirm_password">
                             </div>
-
+                            <div class="col-6">
+                                <label for="input-label" class="form-label">Affiliate ID:</label>
+                                <input type="text" class="form-control" name="affiliate_id" placeholder="Enter Affiliate ID">
+                            </div>
                             <div class="col-lg-6 d-flex align-items-end">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch"
@@ -164,10 +167,14 @@
                                     <label class="form-check-label">Send Notification Email</label>
                                 </div>
                             </div>
+
+                            <div class="my-2 col-12">
+                                @include('partials.password-validation-rules-admin', ['prefix' => 'edit-'])
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" name="updateUser" value="update" class="btn btn-primary">Update</button>
+                        <button type="submit" name="updateUser" value="update" class="btn btn-primary" id="editUserSubmitBtn" disabled>Update</button>
                     </div>
                 </form>
             </div>
@@ -1204,6 +1211,201 @@
                     }
                 });
             });
+        });
+    </script>
+
+    @include('partials.password-validation-script')
+
+    <script>
+        // Create User Modal Password Validation
+        document.addEventListener('DOMContentLoaded', function () {
+            const addUserModal = document.getElementById('addUserModal');
+            const addUserPasswordInput = document.getElementById('addUserPassword');
+            const addUserConfirmInput = document.getElementById('addUserConfirmPassword');
+            const addUserSubmitBtn = document.getElementById('addUserSubmitBtn');
+
+            if (addUserPasswordInput && addUserConfirmInput && addUserModal) {
+                // Initialize all rules to false
+                window.updateRuleUI('add-rule-length', false);
+                window.updateRuleUI('add-rule-uppercase', false);
+                window.updateRuleUI('add-rule-lowercase', false);
+                window.updateRuleUI('add-rule-digit', false);
+                window.updateRuleUI('add-rule-special', false);
+                window.updateRuleUI('add-rule-no-spaces', false);
+                window.updateRuleUI('add-rule-match', false);
+
+                const handleAddUserPasswordInput = () => {
+                    const password = addUserPasswordInput.value;
+                    const confirmPassword = addUserConfirmInput.value;
+
+                    if (!password) {
+                        // Reset all rules when password is empty
+                        window.updateRuleUI('add-rule-length', false);
+                        window.updateRuleUI('add-rule-uppercase', false);
+                        window.updateRuleUI('add-rule-lowercase', false);
+                        window.updateRuleUI('add-rule-digit', false);
+                        window.updateRuleUI('add-rule-special', false);
+                        window.updateRuleUI('add-rule-no-spaces', false);
+                        window.updateRuleUI('add-rule-match', false);
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('add-rule-length', rules.length);
+                        window.updateRuleUI('add-rule-uppercase', rules.uppercase);
+                        window.updateRuleUI('add-rule-lowercase', rules.lowercase);
+                        window.updateRuleUI('add-rule-digit', rules.digit);
+                        window.updateRuleUI('add-rule-special', rules.special);
+                        window.updateRuleUI('add-rule-no-spaces', rules.noSpaces);
+                        window.updateRuleUI('add-rule-match', confirmPassword ? rules.match : null);
+                    }
+                    window.checkAllRulesSatisfied('addUserPassword', 'addUserConfirmPassword', 'addUserSubmitBtn');
+                };
+
+                const handleAddUserConfirmInput = () => {
+                    const password = addUserPasswordInput.value;
+                    const confirmPassword = addUserConfirmInput.value;
+
+                    if (!confirmPassword) {
+                        window.updateRuleUI('add-rule-match', false);
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('add-rule-match', confirmPassword ? rules.match : null);
+                    }
+                    window.checkAllRulesSatisfied('addUserPassword', 'addUserConfirmPassword', 'addUserSubmitBtn');
+                };
+
+                addUserPasswordInput.addEventListener('input', handleAddUserPasswordInput);
+                addUserConfirmInput.addEventListener('input', handleAddUserConfirmInput);
+            }
+
+            // Edit User Modal Password Validation
+            const editUserModal = document.getElementById('editUserModal');
+            const editUserPasswordInput = document.getElementById('editUserPassword');
+            const editUserConfirmInput = document.getElementById('editUserConfirmPassword');
+            const editUserSubmitBtn = document.getElementById('editUserSubmitBtn');
+
+            if (editUserPasswordInput && editUserConfirmInput && editUserModal) {
+                // Initialize all rules to false
+                window.updateRuleUI('edit-rule-length', false);
+                window.updateRuleUI('edit-rule-uppercase', false);
+                window.updateRuleUI('edit-rule-lowercase', false);
+                window.updateRuleUI('edit-rule-digit', false);
+                window.updateRuleUI('edit-rule-special', false);
+                window.updateRuleUI('edit-rule-no-spaces', false);
+                window.updateRuleUI('edit-rule-match', false);
+
+                // For edit modal, password is optional - enable button by default if no password entered
+                if (editUserSubmitBtn && !editUserPasswordInput.value) {
+                    editUserSubmitBtn.disabled = false;
+                }
+
+                const handleEditUserPasswordInput = () => {
+                    const password = editUserPasswordInput.value;
+                    const confirmPassword = editUserConfirmInput.value;
+
+                    if (!password) {
+                        // Password is optional for edit - reset rules and enable button
+                        window.updateRuleUI('edit-rule-length', false);
+                        window.updateRuleUI('edit-rule-uppercase', false);
+                        window.updateRuleUI('edit-rule-lowercase', false);
+                        window.updateRuleUI('edit-rule-digit', false);
+                        window.updateRuleUI('edit-rule-special', false);
+                        window.updateRuleUI('edit-rule-no-spaces', false);
+                        window.updateRuleUI('edit-rule-match', false);
+
+                        // Enable submit button when password is empty
+                        if (editUserSubmitBtn) {
+                            editUserSubmitBtn.disabled = false;
+                        }
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('edit-rule-length', rules.length);
+                        window.updateRuleUI('edit-rule-uppercase', rules.uppercase);
+                        window.updateRuleUI('edit-rule-lowercase', rules.lowercase);
+                        window.updateRuleUI('edit-rule-digit', rules.digit);
+                        window.updateRuleUI('edit-rule-special', rules.special);
+                        window.updateRuleUI('edit-rule-no-spaces', rules.noSpaces);
+                        window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+
+                        // Only enable button if all rules satisfied
+                        const allSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.noSpaces && rules.match === true;
+                        if (editUserSubmitBtn) {
+                            editUserSubmitBtn.disabled = !allSatisfied;
+                        }
+                    }
+                };
+
+                const handleEditUserConfirmInput = () => {
+                    const password = editUserPasswordInput.value;
+                    const confirmPassword = editUserConfirmInput.value;
+
+                    if (!password) {
+                        // No password entered, no validation needed
+                        window.updateRuleUI('edit-rule-match', false);
+                        if (editUserSubmitBtn) {
+                            editUserSubmitBtn.disabled = false;
+                        }
+                    } else {
+                        if (!confirmPassword) {
+                            window.updateRuleUI('edit-rule-match', false);
+                        } else {
+                            const rules = window.checkPasswordRules(password, confirmPassword);
+                            window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+
+                            // Check all rules for button state
+                            const allPasswordRules = window.checkPasswordRules(password, '');
+                            const allSatisfied = allPasswordRules.length && allPasswordRules.uppercase && allPasswordRules.lowercase && allPasswordRules.digit && allPasswordRules.special && allPasswordRules.noSpaces && rules.match === true;
+                            if (editUserSubmitBtn) {
+                                editUserSubmitBtn.disabled = !allSatisfied;
+                            }
+                        }
+                    }
+                };
+
+                editUserPasswordInput.addEventListener('input', handleEditUserPasswordInput);
+                editUserConfirmInput.addEventListener('input', handleEditUserConfirmInput);
+            }
+
+            // Password Visibility Toggle - Create User Modal
+            const toggleAddUserPassword = document.getElementById('toggleAddUserPassword');
+            if (toggleAddUserPassword && addUserPasswordInput) {
+                toggleAddUserPassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = addUserPasswordInput.type === 'password' ? 'text' : 'password';
+                    addUserPasswordInput.type = type;
+                    toggleAddUserPassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
+
+            const toggleAddUserConfirmPassword = document.getElementById('toggleAddUserConfirmPassword');
+            if (toggleAddUserConfirmPassword && addUserConfirmInput) {
+                toggleAddUserConfirmPassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = addUserConfirmInput.type === 'password' ? 'text' : 'password';
+                    addUserConfirmInput.type = type;
+                    toggleAddUserConfirmPassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
+
+            // Password Visibility Toggle - Edit User Modal
+            const toggleEditUserPassword = document.getElementById('toggleEditUserPassword');
+            if (toggleEditUserPassword && editUserPasswordInput) {
+                toggleEditUserPassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = editUserPasswordInput.type === 'password' ? 'text' : 'password';
+                    editUserPasswordInput.type = type;
+                    toggleEditUserPassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
+
+            const toggleEditUserConfirmPassword = document.getElementById('toggleEditUserConfirmPassword');
+            if (toggleEditUserConfirmPassword && editUserConfirmInput) {
+                toggleEditUserConfirmPassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = editUserConfirmInput.type === 'password' ? 'text' : 'password';
+                    editUserConfirmInput.type = type;
+                    toggleEditUserConfirmPassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
         });
     </script>
 @endsection

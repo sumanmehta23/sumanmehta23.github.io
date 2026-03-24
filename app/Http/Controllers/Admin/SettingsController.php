@@ -6,6 +6,7 @@ use App\Models\Ib1;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\Setting;
+use App\Rules\ValidPassword;
 use App\Models\RestrictIps;
 use App\Models\ToggleGroup;
 use App\Models\EmployeeList;
@@ -195,7 +196,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'oldpassword' => 'required',
-            'newpassword' => 'required|confirmed',
+            'newpassword' => ['required', 'confirmed', new ValidPassword()],
         ]);
         $user = EmployeeList::where('email', session('alogin'))->first();
 

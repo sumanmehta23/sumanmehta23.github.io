@@ -315,32 +315,37 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane" id="security" role="tabpanel" aria-labelledby="profile-tab-4">
-                                    <form id="changePasswordForm" method="post">
+                                    <form id="changePasswordForm" method="post" action="{{ route('password.change') }}">
                                         @csrf
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5>Change Password</h5>
                                             </div>
                                             <div class="card-body">
+                                                <!-- Success Message -->
+                                                <div id="passwordSuccessMessage" class="alert alert-success d-none"></div>
+                                                <!-- Error Message -->
+                                                <div id="passwordErrorMessage" class="alert alert-danger d-none"></div>
+
                                                 <div class="row">
                                                     <div class="col-sm-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Current Password</label>
                                                             <input type="password" name="current_password" required
-                                                                class="form-control">
+                                                                class="form-control" id="current_password">
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">New Password</label>
                                                             <input type="password" class="form-control"
-                                                                name="new_password" required>
+                                                                name="new_password" required id="new_password">
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">Confirm Password</label>
                                                             <input type="password" name="new_password_confirmation"
-                                                                required class="form-control">
+                                                                required class="form-control" id="new_password_confirmation">
                                                         </div>
                                                     </div>
-                                                    <div class="col-sm-6">
+                                                    {{-- <div class="col-sm-6">
                                                         <h5>New Password Must Contain:</h5>
                                                         <ul class="list-group list-group-flush">
                                                             <li class="list-group-item"><i
@@ -362,12 +367,18 @@
                                                                     class="ti ti-circle-minus text-danger f-16 me-2"></i>Passwords
                                                                 do not match</li>
                                                         </ul>
+                                                    </div> --}}
+
+                                                    <div class="col-sm-6">
+                                                        @include('partials.password-validation-rules')
                                                     </div>
+
                                                 </div>
                                             </div>
                                             <div class="card-footer text-end btn-page">
                                                 <div class="btn btn-outline-secondary">Cancel</div>
                                                 <button type="submit" name="password_changed"
+                                                    id="password_changed"
                                                     class="btn btn-primary">Update
                                                     Password</button>
                                             </div>
@@ -544,35 +555,64 @@
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
 
+            // Clear previous messages
+            $('#passwordSuccessMessage').addClass('d-none').text('');
+            $('#passwordErrorMessage').addClass('d-none').text('');
+
             $.ajax({
                 type: "POST",
-                url: "{{ route('password.change') }}",
+                url: $(this).attr('action'),
                 data: $(this).serialize(),
                 success: function(response) {
                     console.log("Success Response:", response);
+                    $('#passwordSuccessMessage').removeClass('d-none').text(response.success);
                     Swal.fire({
                         icon: 'success',
                         title: response.success,
                     }).then(() => {
-                        location.reload();
+                        // Clear form after successful password change
+                        $('#changePasswordForm')[0].reset();
+                        // Reset validation UI
+                        $('.rule-icon').removeClass('ti-check text-success').addClass('ti-x text-red-500');
+                        $('#rule-length, #rule-uppercase, #rule-lowercase, #rule-digit, #rule-special, #rule-no-spaces, #rule-match')
+                            .removeClass('text-success').addClass('text-red-500');
                     });
                 },
                 error: function(xhr) {
                     console.log("Error Response:", xhr);
                     let errorMessage = "Something went wrong";
+
                     if (xhr.responseJSON?.errors) {
-                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join(
-                            "");
-                        errorMessage =
-                            `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        // Handle array of errors from controller
+                        const errors = xhr.responseJSON.errors;
+                        if (Array.isArray(errors)) {
+                            let errorList = errors.map(error => `<li>${error}</li>`).join("");
+                            errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        } else {
+                            // Handle object errors
+                            let errorList = '';
+                            for (const [key, value] of Object.entries(xhr.responseJSON.errors)) {
+                                if (Array.isArray(value)) {
+                                    value.forEach(msg => {
+                                        errorList += `<li>${msg}</li>`;
+                                    });
+                                } else {
+                                    errorList += `<li>${value}</li>`;
+                                }
+                            }
+                            errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        }
                     } else if (xhr.responseJSON?.message) {
                         errorMessage = xhr.responseJSON.message;
                     }
 
+                    // Show error in both SweetAlert and inline message
+                    $('#passwordErrorMessage').removeClass('d-none').html(errorMessage);
+
                     Swal.fire({
                         icon: 'error',
                         title: "Password Requirements Not Met",
-                        html: errorMessage, // Use `html` instead of `text` for bullet formatting
+                        html: errorMessage,
                     });
                 }
             });
@@ -838,5 +878,93 @@
             });
         }
 
+    </script>
+
+    @include('partials.password-validation-script')
+
+    <script>
+
+
+        // Validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Check if all validation rules are satisfied
+        function validateRegistrationForm() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const continueBtn = document.getElementById('password_changed');
+
+            if (!emailInput || !passwordInput || !confirmPasswordInput || !continueBtn) return;
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Check email is valid
+            const isEmailValid = email && isValidEmail(email);
+
+            // Check password rules
+            const rules = window.checkPasswordRules(password, confirmPassword);
+
+            // All rules must be satisfied
+            const allRulesSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.match === true;
+
+            // Enable button only if email is valid AND all password rules are satisfied
+            const isFormValid = isEmailValid && allRulesSatisfied;
+
+            continueBtn.disabled = !isFormValid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const continueBtn = document.getElementById('password_changed');
+
+            if (!passwordInput) return;
+            // Email validation
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    validateRegistrationForm();
+                });
+            }
+
+            // Password validation
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const rules = window.checkPasswordRules(password, confirmPassword);
+
+                window.updateRuleUI('rule-length', rules.length);
+                window.updateRuleUI('rule-uppercase', rules.uppercase);
+                window.updateRuleUI('rule-lowercase', rules.lowercase);
+                window.updateRuleUI('rule-digit', rules.digit);
+                window.updateRuleUI('rule-special', rules.special);
+                window.updateRuleUI('rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                validateRegistrationForm();
+            });
+
+            // Confirm password validation
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function () {
+                    const password = passwordInput.value;
+                    const confirmPassword = this.value;
+                    const rules = window.checkPasswordRules(password, confirmPassword);
+
+                    window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                    validateRegistrationForm();
+                });
+            }
+
+            // Initial state - button should be disabled
+            validateRegistrationForm();
+        });
     </script>
 @endsection
