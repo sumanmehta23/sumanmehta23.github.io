@@ -87,7 +87,7 @@ if (app()->environment('local') || config('services.sales.promotion')) {
         body .swal2-container {
             z-index: 999999999999999999 !important;
         }
-        
+
         body .swal2-backdrop-show {
             background-color: rgba(0, 0, 0, 0.4) !important;
             backdrop-filter: blur(2px);
@@ -383,8 +383,11 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                     <div class="pt-3 d-flex flex-column">
                                         <a href="/user-profile" class=""><i class="ti ti-user"></i><span>My
                                                 Account</span></a>
-                                        <a href="/logout" id="logout-link"><i
-                                                class="ti ti-power"></i><span>Logout</span></a>
+                                        <a href="javascript:void(0);" class="" id="support-intercom-sidebar">
+                                            <i class="ti ti-headset"></i>
+                                            <span class="pc-mtext">Support</span>
+                                        </a>
+                                        <a href="/logout" id="logout-link"><i class="ti ti-power"></i><span>Logout</span></a>
                                     </div>
                                 </div>
                             </div>
@@ -499,20 +502,6 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 </ul>
                             </li>
 
-
-
-
-                            {{-- <li class="pc-item">
-                                <a href="/support" class="pc-link">
-                                    <span class="pc-micon">
-                                        <svg class="pc-icon">
-                                            <use xlink:href="#custom-message-2"></use>
-                                        </svg>
-                                    </span>
-                                    <span class="pc-mtext">Support</span>
-                                    <span class="pc-badge"><i class="ti ti-headset"></i></span>
-                                </a>
-                            </li> --}}
                             {{-- @if (!empty($ibResult)) --}}
                             <li class="pc-item">
                                 <a href="/ib-profile" class="pc-link">
@@ -676,7 +665,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 <div class="dropdown-menu dropdown-menu-end pc-h-dropdown">
                                     <a href="/user-profile" class="dropdown-item"><i class="ti ti-user"></i><span>My
                                             Account</span></a>
-                                    <a href="/support" class="dropdown-item"><i
+                                    <a href="javascript:void(0);" class="dropdown-item" id="support-intercom-btn"><i
                                             class="ti ti-headset"></i><span>Support</span></a>
                                     <a href="/logout" class="dropdown-item" id="logout-link-2"><i
                                             class="ti ti-power"></i><span>Logout</span></a>
