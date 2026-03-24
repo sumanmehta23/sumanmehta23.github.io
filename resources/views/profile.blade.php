@@ -402,8 +402,8 @@
                                                                         <th>Currency</th>
                                                                         <th>Network</th>
                                                                         <th>Crypto Address</th>
-                                                                        <th class="text-center">Wallet Details</th>
-                                                                        <th class="text-center">Status / Action</th>
+                                                                        <th class="text-center">Status</th>
+                                                                        <th class="text-center">Action</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -418,7 +418,7 @@
                                                                                     $verification = 'Pending';
                                                                                     $tdClass = 'varification-pending';
                                                                                 } else {
-                                                                                    $verification = 'Approved';
+                                                                                    $verification = 'Verified';
                                                                                     $tdClass = 'varification-plus';
                                                                                 }
                                                                             @endphp
