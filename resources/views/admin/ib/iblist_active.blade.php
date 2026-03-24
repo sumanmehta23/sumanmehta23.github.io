@@ -52,7 +52,7 @@
 <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ibModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form action="#" id="ibRequestForm" method="post">
+      <form action="{{ url('/admin/bulkIbApprove') }}" id="ibRequestForm" method="POST">
         @csrf
         <input type="hidden" name="client_id" id="client_id" value="">
         <div class="modal-header">
@@ -131,11 +131,11 @@
           </div>
 
           <div class="row">
-            <div class="col-md-6 mb-3">
+            <div class="mb-3 col-md-6">
               <label for="date_from" class="form-label">Date From</label>
               <input type="date" class="form-control" id="date_from" name="date_from">
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="mb-3 col-md-6">
               <label for="date_to" class="form-label">Date To</label>
               <input type="date" class="form-control" id="date_to" name="date_to">
             </div>
@@ -199,7 +199,7 @@
       $("#clientName,#clientEmail").html("");
       $("#clientName").html(data.fullname)
       $("#clientEmail").html(data.email)
-      $("#client_id").val(data.user_id)
+      $("#client_id").val(data.id)
       $("[name='ib_status']").val(data.ib_status).trigger("change");
       $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
       myModal.show();
@@ -394,7 +394,7 @@
       $("#clientName,#clientEmail").html("");
       $("#clientName").html(data.fullname)
       $("#clientEmail").html(data.email)
-      $("#client_id").val(data.user_id)
+      $("#client_id").val(data.id)
       $("[name='ib_status']").val(data.ib_status).trigger("change");
       $("[name='ib_group']").val(data.ib_plan_details_id).trigger("change");
       myModal.show();
@@ -736,13 +736,13 @@
       if (modalBody) {
         modalBody.innerHTML = `
           <div class="text-center">
-            <div class="success-icon mb-4" style="animation: bounceIn 0.8s ease-out;">
+            <div class="mb-4 success-icon" style="animation: bounceIn 0.8s ease-out;">
               <i class="fas fa-check-circle text-success" style="font-size: 4rem; filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.4));"></i>
             </div>
-            <h3 class="text-success mb-3" style="font-weight: 700;">Export Completed Successfully!</h3>
-            <p class="text-light mb-4" style="font-size: 16px; line-height: 1.6;">${message}</p>
+            <h3 class="mb-3 text-success" style="font-weight: 700;">Export Completed Successfully!</h3>
+            <p class="mb-4 text-light" style="font-size: 16px; line-height: 1.6;">${message}</p>
             <div class="mt-4">
-              <button type="button" class="btn btn-success btn-lg px-4" data-bs-dismiss="modal"
+              <button type="button" class="px-4 btn btn-success btn-lg" data-bs-dismiss="modal"
                       style="border-radius: 15px; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);">
                 <i class="fas fa-check me-2"></i>Perfect!
               </button>
@@ -757,11 +757,11 @@
       if (modalBody) {
         modalBody.innerHTML = `
           <div class="text-center">
-            <div class="error-icon mb-4" style="animation: shake 0.8s ease-out;">
+            <div class="mb-4 error-icon" style="animation: shake 0.8s ease-out;">
               <i class="fas fa-exclamation-triangle text-danger" style="font-size: 4rem; filter: drop-shadow(0 4px 8px rgba(239, 68, 68, 0.4));"></i>
             </div>
-            <h3 class="text-danger mb-3" style="font-weight: 700;">Export Failed</h3>
-            <p class="text-light mb-4" style="font-size: 16px; line-height: 1.6;">${message}</p>
+            <h3 class="mb-3 text-danger" style="font-weight: 700;">Export Failed</h3>
+            <p class="mb-4 text-light" style="font-size: 16px; line-height: 1.6;">${message}</p>
             <div class="mt-4">
               <button type="button" class="btn btn-danger me-3" data-bs-dismiss="modal"
                       style="border-radius: 15px; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);">
@@ -785,19 +785,19 @@
       if (modalBody) {
         modalBody.innerHTML = `
           <div class="text-center">
-            <div class="export-animation mb-4">
+            <div class="mb-4 export-animation">
               <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem;">
                 <span class="visually-hidden">Processing...</span>
               </div>
             </div>
-            <h4 class="text-light mb-3" style="font-weight: 600;">Processing Your Export</h4>
+            <h4 class="mb-3 text-light" style="font-weight: 600;">Processing Your Export</h4>
             <div id="export-progress" class="mb-3">
               <div class="progress" style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;">
                 <div class="progress-bar bg-gradient" role="progressbar" style="width: 0%; border-radius: 5px;"
                      aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
             </div>
-            <p id="progress-text" class="text-muted mb-0" style="font-size: 14px;">Initializing...</p>
+            <p id="progress-text" class="mb-0 text-muted" style="font-size: 14px;">Initializing...</p>
           </div>
         `;
       }
