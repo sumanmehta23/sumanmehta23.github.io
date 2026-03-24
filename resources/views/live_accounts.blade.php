@@ -54,27 +54,27 @@
                                                 </div>
                                             </div>
 
-                                            <div class="mt-3 row g-2">
-                                                <div class="col-6">
-                                                    <p class="mb-1 text-muted f-12">Nick Name</p>
+                                            <div class="mt-3">
+                                                <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Nick Name</p>
                                                     <p class="mb-0 f-w-400">{{ $acc->account_nick_name }}</p>
                                                 </div>
-                                                <div class="col-6 text-end">
-                                                    <p class="mb-1 text-muted f-12">Leverage</p>
+                                                <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Leverage</p>
                                                     <p class="mb-0 f-w-400">1:{{ $acc->leverage }}</p>
                                                 </div>
-                                                <div class="col-6">
-                                                    <p class="mb-1 text-muted f-12">Balance</p>
+                                                <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Balance</p>
                                                     <p class="mb-0 f-w-400">$ {{ $acc->balance }}</p>
                                                 </div>
-                                                <div class="col-6 text-end">
-                                                    <p class="mb-1 text-muted f-12">Equity</p>
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Equity</p>
                                                     <p class="mb-0 f-w-400">$ {{ $acc->equity }}</p>
                                                 </div>
                                             </div>
 
                                             @if ($acc->code && $acc->code != 'Rejected')
-                                                <div class="gap-2 mt-3 d-flex flex-wrap">
+                                                <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
                                                     <a href="{{ route('view-account-details', $acc->id) }}"
                                                         class="btn btn-sm btn-outline-secondary">
                                                         <span>View <svg class="pc-icon">
