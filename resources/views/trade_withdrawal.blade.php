@@ -4,8 +4,9 @@
         @media (max-width: 768px) {
 
             /* Adjust breakpoint as needed */
-            .mob_width {
-                width: 150%;
+            .custom-dropdown-toggle,
+            .custom-dropdown-menu {
+                width: 100% !important;
             }
         }
     </style>
@@ -61,39 +62,56 @@
                                     <div class="card-body">
                                         <div class="my-4 divider"><span>SELECT MT5 ACCOUNT</span></div>
                                         <div class="row g-1">
-                                            @foreach ($liveaccount_details as $liveaccount)
+                                            <div class="col-md-12">
+                                                <div class="dropdown-select-wrapper" style="position: relative;">
+                                                    <select name="live-account" id="liveAccountSelect" class="form-control select-liveaccount" required style="display: none;">
+                                                        <option value="" data-balance="0" selected disabled>Select MT5 Account</option>
+                                                        @foreach ($liveaccount_details as $liveaccount)
+                                                            <option value="{{ $liveaccount->id }}"
+                                                                data-balance="{{ $liveaccount->balance }}"
+                                                                data-code="{{ $liveaccount->code }}"
+                                                                @if(isset($account_id) && $account_id == $liveaccount->id) selected @endif>
+                                                                {{ $liveaccount->code }} - ${{ number_format(max(0, $liveaccount->balance - $liveaccount->totalBonusDeposit), 2) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
 
-                                                <div class="col-md-3 col-lg-4 col-xl-4">
-                                                    <div class="border rounded address-check">
-                                                        <div class="form-check paycard">
+                                                    <!-- Custom Dropdown Button -->
+                                                    <button type="button" class="dropdown-toggle custom-dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="width: 50%; text-align: left; background: #fff; border: 1px solid #ced4da; padding: 15px; display: flex; align-items: center; border-radius:
+                                                    5px;">
+                                                        <span class="dropdown-selected-text" style="flex: 1;">Select Account</span>
+                                                        {{-- <span class="caret" style="float: right;">▼</span> --}}
+                                                    </button>
 
-                                                            <input id="liveaccount{{ $liveaccount->code }}" type="radio" name="live-account"
-                                                            class="select-liveaccount form-check-input input-primary" data-balance="{{ $liveaccount->balance }}"
-                                                            value="{{ $liveaccount->id }}"
-                                                            @if(isset($account_id) && $account_id == $liveaccount->id) checked @endif>
-
-                                                            <label class="form-check-label d-block" required>
-                                                                <div class="p-1 my-1 row">
-                                                                    <span class="mt-1 col-6">
-                                                                        <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
-                                                                            <img src="{{ asset('assets/images/mt5.png') }}"
-                                                                                alt="user-image" class="wid-25 me-1 ms-1">
-                                                                            {{ $liveaccount->code }}
+                                                    <!-- Custom Dropdown Menu with HTML Options -->
+                                                    <ul class="dropdown-menu custom-dropdown-menu" aria-labelledby="dropdownMenuButton" style="width: 50%; max-height: 300px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 4px; margin-top: 5px;">
+                                                        @foreach ($liveaccount_details as $liveaccount)
+                                                            <li>
+                                                                <a class="dropdown-item custom-dropdown-item" href="javascript:void(0);"
+                                                                   data-value="{{ $liveaccount->id }}"
+                                                                   data-balance="{{ $liveaccount->balance }}"
+                                                                   data-code="{{ $liveaccount->code }}"
+                                                                   style="padding: 0; border-bottom: 1px solid #eee;">
+                                                                    <div class="p-1 my-1 row" style="width: 100%; margin: 0;">
+                                                                        <span class="mt-1 col-6">
+                                                                            <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
+                                                                                <img src="{{ asset('assets/images/mt5.png') }}" alt="user-image" class="wid-25 me-1 ms-1">
+                                                                                {{ $liveaccount->code }}
+                                                                            </span>
                                                                         </span>
-                                                                    </span>
-                                                                    <span class="pb-0 mb-0 col-6 text-end pe-3">
-                                                                        <span class="mb-0 h5 d-block f-w-500">
-                                                                           ${{ number_format(max(0, $liveaccount->balance - $liveaccount->totalBonusDeposit), 2) }}
+                                                                        <span class="pb-0 mb-0 col-6 text-end pe-3">
+                                                                            <span class="mb-0 h5 d-block f-w-500">
+                                                                               ${{ number_format(max(0, $liveaccount->balance - $liveaccount->totalBonusDeposit), 2) }}
+                                                                            </span>
+                                                                            <span class="mb-0 text-muted f-10">Current Balance</span>
                                                                         </span>
-                                                                        <span class="mb-0 text-muted f-10">Current
-                                                                            Balance</span>
-                                                                    </span>
-                                                                </div>
-                                                            </label>
-                                                        </div>
-                                                    </div>
+                                                                    </div>
+                                                                </a>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
                                                 </div>
-                                            @endforeach
+                                            </div>
                                         </div>
                                         {{-- <div class="my-4 divider"><span>SELECT WITHDRAW METHOD</span>
                                         </div>
@@ -502,10 +520,69 @@
                 document.getElementById('selectedLiveAccount').value = selectedValue;
             });
 
-            // Optionally: Set default if one is preselected
-            const checkedRadio = document.querySelector('.select-liveaccount:checked');
-            if (checkedRadio) {
-                document.getElementById('selectedLiveAccount').value = checkedRadio.value;
+            // Custom dropdown handling
+            jQuery('.custom-dropdown-item').on('click', function() {
+                const value = jQuery(this).data('value');
+                const code = jQuery(this).data('code');
+                const balance = jQuery(this).data('balance');
+
+                // Update hidden select
+                jQuery('#liveAccountSelect').val(value).trigger('change');
+
+                // Update dropdown button text with HTML (same as paycard)
+                const htmlContent = `
+                    <span class="mt-1 col-6" style="padding-left: 0;">
+                        <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
+                            <img src="{{ asset('assets/images/mt5.png') }}" alt="user-image" class="wid-25 me-1 ms-1">
+                            ${code}
+                        </span>
+                    </span>
+                    <span class="pb-0 mb-0 col-6 text-end pe-3">
+                        <span class="mb-0 h5 d-block f-w-500">
+                           ${parseFloat(balance).toFixed(2)}
+                        </span>
+                        <span class="mb-0 text-muted f-10">Current Balance</span>
+                    </span>
+                `;
+                jQuery('.dropdown-selected-text').html(htmlContent);
+                jQuery('.dropdown-selected-text').css('display', 'flex');
+                jQuery('.dropdown-selected-text').css('width', '100%');
+
+                // Update hidden input
+                document.getElementById('selectedLiveAccount').value = value;
+
+                // Close dropdown
+                jQuery('.custom-dropdown-menu').removeClass('show');
+            });
+
+            // Set default if one is preselected (works for both dropdown and radio buttons)
+            const selectElement = document.querySelector('.select-liveaccount');
+            if (selectElement && selectElement.value) {
+                document.getElementById('selectedLiveAccount').value = selectElement.value;
+
+                // Update custom dropdown display
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    const code = selectedOption.getAttribute('data-code');
+                    const balance = selectedOption.getAttribute('data-balance');
+                    const htmlContent = `
+                        <span class="mt-1 col-6" style="padding-left: 0;">
+                            <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
+                                <img src="{{ asset('assets/images/mt5.png') }}" alt="user-image" class="wid-25 me-1 ms-1">
+                                ${code}
+                            </span>
+                        </span>
+                        <span class="pb-0 mb-0 col-6 text-end pe-3">
+                            <span class="mb-0 h5 d-block f-w-500">
+                               ${parseFloat(balance).toFixed(2)}
+                            </span>
+                            <span class="mb-0 text-muted f-10">Current Balance</span>
+                        </span>
+                    `;
+                    jQuery('.dropdown-selected-text').html(htmlContent);
+                    jQuery('.dropdown-selected-text').css('display', 'flex');
+                    jQuery('.dropdown-selected-text').css('width', '100%');
+                }
             }
         });
     </script>

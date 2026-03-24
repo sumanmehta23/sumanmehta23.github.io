@@ -1,3 +1,4 @@
+{{-- <div class="pc-container"> --}}
     <div class="pc-content">
         <div class="py-5">
             <div class="row">
@@ -91,6 +92,60 @@
 </div> --}}
 
 <script>
+    // Track Intercom visibility state
+    var isIntercomOpen = false;
+
+    // Function to toggle Intercom messenger
+    function toggleIntercom() {
+        if (window.Intercom) {
+            // We use a try-catch since Intercom API might not be fully loaded yet
+            try {
+                if (isIntercomOpen) {
+                    window.Intercom('hide');
+                    isIntercomOpen = false;
+                } else {
+                    window.Intercom('show');
+                    isIntercomOpen = true;
+                }
+            } catch(e) {
+                console.log('Intercom not ready yet');
+            }
+        }
+    }
+
+    // Listen for Intercom events to keep state in sync
+    if (window.addEventListener) {
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.event) {
+                if (e.data.event === 'intercom:show') {
+                    isIntercomOpen = true;
+                } else if (e.data.event === 'intercom:hide') {
+                    isIntercomOpen = false;
+                }
+            }
+        }, false);
+    }
+
+    // Handle Support button click in header (dropdown menu)
+    document.addEventListener('DOMContentLoaded', function() {
+        var supportBtn = document.getElementById('support-intercom-btn');
+        if (supportBtn) {
+            supportBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleIntercom();
+            });
+        }
+
+        // Handle Support button click in sidebar
+        var supportSidebarBtn = document.getElementById('support-intercom-sidebar');
+        if (supportSidebarBtn) {
+            supportSidebarBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleIntercom();
+            });
+        }
+    });
+
     window.intercomSettings = {
         api_base: "https://api-iam.intercom.io",
         app_id: "hcaolnkq",

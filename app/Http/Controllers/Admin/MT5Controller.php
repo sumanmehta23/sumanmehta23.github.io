@@ -604,7 +604,6 @@ class MT5Controller extends Controller
                 'date' => now()->format('Y-m-d H:i:s'),
                 'type' => $deposit_type,
                 "title_right" => "Fund",
-                'date' => date("Y-m-d H:i:s"),
                 "subtitle_right" => "Deposit"
             ];
             $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
