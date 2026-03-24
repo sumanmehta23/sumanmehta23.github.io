@@ -378,7 +378,7 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="mt-3 row">
-                                        @if ($type != 'demo')
+                                        @if (($type != 'Demo'))
                                             <div class="col-sm-6">
                                                 <a href="{{ url('/internal-transfer') }}">
                                                     <div class="bg-white card">
