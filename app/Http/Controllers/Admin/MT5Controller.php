@@ -604,6 +604,7 @@ class MT5Controller extends Controller
                 'date' => now()->format('Y-m-d H:i:s'),
                 'type' => $deposit_type,
                 "title_right" => "Fund",
+                'date' => date("Y-m-d H:i:s"),
                 "subtitle_right" => "Deposit"
             ];
             $this->mailService->sendEmail($email, $emailSubject, '', '', $templateVars);
@@ -658,7 +659,6 @@ class MT5Controller extends Controller
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
                 }
             }
-
             // MT5 deletion logic
             $error_code = $this->api->DisableTrading($login);
             if (!$error_code['status']) {
