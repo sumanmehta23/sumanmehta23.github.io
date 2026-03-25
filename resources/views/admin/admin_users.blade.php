@@ -264,28 +264,56 @@
         $(document).off("click", ".delete-user");
         $(document).on("click", ".delete-user", function () {
           let id = $(this).data("id");
-          if (confirm('Are you sure you want to delete this user? This action can be undone.')) {
-            $.ajax({
-              url: "/admin/ajax",
-              type: "GET",
-              data: {
-                action: 'deleteAdminUser',
-                id: id
-              },
-              success: function (response) {
-                if (response.status) {
-                  alert(response.message);
-                  $('#tableAdminUsers').DataTable().draw();
-                } else {
-                  alert(response.message);
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to delete this user. This action can be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                url: "/admin/ajax",
+                type: "GET",
+                data: {
+                  action: 'deleteAdminUser',
+                  id: id
+                },
+                success: function (response) {
+                  if (response.status) {
+                    Swal.fire(
+                      'Deleted!',
+                      response.message,
+                      'success'
+                    );
+                    $('#tableAdminUsers').DataTable().draw();
+                  } else {
+                    Swal.fire(
+                      'Error!',
+                      response.message,
+                      'error'
+                    );
+                  }
+                },
+                error: function (xhr, status, error) {
+                  console.error('AJAX Error:', status, error);
+                  Swal.fire(
+                    'Error!',
+                    'An error occurred while deleting the user',
+                    'error'
+                  );
                 }
-              },
-              error: function (xhr, status, error) {
-                console.error('AJAX Error:', status, error);
-                alert('An error occurred while deleting the user');
-              }
-            });
-          }
+              });
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              Swal.fire(
+                'Cancelled',
+                'User deletion has been cancelled',
+                'info'
+              );
+            }
+          });
         });
       }
 
