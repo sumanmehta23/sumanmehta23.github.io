@@ -386,7 +386,12 @@
                                                             <span class="fs-11 text-muted">ADMIN ACTION TAKEN</span>
                                                         </div>
                                                         <div class="mt-2 lh-1">
-                                                            <span>{{ $details->approved_date }}</span>
+                                                            <div>
+                                                                <span>{{ $details->approved_date }}</span>
+                                                            </div>
+                                                            <div class="pt-2">
+                                                                <span>{{ $details->approved_by ?? '' }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
