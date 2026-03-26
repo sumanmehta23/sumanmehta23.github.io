@@ -547,12 +547,17 @@
                                                                 </div>
                                                             @endcan
                                                             @can('wallet_withdraw:viewAny')
-                                                                <div class="col-xl-3">
+                                                                <div class="col-xl-2">
                                                                     <h4 class="mb-3 text-muted fw-normal">NEW TOTAL WITHDRAW
                                                                     </h4>
                                                                     <h4 class="fw-normal">@money($total_ntw)</h4>
                                                                 </div>
                                                             @endcan
+                                                            <div class="col-xl-2">
+                                                                <h4 class="mb-3 text-muted fw-normal">FLOATING BALANCE
+                                                                </h4>
+                                                                <h4 class="fw-normal">@money(($user->accounts()->withTrashed()->where('demo', 0)->where('balance', '>', 0)->sum('balance')))</h4>
+                                                            </div>
                                                         </div>
                                                         @can('account:viewLiveAccounts')
                                                             <div class="mt-3 row">
