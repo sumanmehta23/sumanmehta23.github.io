@@ -370,9 +370,7 @@ class SettingsController extends Controller
                 } elseif ($reason === 'General_Ban') {
                     $type = 'Account Review Notification';
 
-                    $content = '<p><strong>Subject: Account Review Notification</strong></p>' .
-                        '<p>Dear ' . $user->fullname . ',</p>' .
-                        '<p>Following a review of trading activity on your account, we have identified patterns that constitute a breach of the Restricted Trading Activities section of our Terms and Conditions (<a href="https://www.lqhmarkets.com/terms-conditions">https://www.lqhmarkets.com/terms-conditions</a>).</p>' .
+                    $content = '<p>Following a review of trading activity on your account, we have identified patterns that constitute a breach of the Restricted Trading Activities section of our Terms and Conditions (<a href="https://www.lqhmarkets.com/terms-conditions">https://www.lqhmarkets.com/terms-conditions</a>).</p>' .
 
                         '<p>Our Terms prohibit activity that disrupts fair market operation, including manipulative tactics and high-frequency trading exploits. The activity identified on your account falls within these restrictions.</p>' .
 
