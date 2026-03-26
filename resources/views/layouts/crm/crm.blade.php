@@ -27,11 +27,40 @@
             return \Illuminate\Support\Str::is($page, $currentPath)
                 || (!empty($currentRouteName) && \Illuminate\Support\Str::is($page, $currentRouteName));
         });
+
+        $reviewPopupEligibleByUserRules = false;
+        if (auth()->check()) {
+            $currentUser = auth()->user();
+
+            $hasCompletedFirstWithdrawal =
+                \App\Models\TradeWithdrawals::where('user_id', $currentUser->id)
+                ->where('withdraw_type', 'Trade Withdrawal')
+                ->where('status', 1)
+                ->exists()
+                || \App\Models\WalletWithdraw::where('user_id', $currentUser->id)
+                ->where('withdraw_type', 'Wallet Withdrawal')
+                ->where('status', 1)
+                ->exists();
+
+            $isRestrictedOrBanned =
+                \App\Models\RestrictIps::where('email', $currentUser->email)->exists()
+                || (isset($currentUser->status) && (string) $currentUser->status !== '1');
+
+            $hasFlaggedAccount = \App\Models\Account::where('user_id', $currentUser->id)
+                ->where('sync_status', 'flagged')
+                ->exists();
+
+            $reviewPopupEligibleByUserRules = $hasCompletedFirstWithdrawal
+                && !$isRestrictedOrBanned
+                && !$hasFlaggedAccount;
+        }
     @endphp
 
     @include('components.review-popup', [
         'popupId' => $settings['review_popup_id'] ?? 'globalReviewPopup',
-        'enabled' => ($settings['review_popup_enabled'] ?? '1') === '1' && $reviewPopupEnabledByPage,
+        'enabled' => ($settings['review_popup_enabled'] ?? '1') === '1'
+            && $reviewPopupEnabledByPage
+            && $reviewPopupEligibleByUserRules,
         'showOnLoad' => ($settings['review_popup_show_on_load'] ?? '1') === '1',
         'logo' => !empty($settings['review_popup_logo']) ? asset($settings['review_popup_logo']) : (isset($settings['admin_sidebar_logo']) ? asset($settings['admin_sidebar_logo']) : asset('assets/images/logo-dark.png')),
         'logoAlt' => $settings['review_popup_logo_alt'] ?? 'LQH Markets',
