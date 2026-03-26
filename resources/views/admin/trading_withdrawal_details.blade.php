@@ -336,7 +336,7 @@
                                                         class="m-1 btn btn-danger btn-space">Reject</button>
                                                 </div> --}}
                                                 @can("trade_withdrawals:update")
-                                                    @if(auth('admin')->user()->userRole == 'Super Admin')
+                                                    @can("trade_withdrawals:payout")
                                                         <div class="my-auto btn-list ms-auto">
                                                             @php
                                                                 $userData = json_encode(session('userData'));
@@ -363,7 +363,7 @@
                                                                 </div>
                                                             @endif
                                                         </div>
-                                                    @endif
+                                                    @endcan
                                                 @endcan
 
 
