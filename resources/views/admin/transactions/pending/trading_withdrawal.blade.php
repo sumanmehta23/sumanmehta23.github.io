@@ -80,6 +80,9 @@
                                                     <th>Account No</th>
                                                     <th>Withdrawal Amount</th>
                                                     <th>Balance</th>
+                                                    <th>Floating Balance</th>
+                                                    <th>Total Deposit</th>
+                                                    <th>Total Withdrawal</th>
                                                     <th>Withdraw Type</th>
                                                     <th>Withdraw From</th>
                                                     <th>Withdraw To Wallet</th>
@@ -123,7 +126,7 @@
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,15,3,11,12,4,5,6,13,14,9] // Updated column indices to match your use case
+                            columns: [0,18,3,14,15,5,6,7,2,16,17,12] // Updated column indices to match your use case
                         }
                     }
                 ],
@@ -154,6 +157,9 @@
               { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
               { data: 'balance', name: 'balance' },
+              { data: 'floating_balance', name: 'floating_balance' },
+              { data: 'new_total_deposit', name: 'new_total_deposit' },
+              { data: 'new_total_withdrawal', name: 'new_total_withdrawal' },
               { data: 'withdraw_type', name: 'withdraw_type' },
               { data: 'withdraw_from', name: 'withdraw_from' },
               { data: 'withdraw_to', name: 'withdraw_to' },

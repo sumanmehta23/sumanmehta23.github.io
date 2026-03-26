@@ -1811,6 +1811,22 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.code', $order);
                 })
 
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->join('accounts as acc', 'acc.id', '=', 'trade_withdrawal.account_id')
+                        ->orderBy('acc.balance', $order)
+                        ->select('trade_withdrawal.*');
+                })
+
+                ->orderColumn('floating_balance', function ($query, $order) {
+                    $query->leftJoin('accounts as live_acc', function ($join) {
+                            $join->on('live_acc.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('live_acc.balance', '>', 0);
+                        })
+                        ->orderByRaw("COALESCE(SUM(live_acc.balance), 0) {$order}")
+                        ->groupBy('trade_withdrawal.id')
+                        ->select('trade_withdrawal.*');
+                })
+
                 ->orderColumn('transaction_fee', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.transaction_fee', $order);
                 })
@@ -1941,6 +1957,26 @@ class AjaxController extends Controller
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
                 })
+
+                ->addColumn('balance', function ($row) {
+                    return $row->account->balance <= 0 ? '0.00' : $row->account->balance;
+                })
+
+                ->addColumn('floating_balance', function ($row) {
+                    $balance = round($row->user->liveAccounts->where('balance', '>', 0)->sum('balance') ?? 0,2);
+                    return $balance;
+                })
+
+                ->addColumn('new_total_deposit', function ($row) {
+                    $total_deposit = round($row->user->NewTotalDeposit ?? 0, 2);
+                    return $total_deposit;
+                })
+
+                ->addColumn('new_total_withdrawal', function ($row) {
+                    $new_total_withdrawal = round($row->user->NewTotalWithdrawal ?? 0, 2);
+                    return $new_total_withdrawal;
+                })
+
                 ->addColumn('total_withdrawal', function ($row) {
                     return $row->transaction_fee + $row->withdrawal_amount;
                 })
@@ -3021,8 +3057,18 @@ class AjaxController extends Controller
                 })
 
                 ->orderColumn('balance', function ($query, $order) {
-                    $query->join('accounts', 'accounts.id', '=', 'trade_withdrawal.account_id')
-                        ->orderBy('accounts.balance', $order)
+                    $query->join('accounts as acc', 'acc.id', '=', 'trade_withdrawal.account_id')
+                        ->orderBy('acc.balance', $order)
+                        ->select('trade_withdrawal.*');
+                })
+
+                ->orderColumn('floating_balance', function ($query, $order) {
+                    $query->leftJoin('accounts as live_acc', function ($join) {
+                            $join->on('live_acc.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('live_acc.balance', '>', 0);
+                        })
+                        ->orderByRaw("COALESCE(SUM(live_acc.balance), 0) {$order}")
+                        ->groupBy('trade_withdrawal.id')
                         ->select('trade_withdrawal.*');
                 })
 
@@ -3125,6 +3171,25 @@ class AjaxController extends Controller
                 })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
+                })
+
+                ->addColumn('balance', function ($row) {
+                    return $row->account->balance <= 0 ? '0.00' : $row->account->balance;
+                })
+
+                ->addColumn('floating_balance', function ($row) {
+                    $balance = round($row->user->liveAccounts->where('balance', '>', 0)->sum('balance') ?? 0,2);
+                    return $balance;
+                })
+
+                ->addColumn('new_total_deposit', function ($row) {
+                    $total_deposit = round($row->user->NewTotalDeposit ?? 0, 2);
+                    return $total_deposit;
+                })
+
+                ->addColumn('new_total_withdrawal', function ($row) {
+                    $new_total_withdrawal = round($row->user->NewTotalWithdrawal ?? 0, 2);
+                    return $new_total_withdrawal;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
                     return ($row->transaction_fee + $row->withdrawal_amount);
