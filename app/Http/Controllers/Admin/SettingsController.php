@@ -367,6 +367,45 @@ class SettingsController extends Controller
                     ];
                     $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                     $processedEmails[] = $email;
+                } elseif ($reason === 'General_Ban') {
+                    $type = 'Account Termination Notice - Violation of Trading Terms';
+
+                    $content = '<p>
+                        This notice serves to inform you that your trading account with LQH Markets has been permanently terminated, effective immediately, due to unauthorized use of ' . $reason_text . ' algorithms on our live trading platform.
+                    </p>' .
+                        '<p>
+                        Our monitoring systems have detected trading patterns consistent with automated ' . $reason_text . ' on your account, which constitutes a severe violation of our Terms of Service that explicitly prohibits such activities.
+                    </p>' .
+                        '<p>
+                        As a result of this violation:
+                    </p>' .
+                        '<ul>
+                        <li>Your trading account has been permanently terminated</li>
+                        <li>Any pending trades have been closed</li>
+                        <li>Withdrawal of funds is not permitted regarding fraudulent trading activity</li>
+                        <li>Your account details have been flagged in our system to prevent future registration</li>
+                    </ul>' .
+                        '<p>
+                        This decision is final and not subject to appeal. Any attempt to create new accounts will result in immediate termination.
+                    </p>' .
+                        '<p>
+                        For any questions regarding this matter, please contact our compliance department at compliance@lqhmarkets.com.
+                    </p>' .
+                        '<p>
+                        Regards,<br>
+                        Compliance Team<br>
+                        LQH Markets
+                    </p>';
+                    $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                    $templateVars = [
+                        'name' => $user->fullname,
+                        'email' => settings()['email_from_address'],
+                        'content' => $content,
+                        "title_right" => "",
+                        "subtitle_right" => ""
+                    ];
+                    $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    $processedEmails[] = $email;
                 } elseif ($reason === 'Manually') {
                     return back()->with('success', 'IP and Email ban applied successfully.');
                 } else {
