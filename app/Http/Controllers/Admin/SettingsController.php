@@ -367,6 +367,33 @@ class SettingsController extends Controller
                     ];
                     $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
                     $processedEmails[] = $email;
+                } elseif ($reason === 'General_Ban') {
+                    $type = 'Account Review Notification';
+
+                    $content = '<p>Following a review of trading activity on your account, we have identified patterns that constitute a breach of the Restricted Trading Activities section of our Terms and Conditions (<a href="https://www.lqhmarkets.com/terms-conditions">https://www.lqhmarkets.com/terms-conditions</a>).</p>' .
+
+                        '<p>Our Terms prohibit activity that disrupts fair market operation, including manipulative tactics and high-frequency trading exploits. The activity identified on your account falls within these restrictions.</p>' .
+
+                        '<p>Accordingly:</p>' .
+                        '<p>• Trading on your account has been restricted with immediate effect<br>' .
+                        '• Profits derived from the restricted activity have been removed<br>' .
+                        '• Your original deposit(s), less any amounts previously withdrawn, will be returned to your active wallet within 1–2 business days</p>' .
+
+                        '<p>This decision has been made following a documented review of trading data associated with your account.</p>' .
+
+                        '<p>If you wish to request a review, please contact us at <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>, and your case will be assessed by our Compliance Team.</p>' .
+                        
+                        '<p>Kind regards,<br>LQH Markets Compliance Team</p>';
+                    $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                    $templateVars = [
+                        'name' => $user->fullname,
+                        'email' => settings()['email_from_address'],
+                        'content' => $content,
+                        "title_right" => "",
+                        "subtitle_right" => ""
+                    ];
+                    $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    $processedEmails[] = $email;
                 } elseif ($reason === 'Manually') {
                     return back()->with('success', 'IP and Email ban applied successfully.');
                 } else {
