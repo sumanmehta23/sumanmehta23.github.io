@@ -24,9 +24,12 @@
                                 <label for="subject" class="form-label">Restrict Reason</label>
                                 <select class="form-select" required name="reason">
                                     <option value="" selected disabled>Select Reason</option>
-                                    <option value="HFT">HFT</option>
-                                    <option value="Latency Arbitrage">Latency Arbitrage</option>
+                                    <option value="HFT">HFT - Sends notification email</option>
+                                    <option value="Latency Arbitrage">Latency Arbitrage - Sends notification email</option>
                                     <option value="Manually">Restrict (With no email sent)</option>
+                                    <option value="General_Ban">
+                                        General Ban - Sends notification email
+                                    </option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Block IP & Email</button>
