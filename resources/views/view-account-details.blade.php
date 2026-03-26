@@ -236,7 +236,7 @@
                                                         <p class="mb-0">Server</p>
                                                     </div>
                                                 </div>
-                                                <h5 class="mb-0 f-w-400">{{ $settings['mt5_company_name'] }}</h5>
+                                                <h5 class="mb-0 f-w-400">{{ $account->platform === 'mt5' ? $settings['mt5_company_name'] : 'X9-Trade-Server' }}</h5>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">
