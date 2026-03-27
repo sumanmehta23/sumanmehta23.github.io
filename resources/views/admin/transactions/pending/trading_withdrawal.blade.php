@@ -75,8 +75,7 @@
                                             class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
-                                                    <th>Name</th>
-                                                    <th>Email</th>
+                                                    <th>Name/Email</th>
                                                     <th>Current Withdraw Amount</th>
                                                     <th>Withdraw Fee</th>
                                                     <th>Total Current Withdrawal Amount</th>
@@ -89,6 +88,7 @@
                                                     <th>Total Withdrawal</th>
                                                     <th>Floating Balance</th>
 
+                                                    <th>Name</th>
                                                     <th>Balance</th>
                                                     <th>Withdraw From</th>
                                                     <th>Withdraw To Wallet</th>
@@ -127,7 +127,7 @@
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,18,2,3,4,5,6,7,8,9,10,11,12] // Updated column indices to match your use case
+                            columns: [12,18,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
                         }
                     }
                 ],
@@ -153,7 +153,6 @@
                 }
             },
             columns: [
-              { data: 'name', name: 'name' },
               { data: 'email', name: 'email'},
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
               { data: 'withdrawal_fee', name: 'withdrawal_fee'},
@@ -167,6 +166,7 @@
               { data: 'new_total_withdrawal', name: 'new_total_withdrawal' },
               { data: 'floating_balance', name: 'floating_balance' },
 
+              { data: 'name', name: 'name', visible: false },
               { data: 'balance', name: 'balance', visible: false },
               { data: 'withdraw_from', name: 'withdraw_from', visible: false },
               { data: 'withdraw_to', name: 'withdraw_to', visible: false },
