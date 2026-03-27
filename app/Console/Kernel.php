@@ -46,6 +46,9 @@ class Kernel extends ConsoleKernel
         // Mark inactive users based on login_history - runs daily at 3 AM
         $schedule->command('app:mark-inactive-users')->daily()->at('03:00');
 
+        // Sync FXStreet feed through RSS2JSON and keep DB cache fresh.
+        $schedule->command('app:sync-forex-news')->everyThirtyMinutes()->withoutOverlapping();
+
         $schedule->command('app:alter-group-codes --group_code=a_book');
         $schedule->command('app:alter-group-codes --group_code=b_book');
     }
