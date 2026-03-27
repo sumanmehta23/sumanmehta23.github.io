@@ -377,7 +377,7 @@ class SettingsController extends Controller
                         '<p>Accordingly:</p>' .
                         '<p>• Trading on your account has been restricted with immediate effect<br>' .
                         '• Profits derived from the restricted activity have been removed<br>' .
-                        '• Your original deposit(s), less any amounts previously withdrawn, will be returned to your active wallet within 1–2 business days</p>' .
+                        '• Your original deposit(s), less any amounts previously withdrawn, will be returned to your active wallet within 10 business days</p>' .
 
                         '<p>This decision has been made following a documented review of trading data associated with your account.</p>' .
 
