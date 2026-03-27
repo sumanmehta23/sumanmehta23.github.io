@@ -77,22 +77,23 @@
                                                 <tr>
                                                     <th>Name</th>
                                                     <th>Email</th>
-                                                    <th>Account No</th>
-                                                    <th>Withdrawal Amount</th>
-                                                    <th>Balance</th>
-                                                    <th>Floating Balance</th>
+                                                    <th>Current Withdraw Amount</th>
+                                                    <th>Withdraw Fee</th>
+                                                    <th>Total Current Withdrawal Amount</th>
+                                                    <th>Withdraw Type</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
+                                                    <th>Status</th>
+                                                    <th>Withdraw From</th>
                                                     <th>Total Deposit</th>
                                                     <th>Total Withdrawal</th>
-                                                    <th>Withdraw Type</th>
+                                                    <th>Floating Balance</th>
+
+                                                    <th>Balance</th>
                                                     <th>Withdraw From</th>
                                                     <th>Withdraw To Wallet</th>
                                                     <th>Withdraw Date</th>
-                                                    <th>Status</th>
                                                     <th>Actions</th>
-                                                    <th>Withdraw Fee</th>
-                                                    <th>Total Withdraw</th>
-                                                    <th>Date</th>
-                                                    <th>Time</th>
                                                     <th>Email</th>
                                                 </tr>
                                             </thead>
