@@ -143,7 +143,7 @@
                         text: 'Export to Excel',
                         filename: 'Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,20,3,4,17,6,7,8,2,18,19,14] // Updated column indices to match your use case
+                            columns: [0,20,2,3,4,5,6,7,8,9,10,11,12] // Updated column indices to match your use case
                         }
                     }
                 ],
@@ -172,24 +172,25 @@
             columns: [
               { data: 'name', name: 'name'},
               { data: 'email', name: 'email'},
-              { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
               { data: 'transaction_fee', name: 'transaction_fee' },
-              { data: 'balance', name: 'balance' },
-              { data: 'floating_balance', name: 'floating_balance' },
+              { data: 'total_withdrawal', name: 'total_withdrawal'},
+              { data: 'withdraw_type', name: 'withdraw_type' },
+              { data: 'created_date', name: 'created_date',orderable: false},
+              { data: 'created_time', name: 'created_time',orderable: false},
+              { data: 'status', name: 'status' },
+              { data: 'code', name: 'code' },
               { data: 'new_total_deposit', name: 'new_total_deposit' },
               { data: 'new_total_withdrawal', name: 'new_total_withdrawal' },
-              { data: 'withdraw_type', name: 'withdraw_type' },
-              { data: 'withdraw_to', name: 'withdraw_to' },
-              { data: 'withdraw_date', name: 'withdraw_date'},
-              { data: 'withdraw_method', name: 'withdraw_method'},
-              { data: 'approve_date', name: 'approve_date'},
-              { data: 'status', name: 'status' },
+              { data: 'floating_balance', name: 'floating_balance' },
+
+              { data: 'balance', name: 'balance', visible: false },
+              { data: 'withdraw_to', name: 'withdraw_to', visible: false },
+              { data: 'withdraw_date', name: 'withdraw_date', visible: false},
+              { data: 'withdraw_method', name: 'withdraw_method', visible: false},
+              { data: 'approve_date', name: 'approve_date', visible: false},
               { data: 'action', name: 'action', orderable: false, searchable: false },
               { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},
-              { data: 'total_withdrawal', name: 'total_withdrawal', visible: false},
-              { data: 'created_date', name: 'created_date',orderable: false, visible: false},
-              { data: 'created_time', name: 'created_time',orderable: false, visible: false},
               { data: 'client_email', name: 'client_email',orderable: false, visible: false},
             ]
           });
