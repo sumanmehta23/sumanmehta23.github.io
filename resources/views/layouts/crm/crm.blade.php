@@ -47,12 +47,21 @@
                 || (isset($currentUser->status) && (string) $currentUser->status !== '1');
 
             $hasFlaggedAccount = \App\Models\Account::where('user_id', $currentUser->id)
-                ->where('sync_status', 'flagged')
+                ->where('sync_status', 'flagged','banned')
+                ->exists();
+
+            $hasLiveAccountOpenAtLeast3Days = \App\Models\Account::where('user_id', $currentUser->id)
+                ->where('demo', false)
+                ->where(function ($query) {
+                    $query->whereNull('registered_date')
+                        ->orWhere('registered_date', '<=', now()->subDays(3));
+                })
                 ->exists();
 
             $reviewPopupEligibleByUserRules = $hasCompletedFirstWithdrawal
                 && !$isRestrictedOrBanned
-                && !$hasFlaggedAccount;
+                && !$hasFlaggedAccount
+                && $hasLiveAccountOpenAtLeast3Days;
         }
     @endphp
 
