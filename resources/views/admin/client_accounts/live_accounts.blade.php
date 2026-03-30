@@ -650,7 +650,7 @@
                         }
                     },
                     exportOptions: {
-                        columns: [12, 13, 2, 3, 18, 14, 15, 16, 17, 5, 6, 7, 8, 9] // Name, Email, Code, Group, Country, Leverage, Balance, Date, Time, Last Trade Date, Days, Deposited, Not Traded, Status
+                        columns: [12, 13, 14, 2, 3, 9, 5, 6, 10, 11, 7, 8, 15, 16, 18]
                     }
                 },
                 {

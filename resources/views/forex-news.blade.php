@@ -107,12 +107,12 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <span class="badge bg-light-danger text-danger mb-3">This Week's Events</span>
+                            <span class="mb-3 badge bg-light-danger text-danger">This Week's Events</span>
                             <h2 class="mb-1">Economic Calendar</h2>
                             <p class="mb-4 text-muted">Track major economic events and data releases affecting global markets</p>
 
                             <div class="mb-3 d-flex align-items-center justify-content-between">
-                                <div class="calendar-filter d-flex align-items-center flex-wrap">
+                                <div class="flex-wrap calendar-filter d-flex align-items-center">
                                     <a href="{{ route('forex-news.index', ['impact' => 'all']) }}"
                                         class="btn btn-sm {{ $impact === 'all' ? 'btn-filter-active' : 'btn-filter-default' }}">All</a>
                                     <a href="{{ route('forex-news.index', ['impact' => 'high']) }}"
@@ -156,7 +156,7 @@
                                         $currency = strtoupper($item->currency ?: 'FX');
                                     @endphp
 
-                                    <div class="news-event-card px-3 py-3 mb-2">
+                                    <div class="px-3 py-3 mb-2 news-event-card">
                                         <div class="row align-items-center g-2">
                                             <div class="col-md-2 col-lg-1 text-muted fw-semibold">
                                                 {{ $item->time_label ?? '-' }}
@@ -194,6 +194,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    {{-- </div> --}}
 @endsection
-
