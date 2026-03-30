@@ -42,12 +42,13 @@
                 ->where('status', 1)
                 ->exists();
 
-            $isRestrictedOrBanned =
-                \App\Models\RestrictIps::where('email', $currentUser->email)->exists()
-                || (isset($currentUser->status) && (string) $currentUser->status !== '1');
-
             $hasFlaggedAccount = \App\Models\Account::where('user_id', $currentUser->id)
-                ->where('sync_status', 'flagged','banned')
+                ->where('sync_status', 'flagged')
+                ->exists();
+
+            $isBannedUser = \App\Models\RestrictIps::where('email', $currentUser->email)
+                ->whereNull('deleted_at')
+                ->where('block_reason', 'General_Ban')
                 ->exists();
 
             $hasLiveAccountOpenAtLeast3Days = \App\Models\Account::where('user_id', $currentUser->id)
@@ -59,8 +60,8 @@
                 ->exists();
 
             $reviewPopupEligibleByUserRules = $hasCompletedFirstWithdrawal
-                && !$isRestrictedOrBanned
                 && !$hasFlaggedAccount
+                && !$isBannedUser
                 && $hasLiveAccountOpenAtLeast3Days;
         }
     @endphp
