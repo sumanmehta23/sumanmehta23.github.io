@@ -412,7 +412,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="ms-2">
-                                        <h6 class="mb-0">{{ $history['source'] }}</h6>
+                                        <h6 class="mb-0">{{ $history['raw_id'] }}</h6>
                                     </div>
                                 </div>
                             </td>

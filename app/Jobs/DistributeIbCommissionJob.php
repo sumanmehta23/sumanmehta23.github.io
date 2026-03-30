@@ -89,7 +89,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                     ->orWhere('ib15', $this->referral_code);
             })->where('orderstate', 4)->count();
 
-            if ($unprocessedCount > 100000) {
+            if ($unprocessedCount > 1000000) {
                 Log::warning('DistributeIbCommissionJob: Stuck account detected with excessive commissions', [
                     'referral_code' => $this->referral_code,
                     'unprocessed_count' => $unprocessedCount,
@@ -405,7 +405,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                             ? 3
                             : ($ibAccPlans[$accountTypeId][$ibLevel]["d$i"] ?? null);
                         if ($commission) {
-                            $commission = in_array($this->referral_code, ['K08EjL', 'EzHMpw', 'dhMKco', '4uStWn', 'ZiVehO', 'ubFUp7', 'HGvsS1', 'JV4a0Q', 'hvzla', 'zOhX4z', 'jDZVem', 'g6ofHI', 'zzLXS5', 'jMKn9O', 'W0V2I5', 'MPE8QF', 'bNiFv5', 'viQJWM', 'B0AG0Q', '2uDAEC', 'n8veXm', 'MREUR', 'bonus', 'LoTDGy', 'r5rY60', 'l1ILDq', '0D7QTR', 'NfMdsB', '5I6KMP', 'BnqfyN', 'aAWtvV', 'n19Nvf', 'NMdvcb', 'hlS4W0', 'Chinner', 'zym6oK', 'xh8Ule', 'FmL7M0', 'IvkCZH', 'o7Bzs5', 'fpate08'])
+                            $commission = in_array($this->referral_code, ['K08EjL', 'EzHMpw', 'dhMKco', '4uStWn', 'ZiVehO', 'ubFUp7', 'HGvsS1', 'JV4a0Q', 'hvzla', 'zOhX4z', 'jDZVem', 'g6ofHI', 'zzLXS5', 'jMKn9O', 'W0V2I5', 'MPE8QF', 'bNiFv5', 'viQJWM', 'B0AG0Q', '2uDAEC', 'n8veXm', 'MREUR', 'bonus', 'LoTDGy', 'r5rY60', 'l1ILDq', '0D7QTR', 'NfMdsB', '5I6KMP', 'BnqfyN', 'aAWtvV', 'n19Nvf', 'NMdvcb', 'hlS4W0', 'Chinner', 'zym6oK', 'xh8Ule', 'FmL7M0', 'IvkCZH', 'o7Bzs5', 'fpate08','EIz0Oy', 'jbz0sX', 'xJpgdd', 'yWFOZc', 'tLnCex', 'jKRjpD'])
                                 ? 6
                                 : $commission;
                         } else {
@@ -431,6 +431,12 @@ class DistributeIbCommissionJob implements ShouldQueue
                         // if(in_array($this->referral_code, ['xyB6LV'])){
                         //     $commission = preg_match('/Forex|Energy/', $symbolpath) ? .01 : $commission;
                         // }
+
+                        if($commission && preg_match('/Forex|Metals/', $symbolpath)){
+                            $commission = in_array($this->referral_code, ['W0V2I5'])
+                                ? 8
+                                : $commission;
+                        }
 
                         log::info('Calculated commission for trade', [
                             'trade_id' => $ca->id,

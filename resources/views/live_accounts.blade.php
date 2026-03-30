@@ -35,7 +35,76 @@
                         </div>
                         <div class="tab-content" id="myTabContent">
                             <div>
-                                <div class="table-responsive ps-2">
+                                <div class="d-block d-md-none p-2">
+                                    @foreach ($results as $acc)
+                                        <div class="mb-3 border rounded p-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <img src="/assets/images/mt5.png" alt="user-image" class="rounded wid-50 hei-50">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    @if ($acc->code && $acc->code != 'Rejected')
+                                                        <h5 class="mb-1">{{ $acc->code }}</h5>
+                                                    @elseif($acc->code == 'Rejected')
+                                                        <h5 class="mb-1 text-danger">Rejected</h5>
+                                                    @else
+                                                        <h5 class="mb-1 text-warning">Pending</h5>
+                                                    @endif
+                                                    <p class="mb-0 text-muted f-12">{{ $acc->accountType->ac_name }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Nick Name</p>
+                                                    <p class="mb-0 f-w-400">{{ $acc->account_nick_name }}</p>
+                                                </div>
+                                                <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Leverage</p>
+                                                    <p class="mb-0 f-w-400">1:{{ $acc->leverage }}</p>
+                                                </div>
+                                                <div class="mb-2 d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Balance</p>
+                                                    <p class="mb-0 f-w-400">$ {{ $acc->balance }}</p>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <p class="mb-0 text-muted f-12">Equity</p>
+                                                    <p class="mb-0 f-w-400">$ {{ $acc->equity }}</p>
+                                                </div>
+                                            </div>
+
+                                            @if ($acc->code && $acc->code != 'Rejected')
+                                                <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
+                                                    <a href="{{ route('view-account-details', $acc->id) }}"
+                                                        class="btn btn-sm btn-outline-secondary">
+                                                        <span>View <svg class="pc-icon">
+                                                                <use xlink:href="#custom-login"></use>
+                                                            </svg></span>
+                                                    </a>
+                                                    @if (!$acc->isZapierAccount())
+                                                        <a href="{{ url('/trade-deposit') }}" class="btn btn-sm btn-outline-secondary">
+                                                            <span>Deposit <i class="ti ti-database-import"></i></span>
+                                                        </a>
+                                                    @endif
+                                                    <a href="{{ route('trade-withdrawal', ['account_id' => $acc->id]) }}"
+                                                        class="btn btn-sm btn-outline-secondary">
+                                                        <span>Withdraw <i class="ti ti-database-import"></i></span>
+                                                    </a>
+                                                </div>
+                                            @elseif ($acc->code && $acc->code == 'Rejected')
+                                                <div class="mt-3">
+                                                    <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                                </div>
+                                            @else
+                                                <div class="mt-3">
+                                                    <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="table-responsive ps-2 d-none d-md-block">
                                     <table class="table" id="">
                                         <thead>
                                             <tr>
@@ -126,6 +195,9 @@
                                             @endforeach
                                         </tbody>
                                     </table>
+                                </div>
+                                <div class="px-3 pb-3">
+                                    {{ $results->withQueryString()->links('pagination::bootstrap-5') }}
                                 </div>
                             </div>
                         </div>
