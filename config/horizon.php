@@ -185,7 +185,8 @@ return [
             'queue' => ['default', 'emails'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_DEFAULT_PROCESSES', 3), // Reduced from 5
+            'minProcesses' => 1,  // OPTIMIZATION STEP 4: Always maintain at least 1 worker
+            'maxProcesses' => env('SYNC_MAX_DEFAULT_PROCESSES', 3),
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 256,
@@ -197,26 +198,28 @@ return [
             'connection' => 'redis',
             'queue' => ['syncaccountstrades'],
             'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_TRADES_PROCESSES', 25), // Increased for large queue backlog
+            'autoScalingStrategy' => 'size',  // Use queue size-based scaling (better than time-based)
+            'minProcesses' => 5,  // Keep at least 5 workers for this critical queue
+            'maxProcesses' => env('SYNC_MAX_TRADES_PROCESSES', 25),
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 512, // Increased from 256 to handle larger batches
+            'memory' => 512,
             'tries' => 1,
-            'timeout' => 2700, // 45 minutes - for large trade volumes
+            'timeout' => 2700,
             'nice' => 0,
         ],
         'supervisor-3' => [
             'connection' => 'redis',
             'queue' => ['distributeibcommission'],
             'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 30), // Increased from 15 with optimized job performance
+            'autoScalingStrategy' => 'size',  // Size-based scaling for better queue handling
+            'minProcesses' => 3,  // Minimum workers for commission distribution
+            'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 30),
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 512, // Increased from 256 for better performance
+            'memory' => 512,
             'tries' => 1,
-            'timeout' => 1200, // Increased from 600 to handle complex commission distribution
+            'timeout' => 1200,
             'nice' => 0,
         ],
         'supervisor-4' => [
@@ -224,25 +227,27 @@ return [
             'queue' => ['sync-trades', 'sync-all-trades',],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 8), // Reduced from 40
+            'minProcesses' => 1,
+            'maxProcesses' => env('SYNC_TRADES_MAX_PROCESSES', 8),
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 256,
             'tries' => 1,
-            'timeout' => 120, // Increased timeout
+            'timeout' => 120,
             'nice' => 0,
         ],
         'supervisor-optimized-sync' => [
             'connection' => 'redis',
             'queue' => ['optimized-sync-trades', 'enhanced-batch-sync-trades'],
             'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15), // Increased for high volume
+            'autoScalingStrategy' => 'size',  // Queue size-based scaling
+            'minProcesses' => 2,  // Keep minimum workers running
+            'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15),
             'maxTime' => 0,
-            'maxJobs' => 100, // Process 100 jobs before restarting worker
-            'memory' => 256, // Increased memory for larger batches
-            'tries' => 2, // Reduced retries for faster processing
-            'timeout' => 600, // Increased timeout for large batches
+            'maxJobs' => 100,
+            'memory' => 256,
+            'tries' => 2,
+            'timeout' => 600,
             'nice' => 0,
         ],
         'supervisor-account-sync' => [
@@ -250,31 +255,34 @@ return [
             'queue' => ['account-sync'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
+            'minProcesses' => 1,
             'maxProcesses' => env('ACCOUNT_SYNC_MAX_PROCESSES', 3),
             'maxTime' => 0,
-            'maxJobs' => 50, // Process 50 jobs before restarting worker
-            'memory' => 256, // Adequate memory for batch processing
-            'tries' => 2, // Retries for account sync
-            'timeout' => 600, // 10 minutes timeout for batch operations
-            'nice' => 0, // Normal priority
+            'maxJobs' => 50,
+            'memory' => 256,
+            'tries' => 2,
+            'timeout' => 600,
+            'nice' => 0,
         ],
         'supervisor-priority-sync' => [
             'connection' => 'redis',
             'queue' => ['priority-sync-trades'],
             'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 20), // Increased from 10
+            'autoScalingStrategy' => 'size',  // Size-based scaling for priority work
+            'minProcesses' => 2,  // Always maintain at least 2 for priority work
+            'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 20),
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 512, // Increased from 256
+            'memory' => 512,
             'tries' => 1,
-            'timeout' => 1200, // Increased from 300 to prevent timeouts
+            'timeout' => 1200,
             'nice' => 0,
         ],
         'supervisor-high-volume-sync' => [
             'connection' => 'redis',
             'queue' => ['high-volume-sync'],
             'balance' => 'auto',
+            'minProcesses' => 1,
             'maxProcesses' => env('HIGH_VOLUME_SYNC_MAX_QUEUE_PROCESSES', 1),
             'memory' => 256,
             'tries' => 1,
@@ -284,24 +292,26 @@ return [
             'connection' => 'redis',
             'queue' => ['demo-sync-trades'],
             'balance' => 'simple',
-            'maxProcesses' => 1, // Only 1 process for minimal impact
-            'memory' => 256, // Lower memory requirement
+            'minProcesses' => 1,
+            'maxProcesses' => 1,
+            'memory' => 256,
             'tries' => 1,
-            'timeout' => 900, // 15 minutes timeout for demo accounts
-            'nice' => 10, // Lower priority (higher nice value)
+            'timeout' => 900,
+            'nice' => 10,
         ],
         'supervisor-deal-sync' => [
             'connection' => 'redis',
             'queue' => ['deal-sync'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
-            'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 3), // Conservative for MT5 connection management
+            'minProcesses' => 1,
+            'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 3),
             'maxTime' => 0,
-            'maxJobs' => 50, // Process 50 jobs before restarting worker to manage MT5 connections
-            'memory' => 256, // Adequate memory for deal processing
-            'tries' => 3, // More retries for deal sync due to MT5 connection issues
-            'timeout' => 900, // 15 minutes timeout for deal sync operations
-            'nice' => 5, // Medium priority
+            'maxJobs' => 50,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 900,
+            'nice' => 5,
         ],
 
 
@@ -314,55 +324,90 @@ return [
                 'balanceCooldown' => 5,
             ],
             'supervisor-2' => [
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 5,
+                // OPTIMIZATION STEP 4: Aggressive auto-scaling for critical queue
+                'minProcesses' => 5,  // Always keep 5+ workers for large backlogs
+                'maxProcesses' => env('SYNC_MAX_TRADES_PROCESSES', 25),
+                'balanceMaxShift' => 3,  // Allow faster scaling up
+                'balanceCooldown' => 2,  // Quick response to queue changes
             ],
             'supervisor-3' => [
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 5,
+                // OPTIMIZATION STEP 4: Tuned for commission distribution
+                'minProcesses' => 3,
+                'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 30),
+                'balanceMaxShift' => 2,  // Allow moderate scaling
+                'balanceCooldown' => 3,  // Moderate response time
             ],
             'supervisor-4' => [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 5,
             ],
             'supervisor-optimized-sync' => [
-                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15), // Increased for production high volume
-                'balanceMaxShift' => 2, // Allow more dynamic scaling
-                'balanceCooldown' => 3, // Faster scaling response
+                'minProcesses' => 2,
+                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 15),
+                'balanceMaxShift' => 2,
+                'balanceCooldown' => 3,
+            ],
+            'supervisor-account-sync' => [
+                'minProcesses' => 1,
+                'maxProcesses' => env('ACCOUNT_SYNC_MAX_PROCESSES', 3),
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 5,
+            ],
+            'supervisor-priority-sync' => [
+                // OPTIMIZATION STEP 4: Aggressive scaling for priority work
+                'minProcesses' => 2,
+                'maxProcesses' => env('PRIORITY_SYNC_MAX_QUEUE_PROCESSES', 20),
+                'balanceMaxShift' => 3,  // Fast scaling for priority
+                'balanceCooldown' => 2,  // Quick response
             ],
             'supervisor-demo-sync' => [
-                'maxProcesses' => 1, // Only 1 process for demos
-                'balanceMaxShift' => 0, // No scaling for demos
-                'balanceCooldown' => 30, // Slow cooldown
+                'maxProcesses' => 1,
+                'balanceMaxShift' => 0,
+                'balanceCooldown' => 30,
             ],
             'supervisor-deal-sync' => [
-                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 2), // Conservative for production
-                'balanceMaxShift' => 1, // Limited scaling
-                'balanceCooldown' => 10, // Moderate cooldown for deal sync
+                'minProcesses' => 1,
+                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 2),
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 10,
             ],
         ],
 
         'local' => [
             'supervisor-1' => [
-                // 'maxProcesses' => 1,
+                'minProcesses' => 1,
             ],
             'supervisor-2' => [
+                'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],
             'supervisor-3' => [
+                'minProcesses' => 1,
                 'maxProcesses' => 1,
             ],
             'supervisor-4' => [
+                'minProcesses' => 1,
                 'maxProcesses' => 2,
             ],
             'supervisor-optimized-sync' => [
-                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5), // Reduced for connection management
+                'minProcesses' => 1,
+                'maxProcesses' => env('SYNC_ALL_TRADES_MAX_PROCESSES', 5),
+            ],
+            'supervisor-account-sync' => [
+                'minProcesses' => 1,
+                'maxProcesses' => 1,
+            ],
+            'supervisor-priority-sync' => [
+                'minProcesses' => 1,
+                'maxProcesses' => 2,
             ],
             'supervisor-demo-sync' => [
-                'maxProcesses' => 1, // Only 1 process for demos in local too
+                'minProcesses' => 1,
+                'maxProcesses' => 1,
             ],
             'supervisor-deal-sync' => [
-                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 1), // Single process for local development
+                'minProcesses' => 1,
+                'maxProcesses' => env('DEAL_SYNC_MAX_PROCESSES', 1),
             ],
         ],
     ],
