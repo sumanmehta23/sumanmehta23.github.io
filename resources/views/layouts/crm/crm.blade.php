@@ -54,8 +54,8 @@
             $hasLiveAccountOpenAtLeast3Days = \App\Models\Account::where('user_id', $currentUser->id)
                 ->where('demo', false)
                 ->where(function ($query) {
-                    $query->whereNull('registered_date')
-                        ->orWhere('registered_date', '<=', now()->subDays(3));
+                    $query->whereNull('created_at')
+                        ->orWhere('created_at', '<=', now()->subDays(3));
                 })
                 ->exists();
 
