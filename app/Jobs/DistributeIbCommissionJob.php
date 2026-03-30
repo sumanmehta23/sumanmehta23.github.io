@@ -89,7 +89,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                     ->orWhere('ib15', $this->referral_code);
             })->where('orderstate', 4)->count();
 
-            if ($unprocessedCount > 100000) {
+            if ($unprocessedCount > 1000000) {
                 Log::warning('DistributeIbCommissionJob: Stuck account detected with excessive commissions', [
                     'referral_code' => $this->referral_code,
                     'unprocessed_count' => $unprocessedCount,
@@ -434,7 +434,7 @@ class DistributeIbCommissionJob implements ShouldQueue
 
                         if($commission && preg_match('/Forex|Metals/', $symbolpath)){
                             $commission = in_array($this->referral_code, ['W0V2I5'])
-                                ? 7
+                                ? 8
                                 : $commission;
                         }
 
