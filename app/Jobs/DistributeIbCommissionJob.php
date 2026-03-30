@@ -148,7 +148,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                     ->select('ib1_commission.*')  // Only select commission columns, not wallet
                     ->orderBy('ib1_commission.expert_position_id')
                     ->orderBy('ib1_commission.time_closed')
-                    ->chunkById(500, function ($ibcommissions) {
+                    ->chunk(500, function ($ibcommissions) {
                         $finalResults = $walletsToCreate = [];
                         $mergedTrades = collect($this->buffer)->flatten(1)->merge($ibcommissions)->flatten(1);
                         $groupedTrades = $mergedTrades->groupBy('expert_position_id');
