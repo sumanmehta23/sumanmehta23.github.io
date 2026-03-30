@@ -14,7 +14,7 @@ class SyncAccountTrades extends Command
 {
     protected $totalAccountsProcessed = 0;
     protected $cachedIbPlans = []; // Store pre-cached IB plans by category_id
-    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=200 : Maximum number of jobs to create} {--accounts-per-ib=100 : Maximum accounts to process per IB in one pass} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
+    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=0 : Maximum number of jobs to create (0=unlimited)} {--accounts-per-ib=100 : Maximum accounts to process per IB in one pass} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
     protected $description = 'Sync account trades for IBs';
 
     // private function interpolateQuery($query, $bindings)
@@ -115,8 +115,9 @@ class SyncAccountTrades extends Command
                     });
                 }
 
-                // Add orderBy for chunk() method requirement
-                $accountQuery->orderBy('a.id');
+                // Sort by last_trade_at ASC to process oldest/least-recently-synced accounts first
+                // This ensures fair distribution and prevents recently synced accounts from blocking older ones
+                $accountQuery->orderBy('a.last_trade_at', 'ASC');
 
                 // Process accounts individually with delays to ensure fair queue distribution
                 // This prevents large accounts from monopolizing the queue
@@ -131,7 +132,7 @@ class SyncAccountTrades extends Command
                     // - Fair queue distribution: A1, B1, A2, C1, D1, C2 instead of A1, A2, B1
 
                     foreach ($accounts as $account) {
-                        if ($totalJobsCreated >= $maxJobs) {
+                        if ($maxJobs > 0 && $totalJobsCreated >= $maxJobs) {
                             $this->info("Reached maximum job limit of $maxJobs. Stopping further job creation.");
                             return false;
                         }
