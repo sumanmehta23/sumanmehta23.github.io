@@ -232,11 +232,20 @@ class InternalTransfer extends Controller
             }
             $apiOperations['dest_deposit'] = true;
 
+            // Sync account balances
+            Artisan::call('app:sync-account-balances', [
+                '--accounts' => $fromAccount->code,
+                '--force' => true
+            ]);
+
             // Calculate bonus amounts
-            $bonusData = $this->calculateBonusAmounts($fromAccount->code);
+            $bonusData = $this->calculateBonusAmounts($fromAccount->id);
             $totalBonus = $bonusData['total_bonus'];
             $promoLeft = $bonusData['promo_left'];
-
+            // Log::info("Calculated bonus amounts", [
+            //     'total_bonus' => $totalBonus,
+            //     'promo_left' => $promoLeft
+            // ]);
             // Validate sufficient balance
             $this->validateSufficientBalance($transferable_amount, $fromAccount->balance, $totalBonus);
 
@@ -244,29 +253,19 @@ class InternalTransfer extends Controller
             $balance = (float)$transferable_amount > (float)$fromAccount->balance
                 ? abs((float)$transferable_amount - ((float)$transferable_amount - (float)$fromAccount->balance)) * -1
                 : abs((float)$transferable_amount) * -1;
+            // Log::info("Calculated withdrawal balance", [
+            //     'transferable_amount' => $transferable_amount,
+            //     'account_balance' => $fromAccount->balance,
+            //     'calculated_balance' => $balance
+            // ]);
 
             $totalPromoDeducted = $this->handlePromoDeductions($fromAccount, $transferable_amount, $userId, $promoLeft);
             Log::info("message".$totalPromoDeducted);
 
             $userFullname = auth()->user()->fullname;
-            // Create withdrawal record
-            $tradeWithdrawal = TradeWithdrawals::create([
-                'email' => $fromAccount->email,
-                'user_id' => $userId,
-                'account_id' => $fromAccount->id,
-                'withdrawal_amount' => $transferable_amount,
-                'transaction_fee' => 0,
-                'withdraw_type' => $request->input('withdraw_type'),
-                'code' => $fromAccount->code,
-                'wallet_qr' => '',
-                'status' => 0,
-                'email_verified' => 0,
-                'client_wallet_id' => '',
-                'promo_deduction' => $totalPromoDeducted
-            ]);
 
             // Step 5: All API operations succeeded, now execute DB transaction
-            DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount, $sourceBonusAmount, $destBonusAmount) {
+            DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount, $sourceBonusAmount, $destBonusAmount, $userId, $totalPromoDeducted, $request) {
                 $customerID = auth()->user()->id;
 
                 // Create withdrawal record
@@ -274,11 +273,13 @@ class InternalTransfer extends Controller
                     'email' => $email,
                     'user_id' => $customerID,
                     'account_id' => $fromAccount->id,
+                    'code' => $fromAccount->code,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
                     'withdraw_to' => $toAccount->id,
                     'withdraw_date' => now(),
-                    'status' => 1
+                    'status' => 1,
+                    'promo_deduction' => $totalPromoDeducted
                 ]);
 
                 // Log source account bonus deduction if it was applied
@@ -395,6 +396,7 @@ class InternalTransfer extends Controller
 
     private function calculateBonusAmounts($accountId)
     {
+        // log::info("Calculating bonus amounts for account", ['account_id' => $accountId]);
         $bonus = BonusTransaction::where('account_id', $accountId)
             ->where(function ($query) {
                 $query->where('bonus_type', 'Bonus In')
