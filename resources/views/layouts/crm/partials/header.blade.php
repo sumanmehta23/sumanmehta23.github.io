@@ -745,7 +745,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 </a>
                                 <div class="dropdown-menu dropdown-user/profile dropdown-menu-end pc-h-dropdown">
                                     <div class="dropdown-header d-flex align-items-center justify-content-between">
-                                        <h5 class="m-0">Profssile</h5>
+                                        <h5 class="m-0">Profile</h5>
                                     </div>
                                     <div class="dropdown-body">
                                         <div class="profile-notification-scroll position-relative"
