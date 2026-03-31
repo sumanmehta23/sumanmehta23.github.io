@@ -120,22 +120,35 @@ class AccountHelper
             return null;
         }
 
-        // Fetch total trades from MT5 API using HistoryGetTotal
+        // Fetch total trades from MT5 API - separately count open and closed
         $login = $liveAccount->code;
         $from = 'September 01,2024';
         $to = 'March 31,2080';
-        $total = 0;
+        $totalClosed = 0;
+        $totalOpen = 0;
 
-        $error_code = $mt5Interface->executeOperation(function ($api) use ($login, $from, $to, &$total) {
-            return $api->HistoryGetTotal($login, $from, $to, $total);
+        // Get closed trades count
+        $error_code = $mt5Interface->executeOperation(function ($api) use ($login, $from, $to, &$totalClosed) {
+            return $api->HistoryGetTotal($login, $from, $to, $totalClosed);
         });
 
         if ($error_code != MTRetCode::MT_RET_OK) {
-            Log::warning("AccountHelper: Failed to get total trades for account {$login}");
-            $totalTrades = 0;
-        } else {
-            $totalTrades = $total;
+            Log::warning("AccountHelper: Failed to get closed trades for account {$login}");
+            $totalClosed = 0;
         }
+
+        // Get open orders count
+        $error_code_open = $mt5Interface->executeOperation(function ($api) use ($login, &$totalOpen) {
+            return $api->OrdersGetTotal($login, $totalOpen);
+        });
+
+        if ($error_code_open != MTRetCode::MT_RET_OK) {
+            Log::warning("AccountHelper: Failed to get open trades for account {$login}");
+            $totalOpen = 0;
+        }
+        
+        // Total trades = closed + open
+        $totalTrades = $totalClosed + $totalOpen;
 
         $accountData = $mt5Interface->getAccountBalance((int)$liveAccount->code);
         $accountData['total_trades'] = $totalTrades;
