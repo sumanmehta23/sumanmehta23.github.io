@@ -119,7 +119,22 @@ class AccountHelper
             return null;
         }
 
+        // Fetch total trades from MT5 API using HistoryGetTotal
+        $login = $liveAccount->code;
+        $from = 'September 01,2024';
+        $to = 'March 31,2080';
+        $total = 0;
+
+        $error_code = $mt5Interface->executeOperation(function ($api) use ($login, $from, $to, &$total) {
+            return $api->HistoryGetTotal($login, $from, $to, $total);
+        });
+
+        $totalTrades = ($error_code == 0) ? $total : 0;
+
         $accountData = $mt5Interface->getAccountBalance((int)$liveAccount->code);
+
+        $accountData['total_trades'] = $totalTrades;
+
         if ($accountData) {
             $liveAccount->update([
                 'balance' => $accountData['balance'],
