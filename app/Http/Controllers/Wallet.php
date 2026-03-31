@@ -666,7 +666,7 @@ class Wallet extends Controller
         if (isset($wallet_details['wallet_address']) && isset($wallet_details['wallet_network'])) {
             $validation = $this->validateWalletAddress($wallet_details['wallet_address'], $wallet_details['wallet_network']);
             if (!$validation['valid']) {
-                return redirect()->route('user-profile')->with('error', $validation['message']);
+                return redirect()->to('/user-profile#wallets')->with('error', $validation['message']);
             }
         }
 
@@ -718,9 +718,9 @@ class Wallet extends Controller
                 "btn_text" => "Login"
             ];
             $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
-            return redirect()->route('user-profile')->with('status', 'Your Wallet Details succesfully updated');
+            return redirect()->to('/user-profile#wallets')->with('status', 'Your Wallet Details succesfully updated');
         }
-        return redirect()->route('user-profile')->with('error', 'Something went wrong');
+        return redirect()->to('/user-profile#wallets')->with('error', 'Something went wrong');
     }
 
     public function delete_wallet_address(Request $request)
