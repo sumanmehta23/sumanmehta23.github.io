@@ -580,6 +580,7 @@
                         icon: "success"
                     }).then(() => {
                         $('#editBankModal2').modal('hide');
+                        window.location.reload();
                         window.location.href = '/user-profile#wallets';
                     });
                 } else {
