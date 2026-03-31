@@ -523,11 +523,8 @@
                         allowEscapeKey: false
                     }).then((result) => {
                         $('#addBankModal2').modal('hide');
-                        // Redirect to user profile wallets page
-                        location.reload();
-                        setTimeout(function() {
-                            window.location.href = '/user-profile#wallets';
-                        }, 300);
+                        // Redirect to user profile wallets page with hash
+                        window.location.href = '/user-profile#wallets';
                     });
                 } else {
                     Swal.fire({
@@ -583,10 +580,7 @@
                         icon: "success"
                     }).then(() => {
                         $('#editBankModal2').modal('hide');
-                        location.reload();
-                        setTimeout(function() {
-                            window.location.href = '/user-profile#wallets';
-                        }, 20);
+                        window.location.href = '/user-profile#wallets';
                     });
                 } else {
                     Swal.fire({
