@@ -524,6 +524,7 @@
                     }).then((result) => {
                         $('#addBankModal2').modal('hide');
                         // Redirect to user profile wallets page with hash
+                        window.location.reload();
                         window.location.href = '/user-profile#wallets';
                     });
                 } else {
@@ -580,7 +581,6 @@
                         icon: "success"
                     }).then(() => {
                         $('#editBankModal2').modal('hide');
-                        window.location.reload();
                         window.location.href = '/user-profile#wallets';
                     });
                 } else {
