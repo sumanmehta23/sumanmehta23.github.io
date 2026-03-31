@@ -308,8 +308,8 @@ class SettingsController extends Controller
         try {
             foreach ($emails as $email) {
                 $settings = settings();
-                $user = User::where('email', $email)->firstOrFail();
 
+                $user = User::where('email', $email)->firstOrFail();
 
                 // Create RestrictIps entries for all IPs for this email
                 foreach ($ips as $ip) {
@@ -382,7 +382,7 @@ class SettingsController extends Controller
                         '<p>This decision has been made following a documented review of trading data associated with your account.</p>' .
 
                         '<p>If you wish to request a review, please contact us at <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>, and your case will be assessed by our Compliance Team.</p>' .
-                        
+
                         '<p>Kind regards,<br>LQH Markets Compliance Team</p>';
                     $emailSubject = $settings['admin_title'] . ' - ' . $type;
                     $templateVars = [
