@@ -94,8 +94,10 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-
+        dump($request->ip());
+        dump($request->email);
         $restriction = RestrictIps::where('ip', $request->ip())->where('email', $request->email)->first();
+        dd($restriction);
         if ($restriction) {
             return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:Compliance@1xTrade.com">Compliance@1xTrade.com</a>.');
         }
