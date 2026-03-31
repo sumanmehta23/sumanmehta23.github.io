@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use DB;
 use App\Models\Account;
+use App\MT5\MTRetCode;
 use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -129,10 +130,14 @@ class AccountHelper
             return $api->HistoryGetTotal($login, $from, $to, $total);
         });
 
-        $totalTrades = ($error_code == 0) ? $total/2 : 0;
+        if ($error_code != MTRetCode::MT_RET_OK) {
+            Log::warning("AccountHelper: Failed to get total trades for account {$login}");
+            $totalTrades = 0;
+        } else {
+            $totalTrades = $total;
+        }
 
         $accountData = $mt5Interface->getAccountBalance((int)$liveAccount->code);
-
         $accountData['total_trades'] = $totalTrades;
 
         if ($accountData) {
