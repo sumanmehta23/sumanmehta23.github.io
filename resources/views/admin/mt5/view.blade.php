@@ -299,7 +299,7 @@ if ($getUser) {
                                                                     <?php
                                                                         // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_profit = $accountHelper['total_profit'] ?? null;
+                                                                            $total_profit = $accountHelper['profit'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
                                                                             $total_profit = $accountHelper->total_profit ?? null;
                                                                         }
@@ -323,16 +323,16 @@ if ($getUser) {
                                                     <div class="flex-grow-1 ms-3">
                                                         <div class="row g-1">
                                                             <div class="col-6">
-                                                                <p class="mb-0 f-20">Total Comission</p>
+                                                                <p class="mb-0 f-20">Total Commission</p>
                                                             </div>
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_comission = $accountHelper['total_comission'] ?? null;
+                                                                            $total_comission = $accountHelper['total_commission'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_comission = $accountHelper->total_comission ?? null;
+                                                                            $total_comission = $accountHelper->total_commission ?? null;
                                                                         }
                                                                         if (!is_null($total_comission)) {
                                                                             echo "$" . number_format($total_comission, 2);
@@ -360,7 +360,7 @@ if ($getUser) {
                                                                     <?php
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_swap = $accountHelper['total_swap'] ?? null;
+                                                                            $total_swap = (float)$account->accountType->ac_swap ?? null;
                                                                         } elseif (is_object($accountHelper)) {
                                                                             $total_swap = $accountHelper->total_swap ?? null;
                                                                         }

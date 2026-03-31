@@ -112,6 +112,7 @@ class UniversalMT5Service
         return $this->executeOperation(function ($api) use ($login) {
             $account = null;
             $result = $api->UserAccountGet($login, $account);
+            // dd($account);
             if ($result === MTRetCode::MT_RET_OK && $account) {
                 return [
                     'balance' => $account->Balance ?? 0,
@@ -120,6 +121,7 @@ class UniversalMT5Service
                     'margin_free' => $account->MarginFree ?? 0,
                     'profit' => $account->Profit ?? 0,
                     'credit' => $account->Credit ?? 0,
+                    'total_commission' => $account->Commission ?? 0,
                 ];
             }
             return null;
