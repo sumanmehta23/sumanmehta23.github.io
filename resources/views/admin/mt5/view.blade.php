@@ -395,7 +395,7 @@ if ($getUser) {
                                                                             $total_trades = $accountHelper->total_trades ?? null;
                                                                         }
                                                                         if (!is_null($total_trades)) {
-                                                                            echo "$" . number_format($total_trades, 2);
+                                                                            echo ($total_trades);
                                                                         }
                                                                     ?>
                                                                 </h4>

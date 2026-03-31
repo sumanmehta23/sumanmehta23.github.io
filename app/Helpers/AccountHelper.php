@@ -129,7 +129,7 @@ class AccountHelper
             return $api->HistoryGetTotal($login, $from, $to, $total);
         });
 
-        $totalTrades = ($error_code == 0) ? $total : 0;
+        $totalTrades = ($error_code == 0) ? $total/2 : 0;
 
         $accountData = $mt5Interface->getAccountBalance((int)$liveAccount->code);
 
