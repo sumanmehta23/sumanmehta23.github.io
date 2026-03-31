@@ -518,9 +518,16 @@
                 if (data.success == true) {
                     Swal.fire({
                         title: "Check email to verify new wallet address",
-                        icon: "success"
-                    }).then((val) => {
+                        icon: "success",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    }).then((result) => {
+                        $('#addBankModal2').modal('hide');
+                        // Redirect to user profile wallets page
                         location.reload();
+                        setTimeout(function() {
+                            window.location.href = '/user-profile#wallets';
+                        }, 300);
                     });
                 } else {
                     Swal.fire({
@@ -575,7 +582,9 @@
                         title: "Check your email to verify new wallet details",
                         icon: "success"
                     }).then(() => {
+                        $('#editBankModal2').modal('hide');
                         location.reload();
+                        window.location.href = '/user-profile#wallets';
                     });
                 } else {
                     Swal.fire({
