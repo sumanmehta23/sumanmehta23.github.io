@@ -21,7 +21,7 @@
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
-                        
+
                         <div  class="my-3 card">
                             <div  class="card-body">
                                 <form method="POST" action="{{ route('login') }}" id="login-form">
@@ -37,7 +37,7 @@
                                     @endif
                                     @if (session('error'))
                                         <div class="alert alert-danger" id="rate-limit-error">
-                                            <span id="error-message">{{ session('error') }}</span>
+                                            <span id="error-message">{!! session('error') !!}</span>
                                             @if (session('retry_after'))
                                                 <span id="countdown-timer"></span>
                                             @endif
@@ -205,7 +205,7 @@
                 const errorAlert = document.getElementById('rate-limit-error');
                 const loginForm = document.getElementById('login-form');
                 const loginBtn = document.getElementById('login-submit-btn');
-                
+
                 // Disable form and button
                 if (loginForm && loginBtn) {
                     loginBtn.disabled = true;
@@ -218,7 +218,7 @@
                         }
                     });
                 }
-                
+
                 if (countdownElement && errorMessage && retryAfter > 0) {
                     function updateCountdown() {
                         if (retryAfter <= 0) {
@@ -233,21 +233,21 @@
                             }
                             return;
                         }
-                        
+
                         const minutes = Math.floor(retryAfter / 60);
                         const seconds = retryAfter % 60;
                         const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                        
+
                         errorMessage.textContent = `Too many requests. Please wait `;
                         countdownElement.textContent = timeString + ` before trying again.`;
-                        
+
                         retryAfter--;
-                        
+
                         if (retryAfter >= 0) {
                             setTimeout(updateCountdown, 1000);
                         }
                     }
-                    
+
                     updateCountdown();
                 }
             })();
