@@ -638,32 +638,36 @@
             pageLength: 10,
             // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
-                    action: function (e, dt, node, config) {
-                        showLiveAccountsOverlay(4500);
-                        if (excelAction) {
-                            excelAction.call(this, e, dt, node, config);
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('live_accounts')
+                    buttons.push({
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
+                        action: function (e, dt, node, config) {
+                            showLiveAccountsOverlay(4500);
+                            if (excelAction) {
+                                excelAction.call(this, e, dt, node, config);
+                            }
+                        },
+                        exportOptions: {
+                              columns: [12, 13, 14, 2, 3, 9, 5, 6, 10, 11, 7, 8, 15, 16, 18]
                         }
-                    },
-                    exportOptions: {
-                        columns: [12, 13, 14, 2, 3, 9, 5, 6, 10, 11, 7, 8, 15, 16, 18]
-                    }
-                },
-                {
-                    text: 'Export All',
-                    action: function () {
-                        showLiveAccountsOverlay(9000);
-                        const query = $.param(collectLiveAccountFilters());
-                        window.location.href = query
-                            ? ("/admin/export-all-live-accounts?" + query)
-                            : "/admin/export-all-live-accounts";
-                    }
-                }
-            ]
+                    });
+                    buttons.push({
+                        text: 'Export All',
+                        action: function () {
+                            showLiveAccountsOverlay(9000);
+                            const query = $.param(collectLiveAccountFilters());
+                            window.location.href = query
+                                ? ("/admin/export-all-live-accounts?" + query)
+                                : "/admin/export-all-live-accounts";
+                        }
+                    });
+                @endif
+                return buttons;
+            })(),
         });
     });
 

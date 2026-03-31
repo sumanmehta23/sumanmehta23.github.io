@@ -355,23 +355,26 @@
       order: [[0, "desc"]],
       destroy: true,
       dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-      buttons: [
-        {
-          extend: 'excel',
-          text: 'Export to Excel',
-          filename: 'IB_Users_' + new Date().toISOString().slice(0, 10),
-          exportOptions: {
-            columns: [7,8,11,3,4,5,9,10]
-          }
-        },
-        {
-          text: 'Export All',
-          className: 'btn btn-primary export-btn',
-          action: function () {
-            openExportModal();
-          }
-        }
-      ],
+      buttons: (() => {
+        let buttons = [];
+        @hasExportPermission('ib_dashboard')
+          buttons.push({
+            extend: 'excel',
+            text: 'Export to Exceltt',
+            exportOptions: {
+              columns: [7,8,11,3,4,5,9,10]
+            }
+          });
+          buttons.push({
+            text: 'Export All',
+            className: 'btn btn-primary export-btn',
+            action: function () {
+              openExportModal();
+            }
+          });
+        @endif
+        return buttons;
+      })(),
       processing: true,
       serverSide: true,
       searching: true,

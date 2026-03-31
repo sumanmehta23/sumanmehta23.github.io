@@ -814,23 +814,27 @@
                 pageLength: 10,
                 lengthMenu: [ [10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000] ],
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Client_List_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [0,8,9,10,2,3],
-                            orthogonal: 'export'
-                        }
-                    },
-                    {
-                        text: 'Export All',
-                        action: function () {
-                            window.location.href = "/admin/export-all-clients";
-                        }
-                    }
-                ],
+                buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('clients')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            filename: 'Client_List_' + new Date().toISOString().slice(0, 10),
+                            exportOptions: {
+                                columns: [0,8,9,10,2,3],
+                                orthogonal: 'export'
+                            }
+                        });
+                        buttons.push({
+                            text: 'Export All',
+                            action: function () {
+                                window.location.href = "/admin/export-all-clients";
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
             })
 
             dTtable.on('draw', function() {

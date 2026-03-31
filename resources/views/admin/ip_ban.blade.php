@@ -92,16 +92,20 @@
         var tableBlockedIP = $('#tableBlockedIP').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    filename: 'Blocked_Ips_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: {
-                    columns: [0,1,2,3,4] // Updated column indices to match your use case
-                    }
-                },
-            ],
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('ip_ban')
+                    buttons.push({
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        filename: 'Blocked_Ips_' + new Date().toISOString().slice(0, 10),
+                        exportOptions: {
+                            columns: [0,1,2,3,4] // Updated column indices to match your use case
+                        }
+                    });
+                @endif
+                return buttons;
+            })(),
 
             order: [[3, "desc"]],
             processing: true,
