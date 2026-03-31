@@ -584,7 +584,9 @@
                     }).then(() => {
                         $('#editBankModal2').modal('hide');
                         location.reload();
-                        window.location.href = '/user-profile#wallets';
+                        setTimeout(function() {
+                            window.location.href = '/user-profile#wallets';
+                        }, 20);
                     });
                 } else {
                     Swal.fire({
