@@ -179,22 +179,26 @@
                 pageLength: 10,
                 // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Demo_Accounts_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
-                        }
-                    },
-                    {
-                        text: 'Export All',
-                        action: function () {
-                            window.location.href = "/admin/export-all-demo-accounts";
-                        }
-                    }
-                ]
+                buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('demo_accounts')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            filename: 'Demo_Accounts_' + new Date().toISOString().slice(0, 10),
+                            exportOptions: {
+                                columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
+                            }
+                        });
+                        buttons.push({
+                            text: 'Export All',
+                            action: function () {
+                                window.location.href = "/admin/export-all-demo-accounts";
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
 
             });
 

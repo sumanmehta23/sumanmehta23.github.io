@@ -40,12 +40,14 @@
                                     Competitions
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 justify-content-end">
-                                    <button class="btn btn-primary btn-sm export-excel">
-                                        <i class="fe fe-download me-2"></i>Export to Excel
-                                    </button>
-                                    <button class="btn btn-secondary btn-sm export-all">
-                                        <i class="fe fe-download-cloud me-2"></i>Export All
-                                    </button>
+                                    @hasExportPermission('leaderboard')
+                                        <button class="btn btn-primary btn-sm export-excel">
+                                            <i class="fe fe-download me-2"></i>Export to Excel
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm export-all">
+                                            <i class="fe fe-download-cloud me-2"></i>Export All
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>

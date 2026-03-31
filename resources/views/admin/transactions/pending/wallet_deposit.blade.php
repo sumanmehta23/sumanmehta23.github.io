@@ -178,16 +178,20 @@
           var tableWalletDeposit = $('#tableWalletDeposit').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('pending_wallet_deposit')
+                    buttons.push({
                         extend: 'excel',
                         text: 'Export to Excel',
                         filename: 'Pending_Wallet_Deposit_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
                             columns: [6,7,1,2,4,8,9] // Updated column indices to match your use case
                         }
-                    }
-                ],
+                    });
+                @endif
+                return buttons;
+            })(),
 
             order: [[3, "desc"]],
             processing: true,

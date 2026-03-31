@@ -27,9 +27,11 @@
                                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
                                     <i class="fe fe-upload me-1"></i> Import Affiliates
                                 </button>
-                                <button class="btn btn-info btn-sm" onclick="window.location.href='{{ route('admin.affiliates.export') }}'">
-                                    <i class="fe fe-download me-1"></i> Export All
-                                </button>
+                                @hasExportPermission('affiliates')
+                                    <button class="btn btn-info btn-sm" onclick="window.location.href='{{ route('admin.affiliates.export') }}'">
+                                        <i class="fe fe-download me-1"></i> Export All
+                                    </button>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body">
