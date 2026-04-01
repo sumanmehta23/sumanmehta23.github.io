@@ -180,10 +180,11 @@ class SyncLiveAccountsTrades extends Command
         $orders = [];
         $pageSize = 100; // MT5 API returns max 100 records per page
         $pageCount = 0;
-        $position = $total;
         $hitTradeLimit = false;
 
-        while ($position > 0) {
+        $this->line("Starting pagination: total={$total}, pageSize={$pageSize}, maxTrades={$maxTrades}");
+
+        while (count($orders) < $total) {
             // Check if we've hit the max trades limit
             if (count($orders) >= $maxTrades) {
                 $hitTradeLimit = true;
@@ -198,13 +199,18 @@ class SyncLiveAccountsTrades extends Command
             }
 
             $pageCount++;
-            $pageOrders = [];
+            $pageOrders = [];  // Initialize as empty array
+            $position = count($orders);  // Position is how many we've already fetched
             $remainingToFetch = $maxTrades - count($orders);
-            $currentPageSize = min($pageSize, $position, $remainingToFetch);
+            $currentPageSize = min($pageSize, $total - count($orders), $remainingToFetch);
+
+            $this->line("  Page {$pageCount}: position={$position}, pageSize={$currentPageSize}, ordersCollected=" . count($orders));
 
             $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $fromDate, $toDate, $position, $currentPageSize, &$pageOrders) {
                 return $api->HistoryGetPage($login, $fromDate, $toDate, $position, $currentPageSize, $pageOrders);
             });
+
+            $this->line("    → error_code={$error_code}, recordsReturned=" . count($pageOrders ?? []));
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("Failed to get trades page for account {$login}: " . MTRetCode::GetError($error_code), [
@@ -221,15 +227,18 @@ class SyncLiveAccountsTrades extends Command
             }
 
             if (empty($pageOrders)) {
+                $this->line("    → Empty response, stopping pagination");
                 break;
             }
 
             $orders = array_merge($orders, $pageOrders);
-            $position -= $currentPageSize;
         }
 
         if (!empty($orders)) {
+            $this->line("Fetched " . count($orders) . " orders total from API");
             $this->processTrades($account, $orders);
+        } else {
+            $this->warn("No orders fetched from API");
         }
 
         // Update last_trade_sync_at timestamp and status after sync
@@ -247,8 +256,39 @@ class SyncLiveAccountsTrades extends Command
      */
     protected function processTrades(Account $account, array $orders): void
     {
+        $this->info("Processing " . count($orders) . " orders for account {$account->code}");
+
+        // Show first order structure for debugging
+        if (!empty($orders)) {
+            $firstOrder = $orders[0];
+            $this->line("First order object properties: " . implode(", ", array_keys((array)$firstOrder)));
+            $this->line("First order as array: " . json_encode($firstOrder, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        }
+
+        // Analyze data quality
+        $nullPositionIds = 0;
+        $nullSymbols = 0;
+        $validOrders = 0;
+
+        foreach ($orders as $order) {
+            if (empty($order->ExpertPositionID)) $nullPositionIds++;
+            if (empty($order->Symbol)) $nullSymbols++;
+            if (!empty($order->ExpertPositionID) && !empty($order->Symbol)) $validOrders++;
+            $this->line("  - Valid orders: {$validOrders}");
+        }
+
         $tradesToUpsert = [];
-        $ordersByPosition = collect($orders)->groupBy('PositionID');
+        $openTradeCount = 0;
+        $closedTradeCount = 0;
+        $skippedCount = 0;
+
+        // Filter out invalid orders and group by ExpertPositionID
+        $validOrders = collect($orders)->filter(function ($order) {
+            return !empty($order->ExpertPositionID) && !empty($order->Symbol);
+        });
+
+        $ordersByPosition = $validOrders->groupBy('ExpertPositionID');
+        $this->line("Grouped {$validOrders->count()} valid orders into {$ordersByPosition->count()} positions");
 
         foreach ($ordersByPosition as $positionId => $positionOrders) {
             $positionOrders = $positionOrders->sortBy('TimeDone');
@@ -256,51 +296,84 @@ class SyncLiveAccountsTrades extends Command
             if ($positionOrders->count() < 2) {
                 // Open trade
                 $order = $positionOrders->first();
-                $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
+                $tradeData = $this->prepareOpenTrade($account, $positionId, $order);
+                if ($tradeData !== null) {
+                    $tradesToUpsert[] = $tradeData;
+                    $openTradeCount++;
+                } else {
+                    $skippedCount++;
+                }
             } else {
                 // Closed trade
                 $openOrder = $positionOrders->first();
                 $closeOrder = $positionOrders->last();
-                $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                $tradeData = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                if ($tradeData !== null) {
+                    $tradesToUpsert[] = $tradeData;
+                    $closedTradeCount++;
+                } else {
+                    $skippedCount++;
+                }
             }
         }
 
-        if (!empty($tradesToUpsert)) {
-            Trade::upsert($tradesToUpsert, ['account_id', 'position_id'], [
-                'order_id',
-                'symbol',
-                'open_price',
-                'close_price',
-                'open_time',
-                'close_time',
-                'volume',
-                'volume_ext',
-                'profit',
-                'commission',
-                'swap',
-                'sl',
-                'tp',
-                'comment',
-                'type',
-                'status',
-                'state',
-                'code',
-                'updated_at',
-            ]);
+        $this->line("Trade breakdown: {$openTradeCount} open, {$closedTradeCount} closed, {$skippedCount} skipped");
 
-            $tradeCount = count($tradesToUpsert);
-            Log::info("Upserted {$tradeCount} trades for account {$account->code}", [
-                'account_id' => $account->id,
-                'trades_count' => $tradeCount,
-            ]);
+        if (!empty($tradesToUpsert)) {
+            try {
+                Trade::upsert($tradesToUpsert, ['account_id', 'position_id'], [
+                    'order_id',
+                    'symbol',
+                    'open_price',
+                    'close_price',
+                    'open_time',
+                    'close_time',
+                    'volume',
+                    'volume_ext',
+                    'profit',
+                    'commission',
+                    'swap',
+                    'sl',
+                    'tp',
+                    'comment',
+                    'type',
+                    'status',
+                    'state',
+                    'code',
+                    'updated_at',
+                ]);
+
+                $tradeCount = count($tradesToUpsert);
+                $this->line("✓ Successfully upserted {$tradeCount} trades");
+                Log::info("Upserted {$tradeCount} trades for account {$account->code}", [
+                    'account_id' => $account->id,
+                    'trades_count' => $tradeCount,
+                    'open_trades' => $openTradeCount,
+                    'closed_trades' => $closedTradeCount,
+                    'skipped' => $skippedCount,
+                ]);
+            } catch (\Exception $e) {
+                $this->error("Failed to upsert trades: {$e->getMessage()}");
+                Log::error("Failed to upsert trades for account {$account->code}", [
+                    'error' => $e->getMessage(),
+                    'account_id' => $account->id,
+                    'trades_to_insert' => count($tradesToUpsert),
+                ]);
+            }
+        } else {
+            $this->warn("No valid trades to upsert after processing");
         }
     }
 
     /**
      * Prepare open trade data
      */
-    protected function prepareOpenTrade($account, $positionId, $order): array
+    protected function prepareOpenTrade($account, $positionId, $order): ?array
     {
+        // Validate required fields
+        if (empty($order->Symbol) || $positionId === null || $positionId === 0) {
+            return null;
+        }
         return [
             'account_id' => $account->id,
             'close_price' => null,
@@ -330,8 +403,12 @@ class SyncLiveAccountsTrades extends Command
     /**
      * Prepare closed trade data
      */
-    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder): array
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder): ?array
     {
+        // Validate required fields
+        if (empty($openOrder->Symbol) || empty($closeOrder->Symbol) || $positionId === null || $positionId === 0) {
+            return null;
+        }
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
@@ -342,15 +419,15 @@ class SyncLiveAccountsTrades extends Command
             'close_price' => $closeOrder->PriceCurrent,
             'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
-            'volume' => $openOrder->Volume,
-            'volume_ext' => $openOrder->Volume,
+            'volume' => $openOrder->VolumeInitial,
+            'volume_ext' => $openOrder->VolumeInitialExt,
             'sl' => $openOrder->PriceSL,
             'tp' => $openOrder->PriceTP,
             'comment' => $openOrder->Comment ?? '',
             'state' => $closeOrder->State,
             'status' => 'closed',
             'code' => $account->code,
-            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->Volume / 10000000) * $openOrder->ContractSize,
+            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitial / 10000000) * $openOrder->ContractSize,
             'commission' => 0,
             'swap' => 0,
             'created_at' => now(),
