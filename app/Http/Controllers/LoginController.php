@@ -96,7 +96,7 @@ class LoginController extends Controller
     {
         $restriction = RestrictIps::where('ip', $request->ip())->where('email', $request->email)->first();
         if ($restriction) {
-            return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:Compliance@1xTrade.com">Compliance@1xTrade.com</a>.');
+            return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.');
         }
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
@@ -128,7 +128,7 @@ class LoginController extends Controller
         ]);
 
         if (($request->input('email') == 'andrei_makalicza@yahoo.com') || ($request->input('email') == 'teodorescuv1990@gmail.com') || ($request->input('email') == 'aleksandra_andreea@yahoo.com')) {
-            return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:Compliance@1xTrade.com">Compliance@1xTrade.com</a>.');
+            return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.');
         }
 
         // Find the user by email
