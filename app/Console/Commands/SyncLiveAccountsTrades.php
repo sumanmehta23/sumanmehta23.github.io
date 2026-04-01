@@ -15,7 +15,7 @@ class SyncLiveAccountsTrades extends Command
                             {--account-code= : Sync specific account by code}
                             {--limit=100 : Maximum accounts to sync (default: 100)}
                             {--from=September 01,2024 : Start date for trade history}
-                            {--to=March 31,2080 : End date for trade history}
+                            {--to= : End date for trade history (default: today)}
                             {--mark-not-found : Mark accounts not found in MT5 with not_found_in_mt5 flag}';
 
     protected $description = 'Sync live MT5 accounts trades with pagination position tracking. Processes max 500 trades per account per cycle.';
@@ -34,7 +34,7 @@ class SyncLiveAccountsTrades extends Command
             $accountCode = $this->option('account-code');
             $limit = (int) $this->option('limit');
             $defaultFromDate = $this->option('from');
-            $defaultToDate = $this->option('to');
+            $defaultToDate = $this->option('to') ?? now()->format('F d,Y');
             $markNotFound = $this->option('mark-not-found');
 
             // Fetch accounts to sync, excluding accounts not found in MT5
@@ -140,7 +140,7 @@ class SyncLiveAccountsTrades extends Command
         // Timestamp filtering ensures we skip already-processed trades
         return [
             'from' => $defaultFromDate ?? 'September 01,2024',
-            'to' => $defaultToDate ?? 'March 31,2080',
+            'to' => $defaultToDate,
             'reason' => 'Wide range for position-based pagination',
         ];
     }
