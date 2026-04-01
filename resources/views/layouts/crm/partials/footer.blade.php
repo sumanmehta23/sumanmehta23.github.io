@@ -523,10 +523,9 @@
                         allowEscapeKey: false
                     }).then((result) => {
                         $('#addBankModal2').modal('hide');
-                        // Reload page to display new data, then redirect to wallets section
-                        setTimeout(() => {
-                            window.location.href = '/user-profile#wallets';
-                        }, 500);
+                        // Different approach: use location.replace() for cleaner redirect
+                        location.replace('/user-profile#wallets');
+                        location.reload(); // Ensure the page reloads to show updated wallet list
                     });
                 } else {
                     Swal.fire({
