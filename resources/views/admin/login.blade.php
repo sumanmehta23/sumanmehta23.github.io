@@ -93,7 +93,8 @@
                                                                         <label for="password"
                                                                             class="control-label">Password</label>
                                                                         <div class="float-right">
-                                                                            <a href="#" class="text-small"> Forgot
+                                                                            <a href="{{ route('admin.forgot-password') }}"
+                                                                                class="text-small"> Forgot
                                                                                 Password?</a>
                                                                         </div>
                                                                     </div>
@@ -153,5 +154,5 @@
             'selectId' => 'custom_translate_select_login',
             'flagPreviewId' => 'flag-preview-login'
         ])
-                        </div>
+                            </div>
 @endsection
