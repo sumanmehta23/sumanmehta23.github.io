@@ -1055,7 +1055,6 @@ class MT5Accounts extends Controller
         ]);
 
         $platform = $request->input('platform');
-
         if ($platform === 'mt5') {
             return $this->createMT5DemoAccount($request);
         } else {
@@ -1235,7 +1234,7 @@ class MT5Accounts extends Controller
             'investor_password' => $investorPassword,
             'country_id' => 5 // Default country ID
         ];
-
+        
         // Create user in X9
         $response = $this->x9Service->createUser($x9UserData);
 

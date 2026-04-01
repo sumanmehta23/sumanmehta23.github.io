@@ -301,7 +301,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $total_profit = $accountHelper['profit'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_profit = $accountHelper->total_profit ?? null;
+                                                                            $total_profit = $accountHelper->Profit ?? null;
                                                                         }
 
                                                                         if (!is_null($total_profit)) {
@@ -332,7 +332,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $total_comission = $accountHelper['total_commission'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_comission = $accountHelper->total_commission ?? null;
+                                                                            $total_comission = $accountHelper->Commission ?? null;
                                                                         }
                                                                         if (!is_null($total_comission)) {
                                                                             echo "$" . number_format($total_comission, 2);
@@ -362,7 +362,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $total_swap = $account->accountType->ac_swap ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_swap = $accountHelper->total_swap ?? null;
+                                                                            $total_swap = $account->accountType->ac_swap ?? null;
                                                                         }
                                                                         if (($total_swap == null) && ($total_swap == '')) {
                                                                             echo ('No');
@@ -394,7 +394,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $total_trades = $accountHelper['total_trades'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_trades = $accountHelper->total_trades ?? null;
+                                                                            $total_trades = $accountHelper->TotalTrades ?? null;
                                                                         }
                                                                         if (!is_null($total_trades)) {
                                                                             echo ($total_trades);
@@ -449,7 +449,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $feed_margin = $accountHelper['margin_free'];
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $feed_margin = $accountHelper->margin_free ?? 0;
+                                                                            $feed_margin = $accountHelper->MarginFree ?? 0;
                                                                         }
                                                                         if (!is_null($feed_margin)) {
                                                                             echo "$" . number_format($feed_margin, 2);
@@ -480,7 +480,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $margin = $accountHelper['margin'];
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $margin = $accountHelper->margin ?? 0;
+                                                                            $margin = $accountHelper->Margin ?? 0;
                                                                         }
                                                                         if (!is_null($margin)) {
                                                                             echo number_format($margin, 2);
