@@ -62,6 +62,8 @@ class MaintenanceEmailController extends Controller
                   AND t.open_time >= \'2026-01-01\'
                   AND a.trade_platform = \'MetaTrader5\'
                   AND a.demo = 0
+                  AND DATE(a.last_trade_sync_at) = CURDATE()
+                  AND u.maintenance_email_sent = 0
             ) x'))
             ->where('rn', 1)
             ->limit(10000)

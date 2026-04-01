@@ -121,6 +121,9 @@ class SendScheduledMaintenanceEmailJob implements ShouldQueue
                         // Send notification
                         $user->notify(new ScheduledMaintenanceNotification($settings));
                         $sent++;
+
+                         // Mark user as maintenance email sent
+                        $user->update(['maintenance_email_sent' => true]);
                         
                         // Log successful send
                         Log::info('SendScheduledMaintenanceEmailJob: Email sent successfully', [
