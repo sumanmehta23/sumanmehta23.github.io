@@ -43,6 +43,7 @@ class SyncLiveAccountsTrades extends Command
                 ->whereNull('deleted_at')
                 ->where(function ($q) {
                     $q->whereNull('trade_sync_status')
+                        ->orWhere('trade_sync_status', '')
                         ->orWhereIn('trade_sync_status', ['partial', 'error']);
                 })
                 ->limit($limit);
@@ -55,7 +56,7 @@ class SyncLiveAccountsTrades extends Command
             $accounts = $query->get();
 
             if ($accounts->isEmpty()) {
-                $this->warning('No accounts found to sync.');
+                $this->warn('No accounts found to sync.');
                 return;
             }
 
