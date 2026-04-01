@@ -39,7 +39,7 @@
                         </div>
                     </div><!-- COL END -->
                 @endcan
-                @can("wallet_withdraw:viewAny")
+                @can('dashboard:viewTotalWithdraw')
                 <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                     <div class="card custom-card">
                         <div class="card-body">
@@ -59,7 +59,7 @@
                     </div>
                 </div><!-- COL END -->
                 @endcan
-                @can('client:viewAny')
+                @can('dashboard:viewActiveClients')
                 <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4">
                     <div class="card custom-card">
                         <div class="card-body">
@@ -80,7 +80,7 @@
             </div>
             <!-- ROW-1 END -->
             <div class="row">
-                @can("wallet_deposit:viewAny")
+                @can('dashboard:viewPendingDeposits')
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-primary img-card box-primary-shadow">
                         <div class="card-body">
@@ -96,7 +96,7 @@
                     </div>
                 </div><!-- COL END -->
                 @endcan
-                @can("wallet_withdraw:viewAny")
+                @can('dashboard:viewPendingWithdraws')
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-secondary img-card box-secondary-shadow">
                         <div class="card-body">
@@ -112,7 +112,7 @@
                     </div>
                 </div>
                 @endcan
-                @can("ib:viewAny")
+                @can('dashboard:viewPendingIB')
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-success img-card box-success-shadow">
                         <div class="card-body">
@@ -127,7 +127,7 @@
                     </div>
                 </div><!-- COL END -->
                 @endcan
-                @can("client:viewAny")
+                @can('dashboard:viewActivatedWallets')
                 <div class="col-sm-12 col-md-6 col-lg-6 col-xl-3">
                     <div class="card bg-info img-card box-info-shadow">
                         <div class="card-body">
@@ -145,7 +145,7 @@
                 @endcan
             </div>
             <!-- Row -->
-            @can("wallet_deposit:viewAny")
+            @can('dashboard:viewLatestPendingDeposit')
             <div class="row row-sm">
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
@@ -331,7 +331,7 @@
                 </div>
             </div>
             @endcan
-            @can("wallet_withdraw:viewAny")
+            @can('dashboard:viewLatestPendingWithdrawals')
             <div class="row row-sm">
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
@@ -531,7 +531,7 @@
             </div>
             <!-- End Row -->
             @endcan
-            @can("wallet_withdraw:viewAny")
+            @can('dashboard:viewLatestPendingTradeWithdrawals')
             <div class="row row-sm">
                 <div class="col-lg-12">
                     <div class="card custom-card product-sales">
