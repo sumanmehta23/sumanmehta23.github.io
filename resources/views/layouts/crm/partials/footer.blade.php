@@ -523,9 +523,10 @@
                         allowEscapeKey: false
                     }).then((result) => {
                         $('#addBankModal2').modal('hide');
-                        // Redirect to user profile wallets page with hash
-                        window.location.reload();
-                        window.location.href = '/user-profile#wallets';
+                        // Reload page to display new data, then redirect to wallets section
+                        setTimeout(() => {
+                            window.location.href = '/user-profile#wallets';
+                        }, 500);
                     });
                 } else {
                     Swal.fire({
