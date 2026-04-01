@@ -129,11 +129,11 @@
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [12,18,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
+                            columns: [12,18,1,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
                         }
                     });
                 @endif
-                return buttons;
+                return buttons; 
             })(),
 
             // order: [[3, "desc"]],
