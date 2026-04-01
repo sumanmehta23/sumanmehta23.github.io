@@ -351,16 +351,30 @@ class SyncLiveAccountsTrades extends Command
             $positionOrders = $positionOrders->sortBy('TimeDone');
 
             if ($positionOrders->count() < 2) {
-                // Open trade
-                $order = $positionOrders->first();
-                $tradeData = $this->prepareOpenTrade($account, $positionId, $order);
-                if ($tradeData !== null) {
-                    $tradesToUpsert[] = $tradeData;
-                    $openTradeCount++;
-                    //Track the maximum timestamp seen
-                    $maxTimestamp = max($maxTimestamp, $order->TimeDone);
-                } else {
+                // Check if this position already exists in database as open
+                // If yes, skip it (close event may be in next sync batch due to position-based pagination)
+                $existingTrade = Trade::where('account_id', $account->id)
+                    ->where('position_id', $positionId)
+                    ->where('status', 'open')
+                    ->first();
+
+                if ($existingTrade) {
+                    // Position already recorded as open, likely close event in earlier batch
+                    // Don't duplicate it, just skip
+                    $this->line("  Skipping position {$positionId}: already marked as open (likely resumed scan)");
                     $skippedCount++;
+                } else {
+                    // New open trade
+                    $order = $positionOrders->first();
+                    $tradeData = $this->prepareOpenTrade($account, $positionId, $order);
+                    if ($tradeData !== null) {
+                        $tradesToUpsert[] = $tradeData;
+                        $openTradeCount++;
+                        //Track the maximum timestamp seen
+                        $maxTimestamp = max($maxTimestamp, $order->TimeDone);
+                    } else {
+                        $skippedCount++;
+                    }
                 }
             } else {
                 // Closed trade
