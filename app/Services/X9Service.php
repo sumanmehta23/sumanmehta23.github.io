@@ -73,7 +73,6 @@ class X9Service
                 'investor_password' => $userData['investor_password'],
                 'country_id' => $userData['country_id'] ?? 5
             ];
-
             $response = Http::withHeaders([
                 'X-API-Key' => $this->accessToken,
                 'Content-Type' => 'application/json',
@@ -673,7 +672,7 @@ class X9Service
     /**
      * Get closed trades for a specific client group
      * New API endpoint: /api/v1/closed-trades/group/{client_group_id}
-     * 
+     *
      * @param int $clientGroupId The client group ID
      * @param string|null $dateFrom Start date in YYYY-MM-DD format (default: today)
      * @param string|null $dateTo End date in YYYY-MM-DD format (default: today)
@@ -731,6 +730,153 @@ class X9Service
             return [
                 'status' => false,
                 'message' => 'Failed to get closed trades: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
+     * Get closed trades for a specific account (API v1)
+     *
+     * Endpoint: GET /api/v1/closed-trades/{account_number}
+     *
+     * Returns all closed trades for the specified account.
+     *
+     * Response typically includes:
+     * - position_ticket: Trade position identifier
+     * - ticket/ticket_number: Trade ticket number
+     * - symbol: Trading symbol
+     * - order_type/type/cmd: Trade direction (buy/sell)
+     * - open_volume/volume/lots: Trade volume
+     * - closed_volume: Closed volume
+     * - open_price/price_open: Entry price
+     * - close_price/price_close: Exit price
+     * - profit_loss/profit: Trade profit/loss
+     * - stop_loss/sl: Stop loss level
+     * - take_profit/tp: Take profit level
+     * - commission: Trade commission
+     * - swap: Trade swap
+     * - comment: Trade comment
+     * - open_time/time_open: Entry time
+     * - close_time/time_close: Exit time
+     *
+     * @param  string  $accountNumber  Trading account number
+     * @param  string|null  $dateFrom  Start date (YYYY-MM-DD format)
+     * @param  string|null  $dateTo  End date (YYYY-MM-DD format)
+     * @param  int  $limit  Number of trades per request (1-1000, default 100)
+     * @param  int  $offset  Offset for pagination (default 0)
+     * @return array Response with success status and closed trades data
+     */
+    public function getClosedTradesByAccount(
+        string $accountNumber,
+        ?string $dateFrom = null,
+        ?string $dateTo = null,
+        int $limit = 100,
+        int $offset = 0
+    ): array {
+        try {
+            // Validate limit
+            $limit = max(1, min(1000, $limit));
+            $offset = max(0, $offset);
+
+            $params = [
+                'limit' => $limit,
+                'offset' => $offset,
+            ];
+
+            if ($dateFrom) {
+                $params['date_from'] = $dateFrom;
+            }
+            if ($dateTo) {
+                $params['date_to'] = $dateTo;
+            }
+
+            $url = $this->baseUrl . "/api/v1/closed-trades/{$accountNumber}";
+            if (!empty($params)) {
+                $url .= '?' . http_build_query($params);
+            }
+
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->get($url);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'status' => true,
+                    'message' => 'Closed trades retrieved successfully',
+                    'data' => $data['data'] ?? $data,
+                    'trades' => $data['trades'] ?? []
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to get closed trades: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Get Closed Trades By Account Failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Failed to get closed trades: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+
+    /**
+     * Fetch open positions (open trades) for an account (API v1)
+     *
+     * Endpoint: GET /api/v1/positions/{account_number}
+     *
+     * Returns all currently open positions for the given trading account.
+     *
+     * Response typically includes:
+     * - position_id
+     * - symbol
+     * - volume
+     * - price_open
+     * - profit
+     * - swap
+     * - commission
+     * - open_time
+     *
+     * @param  string  $accountNumber  Trading account number
+     * @return array Response with success status and open trades data
+     */
+    public function getOpenTrades(string $accountNumber): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->accessToken,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->get($this->baseUrl . "/api/v1/positions/{$accountNumber}");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'status' => true,
+                    'message' => 'Open trades retrieved successfully',
+                    'data' => $data['data'] ?? $data,
+                    'positions' => $data['positions'] ?? []
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Failed to get open trades: ' . $response->body(),
+                'data' => null
+            ];
+        } catch (Exception $e) {
+            Log::error('X9 Get Open Trades Failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Failed to get open trades: ' . $e->getMessage(),
                 'data' => null
             ];
         }

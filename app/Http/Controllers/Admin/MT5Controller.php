@@ -1567,6 +1567,15 @@ class MT5Controller extends Controller
                 if (isset($balanceData['free_margin'])) {
                     $balanceData['free_margin'] = str_replace(',', '', $balanceData['free_margin']);
                 }
+
+                $openTrades = $x9Service->getOpenTrades($account->code);
+                $openTradesCount = $openTrades['data']['total_positions'] ?? 0;
+                $closedTrades = $x9Service->getClosedTradesByAccount($account->code);
+                $closedTradesCount = $closedTrades['data']['summary']['total_trades'] ?? 0;
+                $profit = $closedTrades['data']['summary']['net_profit_loss'] ?? 0;
+                $commission = collect($closedTrades['data']['trades'])->sum('commission') ?? 0;
+
+                $totalTrades = $openTradesCount + $closedTradesCount;
                 // Update account with fresh data from X9
                 try {
                     // Extract balance data from the correct nested structure
@@ -1590,7 +1599,6 @@ class MT5Controller extends Controller
                 } catch (\Exception $e) {
                     Log::warning('Failed to update X9 account in admin panel: ' . $e->getMessage());
                 }
-
                 $accountHelper = (object) [
                     'Balance' => floatval($balanceData['balance'] ?? $account->balance),
                     'Credit' => floatval($balanceData['credit'] ?? 0),
@@ -1599,6 +1607,9 @@ class MT5Controller extends Controller
                     'Margin' => floatval($balanceData['margin'] ?? 0),
                     'MarginFree' => floatval($balanceData['free_margin'] ?? 0),
                     'MarginLevel' => floatval($balanceData['margin_level'] ?? 0),
+                    'Profit' => $profit,
+                    'Commission' => $commission,
+                    'TotalTrades' => $totalTrades,
                 ];
 
                 // Get X9 group name for display
