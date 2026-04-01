@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Services\QueueSafeMT5Service;
+use App\Services\MT5RestAPIService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -21,6 +22,7 @@ class SyncLiveAccountsTrades extends Command
     protected $description = 'Sync live MT5 accounts trades with pagination position tracking. Processes max 500 trades per account per cycle.';
 
     protected $mt5Service;
+    protected $restApiService;
     protected $api;
     protected const MAX_TRADES_PER_SYNC = 500;
 
@@ -30,6 +32,7 @@ class SyncLiveAccountsTrades extends Command
 
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
+            $this->restApiService = app(MT5RestAPIService::class);
 
             $accountCode = $this->option('account-code');
             $limit = (int) $this->option('limit');
@@ -471,8 +474,8 @@ class SyncLiveAccountsTrades extends Command
     }
 
     /**
-     * After full sync, check for any open trades that were closed in later sync batches
-     * Strategy: First check database for matching closed trades (fast), then only query MT5 for orphaned ones
+     * After full sync, verify open trades against MT5's current open positions via REST API
+     * Much faster than querying historical trades - REST API returns only active positions
      */
     protected function verifyAndCloseOrphanedOpenTrades(Account $account): void
     {
@@ -484,71 +487,25 @@ class SyncLiveAccountsTrades extends Command
             return; // No open trades, nothing to verify
         }
 
-        $this->info("Verifying {$openTrades->count()} open trades...");
+        $this->info("Verifying {$openTrades->count()} open trades against MT5 REST API...");
 
+        // Get all current open positions from MT5 via REST API
+        $mt5OpenPositions = $this->restApiService->getOpenPositions($account->code);
+        $mt5OpenPositionIds = collect($mt5OpenPositions)->toArray();
+
+        $this->line("  MT5 REST API returned " . count($mt5OpenPositionIds) . " current open positions");
+
+        // Compare DB open trades with MT5's actual open positions
         $closedPositions = [];
 
-        // Phase 1: Check if close event exists in database (fast - same sync batch or later batch already processed)
         foreach ($openTrades as $trade) {
-            // Look for a closed trade with same account & position
-            $closedMatch = Trade::where('account_id', $account->id)
-                ->where('position_id', $trade->position_id)
-                ->where('status', 'closed')
-                ->exists();
-
-            if ($closedMatch) {
-                $closedPositions[] = $trade->position_id;
-                $this->line("  ✓ Position {$trade->position_id}: Found matching closed trade in DB - closing duplicate open");
-                continue;
-            }
-
-            // Phase 2: For remaining open trades, check MT5 with targeted date range
-            // Search from open_time to today (not full range, just forward from open)
-            $openTime = \Carbon\Carbon::parse($trade->open_time);
-            $fromDate = $openTime->copy()->format('F d,Y');  // From open time forward
-            $toDate = now()->format('F d,Y');                // To today
-
-            $total = 0;
-            $this->mt5Service->executeOperation(function ($api) use ($account, $fromDate, $toDate, &$total) {
-                return $api->HistoryGetTotal($account->code, $fromDate, $toDate, $total);
-            });
-
-            if ($total === 0) {
-                // No trades in this range = definitely orphaned
-                $closedPositions[] = $trade->position_id;
-                $this->line("  ✓ Position {$trade->position_id}: No events in MT5 from open_time to today - closing (orphaned)");
-                continue;
-            }
-
-            // Fetch orders in this targeted range (should be much smaller than full range)
-            $allOrders = [];
-            $pageSize = 100;
-            for ($position = 0; $position < $total; $position += $pageSize) {
-                $pageOrders = [];
-                $this->mt5Service->executeOperation(function ($api) use ($account, $fromDate, $toDate, $position, $pageSize, &$pageOrders) {
-                    return $api->HistoryGetPage($account->code, $fromDate, $toDate, $position, $pageSize, $pageOrders);
-                });
-                if (!empty($pageOrders)) {
-                    $allOrders = array_merge($allOrders, $pageOrders);
-                } else {
-                    break;
-                }
-            }
-
-            // Count events for this position in MT5
-            $eventCount = collect($allOrders)->where('ExpertPositionID', $trade->position_id)->count();
-
-            if ($eventCount >= 2) {
-                // Has 2+ events = closed trade
-                $closedPositions[] = $trade->position_id;
-                $this->line("  ✓ Position {$trade->position_id}: Found {$eventCount} events in MT5 - closing");
-            } elseif ($eventCount === 0) {
-                // Truly orphaned - no events from open_time onwards
-                $closedPositions[] = $trade->position_id;
-                $this->line("  ✓ Position {$trade->position_id}: Orphaned - no events from open_time - closing");
+            if (in_array($trade->position_id, $mt5OpenPositionIds)) {
+                // Position is open in MT5 - keep it
+                $this->line("  ✓ Position {$trade->position_id}: Still open in MT5");
             } else {
-                // Only 1 event - genuinely still open
-                $this->line("  → Position {$trade->position_id}: Still open (1 event in MT5)");
+                // Position not in MT5's open positions - close it
+                $closedPositions[] = $trade->position_id;
+                $this->line("  ✓ Position {$trade->position_id}: Not in MT5 open positions - closing");
             }
         }
 
@@ -563,7 +520,7 @@ class SyncLiveAccountsTrades extends Command
                     'close_time' => null,
                     'updated_at' => now(),
                 ]);
-            $this->warn("Closed " . count($closedPositions) . " orphaned/delayed-close open trades");
+            $this->warn("Closed " . count($closedPositions) . " positions not found in MT5 open positions");
         }
     }
 
