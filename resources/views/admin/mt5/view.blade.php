@@ -367,7 +367,7 @@ if ($getUser) {
                                                                         if (($total_swap == null) && ($total_swap == '')) {
                                                                             echo ('No');
                                                                         }else {
-                                                                            echo ($total_swap);
+                                                                            echo ('Yes');
                                                                         }
                                                                     ?>
                                                                 </h4>
