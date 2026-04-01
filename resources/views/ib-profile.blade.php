@@ -168,53 +168,49 @@
                                         <div class="form"><label class="mt-3 form-label"
                                                 for="exampleFormControlSelect1">Select
                                                 Account</label>
-                                            <div class="row">
-
+                                            {{-- Hidden radio inputs to maintain existing JS behaviour --}}
+                                            <div style="display:none">
                                                 @forelse ($live_accs as $acc)
-                                                    <div class="col-lg-6">
-                                                        <div class="p-2 border card">
-                                                            <div class="mb-0 form-check">
-                                                                <input type="radio" name="account"
-                                                                    class="form-check-input input-primary" id="{{ $acc->id }}"
-                                                                    value="{{ $acc->id }}">
-                                                                <label class="mb-0 form-check-label d-block"
-                                                                    for="{{ $acc->id }}">
-
-                                                                    <span class="h5 d-block">
-                                                                        <span
-                                                                            class="float-end badge bg-light-primary f-14 fw-medium">
-                                                                            @money($acc->balance)
-                                                                        </span>
-                                                                        <span>
-                                                                            <img src="/assets/images/mt5.png" class="hei-30">
-                                                                            {{ $acc->code }}
-                                                                        </span>
-                                                                    </span>
-                                                                    <span class="mt-2 mb-0 text-muted">
-                                                                        <span class="mt-2 float-end text-muted f-12">
-                                                                            Current
-                                                                            Balance</span>
-                                                                    </span>
-
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    <input id="{{ $acc->id }}"
+                                                        type="radio" name="account"
+                                                        class="select-account"
+                                                        value="{{ $acc->id }}">
                                                 @empty
-                                                    <div class="col-lg-6">
-                                                        <a href="{{ route('show-live-account-form') }}"
-                                                            class="d-grid btn btn-primary">
-
-                                                            <span class="text-truncate w-100">Create new Live
-                                                                Account</span>
-
-                                                        </a>
-                                                    </div>
                                                 @endforelse
-
-
-                                                <!---->
-                                            </div><label class="form-label" for="exampleFormControlSelect1">Enter
+                                            </div>
+                                            {{-- Custom account dropdown --}}
+                                            <div class="mb-3 dropdown">
+                                                <button class="px-3 py-3 btn btn-outline-secondary dropdown-toggle w-50 d-flex justify-content-between align-items-center" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px;">
+                                                    <span id="accountDropdownLabel" class="text-muted w-100 text-start">Select Account</span>
+                                                </button>
+                                                <ul class="shadow dropdown-menu w-50" id="accountDropdownMenu" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
+                                                    @forelse ($live_accs as $acc)
+                                                        <li>
+                                                            <a class="py-2 dropdown-item d-flex justify-content-between align-items-center account-dropdown-item"
+                                                               href="#"
+                                                               data-account-id="{{ $acc->id }}"
+                                                               data-account-code="{{ $acc->code }}"
+                                                               data-account-balance="{{ $acc->balance }}">
+                                                                <span class="d-flex align-items-center">
+                                                                    <img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">
+                                                                    <span class="fw-medium">{{ $acc->code }}</span>
+                                                                </span>
+                                                                <span class="text-end">
+                                                                    <span class="d-block fw-medium">@money($acc->balance)</span>
+                                                                    <small class="text-muted">Current Balance</small>
+                                                                </span>
+                                                            </a>
+                                                        </li>
+                                                    @empty
+                                                        <li>
+                                                            <a class="py-2 dropdown-item text-muted" href="{{ route('show-live-account-form') }}">
+                                                                <i class="ti ti-plus me-2"></i>Create new Live Account
+                                                            </a>
+                                                        </li>
+                                                    @endforelse
+                                                </ul>
+                                            </div>
+                                            <label class="form-label" for="exampleFormControlSelect1">Enter
                                                 Amount</label>
                                             <div class="mb-3 input-group"><span class="input-group-text">$</span>
                                                 <input type="number" name="amount" min="0.01" step="0.01" max="{{ $ib_wallet }}" class="form-control" required aria-label="Amount (to the nearest dollar)">
@@ -480,6 +476,24 @@
             });
         });
 
+        // Handle account dropdown selection
+        $(document).on('click', '.account-dropdown-item', function (e) {
+            e.preventDefault();
+            let accountId = $(this).data('account-id');
+            let accountCode = $(this).data('account-code');
+            let accountBalance = $(this).data('account-balance');
+
+            // Set the hidden radio input
+            $('input[name="account"][value="' + accountId + '"]').prop('checked', true);
+
+            // Update dropdown button label
+            $('#accountDropdownLabel').html(`
+                <span class="d-flex align-items-center">
+                    <img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">
+                    <span class="fw-medium">${accountCode}</span>
+                </span>
+            `);
+        });
 
         $(document).ready(function () {
             $("#commissionTbl").DataTable({
