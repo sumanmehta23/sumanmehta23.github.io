@@ -536,7 +536,8 @@ class MT5RestAPIService
             Log::warning('MT5RestAPI: Open positions API error', [
                 'login' => $login,
                 'retcode' => $response['retcode'],
-                'retmsg' => $response['retmsg'] ?? 'Unknown error'
+                'retmsg' => $response['retmsg'] ?? 'Unknown error',
+                'response' => $response
             ]);
             return [];
         }
