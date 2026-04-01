@@ -538,7 +538,8 @@ class Transaction extends Controller
             $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
             $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
             $content = '<p>We are pleased to inform you that your transaction has been successfully approved manually.</p>
-                        <p>The approved amount has been withdrawn from your wallet.</p>';
+                        <p>The approved amount has been withdrawn from your wallet.</p>
+                        <p></p>';
             $templateVars = [
                 'name' => $deposit_details->user->fullname,
                 'site_link' => $settings['copyright_site_name_text'],
