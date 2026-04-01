@@ -60,10 +60,10 @@
                                         <?php foreach ($roles as $k => $role):
                       $rolename = str_replace(' ', '-', $role->name) ?>
                                         <button data-tab="{{  $rolename }}" data-id="{{  $role->id }}"
-                                            class="user-group nav-link text-start {{  $k == 0 ? 'active' : '' }}"
+                                            class="user-group nav-link text-start {{ (!request('role_id') && $k == 0) || request('role_id') == $role->id ? 'active' : '' }}"
                                             id="{{  $rolename }}-tab" data-bs-toggle="pill"
                                             data-bs-target="#{{  $rolename }}" type="button" role="tab"
-                                            aria-controls="{{  $rolename }}" aria-selected="false" tabindex="-1"><i
+                                            aria-controls="{{  $rolename }}" aria-selected="{{ (!request('role_id') && $k == 0) || request('role_id') == $role->id ? 'true' : 'false' }}" tabindex="-1"><i
                                                 class="align-middle ri-shield-user-line me-1 d-inline-block"></i>{{  $role->name }}</button>
                                         <?php endforeach; ?>
                                     </div>
@@ -72,7 +72,7 @@
                                     <div class="tab-content" id="v-pills-tabContent">
                                         <?php foreach ($roles as $k => $role):
                       $rolename = str_replace(' ', '-', $role->name) ?>
-                                        <div class="tab-pane permissions-tab {{  $k == 0 ? 'active show' : '' }}"
+                                        <div class="tab-pane permissions-tab {{ (!request('role_id') && $k == 0) || request('role_id') == $role->id ? 'active show' : '' }}"
                                             id="{{  $rolename }}" role="tabpanel" tabindex="0"
                                             aria-labelledby="{{  $rolename }}-tab">
                                         </div>
@@ -104,7 +104,22 @@
           });
         });
         $(document).ready(function () {
-          $('.user-group:first').click();
+          // Check if role_id is in URL, otherwise use first role
+          let selectedRoleId = "{{ request('role_id') }}";
+          let roleToClick;
+          
+          if (selectedRoleId) {
+            // Find the button with the matching role ID
+            roleToClick = $('.user-group[data-id="' + selectedRoleId + '"]');
+          } else {
+            // Default to first role
+            roleToClick = $('.user-group:first');
+          }
+          
+          // Trigger click on the selected role
+          if (roleToClick.length) {
+            roleToClick.click();
+          }
         });
         $(document).on('change', '.permission-menu-main', function () {
           let isChecked = $(this).is(':checked');
