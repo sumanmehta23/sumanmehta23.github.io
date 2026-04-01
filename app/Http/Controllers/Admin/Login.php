@@ -12,10 +12,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use App\Services\MailService as MailService;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
 
 class Login extends Controller
 {
+    protected $mailService;
+
+    public function __construct(MailService $mailService)
+    {
+        $this->mailService = $mailService;
+    }
+
     public function index()
     {
         return view('admin.login');
@@ -241,5 +252,148 @@ class Login extends Controller
         unset($_SESSION['alogin']);
         unset($_SESSION['userData']);
         return redirect('/admin/login');
+    }
+
+    /**
+     * Show admin forgot password form
+     */
+    public function showAdminForgotPasswordForm()
+    {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard');
+        }
+        return view('admin.forgot-password');
+    }
+
+    /**
+     * Send admin password reset link
+     */
+    public function sendAdminResetLink(Request $request)
+    {
+        $key = 'adminResetLink:' . (auth('admin')->id() ?: $request->ip());
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $retryAfter = RateLimiter::availableIn($key);
+            $minutes = floor($retryAfter / 60);
+            $seconds = $retryAfter % 60;
+            $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+            return redirect()->back()->with(
+                'error',
+                "Too many requests. Please wait {$formattedTime} before trying again."
+            );
+        }
+        RateLimiter::hit($key, 600);
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = $request->input('email');
+        $admin = EmployeeList::where('email', $email)->first();
+
+        if ($admin) {
+            $code = Str::random(50);
+            $admin->emailToken = $code;
+            $admin->email_token_time = Carbon::now();
+            $admin->save();
+
+            $settings = settings();
+            $from = $settings['email_from_address'];
+            $emailSubject = 'Admin Password Reset - ' . $settings['admin_title'];
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+
+            $content = '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . ' Admin Panel!</div>' .
+                '<div>We have received a request to reset the password associated with your admin account. If you initiated this request, please click the link below to reset your password:</div>';
+
+            $id = $admin->id;
+            $resetLink = $settings['copyright_site_name_text'] . "/admin/reset-password?id=$id&code=$code";
+
+            $templateVars = [
+                'name' => $admin->username,
+                'site_link' => $resetLink,
+                'after_btn_text' => "<div>If you did not request a password reset, please disregard this email, and no further action is required.</div>" .
+                    "<div>If you have any questions or need assistance, feel free to reach out to our support team.</div>" .
+                    "<div>Best regards,<br>The Administration Team</div>",
+                'btn_text' => "Reset Admin Password",
+                'email' => $settings['email_from_address'],
+                "content" => $content,
+                "title_right" => "",
+                "subtitle_right" => ""
+            ];
+
+            $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+            return redirect()->back()->with('success', "We have sent a password reset link to $email. Please check your email to reset your password.");
+        } else {
+            return redirect()->back()->with('error', "Sorry! This email was not found in admin records.");
+        }
+    }
+
+    /**
+     * Show admin reset password form
+     */
+    public function showAdminResetPasswordForm(Request $request)
+    {
+        $id = $request->query('id');
+        $code = $request->query('code');
+
+        $admin = EmployeeList::where('id', $id)->where('emailToken', $code)->first();
+
+        if ($admin && $admin->email_token_time >= Carbon::now('UTC')->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME', 60))) {
+            return view('admin.reset-password', ['id' => $id, 'code' => $code]);
+        } else {
+            return redirect('/admin/login')->with('error', 'This password reset link is invalid or has expired.');
+        }
+    }
+
+    /**
+     * Update admin password
+     */
+    public function resetAdminPassword(Request $request)
+    {
+        if ($request->isMethod('post')) {
+            $id = $request->input('id');
+            $code = $request->input('code');
+
+            $admin = EmployeeList::where('id', $id)->where('emailToken', $code)->first();
+
+            if (!$admin || $admin->email_token_time < Carbon::now('UTC')->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME', 60))) {
+                return redirect('/admin/login')->with('error', 'This password reset link is invalid or has expired.');
+            }
+
+            $request->validate([
+                'password' => 'required|string|min:8|confirmed',
+                'password_confirmation' => 'required_with:password|same:password',
+            ]);
+
+            $admin->password = Hash::make($request->input('password'));
+            $admin->emailToken = null;
+            $admin->email_token_time = null;
+            $admin->save();
+
+            activity()
+                ->causedBy($admin)
+                ->withProperties([
+                    'email' => $admin->email,
+                    'username' => $admin->username,
+                    'admin_id' => $admin->id,
+                    'remark' => 'Password Reset'
+                ])
+                ->log('Authentication');
+
+            return redirect('/admin/login')->with('success', 'Your password has been reset successfully. Please log in with your new password.');
+        }
+
+        // GET request - show form
+        $id = $request->query('id');
+        $code = $request->query('code');
+
+        $admin = EmployeeList::where('id', $id)->where('emailToken', $code)->first();
+
+        if ($admin && $admin->email_token_time >= Carbon::now('UTC')->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME', 60))) {
+            return view('admin.reset-password', ['id' => $id, 'code' => $code]);
+        } else {
+            return redirect('/admin/login')->with('error', 'This password reset link is invalid or has expired.');
+        }
     }
 }

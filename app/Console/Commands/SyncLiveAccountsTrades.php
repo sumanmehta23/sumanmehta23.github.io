@@ -18,28 +18,33 @@ class SyncLiveAccountsTrades extends Command
                             {--to=March 31,2080 : End date for trade history}
                             {--mark-not-found : Mark accounts not found in MT5 with not_found_in_mt5 flag}';
 
-    protected $description = 'Sync live MT5 accounts trades and update last_trade_sync_at timestamp';
+    protected $description = 'Sync live MT5 accounts trades with pagination position tracking. Processes max 500 trades per account per cycle.';
 
     protected $mt5Service;
     protected $api;
+    protected const MAX_TRADES_PER_SYNC = 500;
 
     public function handle(): void
     {
-        $this->info('Starting live MT5 accounts trades sync...');
+        $this->info('Starting incremental MT5 accounts trades sync...');
 
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
 
             $accountCode = $this->option('account-code');
             $limit = (int) $this->option('limit');
-            $fromDate = $this->option('from');
-            $toDate = $this->option('to');
+            $defaultFromDate = $this->option('from');
+            $defaultToDate = $this->option('to');
             $markNotFound = $this->option('mark-not-found');
 
-            // Fetch accounts to sync
+            // Fetch accounts to sync, excluding accounts not found in MT5
             $query = Account::where('demo', false)
                 ->where('account_request_status', 1)
                 ->whereNull('deleted_at')
+                ->where(function ($q) {
+                    $q->whereNull('trade_sync_status')
+                        ->orWhere('trade_sync_status', '!=', 'not_found');
+                })
                 ->limit($limit);
 
             if ($accountCode) {
@@ -64,6 +69,14 @@ class SyncLiveAccountsTrades extends Command
                 try {
                     $this->info("Syncing trades for account: {$account->code}");
 
+                    // Calculate date range based on last trade timestamp
+                    $dateRange = $this->getDateRangeForSync($account, $defaultFromDate, $defaultToDate);
+                    $fromDate = $dateRange['from'];
+                    $toDate = $dateRange['to'];
+
+                    $this->line("📅 {$dateRange['reason']}");
+                    $this->line("Using date range: {$fromDate} to {$toDate}");
+
                     // Sync trades for this account
                     $syncResult = $this->syncAccountTrades($account, $fromDate, $toDate);
 
@@ -79,6 +92,9 @@ class SyncLiveAccountsTrades extends Command
                             ]);
                             $this->warn("Account {$account->code} marked as not_found_in_mt5");
                         }
+                    } elseif ($syncResult === 'partial') {
+                        $totalSynced++;
+                        $this->line("⏸ Partially synced account {$account->code} (reached 500 trade limit, will continue next run)");
                     } else {
                         $totalSynced++;
                         $this->line("✓ Successfully synced account: {$account->code}");
@@ -114,11 +130,42 @@ class SyncLiveAccountsTrades extends Command
     }
 
     /**
-     * Sync trades for a single account
-     * @return bool|string true on success, false on failure, 'not_found' if account not found in MT5
+     * Determine the date range for sync based on last trade timestamp
+     * This enables true incremental syncing without worrying about pagination positions
+     */
+    protected function getDateRangeForSync(Account $account, string $defaultFromDate, string $defaultToDate): array
+    {
+        // Always use a wide date range for consistency
+        // Pagination position is relative to the full range, not date-specific ranges
+        // Timestamp filtering ensures we skip already-processed trades
+        return [
+            'from' => $defaultFromDate ?? 'September 01,2024',
+            'to' => $defaultToDate ?? 'March 31,2080',
+            'reason' => 'Wide range for position-based pagination',
+        ];
+    }
+
+    /**
+     * Format date string for storage in database
+     */
+    protected function formatDateForStorage(string $dateString): string
+    {
+        try {
+            return \Carbon\Carbon::createFromFormat('F d,Y', $dateString)->format('Y-m-d');
+        } catch (\Exception $e) {
+            Log::warning("Failed to parse date string: {$dateString}", ['error' => $e->getMessage()]);
+            // Return the date string as-is if parsing fails (Eloquent will try to handle it)
+            return $dateString;
+        }
+    }
+
+    /**
+     * Sync trades for a single account (max 500 trades per cycle, timestamp aware)
+     * @return bool|string true on success, false on failure, 'not_found' if account not found in MT5, 'partial' if trade limit reached
      */
     protected function syncAccountTrades(Account $account, string $fromDate, string $toDate)
     {
+        $maxTrades = self::MAX_TRADES_PER_SYNC; // Always 500 trades per cycle
         $login = $account->code;
         $total = 0;
 
@@ -152,34 +199,35 @@ class SyncLiveAccountsTrades extends Command
             return false;
         }
 
-        if ($total == 0) {
-            $this->line("No trades found for account {$login}");
+        $this->line("Total trades available in range: {$total}");
 
-            // Update last_trade_sync_at and status even if no trades
-            $account->update([
-                'last_trade_sync_at' => now(),
-                'trade_sync_status' => 'success',
-            ]);
-
-            return true;
-        }
-
-        $this->line("Found {$total} trades for account {$login}");
-
-        // Fetch all trades using pagination
+        // Fetch trades using pagination with limit
         $orders = [];
         $pageSize = 100; // MT5 API returns max 100 records per page
         $pageCount = 0;
-        $position = $total;
+        $hitTradeLimit = false;
+        $position = $account->last_trade_sync_position ?? 0;
 
-        while ($position > 0) {
+        if ($account->last_trade_sync_position) {
+            $this->line("Resuming from last position: {$position}");
+        }
+
+        $this->line("Starting pagination: total={$total}, pageSize={$pageSize}, maxTrades={$maxTrades}, startPosition={$position}");
+
+        while (count($orders) < $maxTrades && $position < $total) {
             $pageCount++;
-            $pageOrders = [];
-            $currentPageSize = min($pageSize, $position);
+            $pageOrders = [];  // Initialize as empty array
+            $remainingTotal = $total - $position;
+            $remainingToFetch = $maxTrades - count($orders);
+            $currentPageSize = min($pageSize, $remainingTotal, $remainingToFetch);
+
+            $this->line("  Page {$pageCount}: position={$position}, pageSize={$currentPageSize}, ordersCollected=" . count($orders));
 
             $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $fromDate, $toDate, $position, $currentPageSize, &$pageOrders) {
                 return $api->HistoryGetPage($login, $fromDate, $toDate, $position, $currentPageSize, $pageOrders);
             });
+
+            $this->line("    → error_code={$error_code}, recordsReturned=" . count($pageOrders ?? []));
 
             if ($error_code != MTRetCode::MT_RET_OK) {
                 Log::error("Failed to get trades page for account {$login}: " . MTRetCode::GetError($error_code), [
@@ -188,41 +236,112 @@ class SyncLiveAccountsTrades extends Command
                     'position' => $position,
                     'account_id' => $account->id,
                 ]);
-                // Update status to error
-                $account->update([
-                    'trade_sync_status' => 'error',
-                ]);
+                $account->update(['trade_sync_status' => 'error']);
                 break;
             }
 
             if (empty($pageOrders)) {
+                $this->line("    → Empty response, stopping pagination");
                 break;
             }
 
             $orders = array_merge($orders, $pageOrders);
-            $position -= $currentPageSize;
+            $position += count($pageOrders);
+
+            // Check if we've hit the max trades limit
+            if (count($orders) >= $maxTrades) {
+                $hitTradeLimit = true;
+                $this->warn("Reached maximum trade limit of {$maxTrades} for account {$login}. Will continue syncing next run.");
+                Log::info("Trade limit reached for account {$login}", [
+                    'account_id' => $account->id,
+                    'trades_fetched' => count($orders),
+                    'total_available' => $total,
+                    'remaining' => $total - count($orders),
+                ]);
+                break;
+            }
         }
 
+        $lastTradeTimestamp = $account->last_trade_sync_timestamp;  // Preserve existing timestamp
         if (!empty($orders)) {
-            $this->processTrades($account, $orders);
+            $this->line("Fetched " . count($orders) . " orders total from API");
+
+            // Filter orders to only include those with timestamp GREATER than last synced
+            // This ensures we never reprocess the same trades even if date ranges overlap
+            $filteredOrders = $orders;
+            if ($account->last_trade_sync_timestamp) {
+                $filteredOrders = array_values(array_filter($orders, function ($order) use ($account) {
+                    return $order->TimeDone > $account->last_trade_sync_timestamp;
+                }));
+                $this->line("Filtered from " . count($orders) . " to " . count($filteredOrders) . " orders (excluding timestamp <= " . $account->last_trade_sync_timestamp . ")");
+            }
+
+            if (!empty($filteredOrders)) {
+                $lastTradeInfo = $this->processTrades($account, $filteredOrders);
+                $lastTradeTimestamp = $lastTradeInfo['last_timestamp'];
+            } else {
+                $this->warn("No new orders after timestamp filtering");
+            }
+        } else {
+            $this->warn("No orders fetched from API");
         }
 
-        // Update last_trade_sync_at timestamp and status after successful sync
+        // Determine if this is a complete sync or partial
+        $isSyncComplete = !$hitTradeLimit && ($position >= $total);
+        $statusToSet = $isSyncComplete ? 'success' : 'partial';
+
+        // Update sync progress with position and timestamp
         $account->update([
             'last_trade_sync_at' => now(),
-            'trade_sync_status' => 'success',
+            'last_trade_sync_from' => $this->formatDateForStorage($fromDate),
+            'last_trade_sync_to' => $this->formatDateForStorage($toDate),
+            'last_trade_sync_timestamp' => $lastTradeTimestamp,
+            'last_trade_sync_position' => $position,  // Track pagination position for resuming
+            'trade_sync_status' => $statusToSet,
         ]);
 
-        return true;
+        if (!$isSyncComplete) {
+            $lastDate = $lastTradeTimestamp ? \Carbon\Carbon::createFromTimestamp($lastTradeTimestamp)->format('Y-m-d H:i:s') : 'unknown';
+            $this->warn("Partial sync complete. Last trade: {$lastDate}. Will continue from position {$position} next run.");
+        }
+
+        return $isSyncComplete ? true : 'partial';
     }
 
     /**
      * Process and upsert trades into the database
+     * Returns array with trade count and last trade timestamp
      */
-    protected function processTrades(Account $account, array $orders): void
+    protected function processTrades(Account $account, array $orders): array
     {
+        $this->info("Processing " . count($orders) . " orders for account {$account->code}");
+
+        // Show first order structure for debugging
+        if (!empty($orders)) {
+            $firstOrder = $orders[0];
+            $this->line("First order object properties: " . implode(", ", array_keys((array)$firstOrder)));
+
+            // Show timestamp distribution debug info
+            $timestamps = array_map(fn($o) => $o->TimeDone, $orders);
+            $minTs = min($timestamps);
+            $maxTs = max($timestamps);
+            $this->line("Order timestamp range: " . $minTs . " (" . \Carbon\Carbon::createFromTimestamp($minTs)->format('Y-m-d H:i:s') . ") to " . $maxTs . " (" . \Carbon\Carbon::createFromTimestamp($maxTs)->format('Y-m-d H:i:s') . ")");
+        }
+
+        // Filter out invalid orders and group by ExpertPositionID
+        $validOrders = collect($orders)->filter(function ($order) {
+            return !empty($order->ExpertPositionID) && !empty($order->Symbol);
+        });
+
+        $ordersByPosition = $validOrders->groupBy('ExpertPositionID');
+        $this->line("Grouped {$validOrders->count()} valid orders into {$ordersByPosition->count()} positions");
+
         $tradesToUpsert = [];
-        $ordersByPosition = collect($orders)->groupBy('PositionID');
+        $openTradeCount = 0;
+        $closedTradeCount = 0;
+        $skippedCount = 0;
+        $lastTradeTimestamp = 0;
+        $maxTimestamp = 0;
 
         foreach ($ordersByPosition as $positionId => $positionOrders) {
             $positionOrders = $positionOrders->sortBy('TimeDone');
@@ -230,51 +349,95 @@ class SyncLiveAccountsTrades extends Command
             if ($positionOrders->count() < 2) {
                 // Open trade
                 $order = $positionOrders->first();
-                $tradesToUpsert[] = $this->prepareOpenTrade($account, $positionId, $order);
+                $tradeData = $this->prepareOpenTrade($account, $positionId, $order);
+                if ($tradeData !== null) {
+                    $tradesToUpsert[] = $tradeData;
+                    $openTradeCount++;
+                    //Track the maximum timestamp seen
+                    $maxTimestamp = max($maxTimestamp, $order->TimeDone);
+                } else {
+                    $skippedCount++;
+                }
             } else {
                 // Closed trade
                 $openOrder = $positionOrders->first();
                 $closeOrder = $positionOrders->last();
-                $tradesToUpsert[] = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                $tradeData = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+                if ($tradeData !== null) {
+                    $tradesToUpsert[] = $tradeData;
+                    $closedTradeCount++;
+                    // Track the maximum timestamp seen (use close order as it's more recent)
+                    $maxTimestamp = max($maxTimestamp, $closeOrder->TimeDone);
+                } else {
+                    $skippedCount++;
+                }
             }
         }
 
-        if (!empty($tradesToUpsert)) {
-            Trade::upsert($tradesToUpsert, ['account_id', 'position_id'], [
-                'order_id',
-                'symbol',
-                'open_price',
-                'close_price',
-                'open_time',
-                'close_time',
-                'volume',
-                'volume_ext',
-                'profit',
-                'commission',
-                'swap',
-                'sl',
-                'tp',
-                'comment',
-                'type',
-                'status',
-                'state',
-                'code',
-                'updated_at',
-            ]);
+        $lastTradeTimestamp = $maxTimestamp;
 
-            $tradeCount = count($tradesToUpsert);
-            Log::info("Upserted {$tradeCount} trades for account {$account->code}", [
-                'account_id' => $account->id,
-                'trades_count' => $tradeCount,
-            ]);
+        $this->line("Trade breakdown: {$openTradeCount} open, {$closedTradeCount} closed, {$skippedCount} skipped");
+
+        if (!empty($tradesToUpsert)) {
+            try {
+                Trade::upsert($tradesToUpsert, ['account_id', 'position_id'], [
+                    'order_id',
+                    'symbol',
+                    'open_price',
+                    'close_price',
+                    'open_time',
+                    'close_time',
+                    'volume',
+                    'volume_ext',
+                    'profit',
+                    'commission',
+                    'swap',
+                    'sl',
+                    'tp',
+                    'comment',
+                    'type',
+                    'status',
+                    'state',
+                    'code',
+                    'updated_at',
+                ]);
+
+                $tradeCount = count($tradesToUpsert);
+                $this->line("✓ Successfully upserted {$tradeCount} trades");
+                Log::info("Upserted {$tradeCount} trades for account {$account->code}", [
+                    'account_id' => $account->id,
+                    'trades_count' => $tradeCount,
+                    'open_trades' => $openTradeCount,
+                    'closed_trades' => $closedTradeCount,
+                    'skipped' => $skippedCount,
+                ]);
+            } catch (\Exception $e) {
+                $this->error("Failed to upsert trades: {$e->getMessage()}");
+                Log::error("Failed to upsert trades for account {$account->code}", [
+                    'error' => $e->getMessage(),
+                    'account_id' => $account->id,
+                    'trades_to_insert' => count($tradesToUpsert),
+                ]);
+            }
+        } else {
+            $this->warn("No valid trades to upsert after processing");
         }
+
+        return [
+            'count' => count($tradesToUpsert),
+            'last_timestamp' => $lastTradeTimestamp,
+        ];
     }
 
     /**
      * Prepare open trade data
      */
-    protected function prepareOpenTrade($account, $positionId, $order): array
+    protected function prepareOpenTrade($account, $positionId, $order): ?array
     {
+        // Validate required fields
+        if (empty($order->Symbol) || $positionId === null || $positionId === 0) {
+            return null;
+        }
         return [
             'account_id' => $account->id,
             'close_price' => null,
@@ -304,8 +467,12 @@ class SyncLiveAccountsTrades extends Command
     /**
      * Prepare closed trade data
      */
-    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder): array
+    protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder): ?array
     {
+        // Validate required fields
+        if (empty($openOrder->Symbol) || empty($closeOrder->Symbol) || $positionId === null || $positionId === 0) {
+            return null;
+        }
         return [
             'account_id' => $account->id,
             'position_id' => $positionId,
@@ -316,15 +483,15 @@ class SyncLiveAccountsTrades extends Command
             'close_price' => $closeOrder->PriceCurrent,
             'open_time' => date('Y-m-d H:i:s', $openOrder->TimeDone),
             'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
-            'volume' => $openOrder->Volume,
-            'volume_ext' => $openOrder->Volume,
+            'volume' => $openOrder->VolumeInitial,
+            'volume_ext' => $openOrder->VolumeInitialExt,
             'sl' => $openOrder->PriceSL,
             'tp' => $openOrder->PriceTP,
             'comment' => $openOrder->Comment ?? '',
             'state' => $closeOrder->State,
             'status' => 'closed',
             'code' => $account->code,
-            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->Volume / 10000000) * $openOrder->ContractSize,
+            'profit' => ($closeOrder->PriceCurrent - $openOrder->PriceCurrent) * ($openOrder->VolumeInitial / 10000000) * $openOrder->ContractSize,
             'commission' => 0,
             'swap' => 0,
             'created_at' => now(),

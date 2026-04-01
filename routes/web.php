@@ -269,6 +269,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
 
+    Route::get('/forgot-password', [Login::class, 'showAdminForgotPasswordForm'])->name('forgot-password');
+    Route::post('/forgot-password', [Login::class, 'sendAdminResetLink'])->name('send-reset-link');
+    Route::get('/reset-password', [Login::class, 'resetAdminPassword'])->name('reset-password');
+    Route::post('/reset-password', [Login::class, 'resetAdminPassword']);
+
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
     Route::post('/resend-credentials', [MT5Accounts::class, 'resendCredentials'])->name('resend-credentials');
@@ -516,16 +521,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:setting:update');
         Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:setting:update');
-        
+
         // Maintenance Email
         Route::get('/maintenance-email', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'index'])->name('maintenance.index')->middleware('check.permissions:setting:update');
         Route::get('/maintenance-email/fetch', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'fetchEmails'])->name('maintenance.fetch')->middleware('check.permissions:setting:update');
         Route::get('/maintenance-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewEmail'])->name('maintenance.preview')->middleware('check.permissions:setting:update');
         Route::post('/maintenance-email/send', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'sendEmails'])->name('maintenance.send')->middleware('check.permissions:setting:update');
-        
+
         // Account Termination Email Preview
         Route::get('/account-termination-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountTerminationEmail'])->name('account-termination.preview')->middleware('check.permissions:setting:update');
-        
+
         // Account Review Email Preview
         Route::get('/account-review-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountReviewEmail'])->name('account-review.preview')->middleware('check.permissions:setting:update');
 
