@@ -14,14 +14,16 @@ class SyncLiveAccountsTrades extends Command
     protected $signature = 'app:sync-live-accounts-trades 
                             {--account-code= : Sync specific account by code}
                             {--limit=100 : Maximum accounts to sync (default: 100)}
+                            {--max-trades=500 : Maximum trades to sync per account (default: 500)}
                             {--from=September 01,2024 : Start date for trade history}
                             {--to=March 31,2080 : End date for trade history}
                             {--mark-not-found : Mark accounts not found in MT5 with not_found_in_mt5 flag}';
 
-    protected $description = 'Sync live MT5 accounts trades and update last_trade_sync_at timestamp';
+    protected $description = 'Sync live MT5 accounts trades and update last_trade_sync_at timestamp. Max 500 trades per account to prevent timeouts.';
 
     protected $mt5Service;
     protected $api;
+    protected const MAX_TRADES_PER_SYNC = 500;
 
     public function handle(): void
     {
@@ -32,14 +34,19 @@ class SyncLiveAccountsTrades extends Command
 
             $accountCode = $this->option('account-code');
             $limit = (int) $this->option('limit');
+            $maxTrades = (int) $this->option('max-trades') ?: self::MAX_TRADES_PER_SYNC;
             $fromDate = $this->option('from');
             $toDate = $this->option('to');
             $markNotFound = $this->option('mark-not-found');
 
-            // Fetch accounts to sync
+            // Fetch accounts to sync, excluding accounts not found in MT5
             $query = Account::where('demo', false)
                 ->where('account_request_status', 1)
                 ->whereNull('deleted_at')
+                ->where(function ($q) {
+                    $q->whereNull('trade_sync_status')
+                        ->orWhere('trade_sync_status', '!=', 'not_found');
+                })
                 ->limit($limit);
 
             if ($accountCode) {
@@ -65,7 +72,7 @@ class SyncLiveAccountsTrades extends Command
                     $this->info("Syncing trades for account: {$account->code}");
 
                     // Sync trades for this account
-                    $syncResult = $this->syncAccountTrades($account, $fromDate, $toDate);
+                    $syncResult = $this->syncAccountTrades($account, $fromDate, $toDate, $maxTrades);
 
                     if ($syncResult === false) {
                         $totalFailed++;
@@ -79,6 +86,9 @@ class SyncLiveAccountsTrades extends Command
                             ]);
                             $this->warn("Account {$account->code} marked as not_found_in_mt5");
                         }
+                    } elseif ($syncResult === 'partial') {
+                        $totalSynced++;
+                        $this->line("⏸ Partially synced account {$account->code} (reached 500 trade limit, will continue next run)");
                     } else {
                         $totalSynced++;
                         $this->line("✓ Successfully synced account: {$account->code}");
@@ -115,9 +125,9 @@ class SyncLiveAccountsTrades extends Command
 
     /**
      * Sync trades for a single account
-     * @return bool|string true on success, false on failure, 'not_found' if account not found in MT5
+     * @return bool|string true on success, false on failure, 'not_found' if account not found in MT5, 'partial' if trade limit reached
      */
-    protected function syncAccountTrades(Account $account, string $fromDate, string $toDate)
+    protected function syncAccountTrades(Account $account, string $fromDate, string $toDate, int $maxTrades = 500)
     {
         $login = $account->code;
         $total = 0;
@@ -166,16 +176,31 @@ class SyncLiveAccountsTrades extends Command
 
         $this->line("Found {$total} trades for account {$login}");
 
-        // Fetch all trades using pagination
+        // Fetch trades using pagination with limit
         $orders = [];
         $pageSize = 100; // MT5 API returns max 100 records per page
         $pageCount = 0;
         $position = $total;
+        $hitTradeLimit = false;
 
         while ($position > 0) {
+            // Check if we've hit the max trades limit
+            if (count($orders) >= $maxTrades) {
+                $hitTradeLimit = true;
+                $this->warn("Reached maximum trade limit of {$maxTrades} for account {$login}. Will continue syncing next run.");
+                Log::info("Trade limit reached for account {$login}", [
+                    'account_id' => $account->id,
+                    'trades_fetched' => count($orders),
+                    'total_available' => $total,
+                    'remaining' => $total - count($orders),
+                ]);
+                break;
+            }
+
             $pageCount++;
             $pageOrders = [];
-            $currentPageSize = min($pageSize, $position);
+            $remainingToFetch = $maxTrades - count($orders);
+            $currentPageSize = min($pageSize, $position, $remainingToFetch);
 
             $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $fromDate, $toDate, $position, $currentPageSize, &$pageOrders) {
                 return $api->HistoryGetPage($login, $fromDate, $toDate, $position, $currentPageSize, $pageOrders);
@@ -207,13 +232,14 @@ class SyncLiveAccountsTrades extends Command
             $this->processTrades($account, $orders);
         }
 
-        // Update last_trade_sync_at timestamp and status after successful sync
+        // Update last_trade_sync_at timestamp and status after sync
+        $statusToSet = $hitTradeLimit ? 'partial' : 'success';
         $account->update([
             'last_trade_sync_at' => now(),
-            'trade_sync_status' => 'success',
+            'trade_sync_status' => $statusToSet,
         ]);
 
-        return true;
+        return $hitTradeLimit ? 'partial' : true;
     }
 
     /**
