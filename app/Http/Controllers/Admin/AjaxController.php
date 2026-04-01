@@ -2326,6 +2326,11 @@ class AjaxController extends Controller
                 ->addColumn('transfer_to', function ($row) {
                     return $row->account->code ?? '-';
                 })
+                ->addColumn('date', function ($row) {
+                    $created = Carbon::parse($row->created_at)->addHours(3);
+                    return "<div class='lh-1'>{$created->format('Y-m-d')}</div>
+                            <div class='lh-2 text-muted'>{$created->format('H:i:s')}</div>";
+                })
                 ->addColumn('status', function ($row) {
                     return match ($row->status) {
                         1 => "<div class='badge bg-outline-success'>Approved</div>",
@@ -2333,10 +2338,29 @@ class AjaxController extends Controller
                         default => "<div class='badge bg-outline-primary'>Pending</div>",
                     };
                 })
-                ->addColumn('date', function ($row) {
-                    $created = Carbon::parse($row->created_at)->addHours(3);
-                    return "<div class='lh-1'>{$created->format('Y-m-d')}</div>
-                            <div class='lh-2 text-muted'>{$created->format('H:i:s')}</div>";
+                ->orderColumn('name', function($query, $direction) {
+                    return $query->leftJoin('aspnetusers', 'aspnetusers.email', '=', 'trade_deposits.email')
+                                 ->orderBy('aspnetusers.fullname', $direction);
+                })
+                ->orderColumn('email', function($query, $direction) {
+                    return $query->leftJoin('aspnetusers', 'aspnetusers.email', '=', 'trade_deposits.email')
+                                 ->orderBy('aspnetusers.email', $direction);
+                })
+                ->orderColumn('amount', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.deposit_amount', $direction);
+                })
+                ->orderColumn('transfer_from', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.deposit_from', $direction);
+                })
+                ->orderColumn('transfer_to', function($query, $direction) {
+                    return $query->leftJoin('accounts', 'accounts.id', '=', 'trade_deposits.account_id')
+                                 ->orderBy('accounts.code', $direction);
+                })
+                ->orderColumn('date', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.created_at', $direction);
+                })
+                ->orderColumn('status', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.status', $direction);
                 })
                 ->rawColumns(['name', 'email', 'amount', 'transfer_from', 'transfer_to', 'date', 'status'])
                 ->make(true);
