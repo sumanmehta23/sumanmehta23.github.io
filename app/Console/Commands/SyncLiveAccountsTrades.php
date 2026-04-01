@@ -55,7 +55,7 @@ class SyncLiveAccountsTrades extends Command
             $accounts = $query->get();
 
             if ($accounts->isEmpty()) {
-                $this->warning('No accounts found to sync.');
+                $this->warn('No accounts found to sync.');
                 return;
             }
 
