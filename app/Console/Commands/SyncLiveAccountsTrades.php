@@ -37,13 +37,13 @@ class SyncLiveAccountsTrades extends Command
             $defaultToDate = $this->option('to') ?? now()->format('F d,Y');
             $markNotFound = $this->option('mark-not-found');
 
-            // Fetch accounts to sync, excluding accounts not found in MT5
+            // Fetch accounts to sync: never synced, incomplete, or failed (exclude 'success' and 'not_found')
             $query = Account::where('demo', false)
                 ->where('account_request_status', 1)
                 ->whereNull('deleted_at')
                 ->where(function ($q) {
                     $q->whereNull('trade_sync_status')
-                        ->orWhere('trade_sync_status', '!=', 'not_found');
+                        ->orWhereIn('trade_sync_status', ['partial', 'error']);
                 })
                 ->limit($limit);
 
@@ -290,15 +290,18 @@ class SyncLiveAccountsTrades extends Command
         $isSyncComplete = !$hitTradeLimit && ($position >= $total);
         $statusToSet = $isSyncComplete ? 'success' : 'partial';
 
-        // Update sync progress with position and timestamp
-        $account->update([
-            'last_trade_sync_at' => now(),
-            'last_trade_sync_from' => $this->formatDateForStorage($fromDate),
-            'last_trade_sync_to' => $this->formatDateForStorage($toDate),
-            'last_trade_sync_timestamp' => $lastTradeTimestamp,
-            'last_trade_sync_position' => $position,  // Track pagination position for resuming
-            'trade_sync_status' => $statusToSet,
-        ]);
+        // Do not overwrite 'error' status if it was already set during pagination failure
+        if ($account->trade_sync_status !== 'error') {
+            // Update sync progress with position and timestamp
+            $account->update([
+                'last_trade_sync_at' => now(),
+                'last_trade_sync_from' => $this->formatDateForStorage($fromDate),
+                'last_trade_sync_to' => $this->formatDateForStorage($toDate),
+                'last_trade_sync_timestamp' => $lastTradeTimestamp,
+                'last_trade_sync_position' => $position,  // Track pagination position for resuming
+                'trade_sync_status' => $statusToSet,
+            ]);
+        }
 
         if (!$isSyncComplete) {
             $lastDate = $lastTradeTimestamp ? \Carbon\Carbon::createFromTimestamp($lastTradeTimestamp)->format('Y-m-d H:i:s') : 'unknown';
