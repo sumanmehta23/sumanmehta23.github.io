@@ -288,29 +288,29 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
         Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
-        Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
+        Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions')->middleware('check.permissions:export:requested_competition');
         Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
-        Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
+        Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export')->middleware('check.permissions:export:logs');
         Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);
         Route::get('/getClientList', [AjaxController::class, 'getClientList']);
-        Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients');
+        Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients')->middleware('check.permissions:export:clients');
         Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
         Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
 
-        Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
-        Route::get('/export-all-demo-accounts', [AjaxController::class, 'exportAllDemoAccounts'])->name('export.all_demo_accounts');
+        Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts')->middleware('check.permissions:export:live_accounts');
+        Route::get('/export-all-demo-accounts', [AjaxController::class, 'exportAllDemoAccounts'])->name('export.all_demo_accounts')->middleware('check.permissions:export:demo_accounts');
 
         Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
         Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
         Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
-        Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
+        Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit')->middleware('check.permissions:export:trading_deposit');
         Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
         Route::get('/getTradeHistory', [AjaxController::class, 'getTradeHistory'])->name('admin.getTradeHistory');
-        Route::get('/export-all-trades', [AjaxController::class, 'exportAllTrades'])->name('export.all_trades');
-        Route::get('/export-filtered-trades', [AjaxController::class, 'exportFilteredTrades'])->name('export.filtered_trades');
+        Route::get('/export-all-trades', [AjaxController::class, 'exportAllTrades'])->name('export.all_trades')->middleware('check.permissions:export:trading_deposit');
+        Route::get('/export-filtered-trades', [AjaxController::class, 'exportFilteredTrades'])->name('export.filtered_trades')->middleware('check.permissions:export:trading_deposit');
         Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
-        Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
+        Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer')->middleware('check.permissions:export:internal_transfer');
 
         Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
         Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
@@ -350,7 +350,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
         // Route::get('/competitions', [Leaderboard::class, 'index'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
-        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
+        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export')->middleware('check.permissions:export:leaderboard');
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
@@ -507,7 +507,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/ib_settings", [IBController::class, 'ib_settings'])->name('ib.settings')->middleware('check.permissions:ib:manageSettings');
         Route::get("/ibCommission", [IBController::class, 'ibCommission']);
         Route::post("/ibCommission", [IBController::class, 'updateIbPlan']);
-        Route::match(['GET', 'POST'], '/export-all-ib-users', [IBController::class, 'exportAllIbUsers'])->name('admin.ib.export');
+        Route::match(['GET', 'POST'], '/export-all-ib-users', [IBController::class, 'exportAllIbUsers'])->name('admin.ib.export')->middleware('check.permissions:export:ib_list_active,export:ib_dashboard');
         Route::get('/download-export/{file}/{token}', [IBController::class, 'downloadExport'])->name('admin.download.export');
         Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
         Route::post("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
@@ -578,7 +578,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/data', [\App\Http\Controllers\Admin\AffiliateController::class, 'getAffiliates'])->name('data');
             Route::get('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'importForm'])->name('import.form');
             Route::post('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'import'])->name('import');
-            Route::get('/export', [\App\Http\Controllers\Admin\AffiliateController::class, 'export'])->name('export');
+            Route::get('/export', [\App\Http\Controllers\Admin\AffiliateController::class, 'export'])->name('export')->middleware('check.permissions:export:affiliates');
             Route::get('/sample', [\App\Http\Controllers\Admin\AffiliateController::class, 'downloadSample'])->name('sample');
             Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
@@ -589,7 +589,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::prefix('login-history')->name('login-history.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
             Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
-            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export')->middleware('check.permissions:export:login_history');
         });
 
         // Inactive Users Routes

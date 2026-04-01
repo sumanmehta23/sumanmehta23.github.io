@@ -172,7 +172,9 @@
                                 </div>
                             </form>
                             <div class="d-flex justify-content-left mb-3">
-                                <button id="exportLogs" class="btn btn-primary">Export Logs</button>
+                                @hasExportPermission('logs')
+                                    <button id="exportLogs" class="btn btn-primary">Export Logs</button>
+                                @endif
                             </div>
                             <div class="activity-log justify-content-center">
 

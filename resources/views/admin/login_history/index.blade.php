@@ -21,9 +21,11 @@
                                 User Login History
                             </div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-info btn-sm" id="exportBtn" title="Export to Excel">
-                                    <i class="fe fe-download me-1"></i> Export
-                                </button>
+                                @hasExportPermission('login_history')
+                                    <button class="btn btn-info btn-sm" id="exportBtn" title="Export to Excel">
+                                        <i class="fe fe-download me-1"></i> Export
+                                    </button>
+                                @endif
                             </div>
                         </div>
                         <div class="card-body">

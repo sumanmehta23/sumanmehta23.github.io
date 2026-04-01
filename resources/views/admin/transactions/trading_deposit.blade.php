@@ -208,22 +208,25 @@
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Trading_Deposit_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [0,11,2,3,4,5,7,9,10] // Updated column indices to match your use case
-                        }
-                    },
-                    {
-                        text: 'Export All',
-                        action: function () {
-                            window.location.href = "/admin/export-all-trading-deposit";
-                        }
-                    }
-                ],
+            buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('trading_deposit')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            exportOptions: {
+                                columns: [0,11,2,3,4,5,7,9,10] // Updated column indices to match your use case
+                            }
+                        });
+                        buttons.push({
+                            text: 'Export All',
+                            action: function () {
+                                window.location.href = "/admin/export-all-trading-deposit";
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
             lengthMenu: [
                 [10, 25, 50, 100, 500, 1000], // DataTable options
                 [10, 25, 50, 100, 500, 1000] // User-facing labels

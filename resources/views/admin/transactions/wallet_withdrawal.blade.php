@@ -170,16 +170,19 @@
 
           var tableWalletWithdrawal = $('#tableWalletWithdrawal').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-              buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Wallet_Withdrawal_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [7,8,1,2,3,9,10,5] // Updated column indices to match your use case
-                        }
-                    }
-                ],
+              buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('wallet_withdrawal')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            exportOptions: {
+                                columns: [7,8,1,2,3,9,10,5] // Updated column indices to match your use case
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
             lengthMenu: [
                 [10, 25, 50, 100, -1], // DataTable options
                 [10, 25, 50, 100, "All"] // User-facing labels
