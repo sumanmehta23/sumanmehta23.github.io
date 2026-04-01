@@ -1,11 +1,11 @@
 
-<form method="POST" action="{{route('admin.update_role_permissions')}}">
+<form method="POST" action="{{route('admin.update_role_permissions')}}" id="permissionsForm">
     @csrf
     <div>
         <div class="mb-3 d-flex justify-content-between">
             <h2 class="text-secondary">Permissions - {{ $roles->name }}</h2>
             <input type="hidden" name="role_id" value="{{ $roles->id }}">
-            <input type="submit" class="btn btn-primary" name="update_permissions" value="Update">
+            <button type="submit" class="btn btn-primary" name="update_permissions" id="updateBtn">Update Permissions</button>
         </div>
         <div class="px-3 row justify-content-between">
             {{-- {{dd($permissionGroups)}} --}}
@@ -55,6 +55,39 @@
     </div>
 </form>
 <script>
+    // Store initial permissions state for comparison
+    let initialPermissionsState = [];
+    
+    $(document).ready(function() {
+        // Save the initial state of checked permissions
+        initialPermissionsState = $('.permission-menu-sub:checked').map(function() {
+            return $(this).val();
+        }).get();
+    });
+
+    // Handle form submission
+    $('#permissionsForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Get current permissions state
+        let currentPermissionsState = $('.permission-menu-sub:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        // Check if anything changed
+        let hasChanges = initialPermissionsState.length !== currentPermissionsState.length ||
+                        !initialPermissionsState.every(val => currentPermissionsState.includes(val));
+        
+        if (!hasChanges) {
+            // Show message that nothing changed
+            alert('No changes were made to the permissions.');
+            return false;
+        }
+        
+        // If changes exist, submit the form
+        this.submit();
+    });
+
     // Function to toggle a single permission checkbox when its description is clicked
 // function toggleCheckbox(permissionId) {
 //     const checkbox = document.getElementById('checkbox-lg-' + permissionId);
