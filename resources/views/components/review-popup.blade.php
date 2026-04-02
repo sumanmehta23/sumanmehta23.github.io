@@ -13,6 +13,11 @@
     $ctaBrand = $ctaBrand ?? 'Trustpilot';
     $showCtaBrandIcon = isset($showCtaBrandIcon) ? (bool) $showCtaBrandIcon : true;
     $ctaUrl = $ctaUrl ?? 'https://www.trustpilot.com/review/lqhmarkets.com';
+    $delayMs = isset($delayMs) ? max(0, (int) $delayMs) : 0;
+    $popupKey = $popupKey ?? null;
+    $impressionUrl = $impressionUrl ?? null;
+    $currentRouteName = $currentRouteName ?? null;
+    $localStorageFallbackKey = $localStorageFallbackKey ?? null;
 @endphp
 
 @if ($enabled)
@@ -352,15 +357,98 @@
         (function() {
             var popupId = @json($popupId);
             var showOnLoad = @json((bool) $showOnLoad);
+            var delayMs = @json($delayMs);
+            var popupKey = @json($popupKey);
+            var impressionUrl = @json($impressionUrl);
+            var currentRouteName = @json($currentRouteName);
+            var localStorageFallbackKey = @json($localStorageFallbackKey);
+            var currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+
+            var markLocalFallback = function() {
+                if (!localStorageFallbackKey || typeof window.localStorage === 'undefined') {
+                    return;
+                }
+
+                try {
+                    window.localStorage.setItem(localStorageFallbackKey, '1');
+                } catch (e) {}
+            };
+
+            var hasLocalFallback = function() {
+                if (!localStorageFallbackKey || typeof window.localStorage === 'undefined') {
+                    return false;
+                }
+
+                try {
+                    return window.localStorage.getItem(localStorageFallbackKey) === '1';
+                } catch (e) {
+                    return false;
+                }
+            };
+
+            var requestFirstImpression = function() {
+                if (!impressionUrl || !popupKey) {
+                    return Promise.resolve(showOnLoad);
+                }
+
+                if (hasLocalFallback()) {
+                    return Promise.resolve(false);
+                }
+
+                return fetch(impressionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        popup_key: popupKey,
+                        current_path: currentPath,
+                        current_route_name: currentRouteName
+                    })
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to store popup impression.');
+                    }
+
+                    return response.json();
+                }).then(function(data) {
+                    if (data && data.should_show) {
+                        markLocalFallback();
+                        return true;
+                    }
+
+                    return false;
+                }).catch(function() {
+                    if (hasLocalFallback()) {
+                        return false;
+                    }
+
+                    markLocalFallback();
+                    return showOnLoad;
+                });
+            };
 
             var initCurrentPopup = function() {
                 if (!window.lqhReviewPopup) {
                     return;
                 }
 
-                window.lqhReviewPopup.init(popupId, {
-                    shouldShow: showOnLoad
-                });
+                if (!showOnLoad) {
+                    window.lqhReviewPopup.init(popupId, {
+                        shouldShow: false
+                    });
+                    return;
+                }
+
+                window.setTimeout(function() {
+                    requestFirstImpression().then(function(shouldShow) {
+                        window.lqhReviewPopup.init(popupId, {
+                            shouldShow: !!shouldShow
+                        });
+                    });
+                }, delayMs);
             };
 
             if (document.readyState === 'loading') {
