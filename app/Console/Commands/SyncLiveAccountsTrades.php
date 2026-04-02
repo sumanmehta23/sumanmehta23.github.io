@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Services\QueueSafeMT5Service;
+use App\Services\MT5RestAPIService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -15,12 +16,13 @@ class SyncLiveAccountsTrades extends Command
                             {--account-code= : Sync specific account by code}
                             {--limit=100 : Maximum accounts to sync (default: 100)}
                             {--from=September 01,2024 : Start date for trade history}
-                            {--to=March 31,2080 : End date for trade history}
+                            {--to= : End date for trade history (default: today)}
                             {--mark-not-found : Mark accounts not found in MT5 with not_found_in_mt5 flag}';
 
     protected $description = 'Sync live MT5 accounts trades with pagination position tracking. Processes max 500 trades per account per cycle.';
 
     protected $mt5Service;
+    protected $restApiService;
     protected $api;
     protected const MAX_TRADES_PER_SYNC = 500;
 
@@ -30,20 +32,22 @@ class SyncLiveAccountsTrades extends Command
 
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
+            $this->restApiService = app(MT5RestAPIService::class);
 
             $accountCode = $this->option('account-code');
             $limit = (int) $this->option('limit');
             $defaultFromDate = $this->option('from');
-            $defaultToDate = $this->option('to');
+            $defaultToDate = $this->option('to') ?? now()->format('F d,Y');
             $markNotFound = $this->option('mark-not-found');
 
-            // Fetch accounts to sync, excluding accounts not found in MT5
+            // Fetch accounts to sync: never synced, incomplete, or failed (exclude 'success' and 'not_found')
             $query = Account::where('demo', false)
                 ->where('account_request_status', 1)
                 ->whereNull('deleted_at')
                 ->where(function ($q) {
                     $q->whereNull('trade_sync_status')
-                        ->orWhere('trade_sync_status', '!=', 'not_found');
+                        ->orWhere('trade_sync_status', '')
+                        ->orWhereIn('trade_sync_status', ['partial', 'error']);
                 })
                 ->limit($limit);
 
@@ -55,7 +59,7 @@ class SyncLiveAccountsTrades extends Command
             $accounts = $query->get();
 
             if ($accounts->isEmpty()) {
-                $this->warning('No accounts found to sync.');
+                $this->warn('No accounts found to sync.');
                 return;
             }
 
@@ -140,7 +144,7 @@ class SyncLiveAccountsTrades extends Command
         // Timestamp filtering ensures we skip already-processed trades
         return [
             'from' => $defaultFromDate ?? 'September 01,2024',
-            'to' => $defaultToDate ?? 'March 31,2080',
+            'to' => $defaultToDate,
             'reason' => 'Wide range for position-based pagination',
         ];
     }
@@ -290,19 +294,25 @@ class SyncLiveAccountsTrades extends Command
         $isSyncComplete = !$hitTradeLimit && ($position >= $total);
         $statusToSet = $isSyncComplete ? 'success' : 'partial';
 
-        // Update sync progress with position and timestamp
-        $account->update([
-            'last_trade_sync_at' => now(),
-            'last_trade_sync_from' => $this->formatDateForStorage($fromDate),
-            'last_trade_sync_to' => $this->formatDateForStorage($toDate),
-            'last_trade_sync_timestamp' => $lastTradeTimestamp,
-            'last_trade_sync_position' => $position,  // Track pagination position for resuming
-            'trade_sync_status' => $statusToSet,
-        ]);
+        // Do not overwrite 'error' status if it was already set during pagination failure
+        if ($account->trade_sync_status !== 'error') {
+            // Update sync progress with position and timestamp
+            $account->update([
+                'last_trade_sync_at' => now(),
+                'last_trade_sync_from' => $this->formatDateForStorage($fromDate),
+                'last_trade_sync_to' => $this->formatDateForStorage($toDate),
+                'last_trade_sync_timestamp' => $lastTradeTimestamp,
+                'last_trade_sync_position' => $position,  // Track pagination position for resuming
+                'trade_sync_status' => $statusToSet,
+            ]);
+        }
 
         if (!$isSyncComplete) {
             $lastDate = $lastTradeTimestamp ? \Carbon\Carbon::createFromTimestamp($lastTradeTimestamp)->format('Y-m-d H:i:s') : 'unknown';
             $this->warn("Partial sync complete. Last trade: {$lastDate}. Will continue from position {$position} next run.");
+        } else {
+            // Full sync complete - check for any dangling open trades and verify with MT5
+            $this->verifyAndCloseOrphanedOpenTrades($account);
         }
 
         return $isSyncComplete ? true : 'partial';
@@ -347,25 +357,59 @@ class SyncLiveAccountsTrades extends Command
             $positionOrders = $positionOrders->sortBy('TimeDone');
 
             if ($positionOrders->count() < 2) {
-                // Open trade
-                $order = $positionOrders->first();
-                $tradeData = $this->prepareOpenTrade($account, $positionId, $order);
-                if ($tradeData !== null) {
-                    $tradesToUpsert[] = $tradeData;
-                    $openTradeCount++;
-                    //Track the maximum timestamp seen
-                    $maxTimestamp = max($maxTimestamp, $order->TimeDone);
-                } else {
+                // Check if this position already exists in database as open
+                // If yes, skip it (close event may be in next sync batch due to position-based pagination)
+                $existingTrade = Trade::where('account_id', $account->id)
+                    ->where('position_id', $positionId)
+                    ->where('status', 'open')
+                    ->first();
+
+                if ($existingTrade) {
+                    // Position already recorded as open, likely close event in earlier batch
+                    // Don't duplicate it, just skip
+                    $this->line("  Skipping position {$positionId}: already marked as open (likely resumed scan)");
                     $skippedCount++;
+                } else {
+                    // New open trade
+                    $order = $positionOrders->first();
+                    $tradeData = $this->prepareOpenTrade($account, $positionId, $order);
+                    if ($tradeData !== null) {
+                        $tradesToUpsert[] = $tradeData;
+                        $openTradeCount++;
+                        //Track the maximum timestamp seen
+                        $maxTimestamp = max($maxTimestamp, $order->TimeDone);
+                    } else {
+                        $skippedCount++;
+                    }
                 }
             } else {
-                // Closed trade
+                // Closed trade - check if this position was previously marked as open
+                $existingOpenTrade = Trade::where('account_id', $account->id)
+                    ->where('position_id', $positionId)
+                    ->where('status', 'open')
+                    ->first();
+
                 $openOrder = $positionOrders->first();
                 $closeOrder = $positionOrders->last();
                 $tradeData = $this->prepareClosedTrade($account, $positionId, $openOrder, $closeOrder);
+
                 if ($tradeData !== null) {
-                    $tradesToUpsert[] = $tradeData;
-                    $closedTradeCount++;
+                    // If this position was previously open, update it; otherwise upsert
+                    if ($existingOpenTrade) {
+                        $this->line("  Updating position {$positionId}: open → closed (close event found)");
+                        $existingOpenTrade->update([
+                            'close_price' => $tradeData['close_price'],
+                            'close_time' => $tradeData['close_time'],
+                            'status' => 'closed',
+                            'profit' => $tradeData['profit'],
+                            'state' => $tradeData['state'],
+                            'updated_at' => now(),
+                        ]);
+                        $closedTradeCount++;
+                    } else {
+                        $tradesToUpsert[] = $tradeData;
+                        $closedTradeCount++;
+                    }
                     // Track the maximum timestamp seen (use close order as it's more recent)
                     $maxTimestamp = max($maxTimestamp, $closeOrder->TimeDone);
                 } else {
@@ -430,6 +474,57 @@ class SyncLiveAccountsTrades extends Command
     }
 
     /**
+     * After full sync, verify open trades against MT5's current open positions via REST API
+     * Much faster than querying historical trades - REST API returns only active positions
+     */
+    protected function verifyAndCloseOrphanedOpenTrades(Account $account): void
+    {
+        $openTrades = Trade::where('account_id', $account->id)
+            ->where('status', 'open')
+            ->get();
+
+        if ($openTrades->isEmpty()) {
+            return; // No open trades, nothing to verify
+        }
+
+        $this->info("Verifying {$openTrades->count()} open trades against MT5 REST API...");
+
+        // Get all current open positions from MT5 via REST API
+        $mt5OpenPositions = $this->restApiService->getOpenPositions($account->code);
+        $mt5OpenPositionIds = collect($mt5OpenPositions)->toArray();
+
+        $this->line("  MT5 REST API returned " . count($mt5OpenPositionIds) . " current open positions");
+
+        // Compare DB open trades with MT5's actual open positions
+        $closedPositions = [];
+
+        foreach ($openTrades as $trade) {
+            if (in_array($trade->position_id, $mt5OpenPositionIds)) {
+                // Position is open in MT5 - keep it
+                $this->line("  ✓ Position {$trade->position_id}: Still open in MT5");
+            } else {
+                // Position not in MT5's open positions - close it
+                $closedPositions[] = $trade->position_id;
+                $this->line("  ✓ Position {$trade->position_id}: Not in MT5 open positions - closing");
+            }
+        }
+
+        // Update identified closed positions
+        if (!empty($closedPositions)) {
+            Trade::whereIn('position_id', $closedPositions)
+                ->where('account_id', $account->id)
+                ->where('status', 'open')
+                ->update([
+                    'status' => 'closed',
+                    'close_price' => null,
+                    'close_time' => null,
+                    'updated_at' => now(),
+                ]);
+            $this->warn("Closed " . count($closedPositions) . " positions not found in MT5 open positions");
+        }
+    }
+
+    /**
      * Prepare open trade data
      */
     protected function prepareOpenTrade($account, $positionId, $order): ?array
@@ -463,10 +558,6 @@ class SyncLiveAccountsTrades extends Command
             'volume_ext' => $order->VolumeInitialExt,
         ];
     }
-
-    /**
-     * Prepare closed trade data
-     */
     protected function prepareClosedTrade($account, $positionId, $openOrder, $closeOrder): ?array
     {
         // Validate required fields

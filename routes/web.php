@@ -331,8 +331,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
         Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
-        Route::get('/getTasks', [AjaxController::class, 'getTasks']);
-        Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
+        Route::get('/getTasks', [AjaxController::class, 'getTasks'])->middleware('check.permissions:task:viewAny');
+        Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks'])->middleware('check.permissions:task:viewAny');
 
 
         // Manual Payment Routes
@@ -451,10 +451,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/ticket_followups', [Tickets::class, 'fetchFollowups'])->name('ticket_followups');
 
         Route::post('/updateKyc', [Kyc::class, 'updateKyc'])->name('updateKyc');
-        Route::get('/kyc-sync', [KycSyncController::class, 'index'])->name('kyc.sync.page');
+        Route::get('/kyc-sync', [KycSyncController::class, 'index'])->name('kyc.sync.page')->middleware('check.permissions:settings:sumsub');
 
         // Admin KYC Sync Routes
-        Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('kyc.sync.user');
+        Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('kyc.sync.user')->middleware('check.permissions:settings:sumsub');
         Route::post('/bulk-sync-kyc', [KycSyncController::class, 'bulkSync'])->name('kyc.sync.bulk');
         Route::get('/debug-applicant', [KycSyncController::class, 'debugApplicant'])->name('kyc.debug.applicant');
 
@@ -480,13 +480,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/2fa-settings', [SettingsController::class, 'twoFactorAuthenticationAdmin'])->name("2fa-settings")->middleware('check.permissions:setting:viewAny');
 
         Route::prefix('/ui_settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
-            Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
+            Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:settings:uiSettings');
+            Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:settings:uiSettings');
         });
 
         Route::prefix('/review-popup-settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'reviewPopupSettings'])->name('review-popup-settings.view')->middleware('check.permissions:setting:viewAny');
-            Route::post('/', [SettingsController::class, 'updateReviewPopupSettings'])->name('review-popup-settings.update')->middleware('check.permissions:setting:update');
+            Route::get('/', [SettingsController::class, 'reviewPopupSettings'])->name('review-popup-settings.view')->middleware('check.permissions:settings:reviewPopup');
+            Route::post('/', [SettingsController::class, 'updateReviewPopupSettings'])->name('review-popup-settings.update')->middleware('check.permissions:settings:reviewPopup');
         });
 
         Route::post('/payment_gateways/update', [SettingsController::class, 'updatePaymentGateways'])
@@ -506,21 +506,21 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             ->middleware('check.permissions:setting:update');
 
         Route::prefix('/logs')->group(function () {
-            Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
+            Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:settings:logs');
         });
 
         Route::prefix('/update_password')->group(function () {
-            Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
-            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
+            Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');;
         });
         Route::prefix('/api-token')->group(function () {
-            Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:setting:update');
-            Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:setting:update']);
-            Route::delete('/apitoken/{id}', [SettingsController::class, 'destroy_apitoken'])->name('apitoken.destroy')->middleware(['check.permissions:setting:update']);
+            Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:settings:apiToken');
+            Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:settings:apiToken']);
+            Route::delete('/apitoken/{id}', [SettingsController::class, 'destroy_apitoken'])->name('apitoken.destroy')->middleware(['check.permissions:settings:apiToken']);
         });
 
-        Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:setting:update');
-        Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:setting:update');
+        Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:settings:emailBroadcasting');
+        Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:settings:emailBroadcasting');
 
         // Maintenance Email
         Route::get('/maintenance-email', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'index'])->name('maintenance.index')->middleware('check.permissions:setting:update');
@@ -535,9 +535,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/account-review-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountReviewEmail'])->name('account-review.preview')->middleware('check.permissions:setting:update');
 
 
-        Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:setting:update');
-        Route::post('/send_ip_ban_reason', [SettingsController::class, 'send_ip_ban_reason'])->name('send_ip_ban_reason')->middleware('check.permissions:setting:update');
-        Route::get('/delete_ip_ban', [SettingsController::class, 'delete_ip_ban'])->name('delete_ip_ban')->middleware('check.permissions:setting:update');
+        Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:settings:banIps');
+        Route::post('/send_ip_ban_reason', [SettingsController::class, 'send_ip_ban_reason'])->name('send_ip_ban_reason')->middleware('check.permissions:settings:banIps');
+        Route::get('/delete_ip_ban', [SettingsController::class, 'delete_ip_ban'])->name('delete_ip_ban')->middleware('check.permissions:settings:banIps');
 
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
@@ -582,15 +582,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         // Tasks Section
         Route::prefix('/tasks')->name('tasks.')->group(function () {
-            Route::get('/', [TaskController::class, 'index'])->name('index');
-            Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks');
-            Route::post('/store', [TaskController::class, 'store'])->name('store');
-            Route::put('/edit', [TaskController::class, 'edit'])->name('edit');
-            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            Route::get('/', [TaskController::class, 'index'])->name('index')->middleware('check.permissions:task:viewAny');
+            Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks')->middleware('check.permissions:clientTask:viewAny');
+            Route::post('/store', [TaskController::class, 'store'])->name('store')->middleware('check.permissions:task:viewAny');
+            Route::put('/edit', [TaskController::class, 'edit'])->name('edit')->middleware('check.permissions:task:viewAny');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update')->middleware('check.permissions:task:viewAny');
             // Route::put('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
-            Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
-            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
-            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+            Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject')->middleware('check.permissions:task:viewAny');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update')->middleware('check.permissions:task:viewAny');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy')->middleware('check.permissions:task:viewAny');
         });
 
         Route::prefix('/learn-content')->name('learn-content.')->group(function () {
