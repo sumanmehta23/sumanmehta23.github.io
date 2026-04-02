@@ -795,7 +795,11 @@ class AjaxController extends Controller
         $rmCondition = $this->buildLiveAccountsBaseQuery();
         $this->applyLiveAccountsFilters($rmCondition, $request);
 
-        $rmCondition->orderBy('id', 'desc');
+        // Don't set a default order here - let DataTables handle ordering
+        // Only apply default order if no order is requested
+        if (!$request->has('order') || empty($request->input('order'))) {
+            $rmCondition->orderBy('id', 'desc');
+        }
 
         if ($request->ajax()) {
             // dd(DataTables::of($rmCondition));
@@ -1044,6 +1048,38 @@ class AjaxController extends Controller
                             ELSE 1
                         END {$order}
                     ");
+                })
+                ->orderColumn('created_at', function ($query, $order) {
+                    $query->orderBy('accounts.created_at', $order);
+                })
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->orderBy('accounts.balance', $order);
+                })
+                ->orderColumn('leverage', function ($query, $order) {
+                    $query->orderBy('accounts.leverage', $order);
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('accounts.email', $order);
+                })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('accounts.code', $order);
+                })
+                ->orderColumn('deposited', function ($query, $order) {
+                    $query->orderBy('successful_trade_deposits_count', $order);
+                })
+                ->orderColumn('traded', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ' . $order)
+                        ->orderBy('accounts.last_trade_at', $order);
+                })
+                ->orderColumn('account_status', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ' . $order)
+                        ->orderBy('accounts.deleted_at', $order);
+                })
+                ->orderColumn('total_deposit', function ($query, $order) {
+                    $query->orderByRaw('(SELECT SUM(deposit_amount) FROM trade_deposits WHERE account_id = accounts.id AND status = 1 AND deposit_type IN ("CryptoChill", "CreditCardPayissa", "RagaPay")) ' . $order);
+                })
+                ->orderColumn('total_withdraw', function ($query, $order) {
+                    $query->orderByRaw('(SELECT SUM(transaction_fee + withdrawal_amount) FROM trade_withdrawal WHERE account_id = accounts.id AND status = 1 AND withdraw_type IN ("Trade Withdrawal")) ' . $order);
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions', 'deposited','traded', 'user_country'])
                 ->make(true);

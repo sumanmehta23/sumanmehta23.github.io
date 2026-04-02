@@ -538,12 +538,12 @@
                 {
                     data: 'balance',
                     name: 'balance',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'created_at',
                     name: 'created_at',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'last_trade_date',
@@ -552,10 +552,12 @@
                 {
                     data: 'days_since_last_trade',
                     name: 'days_since_last_trade',
+                    orderable: true
                 },
                 {
                     data: 'deposited',
                     name: 'deposited',
+                    orderable: true
                 },
                 {
                     data: 'traded',
@@ -568,12 +570,12 @@
                 {
                     data: 'total_deposit',
                     name: 'total_deposit',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'total_withdraw',
                     name: 'total_withdraw',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'fullname',
