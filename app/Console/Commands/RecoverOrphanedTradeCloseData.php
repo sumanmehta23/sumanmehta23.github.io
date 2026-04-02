@@ -94,40 +94,79 @@ class RecoverOrphanedTradeCloseData extends Command
 
             $this->info("Retrieved " . count($allHistory) . " history records from MT5");
 
+            // DEBUG: Show structure of first history record
+            if ($debug && !empty($allHistory)) {
+                $this->line("\n📊 DEBUG: First history record structure:");
+                $firstRecord = $allHistory[0];
+                foreach ((array)$firstRecord as $field => $value) {
+                    $valueStr = is_object($value) ? get_class($value) : (is_array($value) ? 'array' : (string)$value);
+                    $this->line("    {$field}: {$valueStr}");
+                }
+                $this->line("");
+            }
+
             // BATCH PROCESS: Search all orphaned trades within this single result set
+            $searchCount = 0;
             foreach ($orphanedTrades as $trade) {
                 $found = false;
                 $foundData = null;
+                $searchCount++;
 
                 if ($debug) {
-                    $this->line("  Searching for position {$trade->position_id} (open: " . Carbon::create($trade->open_time)->format('Y-m-d H:i:s') . ")");
+                    $this->line("  [{$searchCount}] Searching for position {$trade->position_id} (open: " . Carbon::create($trade->open_time)->format('Y-m-d H:i:s') . ")");
                 }
 
                 // Search for this position in the history
+                $matchAttempts = 0;
+                $potentialMatches = [];
+                
                 foreach ($allHistory as $historyRecord) {
-                    // Match by multiple field names (ExpertPositionID, Order, Position)
+                    $matchAttempts++;
+                    // Match by multiple field names (ExpertPositionID, Order, Position, Ticket, ID)
                     $matchesPosition = false;
+                    $matchField = null;
 
                     if (isset($historyRecord->ExpertPositionID) && $historyRecord->ExpertPositionID == $trade->position_id) {
                         $matchesPosition = true;
+                        $matchField = 'ExpertPositionID';
                     } elseif (isset($historyRecord->Order) && $historyRecord->Order == $trade->position_id) {
                         $matchesPosition = true;
+                        $matchField = 'Order';
                     } elseif (isset($historyRecord->Position) && $historyRecord->Position == $trade->position_id) {
                         $matchesPosition = true;
+                        $matchField = 'Position';
+                    } elseif (isset($historyRecord->Ticket) && $historyRecord->Ticket == $trade->position_id) {
+                        $matchesPosition = true;
+                        $matchField = 'Ticket';
+                    } elseif (isset($historyRecord->ID) && $historyRecord->ID == $trade->position_id) {
+                        $matchesPosition = true;
+                        $matchField = 'ID';
                     }
 
                     if (!$matchesPosition) {
                         continue;
                     }
 
+                    // Record this as a potential match before checking state
+                    $potentialMatches[] = [
+                        'field' => $matchField,
+                        'record' => $historyRecord
+                    ];
+
                     // Check if this is a close event (State == 'closed' or State == 3)
                     $isClosed = false;
+                    $stateValue = $historyRecord->State ?? null;
+                    
                     if (isset($historyRecord->State)) {
                         if (is_string($historyRecord->State)) {
                             $isClosed = strtolower($historyRecord->State) === 'closed';
                         } elseif (is_numeric($historyRecord->State)) {
                             $isClosed = (int)$historyRecord->State === 3; // 3 = closed state
                         }
+                    }
+
+                    if ($debug) {
+                        $this->line("      match_field={$matchField}, state={$stateValue}, is_closed={$isClosed}");
                     }
 
                     if (!$isClosed) {
@@ -149,7 +188,17 @@ class RecoverOrphanedTradeCloseData extends Command
                         ];
                         $found = true;
                         break;
+                    } else {
+                        if ($debug) {
+                            $this->line("      close_price={$closePrice}, close_time={$closeTime} (incomplete)");
+                        }
                     }
+                }
+
+                // DEBUG: Show why position wasn't found
+                if (!$found && $debug && !empty($potentialMatches)) {
+                    $matchCount = count($potentialMatches);
+                    $this->line("      Found {$matchAttempts} records, {$matchCount} position matches but no closed state");
                 }
 
                 if ($found && $foundData) {
