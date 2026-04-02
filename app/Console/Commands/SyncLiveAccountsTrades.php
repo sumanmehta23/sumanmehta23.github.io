@@ -7,6 +7,7 @@ use App\Models\Trade;
 use App\MT5\MTRetCode;
 use App\Services\QueueSafeMT5Service;
 use App\Services\MT5RestAPIService;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -476,6 +477,7 @@ class SyncLiveAccountsTrades extends Command
     /**
      * After full sync, verify open trades against MT5's current open positions via REST API
      * Much faster than querying historical trades - REST API returns only active positions
+     * When closing orphaned positions, fetch actual close data from history
      */
     protected function verifyAndCloseOrphanedOpenTrades(Account $account): void
     {
@@ -496,31 +498,111 @@ class SyncLiveAccountsTrades extends Command
         $this->line("  MT5 REST API returned " . count($mt5OpenPositionIds) . " current open positions");
 
         // Compare DB open trades with MT5's actual open positions
-        $closedPositions = [];
+        $tradesToClose = [];
 
         foreach ($openTrades as $trade) {
             if (in_array($trade->position_id, $mt5OpenPositionIds)) {
                 // Position is open in MT5 - keep it
                 $this->line("  ✓ Position {$trade->position_id}: Still open in MT5");
             } else {
-                // Position not in MT5's open positions - close it
-                $closedPositions[] = $trade->position_id;
-                $this->line("  ✓ Position {$trade->position_id}: Not in MT5 open positions - closing");
+                // Position not in MT5's open positions - will close it
+                // Try to fetch actual close data from history
+                $closeData = $this->getPositionCloseData($account, $trade->position_id);
+
+                if ($closeData) {
+                    $this->line("  ✓ Position {$trade->position_id}: Found close event - close_price={$closeData['close_price']}, close_time={$closeData['close_time']}");
+                    $tradesToClose[] = [
+                        'position_id' => $trade->position_id,
+                        'close_price' => $closeData['close_price'],
+                        'close_time' => $closeData['close_time'],
+                    ];
+                } else {
+                    $this->line("  ✓ Position {$trade->position_id}: No close event found in MT5 - closing as orphaned (null close data)");
+                    $tradesToClose[] = [
+                        'position_id' => $trade->position_id,
+                        'close_price' => null,
+                        'close_time' => null,
+                    ];
+                }
             }
         }
 
         // Update identified closed positions
-        if (!empty($closedPositions)) {
-            Trade::whereIn('position_id', $closedPositions)
-                ->where('account_id', $account->id)
-                ->where('status', 'open')
-                ->update([
-                    'status' => 'closed',
-                    'close_price' => null,
-                    'close_time' => null,
-                    'updated_at' => now(),
-                ]);
-            $this->warn("Closed " . count($closedPositions) . " positions not found in MT5 open positions");
+        if (!empty($tradesToClose)) {
+            foreach ($tradesToClose as $closeInfo) {
+                Trade::where('account_id', $account->id)
+                    ->where('position_id', $closeInfo['position_id'])
+                    ->where('status', 'open')
+                    ->update([
+                        'status' => 'closed',
+                        'close_price' => $closeInfo['close_price'],
+                        'close_time' => $closeInfo['close_time'],
+                        'updated_at' => now(),
+                    ]);
+            }
+            $this->warn("Closed " . count($tradesToClose) . " positions not found in MT5 open positions");
+        }
+    }
+
+    /**
+     * Try to fetch actual close data for a position from MT5 history
+     * 
+     * @param Account $account The account
+     * @param int $positionId The position ID to find
+     * @return array|null Array with close_price and close_time, or null if not found
+     */
+    private function getPositionCloseData(Account $account, int $positionId): ?array
+    {
+        try {
+            // Query a wide date range to find the close event
+            $fromDate = 'September 01,2024';
+            $toDate = now()->format('F d,Y');
+
+            $total = 0;
+            $this->mt5Service->executeOperation(function ($api) use ($account, $fromDate, $toDate, &$total) {
+                return $api->HistoryGetTotal($account->code, $fromDate, $toDate, $total);
+            });
+
+            if ($total === 0) {
+                return null;
+            }
+
+            // Fetch orders in batches, looking for this position
+            $pageSize = 100;
+            for ($position = 0; $position < $total; $position += $pageSize) {
+                $pageOrders = [];
+                $this->mt5Service->executeOperation(function ($api) use ($account, $fromDate, $toDate, $position, $pageSize, &$pageOrders) {
+                    return $api->HistoryGetPage($account->code, $fromDate, $toDate, $position, $pageSize, $pageOrders);
+                });
+
+                if (empty($pageOrders)) {
+                    break;
+                }
+
+                // Search for close event (latest event for this position with 2+ orders)
+                $positionOrders = collect($pageOrders)
+                    ->where('ExpertPositionID', $positionId)
+                    ->sortByDesc('TimeDone')
+                    ->toArray();
+
+                if (count($positionOrders) >= 2) {
+                    // Found both open and close events - get the close
+                    $closeOrder = array_values($positionOrders)[0]; // First (latest) is close
+
+                    return [
+                        'close_price' => (float)$closeOrder->PriceCurrent,
+                        'close_time' => date('Y-m-d H:i:s', $closeOrder->TimeDone),
+                    ];
+                }
+            }
+
+            return null;
+        } catch (Exception $e) {
+            Log::warning("Failed to fetch close data for position {$positionId}", [
+                'account_id' => $account->id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
         }
     }
 
