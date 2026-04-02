@@ -346,7 +346,9 @@ class RecoverOrphanedTradeCloseData extends Command
         }
 
         if (is_numeric($state)) {
-            return (int)$state === 3; // 3 = closed state
+            $stateValue = (int)$state;
+            // State 3 = closed, State 4 = done/completed trade
+            return $stateValue === 3 || $stateValue === 4;
         }
 
         return false;
