@@ -18,7 +18,7 @@ class RecoverOrphanedTradeCloseData extends Command
                             {--debug : Show detailed debug information}
                             {--dry-run : Show what would be recovered without making changes}';
 
-    protected $description = 'Recover close data for trades marked as closed but with null close_price/close_time. Queries minimal date range (min open_time to now).';
+    protected $description = 'Recover close data for trades marked as closed but with null close_price/close_time. Processes history page-by-page with early exit optimization.';
 
     protected $mt5Service;
 
@@ -50,6 +50,7 @@ class RecoverOrphanedTradeCloseData extends Command
         $totalRecovered = 0;
         $totalNotFound = 0;
         $totalErrors = 0;
+        $totalEarlyExits = 0;
 
         foreach ($accounts as $account) {
             $this->line("\n" . str_repeat('=', 60));
@@ -82,147 +83,26 @@ class RecoverOrphanedTradeCloseData extends Command
             $this->line("📅 Optimized date range: {$searchFromDate} to {$searchToDate} ({$daysToScan} days)");
             $this->line("   Min open_time: " . $minOpenDateTime->format('Y-m-d H:i:s'));
 
-            // SINGLE API CALL to get all history for the date range
-            $this->line("🔍 Fetching history from MT5...");
-            $allHistory = $this->getHistoryForDateRange($account, $searchFromDate, $searchToDate, $debug);
+            // SMART OPTIMIZATION: Process history page-by-page with early exit
+            // Fetch one page, search orphaned trades, update matches, repeat
+            // Exit when all trades are fixed or no more history
+            $this->line("🔍 Processing history pages (smart early exit enabled)...");
+            $result = $this->processHistoryWithEarlyExit(
+                $account,
+                $orphanedTrades->keyBy('position_id'),
+                $searchFromDate,
+                $searchToDate,
+                $debug,
+                $dryRun
+            );
 
-            if (empty($allHistory)) {
-                $this->warn("No history data retrieved for date range");
-                $totalNotFound += $orphanedTrades->count();
-                continue;
-            }
+            $totalRecovered += $result['recovered'];
+            $totalNotFound += $result['not_found'];
+            $totalErrors += $result['errors'];
 
-            $this->info("Retrieved " . count($allHistory) . " history records from MT5");
-
-            // DEBUG: Show structure of first history record
-            if ($debug && !empty($allHistory)) {
-                $this->line("\n📊 DEBUG: First history record structure:");
-                $firstRecord = $allHistory[0];
-                foreach ((array)$firstRecord as $field => $value) {
-                    $valueStr = is_object($value) ? get_class($value) : (is_array($value) ? 'array' : (string)$value);
-                    $this->line("    {$field}: {$valueStr}");
-                }
-                $this->line("");
-            }
-
-            // BATCH PROCESS: Search all orphaned trades within this single result set
-            $searchCount = 0;
-            foreach ($orphanedTrades as $trade) {
-                $found = false;
-                $foundData = null;
-                $searchCount++;
-
-                if ($debug) {
-                    $this->line("  [{$searchCount}] Searching for position {$trade->position_id} (open: " . Carbon::create($trade->open_time)->format('Y-m-d H:i:s') . ")");
-                }
-
-                // Search for this position in the history
-                $matchAttempts = 0;
-                $potentialMatches = [];
-
-                foreach ($allHistory as $historyRecord) {
-                    $matchAttempts++;
-                    // Match by multiple field names (ExpertPositionID, Order, Position, Ticket, ID)
-                    $matchesPosition = false;
-                    $matchField = null;
-
-                    if (isset($historyRecord->ExpertPositionID) && $historyRecord->ExpertPositionID == $trade->position_id) {
-                        $matchesPosition = true;
-                        $matchField = 'ExpertPositionID';
-                    } elseif (isset($historyRecord->Order) && $historyRecord->Order == $trade->position_id) {
-                        $matchesPosition = true;
-                        $matchField = 'Order';
-                    } elseif (isset($historyRecord->Position) && $historyRecord->Position == $trade->position_id) {
-                        $matchesPosition = true;
-                        $matchField = 'Position';
-                    } elseif (isset($historyRecord->Ticket) && $historyRecord->Ticket == $trade->position_id) {
-                        $matchesPosition = true;
-                        $matchField = 'Ticket';
-                    } elseif (isset($historyRecord->ID) && $historyRecord->ID == $trade->position_id) {
-                        $matchesPosition = true;
-                        $matchField = 'ID';
-                    }
-
-                    if (!$matchesPosition) {
-                        continue;
-                    }
-
-                    // Record this as a potential match before checking state
-                    $potentialMatches[] = [
-                        'field' => $matchField,
-                        'record' => $historyRecord
-                    ];
-
-                    // Check if this is a close event (State == 'closed' or State == 3)
-                    $isClosed = false;
-                    $stateValue = $historyRecord->State ?? null;
-
-                    if (isset($historyRecord->State)) {
-                        if (is_string($historyRecord->State)) {
-                            $isClosed = strtolower($historyRecord->State) === 'closed';
-                        } elseif (is_numeric($historyRecord->State)) {
-                            $isClosed = (int)$historyRecord->State === 3; // 3 = closed state
-                        }
-                    }
-
-                    if ($debug) {
-                        $this->line("      match_field={$matchField}, state={$stateValue}, is_closed={$isClosed}");
-                    }
-
-                    if (!$isClosed) {
-                        continue;
-                    }
-
-                    // Found close event - extract close data
-                    $closePrice = $historyRecord->ClosePrice ?? $historyRecord->Price ?? null;
-                    $closeTime = $historyRecord->TimeDone ?? $historyRecord->CloseTime ?? null;
-
-                    if ($closePrice !== null && $closeTime !== null) {
-                        if ($debug) {
-                            $this->line("    ✓ Found close event: price={$closePrice}, time={$closeTime}");
-                        }
-
-                        $foundData = [
-                            'close_price' => $closePrice,
-                            'close_time' => $closeTime,
-                        ];
-                        $found = true;
-                        break;
-                    } else {
-                        if ($debug) {
-                            $this->line("      close_price={$closePrice}, close_time={$closeTime} (incomplete)");
-                        }
-                    }
-                }
-
-                // DEBUG: Show why position wasn't found
-                if (!$found && $debug && !empty($potentialMatches)) {
-                    $matchCount = count($potentialMatches);
-                    $this->line("      Found {$matchAttempts} records, {$matchCount} position matches but no closed state");
-                }
-
-                if ($found && $foundData) {
-                    if ($dryRun) {
-                        $this->line("    [DRY-RUN] Would update position {$trade->position_id} with close_price={$foundData['close_price']}, close_time={$foundData['close_time']}");
-                        $totalRecovered++;
-                    } else {
-                        try {
-                            $trade->update([
-                                'close_price' => $foundData['close_price'],
-                                'close_time' => $foundData['close_time'],
-                                'updated_at' => now(),
-                            ]);
-                            $this->line("    ✓ Updated position {$trade->position_id}");
-                            $totalRecovered++;
-                        } catch (\Exception $e) {
-                            $this->error("    ✗ Failed to update position {$trade->position_id}: {$e->getMessage()}");
-                            $totalErrors++;
-                        }
-                    }
-                } else {
-                    $this->warn("    ✗ Position {$trade->position_id} close event not found in history");
-                    $totalNotFound++;
-                }
+            if ($result['early_exit']) {
+                $totalEarlyExits++;
+                $this->line("✓ All orphaned trades recovered! Exiting early after {$result['pages_scanned']} pages.");
             }
         }
 
@@ -231,6 +111,7 @@ class RecoverOrphanedTradeCloseData extends Command
         $this->line("✓ Recovered: {$totalRecovered}");
         $this->line("✗ Not found: {$totalNotFound}");
         $this->line("✗ Errors: {$totalErrors}");
+        $this->line("🚀 Early exits: {$totalEarlyExits}");
         $this->line(str_repeat('=', 60));
 
         if (!$dryRun) {
@@ -238,100 +119,236 @@ class RecoverOrphanedTradeCloseData extends Command
                 'total_recovered' => $totalRecovered,
                 'not_found' => $totalNotFound,
                 'errors' => $totalErrors,
+                'early_exits' => $totalEarlyExits,
             ]);
         }
     }
 
     /**
-     * Get all history records for a date range (single API call)
+     * Process history page-by-page with early exit when all trades are recovered
+     * This is much smarter than loading all pages first
      * 
      * @param Account $account
-     * @param string $fromDate Format: "September 01,2024"
-     * @param string $toDate Format: "September 01,2024"
+     * @param \Illuminate\Support\Collection $orphanedTrades Keyed by position_id
+     * @param string $searchFromDate
+     * @param string $searchToDate
      * @param bool $debug
-     * @return array All history records
+     * @param bool $dryRun
+     * @return array Result with recovered/not_found/errors/early_exit counts
      */
-    private function getHistoryForDateRange(Account $account, string $fromDate, string $toDate, bool $debug = false): array
+    private function processHistoryWithEarlyExit(Account $account, $orphanedTrades, string $searchFromDate, string $searchToDate, bool $debug = false, bool $dryRun = false): array
     {
-        try {
-            $login = $account->code;
-            $allHistory = [];
+        $login = $account->code;
+        $recovered = 0;
+        $errors = 0;
+        $pagesScanned = 0;
+        $earlyExit = false;
 
-            // Get total records in range
-            $total = 0;
-            $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $fromDate, $toDate, &$total) {
-                return $api->HistoryGetTotal($login, $fromDate, $toDate, $total);
+        // Get total records in the date range
+        $total = 0;
+        $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $searchFromDate, $searchToDate, &$total) {
+            return $api->HistoryGetTotal($login, $searchFromDate, $searchToDate, $total);
+        });
+
+        if ($error_code != MTRetCode::MT_RET_OK) {
+            Log::error("Failed to get history total for {$login}", [
+                'error_code' => $error_code,
+                'error' => MTRetCode::GetError($error_code),
+            ]);
+            return [
+                'recovered' => 0,
+                'not_found' => count($orphanedTrades),
+                'errors' => 0,
+                'early_exit' => false,
+                'pages_scanned' => 0,
+            ];
+        }
+
+        if ($debug) {
+            $this->line("   Total history records available: {$total}");
+        }
+
+        $pageSize = 100;
+        $position = 0;
+        $remainingOrphans = $orphanedTrades->count();
+
+        // SMART PAGINATION: Process one page at a time
+        while ($position < $total && $remainingOrphans > 0) {
+            $pagesScanned++;
+            $pageHistory = [];
+            $recordsToFetch = min($pageSize, $total - $position);
+
+            if ($debug) {
+                $this->line("   📄 Page {$pagesScanned}: position={$position}, size={$recordsToFetch}, remaining_orphans={$remainingOrphans}");
+            }
+
+            // Fetch one page from MT5
+            $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $searchFromDate, $searchToDate, $position, $recordsToFetch, &$pageHistory) {
+                return $api->HistoryGetPage($login, $searchFromDate, $searchToDate, $position, $recordsToFetch, $pageHistory);
             });
 
             if ($error_code != MTRetCode::MT_RET_OK) {
-                Log::error("Failed to get history total for {$login}", [
+                Log::error("Failed to get history page for {$login}", [
+                    'page' => $pagesScanned,
+                    'position' => $position,
                     'error_code' => $error_code,
                     'error' => MTRetCode::GetError($error_code),
                 ]);
-                return [];
+                break;
             }
 
-            if ($debug) {
-                $this->line("    Total history records available: {$total}");
-            }
-
-            // Paginate through all history
-            $pageSize = 100;
-            $pageCount = 0;
-            $position = 0;
-
-            while ($position < $total) {
-                $pageCount++;
-                $pageHistory = [];
-                $recordsToFetch = min($pageSize, $total - $position);
-
+            if (empty($pageHistory)) {
                 if ($debug) {
-                    $this->line("    Fetching page {$pageCount}: position={$position}, size={$recordsToFetch}");
+                    $this->line("   Empty page response, stopping pagination");
+                }
+                break;
+            }
+
+            // DEBUG: Show first record structure
+            if ($debug && $pagesScanned === 1 && !empty($pageHistory)) {
+                $this->line("\n   📊 First history record structure:");
+                $firstRecord = $pageHistory[0];
+                foreach ((array)$firstRecord as $field => $value) {
+                    $valueStr = is_object($value) ? get_class($value) : (is_array($value) ? 'array' : (string)$value);
+                    $this->line("      {$field}: {$valueStr}");
+                }
+                $this->line("");
+            }
+
+            // PROCESS THIS PAGE: Search for matches among orphaned trades
+            foreach ($pageHistory as $historyRecord) {
+                if (!is_object($historyRecord)) {
+                    continue;
                 }
 
-                $error_code = $this->mt5Service->executeOperation(function ($api) use ($login, $fromDate, $toDate, $position, $recordsToFetch, &$pageHistory) {
-                    return $api->HistoryGetPage($login, $fromDate, $toDate, $position, $recordsToFetch, $pageHistory);
-                });
+                // Try to match this record to one of our orphaned trades
+                $positionId = $this->extractPositionId($historyRecord);
 
-                if ($error_code != MTRetCode::MT_RET_OK) {
-                    Log::error("Failed to get history page for {$login}", [
-                        'page' => $pageCount,
-                        'position' => $position,
-                        'error_code' => $error_code,
-                        'error' => MTRetCode::GetError($error_code),
-                    ]);
-                    break;
+                if ($positionId === null || !$orphanedTrades->has($positionId)) {
+                    continue; // Not relevant to our orphaned trades
                 }
 
-                if (empty($pageHistory)) {
-                    if ($debug) {
-                        $this->line("    Empty page response, stopping pagination");
+                $trade = $orphanedTrades->get($positionId);
+
+                // Check if this is a close event
+                $isClosed = $this->isCloseEvent($historyRecord);
+                if (!$isClosed) {
+                    continue; // Not the close event
+                }
+
+                // Extract close data
+                $closePrice = null;
+                $closeTime = null;
+
+                if (property_exists($historyRecord, 'ClosePrice')) {
+                    $closePrice = $historyRecord->ClosePrice;
+                } elseif (property_exists($historyRecord, 'Price')) {
+                    $closePrice = $historyRecord->Price;
+                }
+
+                if (property_exists($historyRecord, 'TimeDone')) {
+                    $closeTime = $historyRecord->TimeDone;
+                } elseif (property_exists($historyRecord, 'CloseTime')) {
+                    $closeTime = $historyRecord->CloseTime;
+                }
+
+                if ($closePrice === null || $closeTime === null) {
+                    continue; // Incomplete data
+                }
+
+                // Found a match! Update it
+                if ($debug) {
+                    $this->line("   ✓ Found close data for position {$positionId}: price={$closePrice}, time={$closeTime}");
+                }
+
+                if ($dryRun) {
+                    $this->line("     [DRY-RUN] Would update position {$positionId}");
+                    $recovered++;
+                } else {
+                    try {
+                        $trade->update([
+                            'close_price' => $closePrice,
+                            'close_time' => $closeTime,
+                            'updated_at' => now(),
+                        ]);
+                        $this->line("     ✓ Updated position {$positionId}");
+                        $recovered++;
+                    } catch (\Exception $e) {
+                        $this->error("     ✗ Failed to update position {$positionId}: {$e->getMessage()}");
+                        $errors++;
                     }
-                    break;
                 }
 
-                $allHistory = array_merge($allHistory, $pageHistory);
-                $position += count($pageHistory);
+                // Remove from orphaned list since we found it
+                $orphanedTrades->forget($positionId);
+                $remainingOrphans--;
 
-                if ($debug) {
-                    $this->line("    Retrieved " . count($pageHistory) . " records, total so far: " . count($allHistory));
+                // EARLY EXIT: All trades recovered!
+                if ($remainingOrphans === 0) {
+                    $earlyExit = true;
+                    if ($debug) {
+                        $this->line("   🚀 EARLY EXIT: All orphaned trades found!");
+                    }
+                    break 2; // Break both loops
                 }
             }
 
-            Log::info("Retrieved history for recovery", [
-                'account' => $login,
-                'total_records' => count($allHistory),
-                'pages_fetched' => $pageCount,
-                'date_range' => "{$fromDate} to {$toDate}",
-            ]);
-
-            return $allHistory;
-        } catch (\Exception $e) {
-            Log::error("Exception in getHistoryForDateRange", [
-                'error' => $e->getMessage(),
-                'account' => $account->code,
-            ]);
-            return [];
+            $position += count($pageHistory);
         }
+
+        return [
+            'recovered' => $recovered,
+            'not_found' => $remainingOrphans,
+            'errors' => $errors,
+            'early_exit' => $earlyExit,
+            'pages_scanned' => $pagesScanned,
+        ];
+    }
+
+    /**
+     * Extract position ID from history record (try multiple field names)
+     * 
+     * @param object $historyRecord
+     * @return int|null Position ID or null if not found
+     */
+    private function extractPositionId($historyRecord): ?int
+    {
+        $fields = ['ExpertPositionID', 'Order', 'Position', 'Ticket', 'ID'];
+
+        foreach ($fields as $field) {
+            if (property_exists($historyRecord, $field)) {
+                $value = $historyRecord->$field;
+                if (!empty($value)) {
+                    return (int)$value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if a history record represents a close event
+     * 
+     * @param object $historyRecord
+     * @return bool
+     */
+    private function isCloseEvent($historyRecord): bool
+    {
+        if (!property_exists($historyRecord, 'State')) {
+            return false;
+        }
+
+        $state = $historyRecord->State;
+
+        if (is_string($state)) {
+            return strtolower($state) === 'closed';
+        }
+
+        if (is_numeric($state)) {
+            return (int)$state === 3; // 3 = closed state
+        }
+
+        return false;
     }
 }
