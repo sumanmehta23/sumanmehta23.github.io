@@ -174,6 +174,9 @@ class AjaxController extends Controller
                     case 'getAdminDetails':
                         $result = $this->getAdminDetails($id);
                         break;
+                    case 'deleteAdminUser':
+                        $result = $this->deleteAdminUser($requestData);
+                        break;
                     case 'getPaymentDetails':
                         $result = $this->getPaymentDetails($id);
                         break;
@@ -4276,6 +4279,39 @@ class AjaxController extends Controller
         // $result = $query[0];
         // unset($result->password);
         // return $result;
+    }
+
+    public function deleteAdminUser($data)
+    {
+        header('Content-Type: application/json');
+        $id = $data['id'] ?? null;
+
+        if (!$id) {
+            return ['status' => false, 'message' => 'User ID is required'];
+        }
+
+        $user = EmployeeList::find($id);
+
+        if (!$user) {
+            return ['status' => false, 'message' => 'User not found'];
+        }
+
+        // Check if user has Super Admin or admin role
+        $role = $user->role;
+        if (!$role || !in_array(strtolower($role->name), ['super admin', 'admin'])) {
+            return ['status' => false, 'message' => 'Only users with Super Admin or admin role can be deleted'];
+        }
+
+        // Check if trying to delete yourself
+        $currentUser = Auth::guard('admin')->user();
+        if ($currentUser && $currentUser->id == $id) {
+            return ['status' => false, 'message' => 'You cannot delete your own account'];
+        }
+
+        // Soft delete the user
+        $user->delete();
+
+        return ['status' => true, 'message' => 'User deleted successfully'];
     }
     public function getPaymentDetails($id)
     {
