@@ -1804,6 +1804,32 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.withdraw_type', $order);
                 })
 
+                ->orderColumn('created_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('created_time', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('new_total_deposit', function ($query, $order) {
+                    $query->join('trade_deposits as td', 'td.user_id', '=', 'trade_withdrawal.user_id')
+                        ->where('td.status', 1)
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(td.deposit_amount), 0) as total_deposit')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_deposit', $order);
+                })
+
+                ->orderColumn('new_total_withdrawal', function ($query, $order) {
+                    $query->join('trade_withdrawal as tw', function ($join) {
+                            $join->on('tw.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('tw.status', 1);
+                        })
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(tw.withdrawal_amount), 0) as total_withdrawal')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_withdrawal', $order);
+                })
+
                 ->orderColumn('code', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.code', $order);
                 })
@@ -3081,6 +3107,32 @@ class AjaxController extends Controller
                     $query->join('accounts as acc', 'acc.id', '=', 'trade_withdrawal.account_id')
                         ->orderBy('acc.balance', $order)
                         ->select('trade_withdrawal.*');
+                })
+
+                ->orderColumn('created_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('created_time', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('new_total_deposit', function ($query, $order) {
+                    $query->join('trade_deposits as td', 'td.user_id', '=', 'trade_withdrawal.user_id')
+                        ->where('td.status', 1)
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(td.deposit_amount), 0) as total_deposit')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_deposit', $order);
+                })
+
+                ->orderColumn('new_total_withdrawal', function ($query, $order) {
+                    $query->join('trade_withdrawal as tw', function ($join) {
+                            $join->on('tw.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('tw.status', 1);
+                        })
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(tw.withdrawal_amount), 0) as total_withdrawal')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_withdrawal', $order);
                 })
 
                 ->orderColumn('floating_balance', function ($query, $order) {
