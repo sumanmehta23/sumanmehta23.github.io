@@ -1481,200 +1481,209 @@
                                         </div>
                                     </div>
                                     <?php endif; ?>
-                                    <div class="p-0 tab-pane" id="tab-info">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <div class="card custom-card">
-                                                    <div class="card-header">
-                                                        <div class="card-title">Bank Details</div>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <ul class="list-group">
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                ACCOUNT HOLDER NAME
-                                                                <span>{{ $bank_details->ClientName ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                BANK NAME
-                                                                <span>{{ $bank_details->bankName ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                ACCOUNT NUMBER
-                                                                <span>{{ $bank_details->accountNumber ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                IFSC CODE
-                                                                <span>{{ $bank_details->code ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                SWIFT CODE
-                                                                <span>{{ $bank_details->swift_code ?? '' }}</span>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="card custom-card">
-                                                    <div class="card-header justify-content-between">
-                                                        <div class="card-title">Client Wallet Details</div>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="table-responsive">
-                                                            <table class="table text-nowrap" id="tableClientWallets">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th scope="col">Created On</th>
-                                                                        <th scope="col">Wallet Name</th>
-                                                                        <th scope="col">Currency</th>
-                                                                        <th scope="col">Network</th>
-                                                                        <th scope="col">Address</th>
-                                                                        <th scope="col">Verified</th>
-                                                                        <th scope="col">Status</th>
-                                                                        @can("client_wallet:update")
-                                                                            <th scope="col">Action</th>
-                                                                        @endcan
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="card custom-card">
-                                                    <div class="card-header">
-                                                        <div class="card-title">Client Documents</div>
-                                                    </div>
-                                                    <?php
-                                                    $imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-                                                    $pdfExtensions = ['pdf'];
-                                                    $mimeTypes = [
-                                                        'jpeg' => 'image/jpeg',
-                                                        'jpg' => 'image/jpeg',
-                                                        'png' => 'image/png',
-                                                        'pdf' => 'application/pdf',
-                                                        'gif' => 'image/gif',
-                                                    ];
-                                                    ?>
 
-                                                    <div class="card-body">
-                                                        <?php foreach ($kyc_details as $kyc): ?>
-                                                        <?php
-                                                        $files = [
-                                                            'front_image' => strtolower(pathinfo($kyc->front_image, PATHINFO_EXTENSION)),
-                                                            'kyc_frontside' => strtolower(pathinfo($kyc->kyc_frontside, PATHINFO_EXTENSION)),
-                                                            'kyc_backside' => strtolower(pathinfo($kyc->kyc_backside, PATHINFO_EXTENSION)),
-                                                        ];
-                                                        $statusText = $kyc->status == '1' ? 'Approved' : ($kyc->status == '2' ? 'Rejected' : 'Pending');
-                                                        [$badgeClass, $icon] = getBadgeProperties($kyc->status);
-                                                        ?>
-
-                                                        <?php    if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
-                                                        <div
-                                                            class="m-0 overflow-visible media card-body media-xs d-sm-flex d-block justify-content-between">
-                                                            <div class="mb-2 d-flex mb-sm-0">
-                                                                <div class="my-auto media-body valign-middle"
-                                                                    style="max-width: 100px; display: flex; flex-direction: column;">
-                                                                    <?php        foreach (['front_image' => $files['front_image'], 'kyc_frontside' => $files['kyc_frontside'], 'kyc_backside' => $files['kyc_backside']] as $key => $extension): ?>
-                                                                    <?php            if (in_array($extension, $imageExtensions) || in_array($extension, $pdfExtensions)): ?>
-                                                                    <button
-                                                                        class="mt-1 btn btn-lg btn-icon btn-light text-info me-2"
-                                                                        data-bs-toggle="modal" data-bs-target="#kycModal"
-                                                                        data-bs-kyc="{{ asset('storage' . $kyc->$key) }}"
-                                                                        data-bs-type="{{ $mimeTypes[$extension] }}">
-                                                                        <i
-                                                                            class="ri-{{ in_array($extension, $pdfExtensions) ? 'file-pdf-2-line' : 'image-2-fill' }}"></i>
-                                                                    </button>
-                                                                    <?php            endif; ?>
-                                                                    <?php        endforeach; ?>
-                                                                </div>
-                                                                <div class="my-auto media-body valign-middle">
-                                                                    <a href=""
-                                                                        class="fw-semibold text-dark">{{ $kyc->kyc_type }}</a>
-                                                                    <p class="m-0 text-muted">
-                                                                        {{ $kyc->registered_date_js }}
-                                                                    </p>
-                                                                </div>
+                                        <div class="p-0 tab-pane" id="tab-info">
+                                            <div class="row">
+                                                @can('client:viewBankDetails')
+                                                    <div class="col-6">
+                                                        <div class="card custom-card">
+                                                            <div class="card-header">
+                                                                <div class="card-title">Bank Details</div>
                                                             </div>
-                                                            <div
-                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
-                                                                <span
-                                                                    class="badge {{ $badgeClass }}">{!! $icon !!}
-                                                                    <?= $statusText ?>
-                                                                </span>
-                                                            </div>
-                                                            <div
-                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
-                                                                <?php        if ($kyc->status == 2 || $kyc->status == 0) { ?>
-                                                                <button class="btn btn-lg btn-icon btn-light text-success"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="Approve"
-                                                                    onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',1)">
-                                                                    <i class="ri-check-line"></i>
-                                                                </button>
-                                                                <?php        }
-            if ($kyc->status == 1 || $kyc->status == 0) { ?>
-                                                                <button class="btn btn-lg btn-icon btn-light text-danger"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="Reject"
-                                                                    onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',2)">
-                                                                    <i class="ri-close-circle-line"></i>
-                                                                </button>
-                                                                <?php        } ?>
+                                                            <div class="card-body">
+                                                                <ul class="list-group">
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        ACCOUNT HOLDER NAME
+                                                                        <span>{{ $bank_details->ClientName ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        BANK NAME
+                                                                        <span>{{ $bank_details->bankName ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        ACCOUNT NUMBER
+                                                                        <span>{{ $bank_details->accountNumber ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        IFSC CODE
+                                                                        <span>{{ $bank_details->code ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        SWIFT CODE
+                                                                        <span>{{ $bank_details->swift_code ?? '' }}</span>
+                                                                    </li>
+                                                                </ul>
                                                             </div>
                                                         </div>
-                                                        <?php    endif; ?>
-                                                        <?php endforeach; ?>
                                                     </div>
-
-                                                </div>
-                                                <?php if (!isset($kyc)) { ?>
-                                                <form method="post" enctype="multipart/form-data">
+                                                @endcan
+                                                <div class="col-6">
                                                     <div class="card custom-card">
-                                                        <div class="card-header">
-                                                            <div class="card-title">Upload Documents</div>
+                                                        <div class="card-header justify-content-between">
+                                                            <div class="card-title">Client Wallet Details</div>
                                                         </div>
                                                         <div class="card-body">
-                                                            <div class="mb-3">
-                                                                <label for="formFile" class="form-label">ID Proof Front
-                                                                    Side</label>
-                                                                <input class="form-control" id="formFile" name="image"
-                                                                    type="file" accept="image/png,image/jpeg">
+                                                            <div class="table-responsive">
+                                                                <table class="table text-nowrap" id="tableClientWallets">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th scope="col">Created On</th>
+                                                                            <th scope="col">Wallet Name</th>
+                                                                            <th scope="col">Currency</th>
+                                                                            <th scope="col">Network</th>
+                                                                            <th scope="col">Address</th>
+                                                                            <th scope="col">Verified</th>
+                                                                            <th scope="col">Status</th>
+                                                                            @can("client_wallet:update")
+                                                                                <th scope="col">Action</th>
+                                                                            @endcan
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                    </tbody>
+                                                                </table>
                                                             </div>
-                                                            <div class="mb-3">
-                                                                <label for="formFile" class="form-label">ID Proof Back
-                                                                    Side</label>
-                                                                <input class="form-control" id="formFile" name="image1"
-                                                                    type="file" accept="image/png,image/jpeg">
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label for="formFile" class="form-label">Address Proof
-                                                                    Front Side</label>
-                                                                <input class="form-control" id="formFile" name="image2"
-                                                                    type="file" accept="image/png,image/jpeg">
-                                                            </div>
-                                                        </div>
-                                                        <div class="card-footer">
-                                                            <input type="hidden" name="email"
-                                                                value="{{ $user->email }}">
-                                                            <input type="submit" href="javascript:void(0);"
-                                                                class="btn btn-primary d-grid" value="Upload Document"
-                                                                name="upload_kyc">
                                                         </div>
                                                     </div>
-                                                </form>
-                                                <?php } ?>
+                                                </div>
+
+                                                    <div class="col-6">
+                                                         @can('client:viewClientDocuments')
+                                                            <div class="card custom-card">
+                                                                <div class="card-header">
+                                                                    <div class="card-title">Client Documents</div>
+                                                                </div>
+                                                                <?php
+                                                                $imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                                                                $pdfExtensions = ['pdf'];
+                                                                $mimeTypes = [
+                                                                    'jpeg' => 'image/jpeg',
+                                                                    'jpg' => 'image/jpeg',
+                                                                    'png' => 'image/png',
+                                                                    'pdf' => 'application/pdf',
+                                                                    'gif' => 'image/gif',
+                                                                ];
+                                                                ?>
+
+                                                                <div class="card-body">
+                                                                    <?php foreach ($kyc_details as $kyc): ?>
+                                                                    <?php
+                                                                    $files = [
+                                                                        'front_image' => strtolower(pathinfo($kyc->front_image, PATHINFO_EXTENSION)),
+                                                                        'kyc_frontside' => strtolower(pathinfo($kyc->kyc_frontside, PATHINFO_EXTENSION)),
+                                                                        'kyc_backside' => strtolower(pathinfo($kyc->kyc_backside, PATHINFO_EXTENSION)),
+                                                                    ];
+                                                                    $statusText = $kyc->status == '1' ? 'Approved' : ($kyc->status == '2' ? 'Rejected' : 'Pending');
+                                                                    [$badgeClass, $icon] = getBadgeProperties($kyc->status);
+                                                                    ?>
+
+                                                                    <?php    if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
+                                                                    <div
+                                                                        class="m-0 overflow-visible media card-body media-xs d-sm-flex d-block justify-content-between">
+                                                                        <div class="mb-2 d-flex mb-sm-0">
+                                                                            <div class="my-auto media-body valign-middle"
+                                                                                style="max-width: 100px; display: flex; flex-direction: column;">
+                                                                                <?php        foreach (['front_image' => $files['front_image'], 'kyc_frontside' => $files['kyc_frontside'], 'kyc_backside' => $files['kyc_backside']] as $key => $extension): ?>
+                                                                                <?php            if (in_array($extension, $imageExtensions) || in_array($extension, $pdfExtensions)): ?>
+                                                                                <button
+                                                                                    class="mt-1 btn btn-lg btn-icon btn-light text-info me-2"
+                                                                                    data-bs-toggle="modal" data-bs-target="#kycModal"
+                                                                                    data-bs-kyc="{{ asset('storage' . $kyc->$key) }}"
+                                                                                    data-bs-type="{{ $mimeTypes[$extension] }}">
+                                                                                    <i
+                                                                                        class="ri-{{ in_array($extension, $pdfExtensions) ? 'file-pdf-2-line' : 'image-2-fill' }}"></i>
+                                                                                </button>
+                                                                                <?php            endif; ?>
+                                                                                <?php        endforeach; ?>
+                                                                            </div>
+                                                                            <div class="my-auto media-body valign-middle">
+                                                                                <a href=""
+                                                                                    class="fw-semibold text-dark">{{ $kyc->kyc_type }}</a>
+                                                                                <p class="m-0 text-muted">
+                                                                                    {{ $kyc->registered_date_js }}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div
+                                                                            class="my-auto overflow-visible media-body valign-middle text-sm-end">
+                                                                            <span
+                                                                                class="badge {{ $badgeClass }}">{!! $icon !!}
+                                                                                <?= $statusText ?>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div
+                                                                            class="my-auto overflow-visible media-body valign-middle text-sm-end">
+                                                                            <?php        if ($kyc->status == 2 || $kyc->status == 0) { ?>
+                                                                            <button class="btn btn-lg btn-icon btn-light text-success"
+                                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                                title="Approve"
+                                                                                onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',1)">
+                                                                                <i class="ri-check-line"></i>
+                                                                            </button>
+                                                                            <?php        }
+                        if ($kyc->status == 1 || $kyc->status == 0) { ?>
+                                                                            <button class="btn btn-lg btn-icon btn-light text-danger"
+                                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                                title="Reject"
+                                                                                onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',2)">
+                                                                                <i class="ri-close-circle-line"></i>
+                                                                            </button>
+                                                                            <?php        } ?>
+                                                                        </div>
+                                                                    </div>
+                                                                    <?php    endif; ?>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+
+                                                            </div>
+                                                        @endcan
+                                                        <?php if (!isset($kyc)) { ?>
+                                                        @can('client:viewClientDocuments')
+                                                        <form method="post" enctype="multipart/form-data">
+                                                            <div class="card custom-card">
+                                                                <div class="card-header">
+                                                                    <div class="card-title">Upload Documents</div>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="mb-3">
+                                                                        <label for="formFile" class="form-label">ID Proof Front
+                                                                            Side</label>
+                                                                        <input class="form-control" id="formFile" name="image"
+                                                                            type="file" accept="image/png,image/jpeg">
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="formFile" class="form-label">ID Proof Back
+                                                                            Side</label>
+                                                                        <input class="form-control" id="formFile" name="image1"
+                                                                            type="file" accept="image/png,image/jpeg">
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="formFile" class="form-label">Address Proof
+                                                                            Front Side</label>
+                                                                        <input class="form-control" id="formFile" name="image2"
+                                                                            type="file" accept="image/png,image/jpeg">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-footer">
+                                                                    <input type="hidden" name="email"
+                                                                        value="{{ $user->email }}">
+                                                                    <input type="submit" href="javascript:void(0);"
+                                                                        class="btn btn-primary d-grid" value="Upload Document"
+                                                                        name="upload_kyc">
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                        @endcan
+                                                        <?php } ?>
+                                                    </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    {{-- @endcan --}}
                                     <div class="p-0 tab-pane" id="tab-profile">
                                         <div class="row">
                                             <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
