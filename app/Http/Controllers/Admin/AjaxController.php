@@ -1264,11 +1264,11 @@ class AjaxController extends Controller
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('code', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            $q->where('accounts.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.email', 'LIKE', "%{$searchValue}%")
                                 // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhereRaw("DATE_FORMAT(accounts.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1355,6 +1355,21 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function ($row) {
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('accounts.email', $order);
+                })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('accounts.code', $order);
+                })
+                ->orderColumn('leverage', function ($query, $order) {
+                    $query->orderBy('accounts.leverage', $order);
+                })
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->orderBy('accounts.balance', $order);
+                })
+                ->orderColumn('created_at', function ($query, $order) {
+                    $query->orderBy('accounts.created_at', $order);
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail'])
                 ->make(true);

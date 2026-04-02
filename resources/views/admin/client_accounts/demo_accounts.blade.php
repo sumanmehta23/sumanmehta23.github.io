@@ -15,7 +15,7 @@
             </div>
             <!-- PAGE-HEADER END -->
 
-            <div class="row mb-3">
+            <div class="mb-3 row">
                 <div class="col-md-3">
                     <select id="platformFilter" class="form-select">
                         <option value="">All Platforms</option>
@@ -36,17 +36,17 @@
                                 <table id="ajaxDatatable" class="table ajaxDataTable table-bordered text-nowrap w-100">
                                     <thead>
                                         <tr>
-                                            <td>Client</td>
-                                            <td>Trade ID</td>
-                                            <td>Leverage</td>
-                                            <td>Balance</td>
-                                            <td>registered_date</td>
-                                            <td>Name</td>
-                                            <td>Email</td>
-                                            <td>Account Code</td>
-                                            <td>Account Group</td>
-                                            <td>Date</td>
-                                            <td>Time</td>
+                                            <th>Client</th>
+                                            <th>Trade ID</th>
+                                            <th>Leverage</th>
+                                            <th>Balance</th>
+                                            <th>registered_date</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Account Code</th>
+                                            <th>Account Group</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -96,6 +96,7 @@
                 processing: true,
                 serverSide: true,
                 searching: true,
+                ordering: true,
 
                 ajax: {
                     url: '/admin/getDemoAccountsList',
@@ -110,25 +111,28 @@
                 columns: [
                     {
                         data: 'email',
-                        name: 'email'
+                        name: 'email',
+                        orderable: true
                     },
                     {
                         data: 'code',
-                        name: 'code'
+                        name: 'code',
+                        orderable: true
                     },
                     {
                         data: 'leverage',
-                        name: 'leverage'
+                        name: 'leverage',
+                        orderable: true
                     },
                     {
                         data: 'balance',
                         name: 'balance',
-                        orderable: false
+                        orderable: true
                     },
                     {
                         data: 'created_at',
                         name: 'created_at',
-                        orderable: false
+                        orderable: true
                     },
                     {
                         data: 'fullname',
@@ -174,7 +178,7 @@
                 drawCallback: function(settings) {
                     // Optional customization for draw events
                 },
-                order: [[0, "desc"]],
+                order: [[4, "desc"]],
                 lengthChange: true,
                 pageLength: 10,
                 // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
