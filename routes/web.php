@@ -39,6 +39,7 @@ use App\Http\Controllers\MT5RedisCoordinationDemoController;
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\Payment;
 use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\PopupImpressionController;
 use App\Http\Controllers\Tickets;
 use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\TradeWithdrawal;
@@ -146,6 +147,8 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
     Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
+    Route::post('/popup-impressions/review-popup', [PopupImpressionController::class, 'storeReviewPopup'])
+        ->name('popup-impressions.review-popup');
 
     Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
     Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
