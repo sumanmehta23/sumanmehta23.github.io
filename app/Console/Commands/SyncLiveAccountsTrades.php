@@ -18,19 +18,124 @@ class SyncLiveAccountsTrades extends Command
                             {--limit=100 : Maximum accounts to sync (default: 100)}
                             {--from=September 01,2024 : Start date for trade history}
                             {--to= : End date for trade history (default: today)}
-                            {--mark-not-found : Mark accounts not found in MT5 with not_found_in_mt5 flag}';
+                            {--mark-not-found : Mark accounts not found in MT5 with not_found_in_mt5 flag}
+                            {--daemon : Run as a daemon (continuous background process)}
+                            {--interval=300 : Interval in seconds between sync cycles when running as daemon (default: 300 = 5 minutes)}
+                            {--max-iterations=0 : Maximum number of iterations before exiting (0 = unlimited, useful for memory management)}
+                            {--resync-all : Include already-synced accounts for continuous incremental updates (excludes only not_found)}';
 
-    protected $description = 'Sync live MT5 accounts trades with pagination position tracking. Processes max 500 trades per account per cycle.';
+    protected $description = 'Sync live MT5 accounts trades with pagination position tracking. Processes max 500 trades per account per cycle. Can run as daemon on Forge.';
 
     protected $mt5Service;
     protected $restApiService;
     protected $api;
     protected const MAX_TRADES_PER_SYNC = 500;
+    protected bool $shouldStop = false;
+    protected int $iterations = 0;
 
     public function handle(): void
     {
-        $this->info('Starting incremental MT5 accounts trades sync...');
+        $isDaemon = $this->option('daemon');
 
+        if ($isDaemon) {
+            $this->info('Starting MT5 trades sync daemon...');
+            $this->setupSignalHandlers();
+            $this->runDaemon();
+        } else {
+            $this->info('Starting incremental MT5 accounts trades sync...');
+            $this->executeSyncCycle();
+        }
+    }
+
+    /**
+     * Setup signal handlers for graceful shutdown
+     */
+    protected function setupSignalHandlers(): void
+    {
+        if (extension_loaded('pcntl')) {
+            pcntl_signal(SIGTERM, function () {
+                $this->shouldStop = true;
+                $this->warn('SIGTERM signal received. Stopping daemon gracefully...');
+            });
+
+            pcntl_signal(SIGINT, function () {
+                $this->shouldStop = true;
+                $this->warn('SIGINT signal received. Stopping daemon gracefully...');
+            });
+        } else {
+            $this->warn('PCNTL extension not loaded. Graceful shutdown signals will not be handled.');
+        }
+    }
+
+    /**
+     * Run the daemon loop
+     */
+    protected function runDaemon(): void
+    {
+        $interval = (int) $this->option('interval');
+        $maxIterations = (int) $this->option('max-iterations');
+        $startTime = time();
+
+        $this->line("Daemon mode: interval={$interval}s, max_iterations={$maxIterations}");
+        $this->line('Press Ctrl+C to stop the daemon gracefully.');
+        $this->newLine();
+
+        while (!$this->shouldStop) {
+            $this->iterations++;
+            $memory = memory_get_usage(true) / 1024 / 1024; // MB
+            $now = now()->format('Y-m-d H:i:s');
+            $memoryFormatted = number_format($memory, 2);
+
+            $this->line("[$now] [Iteration #{$this->iterations}] Memory: {$memoryFormatted}MB");
+
+            try {
+                $this->executeSyncCycle();
+            } catch (Exception $e) {
+                $this->error("Error during sync cycle #{$this->iterations}: {$e->getMessage()}");
+                Log::error("Daemon sync cycle error", [
+                    'iteration' => $this->iterations,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // Check if max iterations reached
+            if ($maxIterations > 0 && $this->iterations >= $maxIterations) {
+                $this->warn("Max iterations ({$maxIterations}) reached. Stopping daemon.");
+                break;
+            }
+
+            // Warn if memory usage is high
+            if ($memory > 256) {
+                $memoryFormatted = number_format($memory, 2);
+                $this->warn("High memory usage detected: {$memoryFormatted}MB. Consider restarting the daemon.");
+            }
+
+            // Sleep before next cycle
+            if (!$this->shouldStop) {
+                $this->line("Sleeping for {$interval} seconds until next cycle...");
+                sleep($interval);
+
+                // Handle signals during sleep on Unix-like systems
+                if (extension_loaded('pcntl')) {
+                    pcntl_signal_dispatch();
+                }
+            }
+        }
+
+        $uptime = time() - $startTime;
+        $this->info("Daemon stopped. Ran {$this->iterations} iterations in {$uptime} seconds.");
+        Log::info("Daemon sync stopped", [
+            'iterations' => $this->iterations,
+            'uptime_seconds' => $uptime,
+        ]);
+    }
+
+    /**
+     * Execute a single sync cycle
+     */
+    protected function executeSyncCycle(): void
+    {
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
             $this->restApiService = app(MT5RestAPIService::class);
@@ -40,17 +145,29 @@ class SyncLiveAccountsTrades extends Command
             $defaultFromDate = $this->option('from');
             $defaultToDate = $this->option('to') ?? now()->format('F d,Y');
             $markNotFound = $this->option('mark-not-found');
+            $resyncAll = $this->option('resync-all');
 
-            // Fetch accounts to sync: never synced, incomplete, or failed (exclude 'success' and 'not_found')
+            // Build account query
             $query = Account::where('demo', false)
                 ->where('account_request_status', 1)
                 ->whereNull('deleted_at')
-                ->where(function ($q) {
+                ->where('not_found_in_mt5', false); // Exclude accounts marked as not found
+
+            if ($resyncAll) {
+                // Include all accounts (never synced, incomplete, failed, AND successful)
+                // This enables continuous incremental syncing
+                $this->line('📥 Resync mode: Including all accounts for continuous incremental updates');
+            } else {
+                // Default: only sync accounts that haven't been fully synced yet
+                $query->where(function ($q) {
                     $q->whereNull('trade_sync_status')
                         ->orWhere('trade_sync_status', '')
                         ->orWhereIn('trade_sync_status', ['partial', 'error']);
-                })
-                ->limit($limit);
+                });
+                $this->line('📥 Normal mode: Syncing accounts not yet fully synced');
+            }
+
+            $query->limit($limit);
 
             if ($accountCode) {
                 $query->where('code', $accountCode);
@@ -126,8 +243,8 @@ class SyncLiveAccountsTrades extends Command
             $this->line("Failed: {$totalFailed}");
             $this->line(str_repeat('=', 50) . "\n");
         } catch (\Exception $e) {
-            $this->error("Failed to execute sync command: {$e->getMessage()}");
-            Log::error("SyncLiveAccountsTrades command failed", [
+            $this->error("Failed to execute sync cycle: {$e->getMessage()}");
+            Log::error("SyncLiveAccountsTrades sync cycle failed", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -211,9 +328,16 @@ class SyncLiveAccountsTrades extends Command
         $pageSize = 100; // MT5 API returns max 100 records per page
         $pageCount = 0;
         $hitTradeLimit = false;
-        $position = $account->last_trade_sync_position ?? 0;
+        $resyncAll = $this->option('resync-all');
+        $isResync = $resyncAll && $account->trade_sync_status === 'success';
 
-        if ($account->last_trade_sync_position) {
+        // For resync mode with previously synced accounts, reset position to 0
+        // The timestamp filter will prevent reprocessing old trades
+        $position = $isResync ? 0 : ($account->last_trade_sync_position ?? 0);
+
+        if ($isResync) {
+            $this->line("🔄 Resync mode: Starting fresh from position 0 (timestamp filter active)");
+        } elseif ($account->last_trade_sync_position) {
             $this->line("Resuming from last position: {$position}");
         }
 
@@ -297,13 +421,17 @@ class SyncLiveAccountsTrades extends Command
 
         // Do not overwrite 'error' status if it was already set during pagination failure
         if ($account->trade_sync_status !== 'error') {
+            // For resync mode with previously successful accounts, keep position at 0
+            // This ensures continuous re-scanning from the beginning with timestamp filtering
+            $positionToStore = $isResync && $isSyncComplete ? 0 : $position;
+
             // Update sync progress with position and timestamp
             $account->update([
                 'last_trade_sync_at' => now(),
                 'last_trade_sync_from' => $this->formatDateForStorage($fromDate),
                 'last_trade_sync_to' => $this->formatDateForStorage($toDate),
                 'last_trade_sync_timestamp' => $lastTradeTimestamp,
-                'last_trade_sync_position' => $position,  // Track pagination position for resuming
+                'last_trade_sync_position' => $positionToStore,  // Track pagination position for resuming
                 'trade_sync_status' => $statusToSet,
             ]);
         }
@@ -312,6 +440,10 @@ class SyncLiveAccountsTrades extends Command
             $lastDate = $lastTradeTimestamp ? \Carbon\Carbon::createFromTimestamp($lastTradeTimestamp)->format('Y-m-d H:i:s') : 'unknown';
             $this->warn("Partial sync complete. Last trade: {$lastDate}. Will continue from position {$position} next run.");
         } else {
+            if ($isResync) {
+                $lastDate = $lastTradeTimestamp ? \Carbon\Carbon::createFromTimestamp($lastTradeTimestamp)->format('Y-m-d H:i:s') : 'unknown';
+                $this->line("✓ Resync complete. Latest trade: {$lastDate}. Ready for next incremental cycle.");
+            }
             // Full sync complete - check for any dangling open trades and verify with MT5
             $this->verifyAndCloseOrphanedOpenTrades($account);
         }
