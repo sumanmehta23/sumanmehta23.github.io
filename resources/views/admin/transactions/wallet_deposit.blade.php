@@ -183,16 +183,19 @@
         $(document).ready(function () {
             var tableWalletDeposit = $('#tableWalletDeposit').DataTable({
                 dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Wallet_Deposit_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [6, 7, 1, 2, 4, 8, 9] // Ensuring indices match correct table columns
-                        }
-                    }
-                ],
+                buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('wallet_deposit')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            exportOptions: {
+                                columns: [6, 7, 1, 2, 4, 8, 9] // Updated column indices to match your use case
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
                 lengthMenu: [
                     [10, 25, 50, 100, -1],
                     [10, 25, 50, 100, "All"]

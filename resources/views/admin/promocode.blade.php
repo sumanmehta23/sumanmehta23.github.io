@@ -210,15 +210,19 @@
 
         var TablePromocode = $('#tablePromocodes').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    exportOptions: {
-                        columns: [0,1,2,3,4,5] // Fixed index to match table
-                    }
-                }
-            ],
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('promocode')
+                    buttons.push({
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        exportOptions: {
+                            columns: [0,1,2,3,4,5] // Fixed index to match table
+                        }
+                    });
+                @endif
+                return buttons;
+            })(),
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]

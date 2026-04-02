@@ -138,16 +138,19 @@
           var tableTradingWithdrawal = $('#tableTradingWithdrawal').DataTable({
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        filename: 'Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
-                        exportOptions: {
-                            columns: [12,20,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
-                        }
-                    }
-                ],
+            buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('trading_withdrawal')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            exportOptions: {
+                                columns: [12,20,1,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
 
             // order: [[0, "desc"]],
             lengthMenu: [

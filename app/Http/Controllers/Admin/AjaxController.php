@@ -174,6 +174,9 @@ class AjaxController extends Controller
                     case 'getAdminDetails':
                         $result = $this->getAdminDetails($id);
                         break;
+                    case 'deleteAdminUser':
+                        $result = $this->deleteAdminUser($requestData);
+                        break;
                     case 'getPaymentDetails':
                         $result = $this->getPaymentDetails($id);
                         break;
@@ -3832,14 +3835,27 @@ class AjaxController extends Controller
             $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
             $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
 
+            $status = '<span class="badge bg-outline-primary">Pending</span>';
+
+            if ($row->status == 1) {
+                if($row->admin_remark == 'new' || $row->admin_remark == 'draft'){
+                    $status = '<span class="badge bg-outline-danger">Processing (Cryptochill Draft)</span>';
+                } else {
+                    $status = '<div class="badge bg-outline-success">' . $row->admin_remark . '</div>';
+                }
+            } elseif ($row->status == 2) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by Admin</span>';
+            } elseif ($row->status == 3) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by User</span>';
+            }
+
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
                 'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Cancelled by Admin</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')),
+                'status' => $status,
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
@@ -4263,6 +4279,39 @@ class AjaxController extends Controller
         // $result = $query[0];
         // unset($result->password);
         // return $result;
+    }
+
+    public function deleteAdminUser($data)
+    {
+        header('Content-Type: application/json');
+        $id = $data['id'] ?? null;
+
+        if (!$id) {
+            return ['status' => false, 'message' => 'User ID is required'];
+        }
+
+        $user = EmployeeList::find($id);
+
+        if (!$user) {
+            return ['status' => false, 'message' => 'User not found'];
+        }
+
+        // Check if user has Super Admin or admin role
+        $role = $user->role;
+        if (!$role || !in_array(strtolower($role->name), ['super admin', 'admin'])) {
+            return ['status' => false, 'message' => 'Only users with Super Admin or admin role can be deleted'];
+        }
+
+        // Check if trying to delete yourself
+        $currentUser = Auth::guard('admin')->user();
+        if ($currentUser && $currentUser->id == $id) {
+            return ['status' => false, 'message' => 'You cannot delete your own account'];
+        }
+
+        // Soft delete the user
+        $user->delete();
+
+        return ['status' => true, 'message' => 'User deleted successfully'];
     }
     public function getPaymentDetails($id)
     {
@@ -5578,7 +5627,7 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Promo code is valid. Deposit between ' . $promocode->min_deposit . ' and ' . $promocode->max_deposit . ' and receive ' . $promocode->promo_percentage . '% extra bonus.';
+            $message = 'Code verified! Get a ' . (int)$promocode->promo_percentage . '% deposit bonus. Maximum bonus you can receive is $' . $promocode->max_deposit . '.';
 
             // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
             //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';

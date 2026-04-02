@@ -189,7 +189,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: '{{ $errorTitle }}',
-                    html: '{{ session('error') }}',
+                    html: '{!! session('error') !!}',
                     showConfirmButton: true,
                     allowOutsideClick: false,
                     allowEscapeKey: false,

@@ -125,21 +125,25 @@
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        exportOptions: {
-                            columns: [0,1,2,3,4,6,7] // Updated column indices to match your use case
-                        }
-                    },
-                    {
-                        text: 'Export All',
-                        action: function () {
-                            window.location.href = "/admin/export-all-internal-transfer";
-                        }
-                    }
-                ],
+            buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('internal_transfer')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            exportOptions: {
+                                columns: [0,1,2,3,4,6,7] // Updated column indices to match your use case
+                            }
+                        });
+                        buttons.push({
+                            text: 'Export All',
+                            action: function () {
+                                window.location.href = "/admin/export-all-internal-transfer";
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
 
             order: [[3, "desc"]],
             lengthMenu: [

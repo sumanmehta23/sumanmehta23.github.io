@@ -349,7 +349,7 @@ class Wallet extends Controller
         $templateVars = [
             'name' => $user->fullname,
             'server_name' => $settings['mt5_company_name'],
-            'site_link' => $settings['copyright_site_name_text'] . "/wallet_address_verify?id={$user->id}&clientWallet_id=$ClientWallet->id",
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_address_verify?id={$user->id}&clientWallet_id={$ClientWallet->id}",
             'email' => $from,
             "content" => $content,
             "title_right" => "Activate",
@@ -650,7 +650,7 @@ class Wallet extends Controller
         if (isset($wallet_details['wallet_address']) && isset($wallet_details['wallet_network'])) {
             $validation = $this->validateWalletAddress($wallet_details['wallet_address'], $wallet_details['wallet_network']);
             if (!$validation['valid']) {
-                return redirect()->route('user-profile')->with('error', $validation['message']);
+                return redirect()->to('/user-profile?tab=wallets')->with('error', $validation['message']);
             }
         }
 
@@ -702,9 +702,9 @@ class Wallet extends Controller
                 "btn_text" => "Login"
             ];
             $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
-            return redirect()->route('user-profile')->with('status', 'Your Wallet Details succesfully updated');
+            return redirect()->to('/user-profile?tab=wallets')->with('success', 'Your Wallet Details succesfully updated');
         }
-        return redirect()->route('user-profile')->with('error', 'Something went wrong');
+        return redirect()->to('/user-profile?tab=wallets')->with('error', 'Something went wrong');
     }
 
     public function delete_wallet_address(Request $request)
@@ -809,12 +809,12 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('success', 'Your wallet address is now verified');
+                return redirect()->to('/user-profile?tab=wallets')->with('success', 'Your wallet address is now verified');
             } else {
-                return redirect()->route('dashboard')->with('error', 'Sorry, your wallet address is already verified');
+                return redirect()->to('/user-profile?tab=wallets')->with('error', 'Sorry, your wallet address is already verified');
             }
         } else {
-            return redirect()->route('dashboard')->with('error', 'Sorry! No Adress Found. Signup here');
+            return redirect()->to('/user-profile?tab=wallets')->with('error', 'Sorry! No Adress Found. Signup here');
         }
     }
 
