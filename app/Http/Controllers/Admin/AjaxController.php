@@ -5578,7 +5578,7 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Code verified! Get a ' . $promocode->promo_percentage . '% deposit bonus. Maximum bonus you can receive is $' . $promocode->max_deposit . '.';
+            $message = 'Code verified! Get a ' . (int)$promocode->promo_percentage . '% deposit bonus. Maximum bonus you can receive is $' . $promocode->max_deposit . '.';
 
             // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
             //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';
