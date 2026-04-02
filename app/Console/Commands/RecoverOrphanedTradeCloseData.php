@@ -119,7 +119,7 @@ class RecoverOrphanedTradeCloseData extends Command
                 // Search for this position in the history
                 $matchAttempts = 0;
                 $potentialMatches = [];
-                
+
                 foreach ($allHistory as $historyRecord) {
                     $matchAttempts++;
                     // Match by multiple field names (ExpertPositionID, Order, Position, Ticket, ID)
@@ -156,7 +156,7 @@ class RecoverOrphanedTradeCloseData extends Command
                     // Check if this is a close event (State == 'closed' or State == 3)
                     $isClosed = false;
                     $stateValue = $historyRecord->State ?? null;
-                    
+
                     if (isset($historyRecord->State)) {
                         if (is_string($historyRecord->State)) {
                             $isClosed = strtolower($historyRecord->State) === 'closed';
