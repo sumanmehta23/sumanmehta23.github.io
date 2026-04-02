@@ -73,6 +73,13 @@ class RecoverOrphanedTradeCloseData extends Command
 
             $this->info("Found {$orphanedTrades->count()} orphaned trades");
 
+            if ($debug) {
+                $this->line("   📍 Position IDs we're searching for:");
+                $orphanedTrades->each(function ($trade) {
+                    $this->line("      - Position: {$trade->position_id}, open_time: {$trade->open_time}, open_price: {$trade->open_price}");
+                });
+            }
+
             // OPTIMIZATION: Get minimum open_time across all orphaned trades
             $minOpenTime = $orphanedTrades->min('open_time');
             $minOpenDateTime = new Carbon($minOpenTime);
@@ -216,13 +223,20 @@ class RecoverOrphanedTradeCloseData extends Command
             }
 
             // PROCESS THIS PAGE: Search for matches among orphaned trades
+            $recordIndex = 0;
             foreach ($pageHistory as $historyRecord) {
+                $recordIndex++;
                 if (!is_object($historyRecord)) {
                     continue;
                 }
 
                 // Try to match this record to one of our orphaned trades
                 $positionId = $this->extractPositionId($historyRecord);
+
+                // Show first few extractions if debug mode
+                if ($debug && $pagesScanned === 1 && $recordIndex <= 3) {
+                    $this->line("      History record #{$recordIndex}: extracted positionId={$positionId}");
+                }
 
                 if ($positionId === null || !$orphanedTrades->has($positionId)) {
                     continue; // Not relevant to our orphaned trades
