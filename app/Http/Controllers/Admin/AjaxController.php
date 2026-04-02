@@ -798,7 +798,11 @@ class AjaxController extends Controller
         $rmCondition = $this->buildLiveAccountsBaseQuery();
         $this->applyLiveAccountsFilters($rmCondition, $request);
 
-        $rmCondition->orderBy('id', 'desc');
+        // Don't set a default order here - let DataTables handle ordering
+        // Only apply default order if no order is requested
+        if (!$request->has('order') || empty($request->input('order'))) {
+            $rmCondition->orderBy('id', 'desc');
+        }
 
         if ($request->ajax()) {
             // dd(DataTables::of($rmCondition));
@@ -1048,6 +1052,38 @@ class AjaxController extends Controller
                         END {$order}
                     ");
                 })
+                ->orderColumn('created_at', function ($query, $order) {
+                    $query->orderBy('accounts.created_at', $order);
+                })
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->orderBy('accounts.balance', $order);
+                })
+                ->orderColumn('leverage', function ($query, $order) {
+                    $query->orderBy('accounts.leverage', $order);
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('accounts.email', $order);
+                })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('accounts.code', $order);
+                })
+                ->orderColumn('deposited', function ($query, $order) {
+                    $query->orderBy('successful_trade_deposits_count', $order);
+                })
+                ->orderColumn('traded', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ' . $order)
+                        ->orderBy('accounts.last_trade_at', $order);
+                })
+                ->orderColumn('account_status', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ' . $order)
+                        ->orderBy('accounts.deleted_at', $order);
+                })
+                ->orderColumn('total_deposit', function ($query, $order) {
+                    $query->orderByRaw('(SELECT SUM(deposit_amount) FROM trade_deposits WHERE account_id = accounts.id AND status = 1 AND deposit_type IN ("CryptoChill", "CreditCardPayissa", "RagaPay")) ' . $order);
+                })
+                ->orderColumn('total_withdraw', function ($query, $order) {
+                    $query->orderByRaw('(SELECT SUM(transaction_fee + withdrawal_amount) FROM trade_withdrawal WHERE account_id = accounts.id AND status = 1 AND withdraw_type IN ("Trade Withdrawal")) ' . $order);
+                })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions', 'deposited','traded', 'user_country'])
                 ->make(true);
         }
@@ -1231,11 +1267,11 @@ class AjaxController extends Controller
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('code', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            $q->where('accounts.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.email', 'LIKE', "%{$searchValue}%")
                                 // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhereRaw("DATE_FORMAT(accounts.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1322,6 +1358,21 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function ($row) {
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('accounts.email', $order);
+                })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('accounts.code', $order);
+                })
+                ->orderColumn('leverage', function ($query, $order) {
+                    $query->orderBy('accounts.leverage', $order);
+                })
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->orderBy('accounts.balance', $order);
+                })
+                ->orderColumn('created_at', function ($query, $order) {
+                    $query->orderBy('accounts.created_at', $order);
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail'])
                 ->make(true);
@@ -1805,6 +1856,32 @@ class AjaxController extends Controller
 
                 ->orderColumn('withdraw_type', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.withdraw_type', $order);
+                })
+
+                ->orderColumn('created_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('created_time', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('new_total_deposit', function ($query, $order) {
+                    $query->join('trade_deposits as td', 'td.user_id', '=', 'trade_withdrawal.user_id')
+                        ->where('td.status', 1)
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(td.deposit_amount), 0) as total_deposit')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_deposit', $order);
+                })
+
+                ->orderColumn('new_total_withdrawal', function ($query, $order) {
+                    $query->join('trade_withdrawal as tw', function ($join) {
+                            $join->on('tw.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('tw.status', 1);
+                        })
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(tw.withdrawal_amount), 0) as total_withdrawal')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_withdrawal', $order);
                 })
 
                 ->orderColumn('code', function ($query, $order) {
@@ -3084,6 +3161,32 @@ class AjaxController extends Controller
                     $query->join('accounts as acc', 'acc.id', '=', 'trade_withdrawal.account_id')
                         ->orderBy('acc.balance', $order)
                         ->select('trade_withdrawal.*');
+                })
+
+                ->orderColumn('created_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('created_time', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('new_total_deposit', function ($query, $order) {
+                    $query->join('trade_deposits as td', 'td.user_id', '=', 'trade_withdrawal.user_id')
+                        ->where('td.status', 1)
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(td.deposit_amount), 0) as total_deposit')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_deposit', $order);
+                })
+
+                ->orderColumn('new_total_withdrawal', function ($query, $order) {
+                    $query->join('trade_withdrawal as tw', function ($join) {
+                            $join->on('tw.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('tw.status', 1);
+                        })
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(tw.withdrawal_amount), 0) as total_withdrawal')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_withdrawal', $order);
                 })
 
                 ->orderColumn('floating_balance', function ($query, $order) {
