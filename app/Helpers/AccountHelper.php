@@ -148,8 +148,16 @@ class AccountHelper
             // Then get the actual deals with their details
             return $api->DealGetPage($login, $from, $to, 0, $totalDeals, $deals);
         });
+
+        // Ensure $deals is an array before using array_filter
+        if (!is_array($deals)) {
+            $deals = [];
+        }
         $filteredDeals = array_filter($deals, fn($deal) => $deal->Symbol !== "");
-        $closeTrades = (array_filter($filteredDeals, fn($deal) => $deal->Entry === 1));
+
+        // Ensure filteredDeals is an array before using array_filter
+        $filteredDeals = is_array($filteredDeals) ? $filteredDeals : [];
+        $closeTrades = array_filter($filteredDeals, fn($deal) => $deal->Entry === 1);
 
         $closeTradesCount = $closeTrades ? count($closeTrades) : 0;
         $totalCommission = $filteredDeals ? array_sum(array_column($filteredDeals, 'Commission')) : 0;
