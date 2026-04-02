@@ -526,7 +526,14 @@
                 text: '{{ session('success') }}',
                 message: 'Kindly check your new email address and complete the verification process for this update.'
             }).then(() => {
-                window.location.href = '{{ route('user-profile') }}';
+                // Preserve the tab parameter if it exists in the current URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const tabParam = urlParams.get('tab');
+                let redirectUrl = '{{ route('user-profile') }}';
+                if (tabParam) {
+                    redirectUrl += '?tab=' + tabParam;
+                }
+                window.location.href = redirectUrl;
             });
         </script>
     @endif
@@ -854,6 +861,21 @@
                 }
             });
         }
+
+        // Handle tab navigation from query parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+
+            if (tabParam === 'wallets') {
+                // Get the wallets tab link and click it
+                const walletsTab = document.getElementById('profile-tab-5');
+                if (walletsTab) {
+                    const bsTab = new bootstrap.Tab(walletsTab);
+                    bsTab.show();
+                }
+            }
+        });
 
     </script>
 @endsection
