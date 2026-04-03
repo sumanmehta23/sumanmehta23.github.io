@@ -6,6 +6,8 @@ use App\Models\Ib1;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\Setting;
+use App\Models\PopupImpression;
+use App\Support\PopupCampaigns\ReviewPopupCampaign;
 use App\Rules\ValidPassword;
 use App\Models\RestrictIps;
 use App\Models\ToggleGroup;
@@ -61,7 +63,37 @@ class SettingsController extends Controller
 
     public function reviewPopupSettings()
     {
-        return view('admin.review_popup_settings');
+        $campaign = new ReviewPopupCampaign(settings());
+        $campaignKey = $campaign->key();
+
+        $baseQuery = PopupImpression::query()->where('popup_key', $campaignKey);
+        $usersSawPopup = (clone $baseQuery)->count();
+        $usersClosedPopup = (clone $baseQuery)->whereNotNull('dismissed_at')->count();
+        $usersClickedCta = (clone $baseQuery)->whereNotNull('cta_clicked_at')->count();
+        $usersDismissedAndClicked = (clone $baseQuery)
+            ->whereNotNull('dismissed_at')
+            ->whereNotNull('cta_clicked_at')
+            ->count();
+
+        $pct = static function (int $numerator, int $denominator): ?float {
+            if ($denominator <= 0) {
+                return null;
+            }
+
+            return round(($numerator / $denominator) * 100, 1);
+        };
+
+        $reviewPopupMetrics = [
+            'campaign_key' => $campaignKey,
+            'users_saw_popup' => $usersSawPopup,
+            'users_closed_popup' => $usersClosedPopup,
+            'users_clicked_cta' => $usersClickedCta,
+            'close_rate_pct' => $pct($usersClosedPopup, $usersSawPopup),
+            'cta_conversion_pct' => $pct($usersClickedCta, $usersSawPopup),
+            'dismissed_also_clicked_pct' => $pct($usersDismissedAndClicked, $usersClosedPopup),
+        ];
+
+        return view('admin.review_popup_settings', compact('reviewPopupMetrics'));
     }
 
     public function logs(Request $request)

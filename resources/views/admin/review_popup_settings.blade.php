@@ -1,6 +1,16 @@
 @extends('layouts.admin.admin')
 @section('content')
     @php
+        $reviewPopupMetrics = $reviewPopupMetrics ?? [
+            'campaign_key' => '—',
+            'users_saw_popup' => 0,
+            'users_closed_popup' => 0,
+            'users_clicked_cta' => 0,
+            'close_rate_pct' => null,
+            'cta_conversion_pct' => null,
+            'dismissed_also_clicked_pct' => null,
+        ];
+
         $popupSettingOn = function ($value, $default = true) {
             if ($value === null || $value === '') {
                 return $default;
@@ -32,7 +42,7 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-8 col-sm-12">
+                <div class="col-12 col-xl-10">
                     <form method="post" action="{{ route('admin.review-popup-settings.update') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="card custom-card">
@@ -62,6 +72,13 @@
                                             Preview
                                         </button>
                                     </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="review-popup-metrics-tab" data-bs-toggle="tab"
+                                            data-bs-target="#review-popup-metrics-pane" type="button" role="tab"
+                                            aria-controls="review-popup-metrics-pane" aria-selected="false">
+                                            Metrics
+                                        </button>
+                                    </li>
                                 </ul>
 
                                 <div class="tab-content" id="review-popup-settings-tab-content">
@@ -87,13 +104,14 @@
                                             <label class="form-label">Popup ID</label>
                                             <input type="text" class="form-control" name="review_popup_id"
                                                 value="{{ $settings['review_popup_id'] ?? 'globalReviewPopup' }}">
+                                            <small class="text-muted">HTML element id for the popup on CRM pages. Keep unique if multiple popups exist.</small>
                                         </div>
 
                                         <div class="mb-3">
                                             <label class="form-label">Campaign Key</label>
                                             <input type="text" class="form-control" name="review_popup_campaign_key"
                                                 value="{{ $settings['review_popup_campaign_key'] ?? 'review_popup_v1' }}">
-                                            <small class="text-muted">Use a stable key per popup campaign. Change it only when you want to track a new popup campaign separately.</small>
+                                            <small class="text-muted">Used for impression tracking and the Metrics tab. Change it to start a new campaign without changing the Popup ID.</small>
                                         </div>
 
                                         <div class="mb-3">
@@ -253,7 +271,94 @@
                                                 flagged {{ $popupSettingOn($settings['review_popup_exclude_flagged'] ?? null, true) ? 'excluded' : 'allowed' }}.
                                             </div>
                                         </div>
-                                </div>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="review-popup-metrics-pane" role="tabpanel"
+                                        aria-labelledby="review-popup-metrics-tab" tabindex="0">
+                                        <div class="border rounded-3 p-3 bg-light bg-opacity-25">
+                                            <p class="text-muted mb-4 mb-lg-5">
+                                                Counts and rates for the current
+                                                <strong>Campaign Key</strong>
+                                                <code class="text-danger">{{ $reviewPopupMetrics['campaign_key'] ?? '—' }}</code>.
+                                                Data is collected when clients see, close, or click the CTA on CRM pages.
+                                            </p>
+
+                                            <div class="row g-3 mb-4 mb-lg-5">
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border shadow-sm">
+                                                        <div class="card-body">
+                                                            <div class="text-muted small mb-2">Users who saw the popup</div>
+                                                            <div class="fs-2 fw-semibold">{{ number_format($reviewPopupMetrics['users_saw_popup'] ?? 0) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border shadow-sm">
+                                                        <div class="card-body">
+                                                            <div class="text-muted small mb-2">Users who closed / dismissed</div>
+                                                            <div class="fs-2 fw-semibold">{{ number_format($reviewPopupMetrics['users_closed_popup'] ?? 0) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card h-100 border shadow-sm">
+                                                        <div class="card-body">
+                                                            <div class="text-muted small mb-2">Users who clicked the CTA</div>
+                                                            <div class="fs-2 fw-semibold">{{ number_format($reviewPopupMetrics['users_clicked_cta'] ?? 0) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered align-middle mb-0 bg-white">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Metric</th>
+                                                            <th class="text-end" style="min-width: 8rem;">Value</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Close rate (dismissed ÷ saw)</td>
+                                                            <td class="text-end fw-medium">
+                                                                @if (($reviewPopupMetrics['close_rate_pct'] ?? null) !== null)
+                                                                    {{ $reviewPopupMetrics['close_rate_pct'] }}%
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>CTA click rate (clicked ÷ saw)</td>
+                                                            <td class="text-end fw-medium">
+                                                                @if (($reviewPopupMetrics['cta_conversion_pct'] ?? null) !== null)
+                                                                    {{ $reviewPopupMetrics['cta_conversion_pct'] }}%
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Of users who dismissed, % who also clicked the CTA</td>
+                                                            <td class="text-end fw-medium">
+                                                                @if (($reviewPopupMetrics['dismissed_also_clicked_pct'] ?? null) !== null)
+                                                                    {{ $reviewPopupMetrics['dismissed_also_clicked_pct'] }}%
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <p class="small text-muted mt-3 mb-0">
+                                                A user can both dismiss and click the CTA in the same session; each action is counted once per user.
+                                                Changing the <strong>Campaign Key</strong> in Content starts a new campaign for future metrics.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-footer text-end" id="review-popup-settings-footer">
@@ -287,16 +392,20 @@
             var previewPopupId = 'adminReviewPopupPreview';
             var openButton = document.getElementById('review-popup-preview-open');
             var previewTabButton = document.getElementById('review-popup-preview-tab');
+            var metricsTabButton = document.getElementById('review-popup-metrics-tab');
             var contentTabButton = document.getElementById('review-popup-content-tab');
             var conditionsTabButton = document.getElementById('review-popup-conditions-tab');
             var footer = document.getElementById('review-popup-settings-footer');
 
             var syncFooterVisibility = function() {
-                if (!footer || !previewTabButton) {
+                if (!footer) {
                     return;
                 }
 
-                footer.style.display = previewTabButton.classList.contains('active') ? 'none' : '';
+                var hideFooter = (previewTabButton && previewTabButton.classList.contains('active'))
+                    || (metricsTabButton && metricsTabButton.classList.contains('active'));
+
+                footer.style.display = hideFooter ? 'none' : '';
             };
 
             if (openButton) {
@@ -307,7 +416,7 @@
                 });
             }
 
-            [previewTabButton, contentTabButton, conditionsTabButton].forEach(function(tabButton) {
+            [previewTabButton, metricsTabButton, contentTabButton, conditionsTabButton].forEach(function(tabButton) {
                 if (!tabButton) {
                     return;
                 }

@@ -149,6 +149,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
     Route::post('/popup-impressions/review-popup', [PopupImpressionController::class, 'storeReviewPopup'])
         ->name('popup-impressions.review-popup');
+    Route::post('/popup-impressions/review-popup/dismiss', [PopupImpressionController::class, 'dismissReviewPopup'])
+        ->name('popup-impressions.review-popup.dismiss');
+    Route::post('/popup-impressions/review-popup/click', [PopupImpressionController::class, 'clickReviewPopup'])
+        ->name('popup-impressions.review-popup.click');
 
     Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
     Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
