@@ -99,7 +99,10 @@
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
                                                                     <p style="margin: 0; margin-bottom: 16px;"><strong>Dear {{ $user->fullname }},</strong></p>
-                                                                    <p style="margin: 0; margin-bottom: 16px;">We will be performing scheduled server maintenance over the weekend of 5-6 April. To ensure a smooth transition, all open positions and pending orders across all instruments must be closed before the end of trading on Friday 4 April.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">We would like to inform you that the scheduled server maintenance previously announced for the weekend of 5–6 April has been postponed to the weekend of 11–12 April.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">As a result, there is no requirement to close your open positions or pending orders by April 4. You may continue trading as normal.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">New deadlines for the rescheduled maintenance will be communicated in a separate notice ahead of Friday 10 April. Please look out for that email and plan accordingly.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">We apologize for any inconvenience this change may cause and thank you for your understanding.</p>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -124,12 +127,12 @@
                                                 <td class="column column-1" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;" width="100%">
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
-                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;border-left:4px solid #ff6b35;">
-                                                                <div style="color:#ff6b35;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:16px;font-weight:700;letter-spacing:0px;line-height:120%;text-align:left;mso-line-height-alt:19px;">
-                                                                    <p style="margin: 0; margin-bottom: 8px;"><strong>⚠ IMPORTANT DEADLINE</strong></p>
+                                                            <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;border-left:4px solid #00b98e;">
+                                                                <div style="color:#00b98e;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:16px;font-weight:700;letter-spacing:0px;line-height:120%;text-align:left;mso-line-height-alt:19px;">
+                                                                    <p style="margin: 0; margin-bottom: 8px;"><strong>✓ MAINTENANCE RESCHEDULED</strong></p>
                                                                 </div>
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:left;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0;">Please close all positions and pending orders by <strong>4:50 PM EST (23:50 server time) on Friday, April 4</strong>. Any positions or pending orders still open at <strong>4:55 PM EST (23:55 server time)</strong> will be automatically closed at prevailing market prices.</p>
+                                                                    <p style="margin: 0;">The scheduled maintenance has been moved to <strong>weekend of 11–12 April</strong>. No actions are required at this time.</p>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -156,8 +159,7 @@
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
                                                                 <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 16px;">Trading will resume as normal when markets open on Monday 7 April.</p>
-                                                                    <p style="margin: 0; margin-bottom: 16px;">If you have any questions, please contact our support team.</p>
+                                                                    <p style="margin: 0; margin-bottom: 16px;">If you have any questions, please do not hesitate to contact our support team.</p>
                                                                 </div>
                                                             </td>
                                                         </tr>

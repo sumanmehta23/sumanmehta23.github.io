@@ -42,7 +42,7 @@ class ScheduledMaintenanceNotification extends Notification implements ShouldQue
                 'user' => $notifiable,
                 'settings' => $this->settings,
             ])
-            ->subject('Action Required: All Positions Must Be Closed by Friday 4 April');
+            ->subject('Update: Scheduled Server Maintenance Postponed');
     }
 
     /**
