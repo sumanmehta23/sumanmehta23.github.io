@@ -1294,6 +1294,7 @@ class Wallet extends Controller
                                     $promo = Promocode::where('code', $promocode)->first();
                                     if ($promo) {
                                         $min_depsoit = $promo->min_deposit;
+                                        Log::info("Promocode found: " . $promo->code . " with minimum deposit: " . $min_depsoit);
                                         if ($promo && $amount >= $min_depsoit) {
                                             $ticket = NULL;
                                             if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
@@ -1301,7 +1302,7 @@ class Wallet extends Controller
                                             } else {
                                                 $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                                             }
-
+                                            Log::info("Calculated bonus amount: " . $bonus_amount);
                                             $errorCode = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
                                             if ($errorCode !== MTRetCode::MT_RET_OK) {
                                                 DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
