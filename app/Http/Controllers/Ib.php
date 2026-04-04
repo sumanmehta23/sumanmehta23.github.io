@@ -321,7 +321,9 @@ class Ib extends Controller
             if ($result) {
                 $referral_code = $result->referral_code;
                 $countries = Country::all();
-                return view('auth.register', compact('countries', 'referral_code'));
+                $turnstileEnabled = (bool) config('services.turnstile.enabled', false);
+                $turnstileSiteKey = (string) config('services.turnstile.site_key', '');
+                return view('auth.register', compact('countries', 'referral_code', 'turnstileEnabled', 'turnstileSiteKey'));
             } else {
                 return redirect()->route('register')->with('error', 'Invalid Refer Code');
             }

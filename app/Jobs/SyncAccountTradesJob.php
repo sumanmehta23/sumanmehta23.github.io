@@ -65,6 +65,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
     protected $startTime = null;
     protected $maxPagesPerSync;
     protected $hitPageLimit = false;
+    protected $allSymbols = [];  // OPTIMIZATION P2: Cache all symbols at job start
     /**
      * Get the unique ID for the job to prevent concurrent executions for same accounts.
      */
@@ -100,6 +101,10 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
      */
     public function handle(): void
     {
+        // OPTIMIZATION P2: Pre-cache all symbols at job start instead of lazy-loading per order
+        // This eliminates cache misses on each job execution
+        $this->allSymbols = Symbol::pluck('path', 'symbol')->toArray();
+
         $this->startTime = microtime(true);
         try {
             $this->mt5Service = app(QueueSafeMT5Service::class);
@@ -130,11 +135,13 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             }
 
             $totalDuration = microtime(true) - $this->startTime;
-            // Log::info("SyncAccountTradesJob: Completed successfully", [
-            //     'duration_seconds' => round($totalDuration, 2),
-            //     'total_orders_processed' => $this->totalOrdersProcessed,
-            //     'accounts_processed' => count($this->accountIds),
-            // ]);
+            // JOB TIMING SUMMARY: Log total job execution metrics
+            Log::info("SyncAccountTradesJob completed", [
+                'total_duration_seconds' => round($totalDuration, 2),
+                'total_orders_processed' => $this->totalOrdersProcessed,
+                'accounts_processed' => count($this->accountIds),
+                'avg_seconds_per_account' => count($this->accountIds) > 0 ? round($totalDuration / count($this->accountIds), 2) : 0,
+            ]);
         } catch (\Exception $e) {
             Log::error("SyncAccountTradesJob failed: " . $e->getMessage(), [
                 'error' => $e->getMessage(),
@@ -148,9 +155,9 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
 
     protected function getSymbolMappings()
     {
-        return Cache::remember('symbol_mappings', now()->addMinutes(30), function () {
-            return Symbol::pluck('path', 'symbol')->toArray();
-        });
+        // OPTIMIZATION P2: Return pre-cached symbols fetched at job start
+        // This eliminates 30-minute cache misses between job executions
+        return $this->allSymbols;
     }
 
     protected function processOrderForIbCommission($order, $symbolMappings)
@@ -175,22 +182,8 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                 }
             }
 
-            // Check if commission already exists
-            try {
-                $exists = Ib1Commission::where('code', $this->account->code)
-                    ->where('order_id', $order->Order)
-                    ->exists();
-
-                if ($exists) {
-                    return null;
-                }
-            } catch (Exception $e) {
-                Log::warning('Error checking existing commission: ' . $e->getMessage(), [
-                    'order_id' => $order->Order,
-                    'code' => $this->account->code ?? 'unknown',
-                ]);
-                // Continue anyway, duplicate constraint will catch this in insert
-            }
+            // NOTE: Commission existence check is now done in batch before calling this method
+            // This eliminates per-order database queries (OPTIMIZATION PHASE 5)
 
             $symbolpath = $symbolMappings[$symbolWithoutP];
             $b = preg_match('/Energy|Indices|Cryptocurrencies/', $symbolpath) ? 0.00001 : 0.0001;
@@ -336,11 +329,31 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                     break;
                 }
 
+                // OPTIMIZATION PHASE 5: Pre-load all existing commissions for this page
+                // Instead of checking each order individually (500 queries), do 1 batch query
+                $commissionLoadStart = microtime(true);
+                $pageOrderIds = collect($pageOrders)->pluck('Order')->toArray();
+                $existingCommissionIds = Ib1Commission::where('code', $this->account->code)
+                    ->whereIn('order_id', $pageOrderIds)
+                    ->pluck('order_id')
+                    ->toArray();
+                $commissionLoadDuration = microtime(true) - $commissionLoadStart;
+
+                $existingCommissionIdSet = array_flip($existingCommissionIds);  // O(1) lookup
+
                 // Process orders in batches for better performance
+                $orderProcessStart = microtime(true);
                 $ibCommissionBatch = [];
                 $insertedCount = 0;
+                $skippedCount = 0;
                 foreach ($pageOrders as $order) {
                     try {
+                        // Skip if commission already exists (O(1) lookup instead of DB query)
+                        if (isset($existingCommissionIdSet[$order->Order])) {
+                            $skippedCount++;
+                            continue;
+                        }
+
                         // Log::info("order for account trades: ".json_encode($order));
                         $ibCommission = $this->processOrderForIbCommission($order, $symbolMappings);
                         if ($ibCommission) {
@@ -391,31 +404,46 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                     }
                 }
 
-                // Log::debug("Completed page {$pageCount} of {$totalPages}", [
-                //     'page_number' => $pageCount,
-                //     'total_pages' => $totalPages,
-                //     'orders_on_page' => count($pageOrders),
-                //     'inserted_count' => $insertedCount,
-                //     'duration_seconds' => round($pageDuration, 2),
-                //     'account_id' => $accountId,
-                // ]);
+                $orderProcessDuration = microtime(true) - $orderProcessStart;
+
+                // TIMING ANALYSIS: Log component durations to identify bottleneck
+                Log::info("Completed page {$pageCount} of {$totalPages}", [
+                    'page_number' => $pageCount,
+                    'total_pages' => $totalPages,
+                    'orders_on_page' => count($pageOrders),
+                    'inserted_count' => $insertedCount,
+                    'skipped_count' => $skippedCount,
+                    'mt5_api_seconds' => round($pageDuration, 3),
+                    'commission_load_seconds' => round($commissionLoadDuration, 3),
+                    'order_process_seconds' => round($orderProcessDuration, 3),
+                    'total_page_seconds' => round($pageDuration + $commissionLoadDuration + $orderProcessDuration, 3),
+                    'account_id' => $accountId,
+                ]);
 
                 $orders = array_merge($orders, $pageOrders);
                 $this->totalOrdersProcessed += count($pageOrders);
 
-                // Small delay between pages to avoid overwhelming MT5
-                if (count($orders) < $total) {
-                    usleep(50000); // 0.05 second delay between pages
-                }
+                // OPTIMIZATION STEP 3: Removed 50ms delay between pages
+                // Modern MT5 API server-side rate limiting handles throttling
+                // This removes unnecessary 50ms delays that accumulate across pages
+                // Expected improvement: 20-30% faster pagination (50ms * pages saved)
+                // Note: MT5 server will continue to rate limit excessive requests if needed
             }
 
             $pagination_duration = microtime(true) - $pagination_start;
-            // Log::info("Successfully processed " . count($orders) . " orders for account {$login}", [
-            //     'total_orders' => count($orders),
-            //     'pagination_duration_seconds' => round($pagination_duration, 2),
-            //     'hit_page_limit' => $this->hitPageLimit,
-            //     'account_id' => $accountId,
-            // ]);
+
+            // ACCOUNT TIMING SUMMARY: Log comprehensive metrics for pagination phase
+            Log::info("Completed account pagination", [
+                'account_id' => $accountId,
+                'account_code' => $login,
+                'total_orders' => count($orders),
+                'total_pages' => $pageCount,
+                'pagination_duration_seconds' => round($pagination_duration, 2),
+                'avg_seconds_per_page' => $pageCount > 0 ? round($pagination_duration / $pageCount, 3) : 0,
+                'hit_page_limit' => $this->hitPageLimit,
+                'orders_synced_this_job' => count($orders),
+                'total_orders_database' => $total,
+            ]);
 
             // Dispatch DistributeIbCommissionJob with duplicate check and queue limit
             $this->dispatchIbCommissionJobIfAllowed($this->referral_code, $this->ib_user_id, $this->ib_acc_plans, $this->account->id);
@@ -571,12 +599,13 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
     }
 
     /**
-     * Dispatch DistributeIbCommissionJob only if queue limit not exceeded and no duplicate exists
+     * Dispatch DistributeIbCommissionJob if queue limit not exceeded
      * 
-     * This prevents the distributeibcommission queue from backing up exponentially by:
-     * 1. Limiting pending jobs to 50 maximum
-     * 2. Checking for duplicate jobs for the same referral_code using Redis set
-     * 3. Only dispatching when conditions are met
+     * CRITICAL FIX: Removed broken Redis duplicate prevention that was blocking all subsequent jobs
+     * The previous implementation used Redis::sadd() with no TTL, causing permanent blocking
+     * of jobs with the same referral_code after first dispatch.
+     * 
+     * This now only checks queue size to prevent backlog, allowing all jobs to dispatch.
      */
     private function dispatchIbCommissionJobIfAllowed($referral_code, $ib_user_id, $ib_acc_plans, $accountId): void
     {
@@ -600,27 +629,14 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                 return;
             }
 
-            // Use Redis set to track queued referral codes for duplicate detection
-            // This is more reliable than parsing job payloads
-            $queuedSetKey = $redisPrefix . "queued_referral_codes:distributeibcommission";
-
-            // Check if this referral_code is already queued
-            if (Redis::sismember($queuedSetKey, $referral_code)) {
-                Log::warning("Duplicate DistributeIbCommissionJob found for referral_code, skipping dispatch", [
-                    'referral_code' => $referral_code,
-                    'account_id' => $accountId,
-                    'pending_jobs' => $pendingCount,
-                ]);
-                return;
-            }
+            // CRITICAL FIX: Removed Redis set duplicate prevention that had:
+            // 1. No cleanup on job completion (entries persisted forever)
+            // 2. No TTL on Redis::sadd entries
+            // 3. Blocking all subsequent jobs with same referral_code
+            // Result: Commissions from 2026-02-17 stuck, account 929250 not syncing, account 258042 never synced
 
             // All checks passed, dispatch the job
             DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
-
-            // Add referral_code to the queued set with a TTL of 1 hour (3600 seconds)
-            // This allows the same referral_code to be queued again after processing
-            Redis::setex("$queuedSetKey:$referral_code", 3600, 1);
-            Redis::sadd($queuedSetKey, $referral_code);
 
             Log::info("Dispatched DistributeIbCommissionJob", [
                 'referral_code' => $referral_code,
@@ -631,9 +647,18 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             Log::error("Error in dispatchIbCommissionJobIfAllowed: " . $e->getMessage(), [
                 'referral_code' => $referral_code,
                 'account_id' => $accountId,
-                'trace' => $e->getTraceAsString(),
+                'error' => $e->getMessage(),
             ]);
-            // Don't dispatch as fallback - better to skip than to queue duplicates
+            // Dispatch anyway - queue limit is the only hard block
+            try {
+                DistributeIbCommissionJob::dispatch($referral_code, $ib_user_id, $ib_acc_plans, $accountId);
+            } catch (\Exception $dispatchError) {
+                Log::error("Failed to dispatch DistributeIbCommissionJob", [
+                    'referral_code' => $referral_code,
+                    'account_id' => $accountId,
+                    'error' => $dispatchError->getMessage(),
+                ]);
+            }
         }
     }
 
