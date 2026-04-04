@@ -360,7 +360,7 @@
         @hasExportPermission('ib_dashboard')
           buttons.push({
             extend: 'excel',
-            text: 'Export to Exceltt',
+            text: 'Export to Excel',
             exportOptions: {
               columns: [7,8,11,3,4,5,9,10]
             }
