@@ -2308,7 +2308,13 @@ class AjaxController extends Controller
                                 ->orWhere('code', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('deposit_amount', 'LIKE', "%{$searchValue}%")
                                 ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%");
+                                ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhereExists(function ($subQuery) use ($searchValue) {
+                                    $subQuery->select(DB::raw(1))
+                                        ->from('accounts')
+                                        ->whereRaw('accounts.id = CAST(trade_deposits.deposit_from AS UNSIGNED)')
+                                        ->where('accounts.code', 'LIKE', "%{$searchValue}%");
+                            });
                         });
                     }
                 })
