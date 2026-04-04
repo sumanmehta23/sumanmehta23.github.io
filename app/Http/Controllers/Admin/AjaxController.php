@@ -2299,6 +2299,19 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+
+                        $query->where(function ($q) use ($searchValue) {
+                            $q->where('email', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('deposit_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('deposit_from', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('deposit_type', 'LIKE', "%{$searchValue}%");
+                        });
+                    }
+                })
                 ->addColumn('name', function ($row) {
                     return $row->user->fullname ?? '-';
                 })
