@@ -68,12 +68,16 @@ class SettingsController extends Controller
 
         $baseQuery = PopupImpression::query()->where('popup_key', $campaignKey);
         $usersSawPopup = (clone $baseQuery)->count();
-        $usersClosedPopup = (clone $baseQuery)->whereNotNull('dismissed_at')->count();
         $usersClickedCta = (clone $baseQuery)->whereNotNull('cta_clicked_at')->count();
-        $usersDismissedAndClicked = (clone $baseQuery)
+        $pureDismissals = (clone $baseQuery)
+            ->whereNotNull('dismissed_at')
+            ->whereNull('cta_clicked_at')
+            ->count();
+        $clickedThenDismissed = (clone $baseQuery)
             ->whereNotNull('dismissed_at')
             ->whereNotNull('cta_clicked_at')
             ->count();
+        $usersDismissedPopup = (clone $baseQuery)->whereNotNull('dismissed_at')->count();
 
         $pct = static function (int $numerator, int $denominator): ?float {
             if ($denominator <= 0) {
@@ -86,11 +90,12 @@ class SettingsController extends Controller
         $reviewPopupMetrics = [
             'campaign_key' => $campaignKey,
             'users_saw_popup' => $usersSawPopup,
-            'users_closed_popup' => $usersClosedPopup,
+            'users_dismissed_popup' => $usersDismissedPopup,
             'users_clicked_cta' => $usersClickedCta,
-            'close_rate_pct' => $pct($usersClosedPopup, $usersSawPopup),
-            'cta_conversion_pct' => $pct($usersClickedCta, $usersSawPopup),
-            'dismissed_also_clicked_pct' => $pct($usersDismissedAndClicked, $usersClosedPopup),
+            'pure_dismissals' => $pureDismissals,
+            'clicked_then_dismissed' => $clickedThenDismissed,
+            'pure_dismissal_rate_pct' => $pct($pureDismissals, $usersSawPopup),
+            'cta_click_rate_pct' => $pct($usersClickedCta, $usersSawPopup),
         ];
 
         return view('admin.review_popup_settings', compact('reviewPopupMetrics'));
