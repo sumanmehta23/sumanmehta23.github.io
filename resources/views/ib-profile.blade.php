@@ -504,6 +504,16 @@
                         text: 'Export to Excel',
                         className: ' btn btn-primary',
                         filename: 'Commission_History_' + new Date().toISOString().slice(0, 10),
+                        action: function (e, dt, node, config) {
+                            if (!dt.page.info().recordsDisplay) {
+                                return Swal.fire({
+                                    icon: 'error',
+                                    title: 'Export Failed',
+                                    text: 'No IB commission history data is available to export.'
+                                });
+                            }
+                            $.fn.dataTable.ext.buttons.excelHtml5.action.call(this, e, dt, node, config);
+                        },
                         exportOptions: {
                             columns: [4, 7, 2, 8, 5, 6]
                         }
