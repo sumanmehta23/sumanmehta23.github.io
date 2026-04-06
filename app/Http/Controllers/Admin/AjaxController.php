@@ -1200,6 +1200,25 @@ class AjaxController extends Controller
               AND td.deleted_at IS NULL
         )";
 
+        $hasSuccessfulWAlletDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deposit_type ='Wallet Transfer'
+              AND td.deposit_from = 'Wallet Transfer'
+              AND td.deleted_at IS NULL
+        )";
+
+        $hasSuccessfulInternalDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deposit_type ='Internal Transfer'
+              AND td.deleted_at IS NULL
+        )";
+
         $hasTradesSql = "(accounts.last_trade_at IS NOT NULL OR EXISTS (
             SELECT 1
             FROM trades tr
@@ -1213,7 +1232,12 @@ class AjaxController extends Controller
             $query->whereRaw($hasSuccessfulDepositSql);
         } elseif ($deposited === 'no') {
             $query->whereRaw("NOT {$hasSuccessfulDepositSql}");
+        } elseif ($deposited === 'wallet_deposit') {
+            $query->whereRaw($hasSuccessfulWAlletDepositSql);
+        } elseif ($deposited === 'internal_transfer') {
+            $query->whereRaw($hasSuccessfulInternalDepositSql);
         }
+        
 
         // Separate Not Traded filter
         $Traded = $request->get('traded');
