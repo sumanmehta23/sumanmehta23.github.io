@@ -512,7 +512,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 </a>
                             </li>
 
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="{{ route('learn') }}" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -521,7 +521,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                     </span>
                                     <span class="pc-mtext">Learn</span>
                                 </a>
-                            </li>
+                            </li> --}}
 
                             {{-- @if (!empty($ibResult)) --}}
                             <li class="pc-item">
