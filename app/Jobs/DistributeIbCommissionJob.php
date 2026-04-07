@@ -130,20 +130,25 @@ class DistributeIbCommissionJob implements ShouldQueue
             $this->buffer = [];
             $this->finalResults = [];
 
-            try {
-                // CRITICAL OPTIMIZATION (April 7, 2026): Replace expensive LEFT JOIN with NOT EXISTS
-                // Problem: LEFT JOIN + whereNull = full table scan through ib_wallet = 2298ms
-                // Solution: Use NOT EXISTS subquery - more efficient for this pattern
-                // NOT EXISTS: ~200-300ms vs LEFT JOIN + whereNull: 2298ms (90% faster!)
+            // CRITICAL OPTIMIZATION (April 7, 2026): Cache wallet commission IDs upfront
+            // Problem: Subquery was running 30 times (once per chunk), evaluating to 8,345ms each time
+            // Solution: Load all wallet commission IDs ONCE at job start, use O(1) lookups in loop
+            // This eliminates 30 × 8,345ms = 250 seconds of wasted database time!
+            $cacheStart = microtime(true);
+            $existingWalletCommissionIds = IbWallet::where('user_id', $this->userId)
+                ->pluck('ib1_commission_id')
+                ->flip() // Convert to array for O(1) lookup
+                ->toArray();
+            $cacheDuration = microtime(true) - $cacheStart;
+            Log::debug("Cached wallet commission IDs", [
+                'user_id' => $this->userId,
+                'cached_ids' => count($existingWalletCommissionIds),
+                'cache_duration_ms' => round($cacheDuration * 1000, 2),
+            ]);
 
+            try {
+                // Query WITHOUT the expensive subquery - we'll filter in PHP instead
                 $ibcommissions = Ib1Commission::with(['user:id,email,ib1,ib2,ib3,ib4,ib5,ib6,ib7,ib8,ib9,ib10,ib11,ib12,ib13,ib14,ib15', 'account:id,account_type_id'])
-                    // Use NOT EXISTS instead of LEFT JOIN for better performance
-                    ->whereNotExists(function ($query) {
-                        $query->select(DB::raw(1))
-                            ->from('ib_wallet')
-                            ->whereColumn('ib_wallet.ib1_commission_id', 'ib1_commission.id')
-                            ->where('ib_wallet.user_id', $this->userId);
-                    })
                     ->whereIn('ib1_commission.user_id', $userIds)
                     ->where('ib1_commission.orderstate', 4)
                     ->whereNotIn('ib1_commission.status', [1, 10]) // Exclude processed (1) and discarded (10)
@@ -153,8 +158,19 @@ class DistributeIbCommissionJob implements ShouldQueue
                     // OPTIMIZATION (April 7, 2026): Reduce chunk size for faster processing
                     // 500 trades per chunk was too large - reduced to 200 for better cache locality
                     // Jobs complete faster, queue processes more jobs per second
-                    ->chunk(200, function ($ibcommissions) {
+                    ->chunk(200, function ($ibcommissions) use ($existingWalletCommissionIds) {
                         $finalResults = $walletsToCreate = [];
+
+                        // Filter out commissions that already have wallets (O(1) lookup in cache)
+                        $ibcommissions = $ibcommissions->filter(function ($commission) use ($existingWalletCommissionIds) {
+                            return !isset($existingWalletCommissionIds[$commission->id]);
+                        });
+
+                        // Skip if no unprocessed commissions
+                        if ($ibcommissions->isEmpty()) {
+                            return true;
+                        }
+
                         $mergedTrades = collect($this->buffer)->flatten(1)->merge($ibcommissions)->flatten(1);
                         $groupedTrades = $mergedTrades->groupBy('expert_position_id');
                         $newBuffer = [];
