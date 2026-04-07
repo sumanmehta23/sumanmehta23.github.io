@@ -295,12 +295,12 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                 ->pluck('order_id')
                 ->flip()  // Convert to array for O(1) lookup
                 ->toArray();
-            $cacheDuration = microtime(true) - $cacheStart;
+            $commissionLoadDuration = microtime(true) - $cacheStart;
 
             Log::debug("Cached all commissions for account", [
                 'account_code' => $login,
                 'cached_commissions' => count($allAccountCommissions),
-                'cache_duration_ms' => round($cacheDuration * 1000, 2),
+                'cache_duration_ms' => round($commissionLoadDuration * 1000, 2),
             ]);
 
             $pagination_start = microtime(true);

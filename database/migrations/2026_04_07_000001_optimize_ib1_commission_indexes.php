@@ -37,11 +37,18 @@ return new class extends Migration {
         });
 
         Schema::table('ib_wallet', function (Blueprint $table) {
-            // CRITICAL: Add index for LEFT JOIN condition
-            // Join condition: ON ib1_commission.id = ib_wallet.ib1_commission_id AND user_id = ?
-            // This index optimizes the JOIN lookup for non-matching rows (whereNull check)
-            if (!$this->indexExists('ib_wallet', 'idx_commission_user')) {
-                $table->index(['ib1_commission_id', 'user_id'], 'idx_commission_user');
+            // CRITICAL FIX (April 7, 2026): Column order matters for NOT EXISTS performance!
+            // Query: WHERE NOT EXISTS (SELECT 1 FROM ib_wallet WHERE user_id = ? AND ib1_commission_id = ?)
+            // Index (user_id, ib1_commission_id) allows MySQL to:
+            // 1. Quickly filter to rows matching user_id (very selective)
+            // 2. Then check if any have matching ib1_commission_id
+            // Previous index (ib1_commission_id, user_id) forced full table scan!
+            if (!$this->indexExists('ib_wallet', 'idx_user_commission')) {
+                $table->index(['user_id', 'ib1_commission_id'], 'idx_user_commission');
+            }
+            // Drop old inefficient index if it exists
+            if ($this->indexExists('ib_wallet', 'idx_commission_user')) {
+                $table->dropIndex('idx_commission_user');
             }
         });
     }
@@ -61,6 +68,9 @@ return new class extends Migration {
         });
 
         Schema::table('ib_wallet', function (Blueprint $table) {
+            if ($this->indexExists('ib_wallet', 'idx_user_commission')) {
+                $table->dropIndex('idx_user_commission');
+            }
             if ($this->indexExists('ib_wallet', 'idx_commission_user')) {
                 $table->dropIndex('idx_commission_user');
             }
