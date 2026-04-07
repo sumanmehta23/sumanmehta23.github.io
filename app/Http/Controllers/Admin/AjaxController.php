@@ -5163,8 +5163,11 @@ class AjaxController extends Controller
 
     public function getBlockedIPs(Request $request)
     {
-        $query = RestrictIps::leftJoin('aspnetusers', 'aspnetusers.email', '=', 'restrict_ips.email');
-
+        $query = RestrictIps::leftJoin('aspnetusers', 'aspnetusers.email', '=', 'restrict_ips.email')
+                ->select(
+                    'restrict_ips.*',
+                    'aspnetusers.fullname'
+                );
         // Apply search filter
         if (!empty($request->search['value'])) {
             $searchValue = '%' . $request->search['value'] . '%';
