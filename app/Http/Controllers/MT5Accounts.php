@@ -1277,6 +1277,7 @@ class MT5Accounts extends Controller
                 'invester_password' => $investorPassword,
                 'phone_password' => null,
                 'balance' => $validatedData['demo_deposit'],
+                'equity' => $validatedData['demo_deposit'],
                 'account_request_status' => 1,
             ]);
 

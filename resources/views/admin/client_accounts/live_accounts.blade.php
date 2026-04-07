@@ -538,12 +538,12 @@
                 {
                     data: 'balance',
                     name: 'balance',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'created_at',
                     name: 'created_at',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'last_trade_date',
@@ -552,10 +552,12 @@
                 {
                     data: 'days_since_last_trade',
                     name: 'days_since_last_trade',
+                    orderable: true
                 },
                 {
                     data: 'deposited',
                     name: 'deposited',
+                    orderable: true
                 },
                 {
                     data: 'traded',
@@ -568,12 +570,12 @@
                 {
                     data: 'total_deposit',
                     name: 'total_deposit',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'total_withdraw',
                     name: 'total_withdraw',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'fullname',
@@ -652,7 +654,7 @@
                             }
                         },
                         exportOptions: {
-                            columns: [12, 13, 2, 3, 18, 14, 15, 16, 17, 5, 6, 7, 8, 9] // Name, Email, Code, Group, Country, Leverage, Balance, Date, Time, Last Trade Date, Days, Deposited, Not Traded, Status
+                              columns: [12, 13, 14, 2, 3, 9, 5, 6, 10, 11, 7, 8, 15, 16, 18]
                         }
                     });
                     buttons.push({

@@ -358,7 +358,7 @@ class Transaction extends Controller
             if (!$this->ensureMT5Connection()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'MT5 connection failed',
+                    'message' => 'Unable to adjust withdrawal: Trading server connection failed. Please try again in a few moments.',
                     'error' => 'Unable to connect to trading server',
                 ], 500);
             }
@@ -370,7 +370,7 @@ class Transaction extends Controller
                 // Return a JSON response with the error
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something went wrong',
+                    'message' => 'Unable to adjust withdrawal amount: ' . $error . '. Please verify the account balance and try again.',
                     'error' => $error,
                 ], 400); // 400 Bad Request
             } else {
@@ -641,7 +641,7 @@ class Transaction extends Controller
 
                     // Check if there was an error decoding the JSON
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
+                        return redirect()->back()->with('error', "Withdrawal processing error: Invalid response from payment processor. Please contact support.");
                     }
                     $responseData = json_decode($response);
                     // Process the result from the API
@@ -681,7 +681,8 @@ class Transaction extends Controller
                         });
                         Log::error("Error Processing Request: " . json_encode([$responseData]));
                         // Throw an exception with the error message from the response
-                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                        $errorMessage = isset($responseData->message) ? $responseData->message : 'Unknown error occurred';
+                        return redirect()->back()->with('error', "Withdrawal processing failed: " . $errorMessage . ". Please verify the wallet address and try again.");
                     }
                 }
 
@@ -712,8 +713,7 @@ class Transaction extends Controller
                 $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
                 $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
                 $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
-                            <div>The approved amount has been withdrawn from your wallet.<br></div>
-                            <div><b>Transaction Details</b></div>';
+                            <div>The approved amount has been withdrawn from your wallet.</div>';
                 $templateVars = [
                     'name' => $deposit_details->user->fullname,
                     'site_link' => $settings['copyright_site_name_text'],
@@ -879,6 +879,13 @@ class Transaction extends Controller
                 return redirect()->back()->with('error', "Transaction already cancelled");
             }
 
+            $payoutReq = json_decode($transaction->payout_req, true);
+            if(isset($payoutReq['result']) && $payoutReq['result'] == 'error'){
+                if($payoutReq['reason'] == 'InsufficientFunds') {
+                    // return redirect()->back()->with('error', $payoutReq['reason']);
+                }
+            }
+
             $transaction->admin_remark = $rejection_reason;
             $transaction->status = $status;
 
@@ -932,7 +939,7 @@ class Transaction extends Controller
 
                     // Check if there was an error decoding the JSON
                     if (json_last_error() !== JSON_ERROR_NONE) {
-                        return redirect()->back()->with('error', "Error decoding response payload: " . json_last_error_msg());
+                        return redirect()->back()->with('error', "Withdrawal processing error: Invalid response from payment processor. Please contact support.");
                     }
                     $responseData = json_decode($response);
                     // Process the result from the API
@@ -958,30 +965,78 @@ class Transaction extends Controller
                             // ]);
                         });
                     } elseif($responseData->result == 'error'){
+                        if($responseData->reason == 'InvalidAddress'){
+                            $status = 3; // Set status to 3 for invalid address
+                        }else{
+                            $status = 0; // Set status to 0 for other errors
+                        }
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
-                        DB::transaction(function () use ($request, $response, $responseData, $transaction) {
+                        DB::transaction(function () use ($request, $response, $responseData, $transaction, $status) {
                             // Update wallet_withdraw table with response and set status to 0 (error state)
                             TradeWithdrawals::where('id', $transaction->id)
                                 ->orWhere(DB::raw('id'), '=', $request->did)
                                 ->update([
                                     'payout_res' => $response->body(),
                                     'payout_req' => json_encode($responseData),
-                                    'status' => 3,
+                                    'status' => $status,
                                     'admin_remark' => $responseData->reason
                                 ]);
 
                             // Delete total_balance entry
                             // TotalBalance::where('id', $transaction->id)->delete();
                         });
-                        $comment = 'Cancelled Withdrawal';
-                        $ticket = null;
-                        $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+                        if($responseData->reason == 'InvalidAddress') {
+                            $from = $settings['email_from_address'];
+                            // $transid = "WDID" . $payout_res;
+                            $headers = "MIME-Version: 1.0" . "\r\n";
+                            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+                            $emailSubject = $settings['admin_title'] . ' - Transaction Declined';
+                            $content = '<p>
+                                            We are reaching out regarding your <b>withdrawal request</b> on <b>LQHMarkets</b> that was <b>unsuccessful</b> due to an <b>invalid cryptocurrency address</b>.
+                                        </p>
+                                        <p>
+                                            To complete your withdrawal:
+                                            <ol>
+                                                <li>Please <b>submit a new request</b></li>
+                                                <li>Ensure you provide a <b>valid cryptocurrency address</b></li>
+                                                <li><b>Verify</b> that the address matches the <b>specific cryptocurrency</b> you selected</li>
+                                                <li>We recommend <b>copying and pasting</b> the address directly from your wallet</li>
+                                            </ol>
+                                        </p>
+                                        <p>
+                                            Need help? Contact our support team at <a href="mailto:support@lqhmarkets.com" style="color: #00b98e; text-decoration: none;">support@lqhmarkets.com</a>
+                                        </p>
+                                        <p>
+                                            Thank you for your understanding.
+                                        </p>
+                                        <p>
+                                            Best regards,<br>
+                                            The LQHMarkets Team
+                                        </p>';
 
-                        if ($errorCode != MTRetCode::MT_RET_OK) {
-                            $error = MTRetCode::GetError($errorCode);
-                        } else {
-                            return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                            $templateVars = [
+                                'name' => $transaction->user->fullname,
+                                'site_link' => $settings['copyright_site_name_text'],
+                                'email' => $settings['email_from_address'],
+                                'content' => $content,
+                                'title_right' => 'Transaction',
+                                'subtitle_right' => 'Declined',
+                                'btn_text' => 'Go To Dashboard',
+                            ];
+                            $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
+                            $comment = 'Cancelled Withdrawal';
+                            $ticket = null;
+                            $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+
+                            if ($errorCode != MTRetCode::MT_RET_OK) {
+                                $error = MTRetCode::GetError($errorCode);
+                            } else {
+                                return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                            }
                         }
+                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
 
                     } else {
                         // Update `wallet_withdraw` and delete the `total_balance` entry in case of error
@@ -1000,7 +1055,8 @@ class Transaction extends Controller
                         });
                         Log::error("Error Processing Request: " . json_encode([$responseData]));
                         // Throw an exception with the error message from the response
-                        return redirect()->back()->with('error', "Error Processing Request: " . $responseData->message);
+                        $errorMessage = isset($responseData->message) ? $responseData->message : 'Unknown error occurred';
+                        return redirect()->back()->with('error', "Withdrawal processing failed: " . $errorMessage . ". Please verify the wallet address and try again.");
                     }
                 }
 
@@ -1035,7 +1091,6 @@ class Transaction extends Controller
                 $emailSubject = $settings['admin_title'] . ' - Transaction Approved';
                 $content = '<div>We are pleased to inform you that your transaction has been successfully approved.</div>
                             <div>The approved amount has been withdrawn from your account.</div>
-                            <div><b>Transaction Details</b></div>
                             <div><b>Approved Amount: </b>$' . $amount . '</div>
                             <div><b>Transaction ID: </b>' . $transid . '</div>
                             <div><b>Withdrawal Date: </b>' . $withdrawal_details->withdraw_date . '</div>

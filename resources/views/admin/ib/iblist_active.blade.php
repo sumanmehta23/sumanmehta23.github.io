@@ -216,13 +216,13 @@
         @hasExportPermission('ib_list_active')
           buttons.push({
             extend: 'excel',
-            text: 'Export to Excelmmm',
+            text: 'Export to Excel',
             exportOptions: {
               columns: [7,8,11,3,4,5,9,10]
             }
           });
           buttons.push({
-            text: 'Export Allnn',
+            text: 'Export All',
             className: 'btn btn-primary export-btn',
             action: function () {
               openExportModal();

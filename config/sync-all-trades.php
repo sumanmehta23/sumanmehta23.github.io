@@ -62,11 +62,12 @@ return [
     |
     */
     'batch_sync' => [
-        // Page limit per sync job to ensure fair queue distribution
-        // Default: 20 pages (~2000 trades per page) = ~2 seconds per account
-        // Higher: Faster for large accounts but less fair to other accounts
-        // Lower: Fairer queue but more re-queuing overhead
-        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 20),
+        // Page limit per sync job with fair queue distribution
+        // Set to 100 (MT5 API limit per request)
+        // Large accounts: Auto-requeue handles overflow, other accounts interleave
+        // Small accounts: Process in single job
+        // Expected: No single account starves the queue
+        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 100),
 
         // Enable automatic re-queueing of partial syncs
         'auto_requeue_partial' => env('BATCH_SYNC_AUTO_REQUEUE', true),

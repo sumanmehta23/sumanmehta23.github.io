@@ -167,14 +167,14 @@
                 }
             },
             columns: [
-              { data: 'name', name: 'name' },
-              { data: 'email', name: 'email' },
-              { data: 'amount', name: 'amount' },
-              { data: 'transfer_from', name: 'transfer_from' },
-              { data: 'transfer_to', name: 'transfer_to' },
-              { data: 'date', name: 'date' },
-              { data: 'status', name: 'status' },
-              { data: 'created_at', name: 'created_at', visible:false },
+              { data: 'name', name: 'name', orderable: true },
+              { data: 'email', name: 'email', orderable: true },
+              { data: 'amount', name: 'amount', orderable: true },
+              { data: 'transfer_from', name: 'transfer_from', orderable: true },
+              { data: 'transfer_to', name: 'transfer_to', orderable: true },
+              { data: 'date', name: 'date', orderable: true, orderSequence: ['desc', 'asc'] },
+              { data: 'status', name: 'status', orderable: true },
+              { data: 'created_at', name: 'created_at', visible:false, orderable: false },
               // { data: 'action', name: 'action', orderable: false, searchable: false },
             ]
           });

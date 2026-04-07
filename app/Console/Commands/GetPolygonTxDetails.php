@@ -28,17 +28,19 @@ class GetPolygonTxDetails extends Command
 
     public function handle()
     {
-        $hash = $this->argument('hash');
+        $hash = (string)$this->argument('hash');
+        $hash = trim($hash);                          // remove whitespace/newlines
+        $hash = preg_replace('/[^a-fA-F0-9x]/', '', $hash); // remove any non-hex chars
         $apiKey = $this->option('api-key') ?? env('POLYGONSCAN_API_KEY', '');
 
         $this->info("Fetching transaction: {$hash}");
 
         // 1️⃣ Fetch transaction data from Polygon RPC
-        $rpcResponse = Http::post('https://polygon-rpc.com/', [
+        $rpcResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
             'jsonrpc' => '2.0',
-            'method' => 'eth_getTransactionByHash',
-            'params' => [$hash],
-            'id' => 1,
+            'method'  => 'eth_getTransactionByHash',
+            'params'  => [$hash],
+            'id'      => 1,
         ]);
         if ($rpcResponse->failed() || !isset($rpcResponse['result'])) {
             $this->error('Failed to fetch transaction data from Polygon RPC.');
@@ -54,7 +56,7 @@ class GetPolygonTxDetails extends Command
 
         // Get block timestamp
         $blockNumber = hexdec($tx['blockNumber'] ?? '0x0');
-        $blockResponse = Http::post('https://polygon-rpc.com/', [
+        $blockResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
             'jsonrpc' => '2.0',
             'method' => 'eth_getBlockByNumber',
             'params' => ['0x' . dechex($blockNumber), false],
@@ -68,7 +70,7 @@ class GetPolygonTxDetails extends Command
         $this->info("Transaction date: {$transactionDate} UTC");
 
         // 2️⃣ Fetch transaction receipt to get logs (for token transfers)
-        $receiptResponse = Http::post('https://polygon-rpc.com/', [
+        $receiptResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
             'jsonrpc' => '2.0',
             'method' => 'eth_getTransactionReceipt',
             'params' => [$hash],

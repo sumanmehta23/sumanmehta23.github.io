@@ -94,7 +94,6 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-
         $restriction = RestrictIps::where('ip', $request->ip())->where('email', $request->email)->first();
         if ($restriction) {
             return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.');
@@ -510,7 +509,9 @@ class LoginController extends Controller
             return redirect()->route('dashboard');
         }
         $countries = Country::all();
-        return view('auth.register', compact('countries'));
+        $turnstileEnabled = (bool) config('services.turnstile.enabled', false);
+        $turnstileSiteKey = (string) config('services.turnstile.site_key', '');
+        return view('auth.register', compact('countries', 'turnstileEnabled', 'turnstileSiteKey'));
     }
     public function addUser(Request $request)
     {
