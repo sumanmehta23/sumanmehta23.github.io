@@ -51,15 +51,13 @@ class DistributeIbCommissionJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($referral_code, $userId, $ib_acc_plans, $accountId)
+    public function __construct($referral_code, $userId, $ib_acc_plans = [], $accountId = null)
     {
         $this->referral_code = $referral_code;
         $this->userId = $userId;
         $this->ib_acc_plans = $ib_acc_plans;
         $this->accountId = $accountId;
         $this->onQueue('distributeibcommission');
-        // Optimize for faster processing in high-volume scenarios
-        $this->onConnection(config('queue.default'));
     }
 
     /**
@@ -136,7 +134,9 @@ class DistributeIbCommissionJob implements ShouldQueue
             // This eliminates 30 × 8,345ms = 250 seconds of wasted database time!
             $cacheStart = microtime(true);
             $existingWalletCommissionIds = IbWallet::where('user_id', $this->userId)
+                ->whereNotNull('ib1_commission_id')
                 ->pluck('ib1_commission_id')
+                ->filter()
                 ->flip() // Convert to array for O(1) lookup
                 ->toArray();
             $cacheDuration = microtime(true) - $cacheStart;
