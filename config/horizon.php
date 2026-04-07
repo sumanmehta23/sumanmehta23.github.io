@@ -379,11 +379,11 @@ return [
             ],
             'supervisor-2' => [
                 'minProcesses' => 1,
-                'maxProcesses' => 2,
+                'maxProcesses' => 25,
             ],
             'supervisor-3' => [
                 'minProcesses' => 1,
-                'maxProcesses' => 1,
+                'maxProcesses' => 10,
             ],
             'supervisor-4' => [
                 'minProcesses' => 1,

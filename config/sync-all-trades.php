@@ -63,11 +63,13 @@ return [
     */
     'batch_sync' => [
         // Page limit per sync job with fair queue distribution
-        // Set to 100 (MT5 API limit per request)
+        // OPTIMIZATION: Increased from 100 → 500 pages (April 7, 2026)
+        // Rationale: Job timeout = 2700s (45 min) can safely handle 500 pages (~50k trades)
+        // Benefit: Reduces AUTO_REQUEUE frequency by 5x, prevents queue monopolization
         // Large accounts: Auto-requeue handles overflow, other accounts interleave
         // Small accounts: Process in single job
         // Expected: No single account starves the queue
-        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 100),
+        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 500),
 
         // Enable automatic re-queueing of partial syncs
         'auto_requeue_partial' => env('BATCH_SYNC_AUTO_REQUEUE', true),

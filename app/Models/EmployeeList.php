@@ -11,7 +11,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class EmployeeList extends Authenticatable
 {
-    use HasApiTokens, HasUuids, HasUuids,TwoFactorAuthenticatable;
+    use HasApiTokens, HasUuids, HasUuids, TwoFactorAuthenticatable;
     protected $table = 'emplist';
     // protected $primaryKey = 'id';
     protected $guarded = [];
@@ -44,5 +44,13 @@ class EmployeeList extends Authenticatable
         }
         // info("Permissions to check ".json_encode([$permissions]));
         return $this->role->permissions->pluck('name')->intersect($permissions)->isNotEmpty();
+    }
+    public function isAdmin()
+    {
+        return $this->role->name === 'Admin';
+    }
+    public function isSuperAdmin()
+    {
+        return $this->role->name === 'Super Admin';
     }
 }

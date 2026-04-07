@@ -284,6 +284,25 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             $totalPages = ceil($total / $pageSize);
             $pageCount = 0;
             $symbolMappings = $this->getSymbolMappings();
+
+            // OPTIMIZATION (April 7, 2026): Cache all existing commissions for this account upfront
+            // Instead of querying per-page (100+ queries, 1300ms each), fetch once at the start
+            // This is O(n) scan upfront instead of O(n*100) scattered queries across pages
+            $cacheStart = microtime(true);
+            $allAccountCommissions = Ib1Commission::where('code', $this->account->code)
+                ->select('order_id')
+                ->get()
+                ->pluck('order_id')
+                ->flip()  // Convert to array for O(1) lookup
+                ->toArray();
+            $cacheDuration = microtime(true) - $cacheStart;
+
+            Log::debug("Cached all commissions for account", [
+                'account_code' => $login,
+                'cached_commissions' => count($allAccountCommissions),
+                'cache_duration_ms' => round($cacheDuration * 1000, 2),
+            ]);
+
             $pagination_start = microtime(true);
 
             // Log::info("orders for account trades: " . json_encode($orders));
@@ -329,17 +348,13 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                     break;
                 }
 
-                // OPTIMIZATION PHASE 5: Pre-load all existing commissions for this page
-                // Instead of checking each order individually (500 queries), do 1 batch query
-                $commissionLoadStart = microtime(true);
+                // OPTIMIZATION (April 7, 2026): Use pre-cached commissions instead of per-page queries
+                // This eliminates 100+ slow queries (1300ms each) from the job
+                // Commissions are cached at job start, here we just do O(1) lookups
                 $pageOrderIds = collect($pageOrders)->pluck('Order')->toArray();
-                $existingCommissionIds = Ib1Commission::where('code', $this->account->code)
-                    ->whereIn('order_id', $pageOrderIds)
-                    ->pluck('order_id')
-                    ->toArray();
-                $commissionLoadDuration = microtime(true) - $commissionLoadStart;
-
-                $existingCommissionIdSet = array_flip($existingCommissionIds);  // O(1) lookup
+                $existingCommissionIdSet = array_flip(
+                    array_filter($pageOrderIds, fn($id) => isset($allAccountCommissions[$id]))
+                );  // O(n) instead of 1300ms DB query
 
                 // Process orders in batches for better performance
                 $orderProcessStart = microtime(true);
@@ -450,12 +465,31 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
 
             // AUTO_REQUEUE: If we hit page limit, dispatch another job to continue syncing remaining pages
             if ($this->hitPageLimit && count($orders) < $total) {
-                Log::info("AUTO_REQUEUE: Dispatching continuation job to sync remaining trades", [
+                // OPTIMIZATION (April 7, 2026): Adaptive delay prevents queue flooding
+                // When queue is backed up, wait longer before re-queueing
+                // This gives workers time to catch up and prevents exponential job creation
+                try {
+                    $queueDepth = Redis::llen('queues:syncaccountstrades');
+                } catch (\Exception $e) {
+                    Log::warning("Could not read queue depth from Redis: " . $e->getMessage());
+                    $queueDepth = 0;  // Default to normal delay if Redis unavailable
+                }
+
+                $delay = match (true) {
+                    $queueDepth > 1000 => 120,  // 2 min wait if queue > 1000
+                    $queueDepth > 500 => 60,    // 1 min wait if queue > 500
+                    $queueDepth > 100 => 30,    // 30s wait if queue > 100
+                    default => 5,               // 5s otherwise
+                };
+
+                Log::info("AUTO_REQUEUE: Dispatching continuation job with adaptive delay", [
                     'account_id' => $accountId,
                     'account_code' => $login,
                     'orders_synced_so_far' => count($orders),
                     'total_orders' => $total,
                     'remaining_orders' => $total - count($orders),
+                    'queue_depth' => $queueDepth,
+                    'delay_seconds' => $delay,
                 ]);
                 // Dispatch a new job instance to continue syncing from next page
                 static::dispatch(
@@ -464,7 +498,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
                     $this->ib_user_id,
                     $this->ib_acc_plans,
                     $this->maxPagesPerSync
-                )->delay(now()->addSeconds(5));
+                )->delay(now()->addSeconds($delay));
             }
             // Dispatch the IB commission job if we had new trades
             // if ($this->newTrades) {

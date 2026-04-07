@@ -96,6 +96,10 @@ class SyncAccountTrades extends Command
                     ->where('a.account_request_status', 1)
                     ->whereNull('a.deleted_at')  // Exclude soft-deleted accounts (SoftDeletes trait)
                     ->where('u.status', 1)
+                    ->where(function ($q) use ($ib1) {
+                        $q->where('a.sync_status', '<>', 'not_found_in_mt5')
+                            ->orWhere('a.trade_sync_status', '!=', 'not_found');
+                    })
                     ->where(function ($q) use ($referral_code) {
                         for ($i = 1; $i <= 15; $i++) {
                             $q->orWhere("u.ib{$i}", $referral_code);
@@ -140,7 +144,7 @@ class SyncAccountTrades extends Command
                         $accountId = $account->id;
                         $this->info("Dispatching sync for account: {$accountId} (code: {$account->code})");
 
-                        // Create and dispatch job for single account - if it has > 100 pages, AUTO_REQUEUE will create follow-up
+                        // Create and dispatch job for single account - if it has > 500 pages (was 100), AUTO_REQUEUE will create follow-up
                         SyncAccountTradesJob::dispatch(
                             [$accountId],
                             $referral_code,
@@ -149,12 +153,14 @@ class SyncAccountTrades extends Command
                         )->onQueue('syncaccountstrades');
                         $totalJobsCreated++;
 
-                        // Add 3-second delay between account dispatches to spread queue load
-                        // This prevents queue from being flooded with jobs all at once
-                        // while still processing jobs reasonably quickly
-                        if ($totalJobsCreated % 5 == 0) {
-                            // Every 5 accounts, add a longer pause to let queue stabilize
-                            sleep(3);
+                        // OPTIMIZATION (April 7, 2026): Reduce dispatch rate to prevent queue flooding
+                        // Changed from every 5 accounts to every 20 accounts, reduced sleep from 3s to 2s
+                        // Rationale: Command was creating 1000+ jobs/10min, exceeding processing capacity
+                        // This throttles creation rate to match ~processing rate (~30-40 jobs/min)
+                        if ($totalJobsCreated % 20 == 0) {
+                            // Every 20 accounts, add a pause to let queue stabilize
+                            sleep(2);
+                            $this->info("Pause checkpoint: {$totalJobsCreated} jobs created so far");
                         }
                     }
                 });
