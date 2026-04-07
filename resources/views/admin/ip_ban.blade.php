@@ -125,7 +125,7 @@
             { data: 'email', name: 'email' },
             { data: 'reason', name: 'reason' },
             { data: 'date', name: 'date' },
-            { data: 'action', name: 'action' },
+            { data: 'action', name: 'action', orderable: false },
             ]
         });
 

@@ -5163,50 +5163,29 @@ class AjaxController extends Controller
 
     public function getBlockedIPs(Request $request)
     {
-        $query = RestrictIps::select(
-            'restrict_ips.*',
-        )->with(['user']);
+        $query = RestrictIps::leftJoin('aspnetusers', 'aspnetusers.email', '=', 'restrict_ips.email');
 
         // Apply search filter
         if (!empty($request->search['value'])) {
-            $searchValue = $request->search['value'];
+            $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
-                $q->where('ip', 'LIKE', "%{$searchValue}%")
-                    ->orWhereHas('user', function ($q) use ($searchValue) {
-                        $q->where('fullname', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%");
-                    })
-                    ->orWhere('block_reason', 'LIKE', "%{$searchValue}%");
+                $q->where('restrict_ips.ip', 'LIKE', $searchValue)
+                    ->orWhere('restrict_ips.block_reason', 'LIKE', $searchValue)
+                    ->orWhere('aspnetusers.fullname', 'LIKE', $searchValue)
+                    ->orWhere('aspnetusers.email', 'LIKE', $searchValue);
             });
         }
 
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->orderColumn('ip', function ($query, $order) {
-                    $query->orderBy('restrict_ips.ip', $order);
-                })
-                ->orderColumn('email', function ($query, $order) {
-                    $query->orderBy('restrict_ips.email', $order);
-                })
-                ->orderColumn('reason', function ($query, $order) {
-                    $query->orderBy('restrict_ips.block_reason', $order);
-                })
-                ->orderColumn('date', function ($query, $order) {
-                    $query->orderBy('restrict_ips.created_at', $order);
-                })
-                ->orderColumn('fullname', function ($query, $order) {
-                    $query->orderBy(User::select('fullname')
-                        ->whereColumn('email', 'restrict_ips.email'), $order);
-                })
                 ->addColumn('ip', function ($row) {
                     return $row->ip;
                 })
                 ->addColumn('fullname', function ($row) {
-
-                    return $row->user->fullname;
+                    return $row->fullname ?? 'N/A';
                 })
                 ->addColumn('email', function ($row) {
-                    return $row->user->email;
+                    return $row->email;
                 })
                 ->addColumn('reason', function ($row) {
                     return $row->block_reason;
@@ -5214,17 +5193,27 @@ class AjaxController extends Controller
                 ->addColumn('date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->created_at));
                     $time = date('H:i:s', strtotime($row->created_at));
-                    return "<div class='lh-1'>
-                                $date
-                            </div>
-                            <div class='lh-2 text-muted'>
-                                $time
-                            </div>";
+                    return "<div class='lh-1'>$date</div><div class='lh-2 text-muted'>$time</div>";
                 })
                 ->addColumn('action', function ($row) {
                     return "<a class='btn btn-sm btn-danger' href='/admin/delete_ip_ban?id={$row->id}&ip={$row->ip}'>Delete</a>";
                 })
-                ->rawColumns(['ip', 'name', 'email', 'reason', 'date', 'action'])
+                ->orderColumn('ip', function ($query, $order) {
+                    $query->orderBy('restrict_ips.ip', $order);
+                })
+                ->orderColumn('fullname', function ($query, $order) {
+                    $query->orderBy('aspnetusers.fullname', $order);
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('aspnetusers.email', $order);
+                })
+                ->orderColumn('reason', function ($query, $order) {
+                    $query->orderBy('restrict_ips.block_reason', $order);
+                })
+                ->orderColumn('date', function ($query, $order) {
+                    $query->orderBy('restrict_ips.created_at', $order);
+                })
+                ->rawColumns(['ip', 'fullname', 'email', 'reason', 'date', 'action'])
                 ->make(true);
         }
 
