@@ -17,7 +17,7 @@
                     <div  class="auth-form">
                         <div  class="auth-header row">
                             <div  class="my-1 col mob_logo_center">
-                                <a href="{{ route('login') }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
+                                <a href="{{ $settings['main_website_url'] ?? '#' }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
