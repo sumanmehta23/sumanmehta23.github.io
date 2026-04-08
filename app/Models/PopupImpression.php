@@ -14,5 +14,7 @@ class PopupImpression extends Model
 
     protected $casts = [
         'shown_at' => 'datetime',
+        'dismissed_at' => 'datetime',
+        'cta_clicked_at' => 'datetime',
     ];
 }
