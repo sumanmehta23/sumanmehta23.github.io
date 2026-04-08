@@ -33,7 +33,7 @@
                 <div class="auth-wrapper v3" >
                     <div class="auth-form" style="justify-content: flex-start;">
                         <div class="auth-header row" >
-                            <div class="col my-1" ><a href="/login"><img
+                            <div class="col my-1" ><a href="{{ $settings['main_website_url'] ?? '#' }}"><img
                                         src="/{{ $settings['admin_sidebar_logo'] }}" alt="Logo"
                                         style="height: 8vh;"></a></div>
                         </div>
