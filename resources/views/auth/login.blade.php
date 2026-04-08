@@ -201,6 +201,7 @@
                 app_id: "hcaolnkq"
             };
         </script>
+
         <script>
             (function () {
                 var w = window;
@@ -232,6 +233,16 @@
                 }
             })();
 
+            // 👇 This clears cached user and reboots as anonymous when Intercom button is clicked
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('#intercom-button, .intercom-launcher, [class*="intercom"]')) {
+                    window.Intercom('shutdown');
+                    window.Intercom('boot', {
+                        api_base: "https://api-iam.intercom.io",
+                        app_id: "hcaolnkq"
+                    });
+                }
+            });
         </script>
     @if (session('retry_after'))
         <script>
