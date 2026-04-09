@@ -902,11 +902,10 @@ class AjaxController extends Controller
                     return "<span class='{$class}'>{$days} days</span>";
                 })
                 ->addColumn('deposited', function ($row) {
-                    $hasDeposits = $row->successful_trade_deposits_count > 0;
-
                     $badgeStyle = 'padding:0.35rem 0.5rem';
-                    if ($hasDeposits) {
-                        $green = '#00b894';
+
+                    // Check for CryptoChill, CreditCardPayissa, RagaPay deposits (Yes)
+                    if ($row->successful_trade_deposits_count > 0) {
                         return "
                             <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
                                   style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
@@ -920,6 +919,42 @@ class AjaxController extends Controller
                         ";
                     }
 
+                    // Check for Wallet Transfer deposits
+                    if ($row->wallet_deposit_count > 0) {
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-info d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(23,162,184,0.1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#17a2b8' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <circle cx='12' cy='12' r='1' />
+                                    <path d='M12 1v6m0 6v6' />
+                                    <path d='M4.22 4.22l4.24 4.24m5.08 0l4.24-4.24' />
+                                    <path d='M1 12h6m6 0h6' />
+                                    <path d='M4.22 19.78l4.24-4.24m5.08 0l4.24 4.24' />
+                                </svg>
+                                <span class='fw-bold' style='color:#17a2b8'>Wallet Deposit</span>
+                            </span>
+                        ";
+                    }
+
+                    // Check for Internal Transfer deposits
+                    if ($row->internal_transfer_count > 0) {
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-warning d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(255,193,7,0.1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#ffc107' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <line x1='12' y1='5' x2='12' y2='19' />
+                                    <polyline points='19 12 12 19 5 12' />
+                                </svg>
+                                <span class='fw-bold' style='color:#ffc107'>Internal Transfer</span>
+                            </span>
+                        ";
+                    }
+
+                    // No deposits
                     return "
                         <span class='gap-1 border badge rounded-pill border-danger d-inline-flex align-items-center justify-content-center'
                               style='background-color:rgba(255,0,0,0.08);{$badgeStyle}'>
@@ -1105,6 +1140,12 @@ class AjaxController extends Controller
             ->withCount([
                 'tradeDeposits as successful_trade_deposits_count' => function ($q) {
                     $q->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay']);
+                },
+                'tradeDeposits as wallet_deposit_count' => function ($q) {
+                    $q->where('status', 1)->where('deposit_type', 'Wallet Transfer');
+                },
+                'tradeDeposits as internal_transfer_count' => function ($q) {
+                    $q->where('status', 1)->where('deposit_type', 'Internal Transfer');
                 },
                 'trades as trades_count',
             ]);
