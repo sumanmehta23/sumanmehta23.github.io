@@ -1840,6 +1840,8 @@ class AjaxController extends Controller
             $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
+        $query->orderByDesc('trade_withdrawal.created_at');
+
         // Fetch data
         // $query->orderByDesc('id')->get();
 
@@ -2376,6 +2378,22 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+
+                        $query->where(function ($q) use ($searchValue) {
+                            $q->where('trade_deposits.email', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_from', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhereHas('accountDepositFrom', function ($query2) use ($searchValue) {
+                                    $query2->where('code', 'LIKE', "%{$searchValue}%");
+                                });
+                        });
+                    }
+                })
                 ->addColumn('name', function ($row) {
                     return $row->user->fullname ?? '-';
                 })
@@ -4995,7 +5013,7 @@ class AjaxController extends Controller
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
                         $Traded = $hasTrades ? 'Yes' : 'No';
 
-                        
+
                         fputcsv($handle, [
                         $account->id,
                         $account->user->fullname ?? '',

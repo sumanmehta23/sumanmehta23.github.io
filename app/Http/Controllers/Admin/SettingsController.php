@@ -6,6 +6,8 @@ use App\Models\Ib1;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\Setting;
+use App\Models\PopupImpression;
+use App\Support\PopupCampaigns\ReviewPopupCampaign;
 use App\Rules\ValidPassword;
 use App\Models\RestrictIps;
 use App\Models\ToggleGroup;
@@ -61,7 +63,42 @@ class SettingsController extends Controller
 
     public function reviewPopupSettings()
     {
-        return view('admin.review_popup_settings');
+        $campaign = new ReviewPopupCampaign(settings());
+        $campaignKey = $campaign->key();
+
+        $baseQuery = PopupImpression::query()->where('popup_key', $campaignKey);
+        $usersSawPopup = (clone $baseQuery)->count();
+        $usersClickedCta = (clone $baseQuery)->whereNotNull('cta_clicked_at')->count();
+        $pureDismissals = (clone $baseQuery)
+            ->whereNotNull('dismissed_at')
+            ->whereNull('cta_clicked_at')
+            ->count();
+        $clickedThenDismissed = (clone $baseQuery)
+            ->whereNotNull('dismissed_at')
+            ->whereNotNull('cta_clicked_at')
+            ->count();
+        $usersDismissedPopup = (clone $baseQuery)->whereNotNull('dismissed_at')->count();
+
+        $pct = static function (int $numerator, int $denominator): ?float {
+            if ($denominator <= 0) {
+                return null;
+            }
+
+            return round(($numerator / $denominator) * 100, 1);
+        };
+
+        $reviewPopupMetrics = [
+            'campaign_key' => $campaignKey,
+            'users_saw_popup' => $usersSawPopup,
+            'users_dismissed_popup' => $usersDismissedPopup,
+            'users_clicked_cta' => $usersClickedCta,
+            'pure_dismissals' => $pureDismissals,
+            'clicked_then_dismissed' => $clickedThenDismissed,
+            'pure_dismissal_rate_pct' => $pct($pureDismissals, $usersSawPopup),
+            'cta_click_rate_pct' => $pct($usersClickedCta, $usersSawPopup),
+        ];
+
+        return view('admin.review_popup_settings', compact('reviewPopupMetrics'));
     }
 
     public function logs(Request $request)

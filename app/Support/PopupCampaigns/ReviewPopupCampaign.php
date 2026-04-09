@@ -17,9 +17,12 @@ class ReviewPopupCampaign
     {
     }
 
+    /**
+     * Stable key for impressions, API validation, and admin metrics. Separate from Popup ID (DOM element id).
+     */
     public function key(): string
     {
-        $key = trim((string) ($this->settings['review_popup_campaign_key'] ?? 'review_popup_v1'));
+        $key = trim((string) ($this->settings['review_popup_campaign_key'] ?? ''));
 
         return $key !== '' ? $key : 'review_popup_v1';
     }

@@ -112,7 +112,7 @@
             <div class="auth-wrapper v3">
                 <div class="auth-form register_mob" style="margin: 0;">
                     <div class="auth-header row ">
-                        <div class="my-1 col mob_logo_center"><a href="/login"><img class="mob_logo_center"
+                        <div class="my-1 col mob_logo_center"><a href="{{ $settings['main_website_url'] ?? '#' }}"><img class="mob_logo_center"
                                     src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo"
                                     style="height: 8vh;"></a>
                         </div>
