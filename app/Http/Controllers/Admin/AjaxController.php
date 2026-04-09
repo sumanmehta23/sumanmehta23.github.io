@@ -1840,6 +1840,8 @@ class AjaxController extends Controller
             $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
+        $query->orderByDesc('trade_withdrawal.created_at');
+
         // Fetch data
         // $query->orderByDesc('id')->get();
 
@@ -4995,7 +4997,7 @@ class AjaxController extends Controller
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
                         $Traded = $hasTrades ? 'Yes' : 'No';
 
-                        
+
                         fputcsv($handle, [
                         $account->id,
                         $account->user->fullname ?? '',
