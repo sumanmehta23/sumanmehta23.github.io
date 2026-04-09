@@ -3578,6 +3578,7 @@ class AjaxController extends Controller
         $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, e.two_factor_secret, e.two_factor_recovery_codes, e.two_factor_confirmed_at, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN roles r ON e.role_id = r.id
+                WHERE e.deleted_at IS NULL
                 -- LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.id";
         $query = DB::select($sql);
