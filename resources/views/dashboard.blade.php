@@ -575,55 +575,72 @@
                                 aria-labelledby="analytics-tab-2" tabindex="0">
                                 @if ($demoAccountDetails->count() > 0)
                                     <div>
-                                        <div class="d-block d-md-none p-2">
+                                        <div class="d-block d-md-none live-mobile-list">
                                             @foreach ($demoAccountDetails as $demoAccount)
-                                                <div class="mb-3 border rounded p-3">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="me-2">
-                                                            @if($demoAccount->platform === 'x9')
-                                                                <img src="/images/x92.png" alt="X9 Platform"
-                                                                    class="rounded wid-50 hei-50">
-                                                            @else
-                                                                <img src="/assets/images/mt5.png" alt="MT5 Platform"
-                                                                    class="rounded wid-50 hei-50">
-                                                            @endif
+                                                <div class="mb-3 live-mobile-card">
+                                                    <div class="live-mobile-card__head">
+                                                        <div class="live-mobile-card__identity">
+                                                            <div class="live-mobile-card__icon">
+                                                                @if($demoAccount->platform === 'x9')
+                                                                    <img src="/images/x92.png" alt="X9 Platform">
+                                                                @else
+                                                                    <img src="/assets/images/mt5.png" alt="MT5 Platform">
+                                                                @endif
+                                                            </div>
+                                                            <div class="live-mobile-card__content">
+                                                                @if ($demoAccount->code && $demoAccount->code != 'Rejected')
+                                                                    <h5 class="live-mobile-card__title">{{ $demoAccount->code }}</h5>
+                                                                @elseif($demoAccount->code == 'Rejected')
+                                                                    <h5 class="live-mobile-card__title text-danger">Rejected</h5>
+                                                                @else
+                                                                    <h5 class="live-mobile-card__title text-warning">Pending</h5>
+                                                                @endif
+                                                                <span class="live-mobile-card__badge">
+                                                                    {{ $demoAccount->accountType ? $demoAccount->accountType->ac_name : '' }}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div class="flex-grow-1">
-                                                            <h5 class="mb-1">
-                                                                <span>{{ $demoAccount->code ?? 'Pending' }}</span>
-                                                            </h5>
-                                                            <p class="mb-0 text-muted f-12">
-                                                                {{ $demoAccount->account_type }}
-                                                            </p>
-                                                            <p class="mb-0 text-muted f-12">
-                                                                {{ $demoAccount->accountType ? $demoAccount->accountType->ac_name : '' }}
-                                                            </p>
+
+                                                        <div class="live-mobile-card__leverage-wrap">
+                                                            <span class="live-mobile-card__leverage-label">Leverage</span>
+                                                            <strong class="live-mobile-card__leverage-value">1:{{ $demoAccount->leverage }}</strong>
                                                         </div>
                                                     </div>
 
-                                                    <div class="mt-3">
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Leverage</p>
-                                                            <p class="mb-0 f-w-400">{{ $demoAccount->leverage }}</p>
+                                                    <hr class="live-mobile-card__divider">
+
+                                                    <div class="live-mobile-card__meta">
+                                                        <span class="live-mobile-card__meta-label">Nickname</span>
+                                                        <span class="live-mobile-card__meta-value">
+                                                            {{ $demoAccount->account_nick_name ?: '—' }}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="live-mobile-card__stats">
+                                                        <div class="live-mobile-card__stat">
+                                                            <span class="live-mobile-card__stat-label">Balance</span>
+                                                            <p class="live-mobile-card__stat-value">$ {{ number_format((float) ($demoAccount->balance ?? 0), 2) }}</p>
                                                         </div>
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Balance</p>
-                                                            <p class="mb-0 f-w-400">@money($demoAccount->balance ?? '0.00')</p>
-                                                        </div>
-                                                        <div class="d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Equity</p>
-                                                            <p class="mb-0 f-w-400">@money($demoAccount->equity)</p>
+                                                        <div class="live-mobile-card__stat">
+                                                            <span class="live-mobile-card__stat-label">Equity</span>
+                                                            <p class="live-mobile-card__stat-value">$ {{ number_format((float) ($demoAccount->equity ?? 0), 2) }}</p>
                                                         </div>
                                                     </div>
 
                                                     @if ($demoAccount->code && $demoAccount->code != 'Rejected')
-                                                        <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
+                                                        <div class="live-mobile-card__actions">
                                                             <a href="{{ route('view-account-details', $demoAccount->id) }}"
-                                                                class="btn btn-sm btn-outline-secondary">
-                                                                <span>View <svg class="pc-icon">
-                                                                        <use xlink:href="#custom-login"></use>
-                                                                    </svg></span>
+                                                                class="live-mobile-card__btn">
+                                                                View
                                                             </a>
+                                                        </div>
+                                                    @elseif ($demoAccount->code && $demoAccount->code == 'Rejected')
+                                                        <div class="live-mobile-card__notice live-mobile-card__notice--danger">
+                                                            Your request is rejected. Create your account again.
+                                                        </div>
+                                                    @else
+                                                        <div class="live-mobile-card__notice live-mobile-card__notice--warning">
+                                                            Once your request is approved you will receive an email with your new account information.
                                                         </div>
                                                     @endif
                                                 </div>
