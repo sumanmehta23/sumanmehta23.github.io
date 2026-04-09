@@ -159,7 +159,7 @@
                                                     <div class="col-12 text-end">
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
                                                             @money($ib_wallet)</h3>
-                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>
+                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferable Balance</p>
                                                     </div>
                                                 </div>
                                             </div>
