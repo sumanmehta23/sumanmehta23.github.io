@@ -416,7 +416,7 @@ class Ib extends Controller
                 }
             } else {
 
-                return redirect()->back()->with('error', 'Insufficient IB Transferrable Balance');
+                return redirect()->back()->with('error', 'Insufficient Transferable Balance');
             }
         }
     }
