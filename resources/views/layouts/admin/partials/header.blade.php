@@ -589,6 +589,11 @@ if (app()->environment('local')) {
                                             <a href="/admin/ib_settings" class="side-menu__item ">IB Com. Settings</a>
                                         </li>
                                     @endcan
+                                    @can('ib:viewAny')
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.ib.commission-analysis') }}" class="side-menu__item ">Commission Analysis</a>
+                                        </li>
+                                    @endcan
 
                                 </ul>
                             </li>

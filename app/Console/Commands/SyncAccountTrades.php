@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\SyncAccountTradesJob;
 use App\Jobs\DistributeIbCommissionJob;
+use App\Jobs\SyncDealsJob;
 use App\Models\Ib1;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +16,10 @@ class SyncAccountTrades extends Command
         {--max-jobs=0 : Maximum number of jobs to create (0=unlimited)}
         {--active-only : Only sync accounts with recent activity}
         {--email= : Sync only accounts under a specific IB email}
-        {--code= : Sync only for a specific account code}';
+        {--code= : Sync only for a specific account code}
+        {--backfill-commissions : Also dispatch legacy DistributeIbCommissionJob for unprocessed commissions}';
 
-    protected $description = 'Sync account trades and distribute IB commissions';
+    protected $description = 'Sync account deals from MT5 and distribute IB commissions';
 
     public function handle()
     {
@@ -29,11 +30,9 @@ class SyncAccountTrades extends Command
         $code = $this->option('code');
         $totalJobsCreated = 0;
 
-        Log::info('SyncAccountTrades command started', compact('batchSize', 'maxJobs', 'activeOnly', 'email', 'code'));
+        Log::info('SyncAccountTrades command started (deal-based)', compact('batchSize', 'maxJobs', 'activeOnly', 'email', 'code'));
 
-        // ── STEP 1: Query accounts directly (account-centric, not IB-centric) ──
-        // Instead of looping 4,503 IBs and finding accounts per IB,
-        // query the ~25K accounts once and batch them into jobs.
+        // ── STEP 1: Query accounts ──
         $accountQuery = DB::table('accounts as a')
             ->join('aspnetusers as u', 'a.user_id', '=', 'u.id')
             ->select('a.id', 'a.code', 'a.user_id')
@@ -41,12 +40,10 @@ class SyncAccountTrades extends Command
             ->where('a.account_request_status', 1)
             ->whereNull('a.deleted_at')
             ->where('u.status', 1)
-            // Must have at least one IB in the chain
             ->where(function ($q) {
                 $q->whereNotNull('u.ib1');
             });
 
-        // Apply email filter: find the IB's referral_code, then filter accounts
         if ($email) {
             $ib = Ib1::where('email', $email)->where('status', 1)->first();
             if (!$ib) {
@@ -73,15 +70,15 @@ class SyncAccountTrades extends Command
             });
         }
 
-        // Oldest-synced first for fairness
-        $accountQuery->orderBy('a.last_trade_at', 'ASC');
+        // Oldest-synced first so stale accounts get priority
+        $accountQuery->orderByRaw('COALESCE(a.deals_synced_to, "2000-01-01") ASC');
 
         $totalAccounts = $accountQuery->count();
         $this->info("Total accounts to sync: {$totalAccounts}");
 
-        // ── STEP 2: Batch accounts into jobs ──
-        // Group N accounts per job instead of 1-per-job.
-        // 25K accounts ÷ 10 per batch = 2,500 jobs (vs 25K jobs before).
+        // ── STEP 2: Dispatch SyncDealsJob batches ──
+        // SyncDealsJob handles: MT5 deal fetch → deals table → detect closes → commission distribution
+        // No separate commission dispatch step needed.
         $accountQuery->chunk($batchSize * 50, function ($accounts) use ($batchSize, $maxJobs, &$totalJobsCreated) {
             $batched = $accounts->pluck('id')->chunk($batchSize);
 
@@ -91,17 +88,19 @@ class SyncAccountTrades extends Command
                     return false;
                 }
 
-                SyncAccountTradesJob::dispatch($accountIdBatch->values()->toArray())
+                SyncDealsJob::dispatch($accountIdBatch->values()->toArray())
                     ->onQueue('syncaccountstrades');
                 $totalJobsCreated++;
             }
         });
 
-        $this->info("Dispatched {$totalJobsCreated} SyncAccountTradesJob(s) for {$totalAccounts} accounts.");
+        $this->info("Dispatched {$totalJobsCreated} SyncDealsJob(s) for {$totalAccounts} accounts.");
 
-        // ── STEP 3: Dispatch ONE DistributeIbCommissionJob per unique IB ──
-        // Instead of 11K duplicate commission jobs, dispatch exactly 1 per IB.
-        $this->dispatchCommissionJobs($email, $code);
+        // ── STEP 3 (Optional): Backfill legacy unprocessed commissions ──
+        // Only needed during transition period while old ib1_commission records still have status=0
+        if ($this->option('backfill-commissions')) {
+            $this->dispatchLegacyCommissionJobs($email, $code);
+        }
 
         Log::info('SyncAccountTrades command completed', [
             'sync_jobs' => $totalJobsCreated,
@@ -109,10 +108,27 @@ class SyncAccountTrades extends Command
         ]);
     }
 
-    protected function dispatchCommissionJobs(?string $email, ?string $code): void
+    /**
+     * Dispatch DistributeIbCommissionJob for legacy unprocessed ib1_commission records.
+     * This is only needed during the transition period from order-based to deal-based sync.
+     */
+    protected function dispatchLegacyCommissionJobs(?string $email, ?string $code): void
     {
-        // Step 1: Find all distinct IB referral codes that appear in unprocessed commissions
-        // This is ONE query instead of 4,500+ individual exists() checks
+        $this->info("Checking for legacy unprocessed commissions...");
+
+        $unprocessedCount = DB::table('ib1_commission')
+            ->where('orderstate', 4)
+            ->whereNotIn('status', [1, 10])
+            ->count();
+
+        if ($unprocessedCount === 0) {
+            $this->info("No legacy unprocessed commissions. Backfill not needed.");
+            return;
+        }
+
+        $this->info("Found {$unprocessedCount} legacy unprocessed commissions. Dispatching jobs...");
+
+        // Find distinct IB codes with unprocessed work
         $unprocessedQuery = DB::table('ib1_commission as c')
             ->join('aspnetusers as u', 'c.user_id', '=', 'u.id')
             ->where('c.orderstate', 4)
@@ -122,7 +138,6 @@ class SyncAccountTrades extends Command
             $unprocessedQuery->where('c.code', $code);
         }
 
-        // Collect all distinct referral codes from ib1..ib15 columns in one pass
         $ibCodesWithWork = collect();
         for ($i = 1; $i <= 15; $i++) {
             $codes = (clone $unprocessedQuery)
@@ -135,11 +150,10 @@ class SyncAccountTrades extends Command
         $ibCodesWithWork = $ibCodesWithWork->unique()->values();
 
         if ($ibCodesWithWork->isEmpty()) {
-            $this->info("No unprocessed commissions found. Skipping commission dispatch.");
+            $this->info("No unprocessed commissions found. Skipping.");
             return;
         }
 
-        // Step 2: Match these codes to active IBs and dispatch jobs
         $ibQuery = Ib1::where('status', 1)
             ->whereNotNull('ib_plan_details_id')
             ->whereNotNull('user_id');
@@ -148,23 +162,20 @@ class SyncAccountTrades extends Command
             $ibQuery->where('email', $email);
         }
 
-        // Match IBs by referral_code or email being in the set of codes with work
         $ibQuery->where(function ($q) use ($ibCodesWithWork) {
             $q->whereIn('referral_code', $ibCodesWithWork)
                 ->orWhereIn('email', $ibCodesWithWork);
         });
 
         $commissionJobsCreated = 0;
-
         $ibQuery->cursor()->each(function ($ib) use (&$commissionJobsCreated) {
-            $referralCode = $ib->referral_code ?: $ib->email;
-            $userId = $ib->user_id;
-
-            DistributeIbCommissionJob::dispatch($referralCode, $userId, [], null)
-                ->onQueue('distributeibcommission');
+            DistributeIbCommissionJob::dispatch(
+                $ib->referral_code ?: $ib->email,
+                $ib->user_id
+            )->onQueue('distributeibcommission');
             $commissionJobsCreated++;
         });
 
-        $this->info("Dispatched {$commissionJobsCreated} DistributeIbCommissionJob(s).");
+        $this->info("Dispatched {$commissionJobsCreated} legacy DistributeIbCommissionJob(s).");
     }
 }

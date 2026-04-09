@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\Admin\IBController;
+use App\Http\Controllers\Admin\IbCommissionAnalysisController;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\Admin\Login;
@@ -511,6 +512,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/download-export/{file}/{token}', [IBController::class, 'downloadExport'])->name('admin.download.export');
         Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
         Route::post("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
+
+        // IB Commission Analysis
+        Route::get('/ib-commission-analysis', [IbCommissionAnalysisController::class, 'index'])->name('ib.commission-analysis')->middleware('check.permissions:ib:viewAny');
+        Route::post('/ib-commission-analysis/start', [IbCommissionAnalysisController::class, 'startAnalysis'])->name('ib.commission-analysis.start')->middleware('check.permissions:ib:viewAny');
+        Route::get('/ib-commission-analysis/status', [IbCommissionAnalysisController::class, 'getStatus'])->name('ib.commission-analysis.status')->middleware('check.permissions:ib:viewAny');
+        Route::post('/ib-commission-analysis/fix-duplicates', [IbCommissionAnalysisController::class, 'fixDuplicateWallets'])->name('ib.commission-analysis.fix-duplicates')->middleware('check.permissions:ib:manageSettings');
+        Route::post('/ib-commission-analysis/fix-duplicate-commissions', [IbCommissionAnalysisController::class, 'fixDuplicateCommissions'])->name('ib.commission-analysis.fix-duplicate-commissions')->middleware('check.permissions:ib:manageSettings');
+        Route::post('/ib-commission-analysis/process-stuck', [IbCommissionAnalysisController::class, 'processStuckCommissions'])->name('ib.commission-analysis.process-stuck')->middleware('check.permissions:ib:manageSettings');
+        Route::get('/ib-commission-analysis/stuck-status', [IbCommissionAnalysisController::class, 'getStuckProcessStatus'])->name('ib.commission-analysis.stuck-status')->middleware('check.permissions:ib:viewAny');
 
         Route::get("/mt5_groups", [MT5Controller::class, 'index']);
 
