@@ -467,7 +467,6 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                         </svg>
                                     </span>
                                     <span class="pc-mtext">Accounts</span>
-                                    <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                 </a>
                             </li>
                             {{-- @if ((strpos(auth()->user()->email, 'lqhmarkets.com') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false)) --}}
@@ -479,7 +478,6 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                             </svg>
                                         </span>
                                         <span class="pc-mtext">Competition</span>
-                                        <span class="pc-badge"><i class="ti ti-chart-line"></i></span>
                                     </a>
                                 </li>
                             {{-- @endif --}}
@@ -512,7 +510,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                 </a>
                             </li>
 
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="{{ route('learn') }}" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -521,7 +519,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                     </span>
                                     <span class="pc-mtext">Learn</span>
                                 </a>
-                            </li>
+                            </li> --}}
 
                             {{-- @if (!empty($ibResult)) --}}
                             <li class="pc-item">
@@ -532,7 +530,6 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                         </svg>
                                     </span>
                                     <span class="pc-mtext">IB Profile</span>
-                                    <span class="pc-badge"><i class="ti ti-users"></i></span>
                                 </a>
                             </li>
                             {{-- @endif --}}

@@ -159,7 +159,7 @@
                                                     <div class="col-12 text-end">
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
                                                             @money($ib_wallet)</h3>
-                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>
+                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferable Balance</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -503,6 +503,16 @@
                         text: 'Export to Excel',
                         className: ' btn btn-primary',
                         filename: 'Commission_History_' + new Date().toISOString().slice(0, 10),
+                        action: function (e, dt, node, config) {
+                            if (!dt.page.info().recordsDisplay) {
+                                return Swal.fire({
+                                    icon: 'error',
+                                    title: 'Export Failed',
+                                    text: 'No IB commission history data is available to export.'
+                                });
+                            }
+                            $.fn.dataTable.ext.buttons.excelHtml5.action.call(this, e, dt, node, config);
+                        },
                         exportOptions: {
                             columns: [4, 7, 2, 8, 5, 6]
                         }

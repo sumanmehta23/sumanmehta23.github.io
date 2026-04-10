@@ -177,6 +177,8 @@
                                         <option value="">All</option>
                                         <option value="yes">Yes</option>
                                         <option value="no">No</option>
+                                        <option value="wallet_deposit">Wallet Deposit</option>
+                                        <option value="internal_transfer">Internal Transfer</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
