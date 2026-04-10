@@ -594,6 +594,11 @@ if (app()->environment('local')) {
                                             <a href="{{ route('admin.ib.commission-analysis') }}" class="side-menu__item ">Commission Analysis</a>
                                         </li>
                                     @endcan
+                                    @can('ib:viewAny')
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.ib.withdrawals.index') }}" class="side-menu__item ">IB Withdrawals</a>
+                                        </li>
+                                    @endcan
 
                                 </ul>
                             </li>

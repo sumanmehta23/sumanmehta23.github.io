@@ -240,6 +240,11 @@ class IbCommissionAnalysisController extends Controller
                 $items = $result['overpaid_ibs'] ?? [];
                 $total = count($items);
                 break;
+            case 'fixable_issues':
+                $result = $this->analyzeFixableIssues();
+                $items = $result['items'] ?? [];
+                $total = $result['total'] ?? 0;
+                break;
             case 'overpayment_audit':
                 $result = $this->analyzeOverpaymentAudit();
                 $items = $result['ibs_affected'] ?? [];
@@ -320,6 +325,39 @@ class IbCommissionAnalysisController extends Controller
         $method = $reflect->getMethod('getOverpaymentAudit');
         $method->setAccessible(true);
         return $method->invoke($job, null);
+    }
+
+    private function analyzeFixableIssues()
+    {
+        $service = new \App\Services\FixOverpaidCommissionsService();
+        $fixable = $service->getFixableDuplicates();
+
+        $totalRecoverable = 0;
+        $totalEntries = 0;
+
+        $formatted = array_map(function ($group) use (&$totalRecoverable, &$totalEntries) {
+            $totalRecoverable += $group['recoverable_amount'] ?? 0;
+            $totalEntries += $group['duplicate_entries'] ?? 0;
+
+            return [
+                'expert_position_id' => $group['expert_position_id'] ?? '',
+                'user_id' => $group['user_id'] ?? '',
+                'user_email' => $group['user_email'] ?? '',
+                'referral_code' => $group['referral_code'] ?? '',
+                'order_count' => $group['order_count'] ?? 0,
+                'duplicate_count' => $group['duplicate_entries'] ?? 0,
+                'recoverable_amount' => $group['recoverable_amount'] ?? 0,
+                'withdrawn_amount' => $group['withdrawn_amount'] ?? 0,
+                'status' => 'pending_fix',
+            ];
+        }, $fixable);
+
+        return [
+            'items' => $formatted,
+            'total' => count($formatted),
+            'total_recoverable' => $totalRecoverable,
+            'total_entries' => $totalEntries,
+        ];
     }
 
     private function analyzePipelineHealth()
