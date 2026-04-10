@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
+use function Symfony\Component\Clock\now;
+
 class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
@@ -75,7 +77,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
         // ── Try REST batch API first ──
         $restResult = $this->syncViaRestBatch($accountWindows);
-        
+
         $totalDealsInserted += $restResult['inserted'];
         $closedPositionsBatch = array_merge($closedPositionsBatch, $restResult['closed_positions']);
         $failedAccountIds = $restResult['failed_account_ids'] ?? [];
@@ -167,7 +169,12 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             $logins[] = $w['login'];
             $loginToAccountId[$w['login']] = $acctId;
         }
-
+        Log::info('SyncDealsJob: Fetching deals via REST batch', [
+            'account_count' => count($accountWindows),
+            'logins' => $accountWindows,
+            'global_from' => Carbon::createFromTimestamp($globalFrom)->toDateTimeString(),
+            'global_to' => Carbon::createFromTimestamp($globalTo)->toDateTimeString(),
+        ]);
         $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
 
         $dealsByLogin = $batchResult['deals'];
@@ -333,9 +340,10 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             'trade_sync_status' => 'success',
             'last_trade_sync_at' => now(),
         ];
-        if ($latestTimeDone) {
-            $syncUpdate['deals_synced_to'] = $latestTimeDone;
-        }
+        // if ($latestTimeDone) {
+        //     $syncUpdate['deals_synced_to'] = $latestTimeDone;
+        // }
+        $syncUpdate['deals_synced_to'] = $latestTimeDone ?? now();
         if (!$account->deals_synced_from) {
             $syncUpdate['deals_synced_from'] = Carbon::parse('2024-09-01');
         }

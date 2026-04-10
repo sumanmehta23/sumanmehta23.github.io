@@ -41,6 +41,10 @@ class SyncAccountTrades extends Command
             ->whereNull('a.deleted_at')
             ->where('u.status', 1)
             ->where(function ($q) {
+                $q->where('a.sync_status', '<>','not_found_in_mt5')
+                    ->orWhereNull('a.trade_sync_status','<>','not_found');
+            })
+            ->where(function ($q) {
                 $q->whereNotNull('u.ib1');
             });
 
