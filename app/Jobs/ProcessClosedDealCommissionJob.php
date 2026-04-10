@@ -133,7 +133,6 @@ class ProcessClosedDealCommissionJob implements ShouldQueue
                 $planDetailsMap[$plan->ib_category_id][$plan->account_type_id][$plan->level_id] = $plan;
             }
         }
-
         // Collect position_ids to batch-check for existing wallets and commissions
         $positionIds = array_column($positions, 'position_id');
         $dealIds = array_column($positions, 'deal_id');
