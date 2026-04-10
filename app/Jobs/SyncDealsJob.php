@@ -75,9 +75,10 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
         // ── Try REST batch API first ──
         $restResult = $this->syncViaRestBatch($accountWindows);
+        
         $totalDealsInserted += $restResult['inserted'];
         $closedPositionsBatch = array_merge($closedPositionsBatch, $restResult['closed_positions']);
-        $failedAccountIds = $restResult['failed_account_ids'];
+        $failedAccountIds = $restResult['failed_account_ids'] ?? [];
 
         // ── Fallback: per-account socket API for any that failed ──
         if (!empty($failedAccountIds)) {
@@ -149,7 +150,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             return [
                 'inserted' => 0,
                 'closed_positions' => [],
-                'failed_account_ids' => array_keys($accountWindows),
+                'failed_account_ids' => $failedAccountIds,
             ];
         }
 
@@ -210,6 +211,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         return [
             'inserted' => $inserted,
             'closed_positions' => $closedPositions,
+            'failed_account_ids' => $failedAccountIds,
         ];
     }
 
