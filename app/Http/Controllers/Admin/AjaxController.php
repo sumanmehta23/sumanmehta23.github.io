@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AjaxController extends Controller
@@ -4049,6 +4050,29 @@ class AjaxController extends Controller
             $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
             $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
 
+            $link = '';
+            if ($row->status == 1 && !empty($row->payout_res)) {
+                // Decode JSON
+                $payoutData = json_decode($row->payout_res, true);
+
+                // Get txid
+                $txid = $payoutData['result']['txid'] ?? null;
+
+                // Example: BTC, ETH_TRC, ETH-ERC20 → ETH
+                $kind = $payoutData['result']['kind'] ?? '';
+                $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0] ?? '');
+
+                if ($coin == 'ETH') {
+                    $link = "https://etherscan.io/tx/{$txid}";
+                } elseif ($coin != 'USDT' && $coin != '') {
+                    $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                } elseif ($coin == 'USDT') {
+                    $link = "https://tokenview.io/en/search/{$txid}";
+                }
+            }
+            $paymentMethod = $link
+                ? '<a class="text-success" target="_blank" rel="noopener noreferrer" href="' . $link . '">' . $row->withdraw_type . '</a>'
+                : '<span class="text-success">' . $row->withdraw_type . '</span>';
             $status = '<span class="badge bg-outline-primary">Pending</span>';
 
             if ($row->status == 1) {
@@ -4066,7 +4090,7 @@ class AjaxController extends Controller
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
+                'payment_method' => $paymentMethod,
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $status,
