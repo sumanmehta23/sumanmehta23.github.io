@@ -83,6 +83,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         if (!empty($failedAccountIds)) {
             Log::info('SyncDealsJob: Falling back to socket API', [
                 'failed_accounts' => count($failedAccountIds),
+                'failed_account_ids' => $failedAccountIds
             ]);
             $mt5 = app(QueueSafeMT5Service::class);
             foreach ($failedAccountIds as $accountId) {
@@ -167,6 +168,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         }
 
         $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
+
         $dealsByLogin = $batchResult['deals'];
 
         // Pre-load existing deal_ids for all accounts (one query)
@@ -208,7 +210,6 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         return [
             'inserted' => $inserted,
             'closed_positions' => $closedPositions,
-            'failed_account_ids' => $failedAccountIds,
         ];
     }
 
@@ -292,6 +293,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                     'account_id' => $accountId,
                     'position_id' => $positionId,
                     'deal_id' => $dealId,
+                    'order_id' => $deal['Order'] ?? null,
                     'symbol' => $deal['Symbol'] ?? '',
                     'volume' => $volume,
                     'time_done' => $timeDone->toDateTimeString(),
