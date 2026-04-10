@@ -102,35 +102,43 @@ class RunIbCommissionAnalysisJob implements ShouldQueue
 
     protected function getDuplicateWallets(?string $code, ?string $referral): array
     {
-        $query = DB::table('ib_wallet')
+        $query = DB::table('ib1_commission as c')
+            ->join('ib_wallet as w', 'w.ib1_commission_id', '=', 'c.id')
             ->select(
-                'order_id',
-                'user_id',
+                'c.expert_position_id',
+                'w.user_id',
+                DB::raw('COUNT(DISTINCT w.order_id) as order_count'),
                 DB::raw('COUNT(*) as cnt'),
-                DB::raw('SUM(CAST(ib_wallet AS DECIMAL(20,10))) as total_amount'),
-                DB::raw('MIN(CAST(ib_wallet AS DECIMAL(20,10))) as expected_amount'),
-                DB::raw('SUM(CAST(ib_wallet AS DECIMAL(20,10))) - MIN(CAST(ib_wallet AS DECIMAL(20,10))) as overpaid')
+                DB::raw('SUM(c.volume) as total_volume'),
+                DB::raw('MAX(c.volume) as primary_volume'),
+                DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) as total_amount'),
+                DB::raw('MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as expected_amount'),
+                DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) - MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as overpaid')
             )
-            ->groupBy('order_id', 'user_id')
-            ->havingRaw('COUNT(*) > 1');
+            ->whereNull('c.deleted_at')
+            ->whereNotNull('c.expert_position_id')
+            ->groupBy('c.expert_position_id', 'w.user_id')
+            ->havingRaw('COUNT(DISTINCT w.order_id) > 1');
 
         if ($code) {
-            $query->where('code', $code);
+            $query->where('w.code', $code);
         }
         if ($referral) {
-            $query->where('email', $referral);
+            $query->where('w.email', $referral);
         }
 
-        $duplicates = $query->orderByDesc('cnt')->limit(50)->get();
+        $duplicates = $query->orderByDesc('order_count')->limit(50)->get();
 
         return [
             'count' => $duplicates->count(),
-            'total_extra_rows' => $duplicates->sum('cnt') - $duplicates->count(),
             'total_overpaid' => round($duplicates->sum('overpaid'), 10),
             'items' => $duplicates->map(fn($r) => [
-                'order_id' => $r->order_id,
+                'expert_position_id' => $r->expert_position_id ?? 'NULL',
                 'user_id' => $r->user_id,
-                'count' => $r->cnt,
+                'order_count' => $r->order_count,
+                'wallet_count' => $r->cnt,
+                'total_volume' => round($r->total_volume, 4),
+                'primary_volume' => round($r->primary_volume, 4),
                 'total_amount' => round($r->total_amount, 4),
                 'expected_amount' => round($r->expected_amount, 4),
                 'overpaid' => round($r->overpaid, 4),

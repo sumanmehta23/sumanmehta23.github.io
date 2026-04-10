@@ -75,26 +75,32 @@ class AnalyzeIbCommissions extends Command
     protected function analyzeDuplicateWallets(?string $code, ?string $referral, bool $fix): void
     {
         $this->info('── 2. Duplicate Wallet Entries ──');
-        $this->comment('   Same (order_id, user_id) appearing multiple times');
+        $this->comment('   Partially closed positions (multiple order_ids) for same expert_position_id');
 
-        $query = DB::table('ib_wallet')
+        $query = DB::table('ib1_commission as c')
+            ->join('ib_wallet as w', 'w.ib1_commission_id', '=', 'c.id')
             ->select(
-                'order_id',
-                'user_id',
+                'c.expert_position_id',
+                'w.user_id',
+                DB::raw('COUNT(DISTINCT w.order_id) as order_count'),
                 DB::raw('COUNT(*) as cnt'),
-                DB::raw('SUM(CAST(ib_wallet AS DECIMAL(20,10))) as total_amount'),
-                DB::raw('MIN(CAST(ib_wallet AS DECIMAL(20,10))) as expected_amount'),
-                DB::raw('SUM(CAST(ib_wallet AS DECIMAL(20,10))) - MIN(CAST(ib_wallet AS DECIMAL(20,10))) as overpaid')
+                DB::raw('SUM(c.volume) as total_volume'),
+                DB::raw('MAX(c.volume) as primary_volume'),
+                DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) as total_amount'),
+                DB::raw('MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as expected_amount'),
+                DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) - MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as overpaid')
             )
-            ->groupBy('order_id', 'user_id')
-            ->havingRaw('COUNT(*) > 1');
+            ->whereNull('c.deleted_at')
+            ->whereNotNull('c.expert_position_id')
+            ->groupBy('c.expert_position_id', 'w.user_id')
+            ->havingRaw('COUNT(DISTINCT w.order_id) > 1');
 
         if ($code) {
-            $query->where('code', $code);
+            $query->where('w.code', $code);
         }
 
         if ($referral) {
-            $query->where('email', $referral);
+            $query->where('w.email', $referral);
         }
 
         $duplicates = $query->get();
@@ -105,22 +111,22 @@ class AnalyzeIbCommissions extends Command
             return;
         }
 
-        $totalDuplicateRows = $duplicates->sum('cnt') - $duplicates->count();
         $totalOverpaid = $duplicates->sum('overpaid');
 
-        $this->warn("   Found {$duplicates->count()} order_id+user_id pairs with duplicates");
-        $this->warn("   Total extra rows: {$totalDuplicateRows}");
+        $this->warn("   Found {$duplicates->count()} positions with multiple partial closes");
         $this->warn("   Total overpaid amount: " . number_format($totalOverpaid, 10));
         $this->newLine();
 
         // Show top duplicates
-        $top = $duplicates->sortByDesc('cnt')->take(20);
+        $top = $duplicates->sortByDesc('order_count')->take(20);
         $this->table(
-            ['order_id', 'user_id', 'count', 'total_amount', 'expected', 'overpaid'],
+            ['expert_position_id', 'user_id', 'orders', 'total_vol', 'primary_vol', 'total_amt', 'expected', 'overpaid'],
             $top->map(fn($r) => [
-                $r->order_id,
+                $r->expert_position_id ?? 'NULL',
                 substr($r->user_id, 0, 8) . '...',
-                $r->cnt,
+                $r->order_count,
+                $r->total_volume,
+                $r->primary_volume,
                 number_format($r->total_amount, 4),
                 number_format($r->expected_amount, 4),
                 number_format($r->overpaid, 4),
@@ -138,31 +144,33 @@ class AnalyzeIbCommissions extends Command
 
     protected function fixDuplicateWallets($duplicates): void
     {
-        if (!$this->confirm('This will delete duplicate wallet rows, keeping only the earliest entry per (order_id, user_id). Continue?')) {
+        if (!$this->confirm('This will consolidate wallet entries for partially closed positions, keeping only the primary close (max volume). Continue?')) {
             return;
         }
 
         $deleted = 0;
 
         foreach ($duplicates as $dup) {
-            // Keep the first (oldest) row, delete the rest
-            $keepId = DB::table('ib_wallet')
-                ->where('order_id', $dup->order_id)
-                ->where('user_id', $dup->user_id)
-                ->orderBy('created_at', 'asc')
-                ->value('id');
+            // Find all wallet entries for this expert_position_id + user_id combination
+            $wallets = DB::table('ib_wallet as w')
+                ->join('ib1_commission as c', 'c.id', '=', 'w.ib1_commission_id')
+                ->where('c.expert_position_id', $dup->expert_position_id)
+                ->where('w.user_id', $dup->user_id)
+                ->select('w.id', 'c.volume', 'w.created_at')
+                ->orderBy('c.volume', 'desc')
+                ->get();
 
-            if ($keepId) {
-                $count = DB::table('ib_wallet')
-                    ->where('order_id', $dup->order_id)
-                    ->where('user_id', $dup->user_id)
-                    ->where('id', '!=', $keepId)
-                    ->delete();
-                $deleted += $count;
+            if ($wallets->count() > 1) {
+                // Keep the entry with the largest volume (primary close), delete the rest
+                $keepId = $wallets->first()->id;
+                foreach ($wallets->skip(1) as $wallet) {
+                    DB::table('ib_wallet')->where('id', $wallet->id)->delete();
+                    $deleted++;
+                }
             }
         }
 
-        $this->info("   Deleted {$deleted} duplicate wallet rows.");
+        $this->info("   Deleted {$deleted} duplicate wallet rows from partial closes.");
     }
 
     protected function analyzeDuplicateCommissions(?string $code): void

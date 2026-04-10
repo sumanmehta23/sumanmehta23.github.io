@@ -14,7 +14,7 @@ class IbCommissionAnalysisController extends Controller
 {
     public function index()
     {
-        return view('admin.ib.commission-analysis');
+        return view('admin.ib.commission-analysis-tabs');
     }
 
     public function startAnalysis(Request $request)
@@ -55,10 +55,8 @@ class IbCommissionAnalysisController extends Controller
 
         if ($status === 'completed') {
             $response['data'] = Cache::get($cacheKey . ':result');
-            // Clean up cache after delivering results
-            Cache::forget($cacheKey . ':status');
-            Cache::forget($cacheKey . ':progress');
-            Cache::forget($cacheKey . ':result');
+            // DO NOT delete cache here - it's needed for tab data loading
+            // Cache will expire naturally after 15 minutes (900 seconds)
         }
 
         return response()->json($response);
@@ -201,5 +199,135 @@ class IbCommissionAnalysisController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    public function getTableData(Request $request)
+    {
+        $section = $request->input('section');
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = 50;
+
+        $code = $request->input('code');
+        $referral = $request->input('referral');
+
+        $items = [];
+        $total = 0;
+
+        switch ($section) {
+            case 'overview':
+                $items = []; // Overview is returned differently
+                break;
+            case 'duplicate_wallets':
+                $result = $this->analyzeDupWallets($code, $referral);
+                $items = $result['items'] ?? [];
+                $total = $result['count'] ?? 0;
+                break;
+            case 'duplicate_commissions':
+                $result = $this->analyzeDupCommissions($code);
+                $items = $result['items'] ?? [];
+                $total = $result['count'] ?? 0;
+                break;
+            case 'missing_commissions':
+                $result = $this->analyzeMissingCommissions($code);
+                $items = $result;
+                break;
+            case 'stuck_commissions':
+                $result = $this->analyzeStuckCommissions();
+                $items = $result;
+                break;
+            case 'overpaid_ibs':
+                $result = $this->analyzeOverpaidIbs();
+                $items = $result['overpaid_ibs'] ?? [];
+                $total = count($items);
+                break;
+            case 'overpayment_audit':
+                $result = $this->analyzeOverpaymentAudit();
+                $items = $result['ibs_affected'] ?? [];
+                $total = count($items);
+                break;
+            case 'pipeline_health':
+                $result = $this->analyzePipelineHealth();
+                $items = $result;
+                break;
+        }
+
+        if (!is_array($items)) {
+            $items = [];
+        }
+
+        $paginated = collect($items)->forPage($page, $perPage);
+        $lastPage = (int) ceil(($total ?: count($items)) / $perPage);
+
+        return response()->json([
+            'data' => $paginated->values(),
+            'current_page' => $page,
+            'last_page' => $lastPage,
+            'per_page' => $perPage,
+            'total' => $total ?: count($items),
+        ]);
+    }
+
+    private function analyzeDupWallets($code, $referral)
+    {
+        // Use the job's method directly
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getDuplicateWallets');
+        $method->setAccessible(true);
+        return $method->invoke($job, $code, $referral);
+    }
+
+    private function analyzeDupCommissions($code)
+    {
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getDuplicateCommissions');
+        $method->setAccessible(true);
+        return $method->invoke($job, $code);
+    }
+
+    private function analyzeMissingCommissions($code)
+    {
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getMissingCommissions');
+        $method->setAccessible(true);
+        return $method->invoke($job, $code);
+    }
+
+    private function analyzeStuckCommissions()
+    {
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getStuckCommissions');
+        $method->setAccessible(true);
+        return $method->invoke($job);
+    }
+
+    private function analyzeOverpaidIbs()
+    {
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getOverpaidIbs');
+        $method->setAccessible(true);
+        return $method->invoke($job, null);
+    }
+
+    private function analyzeOverpaymentAudit()
+    {
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getOverpaymentAudit');
+        $method->setAccessible(true);
+        return $method->invoke($job, null);
+    }
+
+    private function analyzePipelineHealth()
+    {
+        $job = new \App\Jobs\RunIbCommissionAnalysisJob('temp');
+        $reflect = new \ReflectionClass($job);
+        $method = $reflect->getMethod('getPipelineHealth');
+        $method->setAccessible(true);
+        return $method->invoke($job);
     }
 }

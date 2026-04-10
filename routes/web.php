@@ -517,6 +517,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/ib-commission-analysis', [IbCommissionAnalysisController::class, 'index'])->name('ib.commission-analysis')->middleware('check.permissions:ib:viewAny');
         Route::post('/ib-commission-analysis/start', [IbCommissionAnalysisController::class, 'startAnalysis'])->name('ib.commission-analysis.start')->middleware('check.permissions:ib:viewAny');
         Route::get('/ib-commission-analysis/status', [IbCommissionAnalysisController::class, 'getStatus'])->name('ib.commission-analysis.status')->middleware('check.permissions:ib:viewAny');
+        Route::get('/ib-commission-analysis/table-data', [IbCommissionAnalysisController::class, 'getTableData'])->name('ib.commission-analysis.table-data')->middleware('check.permissions:ib:viewAny');
         Route::post('/ib-commission-analysis/fix-duplicates', [IbCommissionAnalysisController::class, 'fixDuplicateWallets'])->name('ib.commission-analysis.fix-duplicates')->middleware('check.permissions:ib:manageSettings');
         Route::post('/ib-commission-analysis/fix-duplicate-commissions', [IbCommissionAnalysisController::class, 'fixDuplicateCommissions'])->name('ib.commission-analysis.fix-duplicate-commissions')->middleware('check.permissions:ib:manageSettings');
         Route::post('/ib-commission-analysis/process-stuck', [IbCommissionAnalysisController::class, 'processStuckCommissions'])->name('ib.commission-analysis.process-stuck')->middleware('check.permissions:ib:manageSettings');
