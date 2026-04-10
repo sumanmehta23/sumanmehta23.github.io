@@ -330,4 +330,103 @@ class IbCommissionAnalysisController extends Controller
         $method->setAccessible(true);
         return $method->invoke($job);
     }
+
+    /**
+     * Get fixable duplicate groups (non-withdrawn overpayments only)
+     */
+    public function getFixableDuplicates()
+    {
+        $service = new \App\Services\FixOverpaidCommissionsService();
+        $fixable = $service->getFixableDuplicates();
+
+        return response()->json([
+            'count' => count($fixable),
+            'items' => $fixable,
+        ]);
+    }
+
+    /**
+     * Get commission timeline for a specific expert position
+     */
+    public function getCommissionTimeline(Request $request)
+    {
+        $expertPositionId = $request->input('expert_position_id');
+        $userId = $request->input('user_id');
+
+        if (!$expertPositionId || !$userId) {
+            return response()->json([
+                'error' => 'Missing expert_position_id or user_id',
+            ], 400);
+        }
+
+        $service = new \App\Services\FixOverpaidCommissionsService();
+        $timeline = $service->getCommissionTimeline($expertPositionId, $userId);
+
+        return response()->json($timeline);
+    }
+
+    /**
+     * Fix overpaid commissions for a specific expert position and user
+     * Soft-deletes non-withdrawn overpaid entries and flags them
+     */
+    public function fixOverpaidCommissions(Request $request)
+    {
+        $expertPositionId = $request->input('expert_position_id');
+        $userId = $request->input('user_id');
+
+        if (!$expertPositionId || !$userId) {
+            return response()->json([
+                'error' => 'Missing expert_position_id or user_id',
+            ], 400);
+        }
+
+        $service = new \App\Services\FixOverpaidCommissionsService();
+        $result = $service->fixForDuplicateGroup($expertPositionId, $userId);
+
+        if (!$result['success']) {
+            return response()->json($result, 400);
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get all fixable duplicate entries with their details
+     */
+    public function getFixableEntries()
+    {
+        $entries = DB::table('ib1_commission as c')
+            ->join('ib_wallet as w', 'w.ib1_commission_id', '=', 'c.id')
+            ->select(
+                'c.expert_position_id',
+                'w.user_id',
+                DB::raw('COUNT(DISTINCT w.order_id) as order_count'),
+                DB::raw('COUNT(CASE WHEN w.ib_withdraw IS NULL THEN 1 END) as recoverable_count'),
+                DB::raw('SUM(CASE WHEN w.ib_withdraw IS NULL THEN CAST(w.ib_wallet AS DECIMAL(20,10)) ELSE 0 END) as recoverable_amount'),
+                DB::raw('SUM(CASE WHEN w.ib_withdraw IS NOT NULL THEN CAST(w.ib_wallet AS DECIMAL(20,10)) ELSE 0 END) as withdrawn_amount'),
+                DB::raw('COUNT(*) as total_wallet_entries')
+            )
+            ->whereNull('c.deleted_at')
+            ->whereNotNull('c.expert_position_id')
+            ->whereNull('w.deleted_at')
+            ->groupBy('c.expert_position_id', 'w.user_id')
+            ->havingRaw('COUNT(DISTINCT w.order_id) > 1')
+            ->havingRaw('COUNT(CASE WHEN w.ib_withdraw IS NULL THEN 1 END) > 0')
+            ->limit(100)
+            ->get();
+
+        return response()->json([
+            'count' => count($entries),
+            'entries' => $entries->map(fn($e) => [
+                'expert_position_id' => $e->expert_position_id,
+                'user_id' => $e->user_id,
+                'order_count' => $e->order_count,
+                'total_wallet_entries' => $e->total_wallet_entries,
+                'recoverable_count' => $e->recoverable_count,
+                'recoverable_amount' => round($e->recoverable_amount, 4),
+                'withdrawn_amount' => round($e->withdrawn_amount, 4),
+                'can_fix' => $e->recoverable_count > 0,
+            ])->toArray(),
+        ]);
+    }
 }

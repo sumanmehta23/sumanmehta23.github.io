@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\Admin\Dashboard;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\IbCommissionAnalysisController;
+use App\Http\Controllers\Admin\IbWithdrawalController;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Leaderboard;
 use App\Http\Controllers\Admin\Login;
@@ -285,7 +286,6 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/ajax', [AjaxController::class, 'index']);
         Route::get('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
         Route::post('/api/ajax', [ApiAjaxController::class, 'handleRequest']);
-        Route::get('/logout', [Login::class, 'logout'])->name('logout');
         Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
         Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
@@ -522,6 +522,17 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/ib-commission-analysis/fix-duplicate-commissions', [IbCommissionAnalysisController::class, 'fixDuplicateCommissions'])->name('ib.commission-analysis.fix-duplicate-commissions')->middleware('check.permissions:ib:manageSettings');
         Route::post('/ib-commission-analysis/process-stuck', [IbCommissionAnalysisController::class, 'processStuckCommissions'])->name('ib.commission-analysis.process-stuck')->middleware('check.permissions:ib:manageSettings');
         Route::get('/ib-commission-analysis/stuck-status', [IbCommissionAnalysisController::class, 'getStuckProcessStatus'])->name('ib.commission-analysis.stuck-status')->middleware('check.permissions:ib:viewAny');
+
+        // Overpayment fix endpoints
+        Route::get('/ib-commission-analysis/fixable-duplicates', [IbCommissionAnalysisController::class, 'getFixableDuplicates'])->name('ib.commission-analysis.fixable-duplicates')->middleware('check.permissions:ib:viewAny');
+        Route::get('/ib-commission-analysis/fixable-entries', [IbCommissionAnalysisController::class, 'getFixableEntries'])->name('ib.commission-analysis.fixable-entries')->middleware('check.permissions:ib:viewAny');
+        Route::get('/ib-commission-analysis/commission-timeline', [IbCommissionAnalysisController::class, 'getCommissionTimeline'])->name('ib.commission-analysis.commission-timeline')->middleware('check.permissions:ib:viewAny');
+        Route::post('/ib-commission-analysis/fix-overpaid', [IbCommissionAnalysisController::class, 'fixOverpaidCommissions'])->name('ib.commission-analysis.fix-overpaid')->middleware('check.permissions:ib:manageSettings');
+
+        // IB Withdrawal tracking
+        Route::get('/ib-withdrawals', [IbWithdrawalController::class, 'index'])->name('ib.withdrawals.index')->middleware('check.permissions:ib:viewAny');
+        Route::get('/ib-withdrawals/{id}', [IbWithdrawalController::class, 'show'])->name('ib.withdrawals.show')->middleware('check.permissions:ib:viewAny');
+        Route::get('/ib-withdrawals/{id}/overpaid-details', [IbWithdrawalController::class, 'getOverpaidDetails'])->name('ib.withdrawals.overpaid-details')->middleware('check.permissions:ib:viewAny');
 
         Route::get("/mt5_groups", [MT5Controller::class, 'index']);
 

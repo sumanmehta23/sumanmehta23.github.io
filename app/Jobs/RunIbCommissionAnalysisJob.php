@@ -102,6 +102,7 @@ class RunIbCommissionAnalysisJob implements ShouldQueue
 
     protected function getDuplicateWallets(?string $code, ?string $referral): array
     {
+        // Query duplicates, excluding withdrawn entries
         $query = DB::table('ib1_commission as c')
             ->join('ib_wallet as w', 'w.ib1_commission_id', '=', 'c.id')
             ->select(
@@ -113,7 +114,13 @@ class RunIbCommissionAnalysisJob implements ShouldQueue
                 DB::raw('MAX(c.volume) as primary_volume'),
                 DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) as total_amount'),
                 DB::raw('MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as expected_amount'),
-                DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) - MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as overpaid')
+                DB::raw('SUM(CAST(w.ib_wallet AS DECIMAL(20,10))) - MIN(CAST(w.ib_wallet AS DECIMAL(20,10))) as overpaid'),
+                // Count non-withdrawn entries (can be fixed)
+                DB::raw('COUNT(CASE WHEN w.ib_withdraw IS NULL THEN 1 END) as recoverable_count'),
+                // Sum non-withdrawn amounts (can be fixed)
+                DB::raw('SUM(CASE WHEN w.ib_withdraw IS NULL THEN CAST(w.ib_wallet AS DECIMAL(20,10)) ELSE 0 END) as recoverable_amount'),
+                // Sum withdrawn amounts (cannot be fixed)
+                DB::raw('SUM(CASE WHEN w.ib_withdraw IS NOT NULL THEN CAST(w.ib_wallet AS DECIMAL(20,10)) ELSE 0 END) as withdrawn_amount')
             )
             ->whereNull('c.deleted_at')
             ->whereNotNull('c.expert_position_id')
@@ -132,6 +139,8 @@ class RunIbCommissionAnalysisJob implements ShouldQueue
         return [
             'count' => $duplicates->count(),
             'total_overpaid' => round($duplicates->sum('overpaid'), 10),
+            'total_recoverable' => round($duplicates->sum('recoverable_amount'), 10),
+            'total_withdrawn' => round($duplicates->sum('withdrawn_amount'), 10),
             'items' => $duplicates->map(fn($r) => [
                 'expert_position_id' => $r->expert_position_id ?? 'NULL',
                 'user_id' => $r->user_id,
@@ -142,6 +151,10 @@ class RunIbCommissionAnalysisJob implements ShouldQueue
                 'total_amount' => round($r->total_amount, 4),
                 'expected_amount' => round($r->expected_amount, 4),
                 'overpaid' => round($r->overpaid, 4),
+                'recoverable_count' => (int)$r->recoverable_count,
+                'recoverable_amount' => round($r->recoverable_amount, 4),
+                'withdrawn_amount' => round($r->withdrawn_amount, 4),
+                'can_fix' => (int)$r->recoverable_count > 0,
             ])->values()->toArray(),
         ];
     }
