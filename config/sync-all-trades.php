@@ -40,7 +40,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Priority Sync Configuration
+    | Priority Sync Configuration (LEGACY — use deals_sync instead)
     |--------------------------------------------------------------------------
     */
     'priority_sync' => [
@@ -49,6 +49,20 @@ return [
         'cycle_delay' => env('PRIORITY_SYNC_CYCLE_DELAY', 30), // Seconds
         'min_sync_interval' => env('PRIORITY_SYNC_MIN_INTERVAL', 60), // Minutes
         'max_pending_jobs' => env('PRIORITY_SYNC_MAX_PENDING_JOBS', 100),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Unified Deal Sync Configuration (app:sync-deals-v2)
+    |--------------------------------------------------------------------------
+    | Single pipeline: MT5 DealGetPage → deals table → trades table → commissions
+    */
+    'deals_sync' => [
+        'batch_size' => env('DEALS_SYNC_BATCH_SIZE', 10),
+        'cycle_delay' => env('DEALS_SYNC_CYCLE_DELAY', 30), // Seconds between daemon cycles
+        'min_sync_interval' => env('DEALS_SYNC_MIN_INTERVAL', 20), // Minutes between syncs for same account
+        'max_pending_jobs' => env('DEALS_SYNC_MAX_PENDING_JOBS', 100),
+        'stale_threshold' => env('DEALS_SYNC_STALE_THRESHOLD', 3), // Hours before forcing re-sync
     ],
 
     /*

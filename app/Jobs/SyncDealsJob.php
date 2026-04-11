@@ -5,9 +5,7 @@ namespace App\Jobs;
 use App\Models\Account;
 use App\Models\Deal;
 use App\Models\Trade;
-use App\MT5\MTRetCode;
 use App\Services\MT5RestAPIService;
-use App\Services\QueueSafeMT5Service;
 use Exception;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -20,8 +18,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-use function Symfony\Component\Clock\now;
-
 class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
@@ -33,6 +29,9 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
     protected $accountIds;
     protected $maxPagesPerAccount;
+
+    /** Max deals to fetch in a single REST call per account */
+    protected const MAX_DEALS_PER_REST_CALL = 5000;
 
     public function uniqueId(): string
     {
@@ -49,8 +48,6 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     public function handle(): void
     {
         $jobStart = microtime(true);
-        $totalDealsInserted = 0;
-        $closedPositionsBatch = [];
 
         // ── Load accounts and build login → account map ──
         $accounts = Account::whereIn('id', $this->accountIds)->get()->keyBy('id');
@@ -75,43 +72,23 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ];
         }
 
-        // ── Try REST batch API first ──
+        // ── Sync all accounts via REST batch API (no socket fallback) ──
         $restResult = $this->syncViaRestBatch($accountWindows);
 
-        $totalDealsInserted += $restResult['inserted'];
-        $closedPositionsBatch = array_merge($closedPositionsBatch, $restResult['closed_positions']);
+        $totalDealsInserted = $restResult['inserted'];
+        $closedPositionsBatch = $restResult['closed_positions'];
         $failedAccountIds = $restResult['failed_account_ids'] ?? [];
 
-        // ── Fallback: per-account socket API for any that failed ──
+        // Mark failed accounts for retry on next cycle
         if (!empty($failedAccountIds)) {
-            Log::info('SyncDealsJob: Falling back to socket API', [
+            Log::warning('SyncDealsJob: Accounts failed REST sync, will retry next cycle', [
                 'failed_accounts' => count($failedAccountIds),
-                'failed_account_ids' => $failedAccountIds
+                'failed_account_ids' => $failedAccountIds,
             ]);
-            $mt5 = app(QueueSafeMT5Service::class);
-            foreach ($failedAccountIds as $accountId) {
-                try {
-                    $result = $this->syncAccountDealsViaSocket($mt5, $accountId);
-                    $totalDealsInserted += $result['inserted'];
-                    foreach ($result['closed_positions'] as $cp) {
-                        $closedPositionsBatch[] = $cp;
-                    }
-
-                    if (count($closedPositionsBatch) >= 100) {
-                        ProcessClosedDealCommissionJob::dispatch($closedPositionsBatch)
-                            ->onQueue('distributeibcommission');
-                        $closedPositionsBatch = [];
-                    }
-                } catch (Exception $e) {
-                    Log::error("SyncDealsJob: Socket fallback failed for {$accountId}", [
-                        'error' => $e->getMessage(),
-                    ]);
-                    Account::where('id', $accountId)->update([
-                        'trade_sync_status' => 'error',
-                        'sync_error' => substr($e->getMessage(), 0, 500),
-                    ]);
-                }
-            }
+            Account::whereIn('id', $failedAccountIds)->update([
+                'sync_status' => 'error',
+                'sync_error' => 'REST API fetch failed, will retry next cycle',
+            ]);
         }
 
         // Dispatch remaining closed positions
@@ -120,11 +97,21 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                 ->onQueue('distributeibcommission');
         }
 
+        // Mark successfully synced accounts
+        $successfulIds = array_diff($this->accountIds, $failedAccountIds);
+        if (!empty($successfulIds)) {
+            Account::whereIn('id', $successfulIds)->update([
+                'sync_status' => 'synced',
+                'sync_error' => null,
+                'sync_stuck_count' => 0,
+            ]);
+        }
+
         Log::info("SyncDealsJob completed", [
             'accounts' => count($this->accountIds),
             'total_deals_inserted' => $totalDealsInserted,
-            'rest_batch' => count($this->accountIds) - count($failedAccountIds),
-            'socket_fallback' => count($failedAccountIds),
+            'rest_success' => count($this->accountIds) - count($failedAccountIds),
+            'rest_failed' => count($failedAccountIds),
             'duration_seconds' => round(microtime(true) - $jobStart, 2),
         ]);
     }
@@ -146,38 +133,26 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         try {
             $restService = app(MT5RestAPIService::class);
         } catch (Exception $e) {
-            Log::warning('SyncDealsJob: REST service unavailable, all accounts will use socket', [
+            Log::warning('SyncDealsJob: REST service unavailable', [
                 'error' => $e->getMessage(),
             ]);
             return [
                 'inserted' => 0,
                 'closed_positions' => [],
-                'failed_account_ids' => $failedAccountIds,
+                'failed_account_ids' => array_keys($accountWindows),
             ];
         }
 
-        // Group accounts by similar time windows to minimize REST calls.
-        // For simplicity, use the widest window (min $from, max $to).
-        $globalFrom = PHP_INT_MAX;
-        $globalTo = 0;
-        $logins = [];
-        $loginToAccountId = [];
-
+        // Separate accounts: already-synced (incremental) vs never-synced (first-time)
+        $incrementalAccounts = [];
+        $firstTimeAccounts = [];
         foreach ($accountWindows as $acctId => $w) {
-            $globalFrom = min($globalFrom, $w['from']);
-            $globalTo = max($globalTo, $w['to']);
-            $logins[] = $w['login'];
-            $loginToAccountId[$w['login']] = $acctId;
+            if ($w['account']->deals_synced_to === null) {
+                $firstTimeAccounts[$acctId] = $w;
+            } else {
+                $incrementalAccounts[$acctId] = $w;
+            }
         }
-        Log::info('SyncDealsJob: Fetching deals via REST batch', [
-            'account_count' => count($accountWindows),
-            'logins' => $accountWindows,
-            'global_from' => Carbon::createFromTimestamp($globalFrom)->toDateTimeString(),
-            'global_to' => Carbon::createFromTimestamp($globalTo)->toDateTimeString(),
-        ]);
-        $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
-
-        $dealsByLogin = $batchResult['deals'];
 
         // Pre-load existing deal_ids for all accounts (one query)
         $allAccountIds = array_keys($accountWindows);
@@ -186,32 +161,73 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ->flip()
             ->toArray();
 
-        foreach ($accountWindows as $acctId => $w) {
-            $login = (string) $w['login'];
-            $account = $w['account'];
-            $rawDeals = $dealsByLogin[$login] ?? null;
+        // ── 1. Process incremental (already-synced) accounts via batch REST ──
+        if (!empty($incrementalAccounts)) {
+            $globalFrom = PHP_INT_MAX;
+            $globalTo = 0;
+            $logins = [];
 
-            if ($rawDeals === null) {
-                // REST returned nothing for this login — mark for socket fallback
-                $failedAccountIds[] = $acctId;
-                continue;
+            foreach ($incrementalAccounts as $acctId => $w) {
+                $globalFrom = min($globalFrom, $w['from']);
+                $globalTo = max($globalTo, $w['to']);
+                $logins[] = $w['login'];
             }
 
-            // Per-account from filter: REST used global window, so trim deals
-            // that are before this account's actual incremental cursor.
-            $accountFrom = $w['from'];
+            Log::info('SyncDealsJob: Fetching incremental deals via REST batch', [
+                'account_count' => count($incrementalAccounts),
+                'global_from' => Carbon::createFromTimestamp($globalFrom)->toDateTimeString(),
+                'global_to' => Carbon::createFromTimestamp($globalTo)->toDateTimeString(),
+            ]);
 
-            $result = $this->processRestDeals($rawDeals, $acctId, $account, $accountFrom, $existingDealIds);
-            $inserted += $result['inserted'];
-            $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+            $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
+            $dealsByLogin = $batchResult['deals'];
 
-            // Sync trades table from newly inserted deals
-            $this->syncTrades($acctId, $account, $result['new_deal_ids']);
+            foreach ($incrementalAccounts as $acctId => $w) {
+                $login = (string) $w['login'];
+                $account = $w['account'];
+                $rawDeals = $dealsByLogin[$login] ?? null;
 
-            // Dispatch commission in batches of 100
-            if (count($closedPositions) >= 100) {
-                ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
-                    ->onQueue('distributeibcommission');
+                if ($rawDeals === null) {
+                    $failedAccountIds[] = $acctId;
+                    continue;
+                }
+
+                $accountFrom = $w['from'];
+                $result = $this->processRestDeals($rawDeals, $acctId, $account, $accountFrom, $existingDealIds);
+                $inserted += $result['inserted'];
+                $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+
+                $this->syncTrades($acctId, $account, $result['new_deal_ids']);
+
+                if (count($closedPositions) >= 100) {
+                    ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
+                        ->onQueue('distributeibcommission');
+                }
+            }
+        }
+
+        // ── 2. Process first-time (never-synced) accounts with date-range awareness ──
+        if (!empty($firstTimeAccounts)) {
+            Log::info('SyncDealsJob: Processing first-time accounts via REST with date-range splitting', [
+                'count' => count($firstTimeAccounts),
+            ]);
+
+            foreach ($firstTimeAccounts as $acctId => $w) {
+                try {
+                    $result = $this->syncFirstTimeAccountViaRest($restService, $acctId, $w, $existingDealIds);
+                    $inserted += $result['inserted'];
+                    $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+
+                    if (count($closedPositions) >= 100) {
+                        ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
+                            ->onQueue('distributeibcommission');
+                    }
+                } catch (Exception $e) {
+                    Log::error("SyncDealsJob: First-time sync failed for account {$acctId}", [
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedAccountIds[] = $acctId;
+                }
             }
         }
 
@@ -223,9 +239,131 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     }
 
     /**
+     * Sync a never-synced account via REST API with date-range splitting for high-volume accounts.
+     *
+     * Uses getDealTotals() to check volume, then:
+     * - <= MAX_DEALS_PER_REST_CALL: single REST call
+     * - > MAX_DEALS_PER_REST_CALL: split time range into smaller chunks
+     */
+    protected function syncFirstTimeAccountViaRest(
+        MT5RestAPIService $restService,
+        string $accountId,
+        array $window,
+        array &$existingDealIds
+    ): array {
+        $login = $window['login'];
+        $account = $window['account'];
+        $from = $window['from'];
+        $to = $window['to'];
+
+        // Get total deal count to plan fetch strategy (1 lightweight API call)
+        $totals = $restService->getDealTotals([$login], $from, $to);
+        $totalDeals = $totals[(string) $login] ?? 0;
+
+        Log::info("SyncDealsJob: First-time account deal count", [
+            'account_id' => $accountId,
+            'login' => $login,
+            'total_deals' => $totalDeals,
+        ]);
+
+        if ($totalDeals === 0) {
+            // No deals — just update cursors
+            $this->processRestDeals([], $accountId, $account, $from, $existingDealIds);
+            return ['inserted' => 0, 'closed_positions' => [], 'new_deal_ids' => []];
+        }
+
+        if ($totalDeals <= self::MAX_DEALS_PER_REST_CALL) {
+            // Small enough — fetch everything in one REST call
+            $batchResult = $restService->getBatchDeals([$login], $from, $to);
+            $rawDeals = $batchResult['deals'][(string) $login] ?? [];
+
+            if (empty($rawDeals) && $totalDeals > 0) {
+                throw new Exception("REST API returned no data for login {$login} (expected {$totalDeals} deals)");
+            }
+
+            $result = $this->processRestDeals($rawDeals, $accountId, $account, $from, $existingDealIds);
+            $this->syncTrades($accountId, $account, $result['new_deal_ids']);
+            return $result;
+        }
+
+        // ── High-volume account: split date range into manageable chunks ──
+        $effectiveTo = Carbon::now()->timestamp;
+        $chunks = $this->calculateDateRangeChunks($from, $effectiveTo, $totalDeals);
+
+        Log::info("SyncDealsJob: Splitting high-volume first-time account into date chunks", [
+            'account_id' => $accountId,
+            'login' => $login,
+            'total_deals' => $totalDeals,
+            'chunks' => count($chunks),
+            'max_deals_per_call' => self::MAX_DEALS_PER_REST_CALL,
+        ]);
+
+        $totalInserted = 0;
+        $allClosedPositions = [];
+        $allNewDealIds = [];
+
+        foreach ($chunks as $i => $chunk) {
+            // Use the original far-future $to for the last chunk to catch everything
+            $chunkTo = ($i === count($chunks) - 1) ? $to : $chunk['to'];
+
+            $batchResult = $restService->getBatchDeals([$login], $chunk['from'], $chunkTo);
+            $rawDeals = $batchResult['deals'][(string) $login] ?? [];
+
+            if (empty($rawDeals)) {
+                Log::info("SyncDealsJob: Chunk " . ($i + 1) . "/" . count($chunks) . " empty for {$login}");
+                continue;
+            }
+
+            // Only mark complete on the last chunk
+            $isLastChunk = ($i === count($chunks) - 1);
+            $result = $this->processRestDeals($rawDeals, $accountId, $account, $chunk['from'], $existingDealIds, $isLastChunk);
+            $totalInserted += $result['inserted'];
+            $allClosedPositions = array_merge($allClosedPositions, $result['closed_positions']);
+            $allNewDealIds = array_merge($allNewDealIds, $result['new_deal_ids']);
+
+            Log::info("SyncDealsJob: Chunk completed", [
+                'account_id' => $accountId,
+                'login' => $login,
+                'chunk' => ($i + 1) . '/' . count($chunks),
+                'deals_in_chunk' => count($rawDeals),
+                'inserted' => $result['inserted'],
+            ]);
+        }
+
+        // Sync trades once with all new deal IDs from all chunks
+        $this->syncTrades($accountId, $account, $allNewDealIds);
+
+        return ['inserted' => $totalInserted, 'closed_positions' => $allClosedPositions, 'new_deal_ids' => $allNewDealIds];
+    }
+
+    /**
+     * Calculate optimal date-range chunks to keep each REST call under the deal limit.
+     *
+     * Evenly divides the time range based on total deals / max per call.
+     * Deal distribution isn't perfectly uniform, but this keeps each chunk
+     * within a reasonable size for the REST API.
+     */
+    protected function calculateDateRangeChunks(int $from, int $to, int $totalDeals): array
+    {
+        $numChunks = (int) ceil($totalDeals / self::MAX_DEALS_PER_REST_CALL);
+        $totalSeconds = max($to - $from, 1);
+        $chunkDuration = (int) ceil($totalSeconds / $numChunks);
+
+        $chunks = [];
+        $currentFrom = $from;
+        for ($i = 0; $i < $numChunks; $i++) {
+            $currentTo = min($currentFrom + $chunkDuration, $to);
+            $chunks[] = ['from' => $currentFrom, 'to' => $currentTo];
+            $currentFrom = $currentTo;
+        }
+
+        return $chunks;
+    }
+
+    /**
      * Transform REST deal arrays into DB rows, upsert, and detect closes.
      */
-    protected function processRestDeals(array $rawDeals, string $accountId, Account $account, int $accountFrom, array &$existingDealIds): array
+    protected function processRestDeals(array $rawDeals, string $accountId, Account $account, int $accountFrom, array &$existingDealIds, bool $markComplete = true): array
     {
         $dealsToInsert = [];
         $closedPositions = [];
@@ -334,216 +472,21 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        // Update sync cursor
+        // Always update sync cursors — even if no new deals were found
         $syncUpdate = [
             'deals_last_fetch_at' => now(),
             'trade_sync_status' => 'success',
             'last_trade_sync_at' => now(),
+            'deals_synced_to' => $latestTimeDone ?? now(),
+            'deals_synced_from' => $account->deals_synced_from ?? Carbon::parse('2024-09-01'),
         ];
-        // if ($latestTimeDone) {
-        //     $syncUpdate['deals_synced_to'] = $latestTimeDone;
-        // }
-        $syncUpdate['deals_synced_to'] = $latestTimeDone ?? now();
-        if (!$account->deals_synced_from) {
-            $syncUpdate['deals_synced_from'] = Carbon::parse('2024-09-01');
-        }
-        $syncUpdate['deals_sync_complete'] = true;
-        Account::where('id', $accountId)->update($syncUpdate);
-        Cache::forget("account:{$accountId}");
-
-        return ['inserted' => count($dealsToInsert), 'closed_positions' => $closedPositions, 'new_deal_ids' => $newDealIds];
-    }
-
-    // ─────────────────────────────────────────────────────────
-    //  Socket Fallback Path (per-account, paginated)
-    // ─────────────────────────────────────────────────────────
-
-    protected function syncAccountDealsViaSocket(QueueSafeMT5Service $mt5, string $accountId): array
-    {
-        $account = Cache::remember("account:{$accountId}", 600, fn() => Account::find($accountId));
-        if (!$account) {
-            return ['inserted' => 0, 'closed_positions' => []];
-        }
-
-        $login = $account->code;
-
-        // INCREMENTAL: Use last sync timestamp or default start
-        $lastSync = $account->deals_synced_to;
-        if ($lastSync) {
-            $from = Carbon::parse($lastSync)->subHour()->timestamp;
-        } else {
-            $from = Carbon::parse('2024-09-01')->timestamp;
-        }
-        $to = Carbon::parse('2080-03-31')->timestamp;
-
-        // Get total deals count
-        $total = 0;
-        $errorCode = $mt5->executeOperation(function ($api) use ($login, $from, $to, &$total) {
-            return $api->DealGetTotal($login, $from, $to, $total);
-        });
-
-        if ($errorCode != MTRetCode::MT_RET_OK) {
-            if ($errorCode == MTRetCode::MT_RET_ERR_NOTFOUND) {
-                $account->update(['deletion_type' => 'not_found_on_mt5']);
-                $account->delete();
-            }
-            Log::warning("SyncDealsJob: DealGetTotal failed for {$login}", [
-                'error_code' => $errorCode,
-            ]);
-            return ['inserted' => 0, 'closed_positions' => []];
-        }
-
-        if ($total == 0) {
-            return ['inserted' => 0, 'closed_positions' => []];
-        }
-
-        // Pre-load existing deal_ids for this account to skip duplicates (O(1) lookup)
-        $existingDealIds = Deal::where('account_id', $accountId)
-            ->pluck('deal_id')
-            ->flip()
-            ->toArray();
-
-        $pageSize = 100;
-        $inserted = 0;
-        $closedPositions = [];
-        $newDealIds = [];
-        $latestTimeDone = null;
-        $pagesProcessed = 0;
-
-        for ($offset = 0; $offset < $total; $offset += $pageSize) {
-            if ($pagesProcessed >= $this->maxPagesPerAccount) {
-                // Re-queue for continuation
-                static::dispatch([$accountId], $this->maxPagesPerAccount)
-                    ->onQueue('syncaccountstrades')
-                    ->delay(now()->addSeconds(5));
-                Log::info("SyncDealsJob: Page limit hit for {$login}, re-queuing", [
-                    'pages_done' => $pagesProcessed,
-                    'offset' => $offset,
-                    'total' => $total,
-                ]);
-                break;
-            }
-
-            $deals = [];
-            $errorCode = $mt5->executeOperation(function ($api) use ($login, $from, $to, $offset, $pageSize, &$deals) {
-                return $api->DealGetPage($login, $from, $to, $offset, $pageSize, $deals);
-            });
-
-            if ($errorCode != MTRetCode::MT_RET_OK || empty($deals)) {
-                break;
-            }
-
-            $dealsToInsert = [];
-            foreach ($deals as $deal) {
-                // Skip if already synced
-                if (isset($existingDealIds[$deal->Deal])) {
-                    continue;
-                }
-
-                // Only sync buy/sell deals (action 0=buy, 1=sell)
-                if (!in_array($deal->Action, [0, 1])) {
-                    continue;
-                }
-
-                // Skip entries without symbol (deposits/withdrawals from MT5 API)
-                if (empty(trim($deal->Symbol ?? ''))) {
-                    continue;
-                }
-
-                $timeDone = Carbon::createFromTimestamp($deal->Time);
-                if (!$latestTimeDone || $timeDone->gt($latestTimeDone)) {
-                    $latestTimeDone = $timeDone;
-                }
-
-                $dealsToInsert[] = [
-                    'account_id' => $accountId,
-                    'deal_id' => $deal->Deal,
-                    'order_id' => $deal->Order,
-                    'position_id' => $deal->PositionID,
-                    'symbol' => $deal->Symbol,
-                    'type' => $deal->Action, // 0=buy, 1=sell
-                    'action' => $deal->Action,
-                    'entry' => $deal->Entry, // 0=in, 1=out
-                    'volume' => $deal->Volume / 10000, // MT5 volume is in lots * 10000
-                    'price' => $deal->Price,
-                    'profit' => $deal->Profit,
-                    'swap' => $deal->Storage ?? 0,
-                    'commission' => $deal->Commission ?? 0,
-                    'comment' => $deal->Comment ?? null,
-                    'reason' => $deal->Reason ?? null,
-                    'time_done' => $timeDone,
-                    'time_msc' => isset($deal->TimeMsc) ? $deal->TimeMsc : null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-
-                // Mark existing so subsequent pages don't re-insert
-                $existingDealIds[$deal->Deal] = true;
-                $newDealIds[] = $deal->Deal;
-
-                // Track close deals for commission processing
-                if ($deal->Entry == 1 && $deal->PositionID > 0) {
-                    $closedPositions[] = [
-                        'account_id' => $accountId,
-                        'position_id' => $deal->PositionID,
-                        'deal_id' => $deal->Deal,
-                        'symbol' => $deal->Symbol,
-                        'volume' => $deal->Volume / 10000,
-                        'time_done' => $timeDone->toDateTimeString(),
-                    ];
-                }
-            }
-
-            if (!empty($dealsToInsert)) {
-                // Use upsert to handle any race conditions
-                Deal::upsert($dealsToInsert, ['deal_id'], [
-                    'order_id',
-                    'position_id',
-                    'symbol',
-                    'type',
-                    'action',
-                    'entry',
-                    'volume',
-                    'price',
-                    'profit',
-                    'swap',
-                    'commission',
-                    'comment',
-                    'reason',
-                    'time_done',
-                    'time_msc',
-                    'updated_at',
-                ]);
-                $inserted += count($dealsToInsert);
-            }
-
-            $pagesProcessed++;
-        }
-
-        // Update sync cursor
-        $syncUpdate = [
-            'deals_last_fetch_at' => now(),
-            'trade_sync_status' => 'success',
-            'last_trade_sync_at' => now(),
-        ];
-        if ($latestTimeDone) {
-            $syncUpdate['deals_synced_to'] = $latestTimeDone;
-        }
-        if (!$account->deals_synced_from) {
-            $syncUpdate['deals_synced_from'] = Carbon::parse('2024-09-01');
-        }
-        if ($pagesProcessed >= $this->maxPagesPerAccount) {
-            // Partial sync — don't mark complete
-        } elseif ($offset >= $total) {
+        if ($markComplete) {
             $syncUpdate['deals_sync_complete'] = true;
         }
         Account::where('id', $accountId)->update($syncUpdate);
         Cache::forget("account:{$accountId}");
 
-        // Sync trades table from newly inserted deals
-        $this->syncTrades($accountId, $account, $newDealIds);
-
-        return ['inserted' => $inserted, 'closed_positions' => $closedPositions];
+        return ['inserted' => count($dealsToInsert), 'closed_positions' => $closedPositions, 'new_deal_ids' => $newDealIds];
     }
 
     // ─────────────────────────────────────────────────────────
