@@ -34,6 +34,9 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     /** Max deals to fetch in a single REST call per account */
     protected const MAX_DEALS_PER_REST_CALL = 5000;
 
+    /** Days since last sync before an incremental account is treated as "stale" and processed individually */
+    protected const STALE_INCREMENTAL_DAYS = 7;
+
     public function uniqueId(): string
     {
         return 'sync-deals-' . collect($this->accountIds)->sort()->join('-');
@@ -65,6 +68,27 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     public function handle(): void
     {
         $jobStart = microtime(true);
+        $currentPhase = 'init';
+
+        // Register a shutdown function to capture timeouts before the worker kills us
+        $accountIds = $this->accountIds;
+        register_shutdown_function(function () use ($jobStart, &$currentPhase, $accountIds) {
+            $elapsed = round(microtime(true) - $jobStart, 2);
+            if ($elapsed > ($this->timeout * 0.9)) {
+                Log::error('SyncDealsJob: Likely timeout detected in shutdown', [
+                    'phase' => $currentPhase,
+                    'elapsed_seconds' => $elapsed,
+                    'timeout' => $this->timeout,
+                    'account_ids' => $accountIds,
+                ]);
+                Account::whereIn('id', $accountIds)
+                    ->where('sync_status', 'pending')
+                    ->update([
+                        'sync_status' => 'needs_retry',
+                        'sync_error' => "Timeout after {$elapsed}s during phase: {$currentPhase}",
+                    ]);
+            }
+        });
 
         // ── Load accounts and build login → account map ──
         $accounts = Account::whereIn('id', $this->accountIds)->get()->keyBy('id');
@@ -160,14 +184,21 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ];
         }
 
-        // Separate accounts: already-synced (incremental) vs never-synced (first-time)
-        $incrementalAccounts = [];
-        $firstTimeAccounts = [];
+        // Separate accounts into 3 buckets based on sync recency:
+        // - Fresh incremental: synced within last N days → safe for batch REST
+        // - Stale incremental: synced > N days ago → process individually with volume awareness
+        // - Never-synced: no deals_synced_to → process individually with volume awareness
+        $freshIncrementalAccounts = [];
+        $staleAccounts = []; // stale-incremental + never-synced
+        $staleThresholdDate = Carbon::now()->subDays(self::STALE_INCREMENTAL_DAYS);
+
         foreach ($accountWindows as $acctId => $w) {
             if ($w['account']->deals_synced_to === null) {
-                $firstTimeAccounts[$acctId] = $w;
+                $staleAccounts[$acctId] = $w;
+            } elseif (Carbon::parse($w['account']->deals_synced_to)->lt($staleThresholdDate)) {
+                $staleAccounts[$acctId] = $w;
             } else {
-                $incrementalAccounts[$acctId] = $w;
+                $freshIncrementalAccounts[$acctId] = $w;
             }
         }
 
@@ -178,20 +209,20 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ->flip()
             ->toArray();
 
-        // ── 1. Process incremental (already-synced) accounts via batch REST ──
-        if (!empty($incrementalAccounts)) {
+        // ── 1. Process fresh incremental accounts via batch REST (tight window) ──
+        if (!empty($freshIncrementalAccounts)) {
             $globalFrom = PHP_INT_MAX;
             $globalTo = 0;
             $logins = [];
 
-            foreach ($incrementalAccounts as $acctId => $w) {
+            foreach ($freshIncrementalAccounts as $acctId => $w) {
                 $globalFrom = min($globalFrom, $w['from']);
                 $globalTo = max($globalTo, $w['to']);
                 $logins[] = $w['login'];
             }
 
-            Log::info('SyncDealsJob: Fetching incremental deals via REST batch', [
-                'account_count' => count($incrementalAccounts),
+            Log::info('SyncDealsJob: Fetching fresh incremental deals via REST batch', [
+                'account_count' => count($freshIncrementalAccounts),
                 'global_from' => Carbon::createFromTimestamp($globalFrom)->toDateTimeString(),
                 'global_to' => Carbon::createFromTimestamp($globalTo)->toDateTimeString(),
             ]);
@@ -199,7 +230,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
             $dealsByLogin = $batchResult['deals'];
 
-            foreach ($incrementalAccounts as $acctId => $w) {
+            foreach ($freshIncrementalAccounts as $acctId => $w) {
                 $login = (string) $w['login'];
                 $account = $w['account'];
                 $rawDeals = $dealsByLogin[$login] ?? null;
@@ -223,13 +254,19 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        // ── 2. Process first-time (never-synced) accounts with date-range awareness ──
-        if (!empty($firstTimeAccounts)) {
-            Log::info('SyncDealsJob: Processing first-time accounts via REST with date-range splitting', [
-                'count' => count($firstTimeAccounts),
+        // ── 2. Process stale / never-synced accounts individually with volume awareness ──
+        if (!empty($staleAccounts)) {
+            $staleIncrementalCount = count(array_filter($staleAccounts, fn($w) => $w['account']->deals_synced_to !== null));
+            $neverSyncedCount = count($staleAccounts) - $staleIncrementalCount;
+
+            Log::info('SyncDealsJob: Processing stale/never-synced accounts with date-range splitting', [
+                'total' => count($staleAccounts),
+                'stale_incremental' => $staleIncrementalCount,
+                'never_synced' => $neverSyncedCount,
+                'stale_threshold_days' => self::STALE_INCREMENTAL_DAYS,
             ]);
 
-            foreach ($firstTimeAccounts as $acctId => $w) {
+            foreach ($staleAccounts as $acctId => $w) {
                 try {
                     $result = $this->syncFirstTimeAccountViaRest($restService, $acctId, $w, $existingDealIds);
                     $inserted += $result['inserted'];
