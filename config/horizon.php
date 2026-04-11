@@ -326,14 +326,14 @@ return [
             'supervisor-2' => [
                 // OPTIMIZATION STEP 4: Aggressive auto-scaling for critical queue
                 'minProcesses' => 5,  // Always keep 5+ workers for large backlogs
-                'maxProcesses' => env('SYNC_MAX_TRADES_PROCESSES', 25),
+                'maxProcesses' => env('SYNC_MAX_TRADES_PROCESSES', 5),
                 'balanceMaxShift' => 3,  // Allow faster scaling up
                 'balanceCooldown' => 2,  // Quick response to queue changes
             ],
             'supervisor-3' => [
                 // OPTIMIZATION STEP 4: Tuned for commission distribution
                 'minProcesses' => 3,
-                'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 30),
+                'maxProcesses' => env('SYNC_MAX_IB_DISTRIBUTION_PROCESSES', 5),
                 'balanceMaxShift' => 2,  // Allow moderate scaling
                 'balanceCooldown' => 3,  // Moderate response time
             ],
@@ -379,11 +379,11 @@ return [
             ],
             'supervisor-2' => [
                 'minProcesses' => 1,
-                'maxProcesses' => 2,
+                'maxProcesses' => 5,
             ],
             'supervisor-3' => [
                 'minProcesses' => 1,
-                'maxProcesses' => 1,
+                'maxProcesses' => 5,
             ],
             'supervisor-4' => [
                 'minProcesses' => 1,

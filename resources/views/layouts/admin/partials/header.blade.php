@@ -611,6 +611,16 @@ if (app()->environment('local') || app()->environment('development')) {
                                             <a href="/admin/ib_settings" class="side-menu__item ">IB Com. Settings</a>
                                         </li>
                                     @endcan
+                                    @can('ib:viewAny')
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.ib.commission-analysis') }}" class="side-menu__item ">Commission Analysis</a>
+                                        </li>
+                                    @endcan
+                                    @can('ib:viewAny')
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.ib.withdrawals.index') }}" class="side-menu__item ">IB Withdrawals</a>
+                                        </li>
+                                    @endcan
 
                                 </ul>
                             </li>

@@ -40,7 +40,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Priority Sync Configuration
+    | Priority Sync Configuration (LEGACY — use deals_sync instead)
     |--------------------------------------------------------------------------
     */
     'priority_sync' => [
@@ -49,6 +49,20 @@ return [
         'cycle_delay' => env('PRIORITY_SYNC_CYCLE_DELAY', 30), // Seconds
         'min_sync_interval' => env('PRIORITY_SYNC_MIN_INTERVAL', 60), // Minutes
         'max_pending_jobs' => env('PRIORITY_SYNC_MAX_PENDING_JOBS', 100),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Unified Deal Sync Configuration (app:sync-deals-v2)
+    |--------------------------------------------------------------------------
+    | Single pipeline: MT5 DealGetPage → deals table → trades table → commissions
+    */
+    'deals_sync' => [
+        'batch_size' => env('DEALS_SYNC_BATCH_SIZE', 10),
+        'cycle_delay' => env('DEALS_SYNC_CYCLE_DELAY', 30), // Seconds between daemon cycles
+        'min_sync_interval' => env('DEALS_SYNC_MIN_INTERVAL', 20), // Minutes between syncs for same account
+        'max_pending_jobs' => env('DEALS_SYNC_MAX_PENDING_JOBS', 100),
+        'stale_threshold' => env('DEALS_SYNC_STALE_THRESHOLD', 3), // Hours before forcing re-sync
     ],
 
     /*
@@ -63,11 +77,13 @@ return [
     */
     'batch_sync' => [
         // Page limit per sync job with fair queue distribution
-        // Set to 100 (MT5 API limit per request)
+        // OPTIMIZATION: Increased from 100 → 500 pages (April 7, 2026)
+        // Rationale: Job timeout = 2700s (45 min) can safely handle 500 pages (~50k trades)
+        // Benefit: Reduces AUTO_REQUEUE frequency by 5x, prevents queue monopolization
         // Large accounts: Auto-requeue handles overflow, other accounts interleave
         // Small accounts: Process in single job
         // Expected: No single account starves the queue
-        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 100),
+        'max_pages_per_sync' => env('BATCH_SYNC_MAX_PAGES', 500),
 
         // Enable automatic re-queueing of partial syncs
         'auto_requeue_partial' => env('BATCH_SYNC_AUTO_REQUEUE', true),
