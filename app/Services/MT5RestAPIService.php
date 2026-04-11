@@ -706,6 +706,110 @@ class MT5RestAPIService
     }
 
     /**
+     * Get all open positions for a specific login (for trade verification)
+     *
+     * @param int|string $login MT5 login ID
+     * @return array Array of open position IDs from MT5
+     */
+    public function getOpenPositions($login): array
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (!$apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool', ['login' => $login]);
+            return [];
+        }
+
+        try {
+            // Request open positions using /api/position/get_page
+            // Start from position 0, request up to 1000 positions (typically much less)
+            $requestData = [
+                'login' => (int)$login,
+                'from' => 0,
+                'total' => 1000
+            ];
+
+            $result = $apiRequest->Post('/api/position/get_page', json_encode($requestData));
+
+            if ($result === false) {
+                Log::warning('MT5RestAPI: Open positions request failed', ['login' => $login]);
+                $this->connectionPool->reportConnectionError($apiRequest);
+                return [];
+            }
+
+            return $this->processOpenPositionsResponse($result, $login);
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception in getOpenPositions', [
+                'error' => $e->getMessage(),
+                'login' => $login
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+            return [];
+        }
+    }
+
+    /**
+     * Process open positions response from REST API
+     */
+    private function processOpenPositionsResponse($response, $login): array
+    {
+        // Decode JSON if needed
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (!$response) {
+                Log::warning('MT5RestAPI: Invalid JSON in open positions response', ['login' => $login]);
+                return [];
+            }
+        }
+
+        // Check for API error
+        if (isset($response['retcode']) && $response['retcode'] !== "0 Done") {
+            Log::warning('MT5RestAPI: Open positions API error', [
+                'login' => $login,
+                'retcode' => $response['retcode'],
+                'retmsg' => $response['retmsg'] ?? 'Unknown error',
+                'response' => $response
+            ]);
+            return [];
+        }
+
+        // Extract positions array from response
+        $positions = [];
+        if (isset($response['answer']) && is_array($response['answer'])) {
+            $positionsData = $response['answer'];
+        } elseif (isset($response['data']) && is_array($response['data'])) {
+            $positionsData = $response['data'];
+        } elseif (is_array($response) && !isset($response['retcode'])) {
+            $positionsData = $response;
+        } else {
+            Log::warning('MT5RestAPI: Invalid open positions response format', [
+                'login' => $login,
+                'response_keys' => is_array($response) ? array_keys($response) : 'not_array'
+            ]);
+            return [];
+        }
+
+        if (!is_array($positionsData)) {
+            return [];
+        }
+
+        // Extract position IDs
+        foreach ($positionsData as $positionData) {
+            if (isset($positionData['ID'])) {
+                $positions[] = (int)$positionData['ID'];
+            } elseif (isset($positionData['Ticket'])) {
+                $positions[] = (int)$positionData['Ticket'];
+            }
+        }
+
+        Log::info('MT5RestAPI: Open positions retrieved', [
+            'login' => $login,
+            'open_position_count' => count($positions)
+        ]);
+
+        return $positions;
+    }
+
+    /**
      * Health check for the service
      */
     public function healthCheck(): bool

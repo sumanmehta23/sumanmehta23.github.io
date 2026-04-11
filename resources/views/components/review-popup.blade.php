@@ -13,6 +13,13 @@
     $ctaBrand = $ctaBrand ?? 'Trustpilot';
     $showCtaBrandIcon = isset($showCtaBrandIcon) ? (bool) $showCtaBrandIcon : true;
     $ctaUrl = $ctaUrl ?? 'https://www.trustpilot.com/review/lqhmarkets.com';
+    $delayMs = isset($delayMs) ? max(0, (int) $delayMs) : 0;
+    $popupKey = $popupKey ?? null;
+    $impressionUrl = $impressionUrl ?? null;
+    $currentRouteName = $currentRouteName ?? null;
+    $localStorageFallbackKey = $localStorageFallbackKey ?? null;
+    $metricsDismissUrl = $metricsDismissUrl ?? null;
+    $metricsClickUrl = $metricsClickUrl ?? null;
 @endphp
 
 @if ($enabled)
@@ -197,7 +204,10 @@
         </style>
     @endonce
 
-    <div id="{{ $popupId }}" class="lqh-review-popup" role="dialog" aria-modal="true" aria-labelledby="{{ $popupId }}Title">
+    <div id="{{ $popupId }}" class="lqh-review-popup" role="dialog" aria-modal="true" aria-labelledby="{{ $popupId }}Title"
+        @if (!empty($popupKey)) data-review-popup-key="{{ $popupKey }}" @endif
+        @if (!empty($metricsDismissUrl)) data-review-popup-dismiss-url="{{ $metricsDismissUrl }}" @endif
+        @if (!empty($metricsClickUrl)) data-review-popup-click-url="{{ $metricsClickUrl }}" @endif>
         <div class="lqh-review-popup__backdrop" data-review-popup-close="true"></div>
         <div class="lqh-review-popup__card">
             <button type="button" class="lqh-review-popup__close" data-review-popup-close="true" aria-label="Close popup">
@@ -257,15 +267,57 @@
                     }
                 };
 
+                var getCsrfToken = function() {
+                    var meta = document.querySelector('meta[name="csrf-token"]');
+
+                    return meta ? meta.getAttribute('content') : '';
+                };
+
                 var buildApi = function(root) {
+                    var metricsSentDismiss = false;
+                    var metricsSentCta = false;
+
+                    var postMetric = function(url) {
+                        if (!url) {
+                            return;
+                        }
+
+                        var key = root.getAttribute('data-review-popup-key');
+                        if (!key) {
+                            return;
+                        }
+
+                        var body = JSON.stringify({ popup_key: key });
+
+                        try {
+                            fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': getCsrfToken()
+                                },
+                                credentials: 'same-origin',
+                                body: body,
+                                keepalive: true
+                            }).catch(function() {});
+                        } catch (e) {}
+                    };
+
                     var open = function() {
                         root.classList.add('is-visible');
                         addBodyLockIfNeeded();
                     };
 
                     var close = function() {
+                        var wasVisible = root.classList.contains('is-visible');
                         root.classList.remove('is-visible');
                         removeBodyLockIfNeeded();
+
+                        if (wasVisible && !metricsSentDismiss) {
+                            metricsSentDismiss = true;
+                            postMetric(root.getAttribute('data-review-popup-dismiss-url'));
+                        }
                     };
 
                     var init = function(options) {
@@ -278,6 +330,16 @@
                     };
 
                     root.addEventListener('click', function(event) {
+                        var cta = event.target.closest('.lqh-review-popup__cta');
+                        if (cta && root.contains(cta)) {
+                            if (!metricsSentCta) {
+                                metricsSentCta = true;
+                                postMetric(root.getAttribute('data-review-popup-click-url'));
+                            }
+
+                            return;
+                        }
+
                         if (event.target.closest('[data-review-popup-close="true"]')) {
                             close();
                         }
@@ -352,15 +414,98 @@
         (function() {
             var popupId = @json($popupId);
             var showOnLoad = @json((bool) $showOnLoad);
+            var delayMs = @json($delayMs);
+            var popupKey = @json($popupKey);
+            var impressionUrl = @json($impressionUrl);
+            var currentRouteName = @json($currentRouteName);
+            var localStorageFallbackKey = @json($localStorageFallbackKey);
+            var currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+
+            var markLocalFallback = function() {
+                if (!localStorageFallbackKey || typeof window.localStorage === 'undefined') {
+                    return;
+                }
+
+                try {
+                    window.localStorage.setItem(localStorageFallbackKey, '1');
+                } catch (e) {}
+            };
+
+            var hasLocalFallback = function() {
+                if (!localStorageFallbackKey || typeof window.localStorage === 'undefined') {
+                    return false;
+                }
+
+                try {
+                    return window.localStorage.getItem(localStorageFallbackKey) === '1';
+                } catch (e) {
+                    return false;
+                }
+            };
+
+            var requestFirstImpression = function() {
+                if (!impressionUrl || !popupKey) {
+                    return Promise.resolve(showOnLoad);
+                }
+
+                if (hasLocalFallback()) {
+                    return Promise.resolve(false);
+                }
+
+                return fetch(impressionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        popup_key: popupKey,
+                        current_path: currentPath,
+                        current_route_name: currentRouteName
+                    })
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to store popup impression.');
+                    }
+
+                    return response.json();
+                }).then(function(data) {
+                    if (data && data.should_show) {
+                        markLocalFallback();
+                        return true;
+                    }
+
+                    return false;
+                }).catch(function() {
+                    if (hasLocalFallback()) {
+                        return false;
+                    }
+
+                    markLocalFallback();
+                    return showOnLoad;
+                });
+            };
 
             var initCurrentPopup = function() {
                 if (!window.lqhReviewPopup) {
                     return;
                 }
 
-                window.lqhReviewPopup.init(popupId, {
-                    shouldShow: showOnLoad
-                });
+                if (!showOnLoad) {
+                    window.lqhReviewPopup.init(popupId, {
+                        shouldShow: false
+                    });
+                    return;
+                }
+
+                window.setTimeout(function() {
+                    requestFirstImpression().then(function(shouldShow) {
+                        window.lqhReviewPopup.init(popupId, {
+                            shouldShow: !!shouldShow
+                        });
+                    });
+                }, delayMs);
             };
 
             if (document.readyState === 'loading') {

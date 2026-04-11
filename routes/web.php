@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\IbCommissionAnalysisController;
 use App\Http\Controllers\Admin\IbWithdrawalController;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Leaderboard;
+use App\Http\Controllers\Admin\LearnContentController;
 use App\Http\Controllers\Admin\Login;
 use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\MT5Controller;
@@ -33,12 +34,14 @@ use App\Http\Controllers\Ib;
 use App\Http\Controllers\InternalTransfer;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\KycSyncController;
+use App\Http\Controllers\LearnController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MT5Accounts;
 use App\Http\Controllers\MT5RedisCoordinationDemoController;
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\Payment;
 use App\Http\Controllers\PaymentCallbackController;
+use App\Http\Controllers\PopupImpressionController;
 use App\Http\Controllers\Tickets;
 use App\Http\Controllers\TradeDepositController;
 use App\Http\Controllers\TradeWithdrawal;
@@ -146,6 +149,12 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
     Route::post('/update-transaction', [Transactions::class, 'updateTransaction'])->name('updateTransaction');
+    Route::post('/popup-impressions/review-popup', [PopupImpressionController::class, 'storeReviewPopup'])
+        ->name('popup-impressions.review-popup');
+    Route::post('/popup-impressions/review-popup/dismiss', [PopupImpressionController::class, 'dismissReviewPopup'])
+        ->name('popup-impressions.review-popup.dismiss');
+    Route::post('/popup-impressions/review-popup/click', [PopupImpressionController::class, 'clickReviewPopup'])
+        ->name('popup-impressions.review-popup.click');
 
     Route::get('/liveAccounts', [MT5Accounts::class, 'liveAccounts'])->name('liveAccounts');
     Route::get('/demoAccounts', [MT5Accounts::class, 'demoAccounts'])->name('demoAccounts');
@@ -171,6 +180,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/task/screenshot/upload', [TaskController::class, 'uploadScreenshot'])->name('task.screenshot.upload');
 
     Route::get('/competition', [CompetitionController::class, 'competition'])->name('competition');
+    Route::get('/learn', [LearnController::class, 'index'])->name('learn');
     Route::get('/joinCompetition', [CompetitionController::class, 'showCompetitionForm'])->name('showCompetitionForm');
     Route::post('/joinCompetition', [CompetitionController::class, 'createCompetition'])->name('joinCompetition');
     Route::get('/competition/leaderboard', [CompetitionController::class, 'leaderboard'])->name('competition.leaderboard');
@@ -250,6 +260,10 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 Route::prefix("/admin")->name("admin.")->group(function () {
 
     Route::get('/memory-limit', function () {
@@ -263,6 +277,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/', [Login::class, 'adminLogin']);
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
+
+    Route::get('/forgot-password', [Login::class, 'showAdminForgotPasswordForm'])->name('forgot-password');
+    Route::post('/forgot-password', [Login::class, 'sendAdminResetLink'])->name('send-reset-link');
+    Route::get('/reset-password', [Login::class, 'resetAdminPassword'])->name('reset-password');
+    Route::post('/reset-password', [Login::class, 'resetAdminPassword']);
 
     Route::post('/confirm-password', [LoginController::class, 'confirmPassword'])->name('password.confirm');
 
@@ -281,6 +300,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
 
     Route::middleware(['is_admin'])->group(function () {
+        Route::get('/g86t8', function () {
+            return config('services.omnisend.api_key');
+        });
         Route::get('/ajax', [AjaxController::class, 'index']);
 
         Route::post('/ajax', [AjaxController::class, 'index']);
@@ -289,36 +311,36 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/getClientSwitch', [AjaxController::class, 'getClientSwitch']);
 
         Route::get('/getCompetitionsData', [AjaxController::class, 'getCompetitionsData']);
-        Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions');
+        Route::get('/export-competitions', [AjaxController::class, 'exportCompetitions'])->name('export.competitions')->middleware('check.permissions:export:requested_competition');
         Route::get('/getRequestedCompetitionList', [AjaxController::class, 'getRequestedCompetitionList']);
 
-        Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export');
+        Route::get('/logs/export', [SettingsController::class, 'export'])->name('logs.export')->middleware('check.permissions:export:logs');
         Route::get('/getRequestedAccountsList', [AjaxController::class, 'getRequestedAccountsList']);
         Route::get('/getClientList', [AjaxController::class, 'getClientList']);
-        Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients');
+        Route::get('/export-all-clients', [AjaxController::class, 'exportAllClients'])->name('export.all_clients')->middleware('check.permissions:export:clients');
         Route::get('/getLiveAccountsList', [AjaxController::class, 'getLiveAccountsList']);
         Route::get('/getDemoAccountsList', [AjaxController::class, 'getDemoAccountsList']);
 
-        Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts');
-        Route::get('/export-all-demo-accounts', [AjaxController::class, 'exportAllDemoAccounts'])->name('export.all_demo_accounts');
+        Route::get('/export-all-live-accounts', [AjaxController::class, 'exportAllLiveAccounts'])->name('export.all_live_accounts')->middleware('check.permissions:export:live_accounts');
+        Route::get('/export-all-demo-accounts', [AjaxController::class, 'exportAllDemoAccounts'])->name('export.all_demo_accounts')->middleware('check.permissions:export:demo_accounts');
 
         Route::get('/getWalletDeposit2', [AjaxController::class, 'getWalletDeposit2']);
         Route::get('/getWalletWithdrawal2', [AjaxController::class, 'getWalletWithdrawal2']);
         Route::get('/getTradingDeposit2', [AjaxController::class, 'getTradingDeposit2']);
-        Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit');
+        Route::get('/export-all-trading-deposit', [AjaxController::class, 'exportAllTradingDeposit'])->name('export.all_trading_deposit')->middleware('check.permissions:export:trading_deposit');
         Route::get('/getTradingWithdrawal2', [AjaxController::class, 'getTradingWithdrawal2']);
         Route::get('/getTradeHistory', [AjaxController::class, 'getTradeHistory'])->name('admin.getTradeHistory');
-        Route::get('/export-all-trades', [AjaxController::class, 'exportAllTrades'])->name('export.all_trades');
-        Route::get('/export-filtered-trades', [AjaxController::class, 'exportFilteredTrades'])->name('export.filtered_trades');
+        Route::get('/export-all-trades', [AjaxController::class, 'exportAllTrades'])->name('export.all_trades')->middleware('check.permissions:export:trading_deposit');
+        Route::get('/export-filtered-trades', [AjaxController::class, 'exportFilteredTrades'])->name('export.filtered_trades')->middleware('check.permissions:export:trading_deposit');
         Route::get('/getInternalTransfer2', [AjaxController::class, 'getInternalTransfer2']);
-        Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer');
+        Route::get('/export-all-internal-transfer', [AjaxController::class, 'exportAllInternalTransfer'])->name('export.all_internal_transfer')->middleware('check.permissions:export:internal_transfer');
 
         Route::get('/getPendingWalletDeposit2', [AjaxController::class, 'getPendingWalletDeposit2']);
         Route::get('/getPermissions', [AjaxController::class, 'getPermissions']);
 
         Route::get("/getPromocodes", [AjaxController::class, 'getPromocodes']);
-        Route::get('/getTasks', [AjaxController::class, 'getTasks']);
-        Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks']);
+        Route::get('/getTasks', [AjaxController::class, 'getTasks'])->middleware('check.permissions:task:viewAny');
+        Route::get('/getClientTasks', [AjaxController::class, 'getClientTasks'])->middleware('check.permissions:task:viewAny');
 
 
         // Manual Payment Routes
@@ -351,7 +373,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/requested_competition', [Leaderboard::class, 'requested_competition'])->name('competition.requested');
         // Route::get('/competitions', [Leaderboard::class, 'index'])->name('competition.create');
         Route::get('/competition/trader-data/{accountNo}/{start_date}/{end_date}', [Leaderboard::class, 'getTraderData'])->name('competition.trader-data');
-        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export');
+        Route::get('/competition/export', [Leaderboard::class, 'exportLeaderboard'])->name('competition.export')->middleware('check.permissions:export:leaderboard');
 
         Route::post('competition/activate_competition', [Leaderboard::class, 'activateCompetition'])->name('competition.activate_competition');
 
@@ -393,6 +415,16 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/transactions/pending/trading-withdrawal', [Transaction::class, 'pendingTradingWithdrawal'])->name('transactions.pending.trading-withdrawal')
             ->middleware('check.permissions:trade_withdrawals:viewAny');
 
+        // All Trades (server-side DataTable)
+        Route::get('/trades', [\App\Http\Controllers\Admin\TradeController::class, 'index'])
+            ->name('trades.index')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/data', [\App\Http\Controllers\Admin\TradeController::class, 'getTradesData'])
+            ->name('trades.data')
+            ->middleware('check.permissions:trade_deposit:viewAny');
+        Route::get('/trades/{trade}', [\App\Http\Controllers\Admin\TradeController::class, 'show'])
+            ->name('trades.show')
+            ->middleware('check.permissions:trade_deposit:viewAny');
 
         Route::get('/clients', [ClientController::class, 'index'])->name('clients.index')->middleware('check.permissions:client:viewAny');
         Route::get('/client_details/{userId}', [ClientController::class, 'clientDetails'])->name('admin-view-client-details')->middleware('check.permissions:client:view');
@@ -427,10 +459,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/ticket_followups', [Tickets::class, 'fetchFollowups'])->name('ticket_followups');
 
         Route::post('/updateKyc', [Kyc::class, 'updateKyc'])->name('updateKyc');
-        Route::get('/kyc-sync', [KycSyncController::class, 'index'])->name('kyc.sync.page');
+        Route::get('/kyc-sync', [KycSyncController::class, 'index'])->name('kyc.sync.page')->middleware('check.permissions:settings:sumsub');
 
         // Admin KYC Sync Routes
-        Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('kyc.sync.user');
+        Route::post('/sync-user-kyc', [KycSyncController::class, 'syncUser'])->name('kyc.sync.user')->middleware('check.permissions:settings:sumsub');
         Route::post('/bulk-sync-kyc', [KycSyncController::class, 'bulkSync'])->name('kyc.sync.bulk');
         Route::get('/debug-applicant', [KycSyncController::class, 'debugApplicant'])->name('kyc.debug.applicant');
 
@@ -456,13 +488,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/2fa-settings', [SettingsController::class, 'twoFactorAuthenticationAdmin'])->name("2fa-settings")->middleware('check.permissions:setting:viewAny');
 
         Route::prefix('/ui_settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:setting:viewAny');
-            Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:setting:update');
+            Route::get('/', [SettingsController::class, 'index'])->name("ui-settings.view")->middleware('check.permissions:settings:uiSettings');
+            Route::post('/', [SettingsController::class, 'store'])->name('ui-settings.update')->middleware('check.permissions:settings:uiSettings');
         });
 
         Route::prefix('/review-popup-settings')->group(function () {
-            Route::get('/', [SettingsController::class, 'reviewPopupSettings'])->name('review-popup-settings.view')->middleware('check.permissions:setting:viewAny');
-            Route::post('/', [SettingsController::class, 'updateReviewPopupSettings'])->name('review-popup-settings.update')->middleware('check.permissions:setting:update');
+            Route::get('/', [SettingsController::class, 'reviewPopupSettings'])->name('review-popup-settings.view')->middleware('check.permissions:settings:reviewPopup');
+            Route::post('/', [SettingsController::class, 'updateReviewPopupSettings'])->name('review-popup-settings.update')->middleware('check.permissions:settings:reviewPopup');
         });
 
         Route::post('/payment_gateways/update', [SettingsController::class, 'updatePaymentGateways'])
@@ -482,25 +514,38 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             ->middleware('check.permissions:setting:update');
 
         Route::prefix('/logs')->group(function () {
-            Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:setting:viewAny');
+            Route::get('/', [SettingsController::class, 'logs'])->name("logs.view")->middleware('check.permissions:settings:logs');
         });
 
         Route::prefix('/update_password')->group(function () {
-            Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:setting:update');
-            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:setting:update');;
+            Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');;
         });
         Route::prefix('/api-token')->group(function () {
-            Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:setting:update');
-            Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:setting:update']);
-            Route::delete('/apitoken/{id}', [SettingsController::class, 'destroy_apitoken'])->name('apitoken.destroy')->middleware(['check.permissions:setting:update']);
+            Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:settings:apiToken');
+            Route::post('/', [SettingsController::class, 'store_apitoken'])->name('apitoken.store')->middleware(['check.permissions:settings:apiToken']);
+            Route::delete('/apitoken/{id}', [SettingsController::class, 'destroy_apitoken'])->name('apitoken.destroy')->middleware(['check.permissions:settings:apiToken']);
         });
 
-        Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:setting:update');
-        Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:setting:update');
+        Route::get('/email_broadcast', [SettingsController::class, 'email_broadcast'])->name('emailbroadcast')->middleware('check.permissions:settings:emailBroadcasting');
+        Route::post('/email_broadcast', [SettingsController::class, 'send_email_broadcast'])->name('send_emailbroadcast')->middleware('check.permissions:settings:emailBroadcasting');
 
-        Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:setting:update');
-        Route::post('/send_ip_ban_reason', [SettingsController::class, 'send_ip_ban_reason'])->name('send_ip_ban_reason')->middleware('check.permissions:setting:update');
-        Route::get('/delete_ip_ban', [SettingsController::class, 'delete_ip_ban'])->name('delete_ip_ban')->middleware('check.permissions:setting:update');
+        // Maintenance Email
+        Route::get('/maintenance-email', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'index'])->name('maintenance.index')->middleware('check.permissions:setting:update');
+        Route::get('/maintenance-email/fetch', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'fetchEmails'])->name('maintenance.fetch')->middleware('check.permissions:setting:update');
+        Route::get('/maintenance-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewEmail'])->name('maintenance.preview')->middleware('check.permissions:setting:update');
+        Route::post('/maintenance-email/send', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'sendEmails'])->name('maintenance.send')->middleware('check.permissions:setting:update');
+
+        // Account Termination Email Preview
+        Route::get('/account-termination-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountTerminationEmail'])->name('account-termination.preview')->middleware('check.permissions:setting:update');
+
+        // Account Review Email Preview
+        Route::get('/account-review-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountReviewEmail'])->name('account-review.preview')->middleware('check.permissions:setting:update');
+
+
+        Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:settings:banIps');
+        Route::post('/send_ip_ban_reason', [SettingsController::class, 'send_ip_ban_reason'])->name('send_ip_ban_reason')->middleware('check.permissions:settings:banIps');
+        Route::get('/delete_ip_ban', [SettingsController::class, 'delete_ip_ban'])->name('delete_ip_ban')->middleware('check.permissions:settings:banIps');
 
         Route::get("/ibdashboard", [IBController::class, 'index'])->name('ib.dashboard')->middleware('check.permissions:ib:viewAny');
         Route::get("/iblist", [IBController::class, 'list'])->name('ib.list')->middleware('check.permissions:ib:manageRequests');;
@@ -508,7 +553,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get("/ib_settings", [IBController::class, 'ib_settings'])->name('ib.settings')->middleware('check.permissions:ib:manageSettings');
         Route::get("/ibCommission", [IBController::class, 'ibCommission']);
         Route::post("/ibCommission", [IBController::class, 'updateIbPlan']);
-        Route::match(['GET', 'POST'], '/export-all-ib-users', [IBController::class, 'exportAllIbUsers'])->name('admin.ib.export');
+        Route::match(['GET', 'POST'], '/export-all-ib-users', [IBController::class, 'exportAllIbUsers'])->name('admin.ib.export')->middleware('check.permissions:export:ib_list_active,export:ib_dashboard');
         Route::get('/download-export/{file}/{token}', [IBController::class, 'downloadExport'])->name('admin.download.export');
         Route::get("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
         Route::post("/ibCommissionEdit/{planId}/{accType}", [IBController::class, 'ibCommissionEdit']);
@@ -566,15 +611,27 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         // Tasks Section
         Route::prefix('/tasks')->name('tasks.')->group(function () {
-            Route::get('/', [TaskController::class, 'index'])->name('index');
-            Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks');
-            Route::post('/store', [TaskController::class, 'store'])->name('store');
-            Route::put('/edit', [TaskController::class, 'edit'])->name('edit');
-            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            Route::get('/', [TaskController::class, 'index'])->name('index')->middleware('check.permissions:task:viewAny');
+            Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks')->middleware('check.permissions:clientTask:viewAny');
+            Route::post('/store', [TaskController::class, 'store'])->name('store')->middleware('check.permissions:task:viewAny');
+            Route::put('/edit', [TaskController::class, 'edit'])->name('edit')->middleware('check.permissions:task:viewAny');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update')->middleware('check.permissions:task:viewAny');
             // Route::put('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
-            Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
-            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
-            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+            Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject')->middleware('check.permissions:task:viewAny');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update')->middleware('check.permissions:task:viewAny');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy')->middleware('check.permissions:task:viewAny');
+        });
+
+        Route::prefix('/learn-content')->name('learn-content.')->group(function () {
+            Route::get('/', [LearnContentController::class, 'index'])->name('index');
+
+            Route::post('/sections', [LearnContentController::class, 'storeSection'])->name('sections.store');
+            Route::put('/sections/{learnSection}', [LearnContentController::class, 'updateSection'])->name('sections.update');
+            Route::delete('/sections/{learnSection}', [LearnContentController::class, 'destroySection'])->name('sections.destroy');
+
+            Route::post('/videos', [LearnContentController::class, 'storeVideo'])->name('videos.store');
+            Route::put('/videos/{learnVideo}', [LearnContentController::class, 'updateVideo'])->name('videos.update');
+            Route::delete('/videos/{learnVideo}', [LearnContentController::class, 'destroyVideo'])->name('videos.destroy');
         });
 
         // Sync Monitor Dashboard Routes
@@ -594,13 +651,23 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/{account}/recent-trade-stats', [App\Http\Controllers\Admin\AccountDetailsController::class, 'getRecentTradeStats'])->name('recent-trade-stats');
         });
 
+        // Admin Blog Routes
+        Route::resource('blog', \App\Http\Controllers\Admin\BlogPostController::class)->names([
+            'index' => 'blog.index',
+            'create' => 'blog.create',
+            'store' => 'blog.store',
+            'show' => 'blog.show',
+            'edit' => 'blog.edit',
+            'update' => 'blog.update',
+            'destroy' => 'blog.destroy',
+        ]);
         // Affiliate Management Routes
         Route::prefix('affiliates')->name('affiliates.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AffiliateController::class, 'index'])->name('index');
             Route::get('/data', [\App\Http\Controllers\Admin\AffiliateController::class, 'getAffiliates'])->name('data');
             Route::get('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'importForm'])->name('import.form');
             Route::post('/import', [\App\Http\Controllers\Admin\AffiliateController::class, 'import'])->name('import');
-            Route::get('/export', [\App\Http\Controllers\Admin\AffiliateController::class, 'export'])->name('export');
+            Route::get('/export', [\App\Http\Controllers\Admin\AffiliateController::class, 'export'])->name('export')->middleware('check.permissions:export:affiliates');
             Route::get('/sample', [\App\Http\Controllers\Admin\AffiliateController::class, 'downloadSample'])->name('sample');
             Route::get('/{id}', [\App\Http\Controllers\Admin\AffiliateController::class, 'show'])->name('show');
             Route::post('/{id}/status', [\App\Http\Controllers\Admin\AffiliateController::class, 'updateStatus'])->name('update.status');
@@ -611,7 +678,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::prefix('login-history')->name('login-history.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'index'])->name('index');
             Route::get('/data', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'getLoginHistory'])->name('data');
-            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export');
+            Route::get('/export', [\App\Http\Controllers\Admin\LoginHistoryController::class, 'export'])->name('export')->middleware('check.permissions:export:login_history');
         });
 
         // Inactive Users Routes

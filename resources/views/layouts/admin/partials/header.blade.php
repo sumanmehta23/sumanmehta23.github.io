@@ -54,7 +54,7 @@
 
     <?php
 $marginTopStyle = ''; // Default value
-if (app()->environment('local')) {
+if (app()->environment('local') || app()->environment('development')) {
     $marginTopStyle = 'style="margin-top: 40px;"';
 }
     ?>
@@ -220,6 +220,11 @@ if (app()->environment('local')) {
         </script>
     @endif
     @if (app()->environment('local'))
+        <div
+            style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
+            <b>LOCAL ENVIRONMENT</b>
+        </div>
+        @elseif (app()->environment('development'))
         <div
             style="position: fixed; top: 0; width: 100%; background-color: #ff1f32; color: #ffffff; text-align: center; padding: 10px; z-index: 1000;">
             <b>DEV ENVIRONMENT</b>
@@ -462,7 +467,8 @@ if (app()->environment('local')) {
                                 auth()->user()->can('wallet_withdrawal:viewAny') ||
                                 auth()->user()->can('trade_deposit:viewAny') ||
                                 auth()->user()->can('trade_withdrawals:viewAny') ||
-                                auth()->user()->can('internal_transfer:viewAny')
+                                auth()->user()->can('internal_transfer:viewAny') ||
+                                auth()->user()->can('trade:viewAny')
                             )
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">FINANCE</span>
@@ -552,6 +558,22 @@ if (app()->environment('local')) {
                                 </ul>
                             </li>
                         @endif
+
+                        @can('trades:view')
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">TRADES</span>
+                            </li>
+                            @can('trades:viewAny')
+                                <li class="slide menu-item-main ">
+                                    <a href="{{ route('admin.trades.index') }}" class="side-menu__item">
+                                        <i class="side-menu__icon fe fe-trending-up"></i>
+                                        <span class="side-menu__label">Trades</span>
+                                    </a>
+                                    <ul class="slide-menu child1"></ul>
+                                </li>
+                            @endcan
+                        @endcan
+
                         @if (auth()->user()->can('ib:viewAny') || auth()->user()->can('ib:manageSettings'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">INTRODUCING BROKER</span>
@@ -630,27 +652,37 @@ if (app()->environment('local')) {
                                         </a>
                                     </li>
 
+                                    <li class="slide menu-item-sub">
+                                        <a href="{{ route('admin.learn-content.index') }}" class="side-menu__item ">
+                                            Learn Content
+                                        </a>
+                                    </li>
+
                                 </ul>
                             </li>
                         @endcan
 
-                        @if ((strpos(auth()->user()->email, 'lqhmarkets') !== false) || (strpos(auth()->user()->email, 'serverfront') !== false))
+                        @can('menu:tasks')
                         <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
+                            @can('task:viewAny')
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.index') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
                                     <span class="side-menu__label">Tasks</span>
                                 </a>
                             </li>
+                            @endcan
+                            @can('clientTask:viewAny')
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.client_tasks') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
                                     <span class="side-menu__label">Client Tasks</span>
                                 </a>
                             </li>
-                        @endif
+                            @endcan
+                        @endcan
 
 
                         @can('m_t5_group:viewAny')
@@ -809,7 +841,24 @@ if (app()->environment('local')) {
 
                             </ul>
                         </li> --}}
+                        @can('blog:view')
+                            <li class="slide__category menu-item-category">
+                                <span class="category-name">BLOG</span>
+                            </li>
+                            @can('blog:viewAny')
+                                <li class="slide menu-item-main">
+                                    <a href="{{ route('admin.blog.index') }}" class="side-menu__item">
+                                        <i class="side-menu__icon fe fe-file-text"></i>
+                                        <span class="side-menu__label">Blog Posts</span>
+                                    </a>
+                                    <ul class="slide-menu child1">
+                                    </ul>
+                                </li>
+                            @endcan
+                        @endcan
 
+
+                        @can('menu:settings')
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-settings"></i>
@@ -819,54 +868,56 @@ if (app()->environment('local')) {
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 758px);"
                                 data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-                                @can('setting:viewAny')
+                                @can('settings:sumsub')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.kyc.sync.page') }}" class="side-menu__item ">
                                             Sumsub KYC Sync
                                         </a>
                                     </li>
                                 @endcan
-                                @can('setting:update')
+                                @can('settings:updatePassword')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.update_password') }}" class="side-menu__item ">
                                             Update Password
                                         </a>
                                     </li>
                                 @endcan
-                                @can('setting:viewAny')
+                                @can('settings:uiSettings')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.ui-settings.view') }}" class="side-menu__item ">
                                             UI Settings
                                         </a>
                                     </li>
+                                @endcan
+                                @can('settings:reviewPopup')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.review-popup-settings.view') }}" class="side-menu__item ">
                                             Review Popup Settings
                                         </a>
                                     </li>
                                 @endcan
-                                @can('setting:viewAny')
+                                @can('settings:logs')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.logs.view') }}" class="side-menu__item ">
                                             Logs
                                         </a>
                                     </li>
                                 @endcan
-                                @can('setting:update')
+                                @can('settings:apiToken')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.apitoken.create') }}" class="side-menu__item ">
                                             API Token
                                         </a>
                                     </li>
                                 @endcan
-                                @can('setting:update')
+                                @can('settings:banIps')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.ip_ban') }}" class="side-menu__item ">
                                             Ban IP's
                                         </a>
                                     </li>
                                 @endcan
-                                @can('setting:update')
+                                @can('settings:emailBroadcasting')
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.emailbroadcast') }}" class="side-menu__item ">
                                             Email Broadcasting
@@ -876,6 +927,7 @@ if (app()->environment('local')) {
 
                             </ul>
                         </li>
+                        @endcan
                     </ul>
                     {{-- <ul class="main-menu">
 

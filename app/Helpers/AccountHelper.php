@@ -2,8 +2,8 @@
 
 namespace App\Helpers;
 
-use DB;
 use App\Models\Account;
+use App\MT5\MTRetCode;
 use App\Services\UniversalMT5Service;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -119,7 +119,57 @@ class AccountHelper
             return null;
         }
 
+        // Fetch total trades using MT5 API - using deals for both open and closed trades
+        $login = $liveAccount->code;
+        $from = 'September 01,2024';
+        $to = 'March 31,2080';
+        $totalOpen = 0;
+        $totalDeals = 0;
+        $totalClose = 0;
+
+        // Get open positions/trades count from MT5 API
+        $error_code = $mt5Interface->executeOperation(function ($api) use ($login, &$totalOpen) {
+            return $api->PositionGetTotal($login, $totalOpen);
+        });
+        if ($error_code != MTRetCode::MT_RET_OK) {
+            Log::warning("AccountHelper: Failed to get open positions for account {$login}");
+            $totalOpen = 0;
+        }
+        // Get closed trades/deals from MT5 API with commission
+        $deals = [];
+        $totalCommission = 0;
+
+        $error_code = $mt5Interface->executeOperation(function ($api) use ($login, $from, $to, &$totalDeals, &$deals) {
+            // First get total count of deals
+            $error_code = $api->DealGetTotal($login, $from, $to, $totalDeals);
+            if ($error_code != MTRetCode::MT_RET_OK) {
+                return $error_code;
+            }
+            // Then get the actual deals with their details
+            return $api->DealGetPage($login, $from, $to, 0, $totalDeals, $deals);
+        });
+
+        // Ensure $deals is an array before using array_filter
+        if (!is_array($deals)) {
+            $deals = [];
+        }
+        $filteredDeals = array_filter($deals, fn($deal) => $deal->Symbol !== "");
+
+        // Ensure filteredDeals is an array before using array_filter
+        $filteredDeals = is_array($filteredDeals) ? $filteredDeals : [];
+        $closeTrades = array_filter($filteredDeals, fn($deal) => $deal->Entry === 1);
+
+        $closeTradesCount = $closeTrades ? count($closeTrades) : 0;
+        $totalCommission = $filteredDeals ? array_sum(array_column($filteredDeals, 'Commission')) : 0;
+
+        // Total trades = open positions + closed deals
+        $totalTrades = $totalOpen + $closeTradesCount;
+
+        // dd((int)$liveAccount->code);
         $accountData = $mt5Interface->getAccountBalance((int)$liveAccount->code);
+        $accountData['total_trades'] = $totalTrades;
+        $accountData['total_commission'] = $totalCommission;
+
         if ($accountData) {
             $liveAccount->update([
                 'balance' => $accountData['balance'],

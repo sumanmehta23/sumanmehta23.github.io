@@ -14,25 +14,34 @@
     @yield('content')
 
     @php
-        $reviewPopupPagesRaw = (string) ($settings['review_popup_pages'] ?? 'liveAccounts');
-        $reviewPopupPages = collect(preg_split('/[\r\n,]+/', $reviewPopupPagesRaw))
-            ->map(fn($page) => trim($page))
-            ->filter()
-            ->values();
-
-        $currentPath = trim(request()->path(), '/');
-        $currentRouteName = optional(request()->route())->getName();
-
-        $reviewPopupEnabledByPage = $reviewPopupPages->isNotEmpty() && $reviewPopupPages->contains(function ($page) use ($currentPath, $currentRouteName) {
-            return \Illuminate\Support\Str::is($page, $currentPath)
-                || (!empty($currentRouteName) && \Illuminate\Support\Str::is($page, $currentRouteName));
-        });
+        $reviewPopupCampaign = new \App\Support\PopupCampaigns\ReviewPopupCampaign($settings);
+        $reviewPopupPopupKey = $reviewPopupCampaign->key();
+        $reviewPopupCurrentUser = auth()->user();
+        $reviewPopupCurrentRouteName = optional(request()->route())->getName();
+        $reviewPopupEligibleByUserRules = $reviewPopupCampaign->isUserEligible($reviewPopupCurrentUser);
+        $reviewPopupShouldRender = $reviewPopupCampaign->canRender(request())
+            && $reviewPopupEligibleByUserRules;
+        $reviewPopupAlreadySeen = $reviewPopupCurrentUser
+            ? \App\Models\PopupImpression::where('user_id', $reviewPopupCurrentUser->id)
+                ->where('popup_key', $reviewPopupPopupKey)
+                ->exists()
+            : false;
+        $reviewPopupAutoOpen = $reviewPopupShouldRender
+            && !$reviewPopupAlreadySeen
+            && $reviewPopupCampaign->shouldAutoOpen();
     @endphp
 
     @include('components.review-popup', [
         'popupId' => $settings['review_popup_id'] ?? 'globalReviewPopup',
-        'enabled' => ($settings['review_popup_enabled'] ?? '1') === '1' && $reviewPopupEnabledByPage,
-        'showOnLoad' => ($settings['review_popup_show_on_load'] ?? '1') === '1',
+        'enabled' => $reviewPopupShouldRender && !$reviewPopupAlreadySeen,
+        'showOnLoad' => $reviewPopupAutoOpen,
+        'delayMs' => $reviewPopupCampaign->delayMs(),
+        'popupKey' => $reviewPopupPopupKey,
+        'impressionUrl' => route('popup-impressions.review-popup'),
+        'metricsDismissUrl' => route('popup-impressions.review-popup.dismiss'),
+        'metricsClickUrl' => route('popup-impressions.review-popup.click'),
+        'currentRouteName' => $reviewPopupCurrentRouteName,
+        'localStorageFallbackKey' => 'popup-impression:' . $reviewPopupPopupKey . ':' . ($reviewPopupCurrentUser->id ?? 'guest'),
         'logo' => !empty($settings['review_popup_logo']) ? asset($settings['review_popup_logo']) : (isset($settings['admin_sidebar_logo']) ? asset($settings['admin_sidebar_logo']) : asset('assets/images/logo-dark.png')),
         'logoAlt' => $settings['review_popup_logo_alt'] ?? 'LQH Markets',
         'title' => $settings['review_popup_title'] ?? 'Enjoying the Platform?',

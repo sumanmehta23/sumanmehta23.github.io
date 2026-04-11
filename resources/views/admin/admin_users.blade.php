@@ -209,10 +209,15 @@
             var return_data = '';
             var admin_role = '@can("employee:update")1 @endcan';
             var admin_role_id = @json(session('userData')['role_id']);
+            var user_role = @json(session('userData')['userRole'] ?? session('userRole'));
             if (admin_role ) {
               return_data += '<a data-id="' + row_data.enc_id + '" class="update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path><path d="M16 5l3 3"></path></svg></a>';
               if (row_data.role_id == 2) {
                 return_data += '<a href="/admin/rm_dashboard?id=' + row_data.enc_id + '" class="ms-2" ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path class="text-primary" stroke="none" d="M0 0h24v24H0z" fill="none"></path><path class="text-primary" d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path class="text-primary" d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path></svg></a>';
+              }
+              // Add delete button for Super Admin or admin roles
+              if (user_role && (user_role.toLowerCase() === 'super admin' || user_role.toLowerCase() === 'admin')) {
+                return_data += '<a data-id="' + row_data.enc_id + '" class="ms-2 delete-user text-danger" href="javascript:void(0)" title="Delete User"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"></path></svg></a>';
               }
             }
             return return_data;
@@ -254,6 +259,62 @@
             }
           });
 
+        });
+
+        // Delete user handler
+        $(document).off("click", ".delete-user");
+        $(document).on("click", ".delete-user", function () {
+          let id = $(this).data("id");
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to delete this user. This action can be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                url: "/admin/ajax",
+                type: "GET",
+                data: {
+                  action: 'deleteAdminUser',
+                  id: id
+                },
+                success: function (response) {
+                  if (response.status) {
+                    Swal.fire(
+                      'Deleted!',
+                      response.message,
+                      'success'
+                    );
+                    $('#tableAdminUsers').DataTable().draw();
+                  } else {
+                    Swal.fire(
+                      'Error!',
+                      response.message,
+                      'error'
+                    );
+                  }
+                },
+                error: function (xhr, status, error) {
+                  console.error('AJAX Error:', status, error);
+                  Swal.fire(
+                    'Error!',
+                    'An error occurred while deleting the user',
+                    'error'
+                  );
+                }
+              });
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              Swal.fire(
+                'Cancelled',
+                'User deletion has been cancelled',
+                'info'
+              );
+            }
+          });
         });
       }
 

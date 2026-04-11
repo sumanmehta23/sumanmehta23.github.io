@@ -177,6 +177,31 @@
                     @include('admin.kyc_provider_setting')
                 </div>
 
+                <div class="col-lg-4 col-sm-12">
+                    <form method="post">
+                        @csrf
+                        <div class="card custom-card">
+                            <div class="card-header">
+                                <div class="card-title">URL Settings</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Main Website URL</label>
+                                    <input type="url" class="form-control" name="main_website_url" 
+                                           value="{{ $settings['main_website_url'] ?? 'https://www.lqhmarkets.com' }}"
+                                           placeholder="https://www.lqhmarkets.com">
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle"></i> Main website URL used on public pages (e.g., https://www.lqhmarkets.com)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-footer text-end">
+                                <input type="submit" class="btn btn-primary" value="Update" name="update">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
     @endSection

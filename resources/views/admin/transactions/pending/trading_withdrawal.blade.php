@@ -121,16 +121,20 @@
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('pending_trading_withdrawal')
+                    buttons.push({
                         extend: 'excel',
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [12,18,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
+                            columns: [12,18,1,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
                         }
-                    }
-                ],
+                    });
+                @endif
+                return buttons; 
+            })(),
 
             // order: [[3, "desc"]],
             lengthMenu: [

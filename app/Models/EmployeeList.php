@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class EmployeeList extends Authenticatable
 {
-    use HasApiTokens, HasUuids, HasUuids, TwoFactorAuthenticatable;
+    use HasApiTokens, HasUuids, HasUuids, TwoFactorAuthenticatable, SoftDeletes;
     protected $table = 'emplist';
     // protected $primaryKey = 'id';
     protected $guarded = [];

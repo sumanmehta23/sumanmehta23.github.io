@@ -94,10 +94,9 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-
         $restriction = RestrictIps::where('ip', $request->ip())->where('email', $request->email)->first();
         if ($restriction) {
-            return redirect()->back()->with('error', 'You are blocked by admin.');
+            return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.');
         }
         $key = 'login:' . (auth()->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 3)) {
@@ -129,7 +128,7 @@ class LoginController extends Controller
         ]);
 
         if (($request->input('email') == 'andrei_makalicza@yahoo.com') || ($request->input('email') == 'teodorescuv1990@gmail.com') || ($request->input('email') == 'aleksandra_andreea@yahoo.com')) {
-            return redirect()->back()->with('error', 'You are blocked by admin.');
+            return redirect()->back()->with('error', 'Your account has been temporarily disabled. Please contact <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>.');
         }
 
         // Find the user by email
@@ -510,7 +509,9 @@ class LoginController extends Controller
             return redirect()->route('dashboard');
         }
         $countries = Country::all();
-        return view('auth.register', compact('countries'));
+        $turnstileEnabled = (bool) config('services.turnstile.enabled', false);
+        $turnstileSiteKey = (string) config('services.turnstile.site_key', '');
+        return view('auth.register', compact('countries', 'turnstileEnabled', 'turnstileSiteKey'));
     }
     public function addUser(Request $request)
     {

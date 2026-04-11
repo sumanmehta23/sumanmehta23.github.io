@@ -177,6 +177,8 @@
                                         <option value="">All</option>
                                         <option value="yes">Yes</option>
                                         <option value="no">No</option>
+                                        <option value="wallet_deposit">Wallet Deposit</option>
+                                        <option value="internal_transfer">Internal Transfer</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
@@ -538,12 +540,12 @@
                 {
                     data: 'balance',
                     name: 'balance',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'created_at',
                     name: 'created_at',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'last_trade_date',
@@ -552,10 +554,12 @@
                 {
                     data: 'days_since_last_trade',
                     name: 'days_since_last_trade',
+                    orderable: true
                 },
                 {
                     data: 'deposited',
                     name: 'deposited',
+                    orderable: true
                 },
                 {
                     data: 'traded',
@@ -568,12 +572,12 @@
                 {
                     data: 'total_deposit',
                     name: 'total_deposit',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'total_withdraw',
                     name: 'total_withdraw',
-                    orderable: false
+                    orderable: true
                 },
                 {
                     data: 'fullname',
@@ -638,32 +642,36 @@
             pageLength: 10,
             // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
-                    action: function (e, dt, node, config) {
-                        showLiveAccountsOverlay(4500);
-                        if (excelAction) {
-                            excelAction.call(this, e, dt, node, config);
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('live_accounts')
+                    buttons.push({
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        filename: 'Live_Accounts_' + new Date().toISOString().slice(0, 10),
+                        action: function (e, dt, node, config) {
+                            showLiveAccountsOverlay(4500);
+                            if (excelAction) {
+                                excelAction.call(this, e, dt, node, config);
+                            }
+                        },
+                        exportOptions: {
+                              columns: [12, 13, 14, 2, 3, 9, 5, 6, 10, 11, 7, 8, 15, 16, 18]
                         }
-                    },
-                    exportOptions: {
-                        columns: [12, 13, 2, 3, 18, 14, 15, 16, 17, 5, 6, 7, 8, 9] // Name, Email, Code, Group, Country, Leverage, Balance, Date, Time, Last Trade Date, Days, Deposited, Not Traded, Status
-                    }
-                },
-                {
-                    text: 'Export All',
-                    action: function () {
-                        showLiveAccountsOverlay(9000);
-                        const query = $.param(collectLiveAccountFilters());
-                        window.location.href = query
-                            ? ("/admin/export-all-live-accounts?" + query)
-                            : "/admin/export-all-live-accounts";
-                    }
-                }
-            ]
+                    });
+                    buttons.push({
+                        text: 'Export All',
+                        action: function () {
+                            showLiveAccountsOverlay(9000);
+                            const query = $.param(collectLiveAccountFilters());
+                            window.location.href = query
+                                ? ("/admin/export-all-live-accounts?" + query)
+                                : "/admin/export-all-live-accounts";
+                        }
+                    });
+                @endif
+                return buttons;
+            })(),
         });
     });
 

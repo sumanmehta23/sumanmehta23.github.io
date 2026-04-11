@@ -299,9 +299,9 @@ if ($getUser) {
                                                                     <?php
                                                                         // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_profit = $accountHelper['total_profit'] ?? null;
+                                                                            $total_profit = $accountHelper['profit'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_profit = $accountHelper->total_profit ?? null;
+                                                                            $total_profit = $accountHelper->Profit ?? null;
                                                                         }
 
                                                                         if (!is_null($total_profit)) {
@@ -323,16 +323,16 @@ if ($getUser) {
                                                     <div class="flex-grow-1 ms-3">
                                                         <div class="row g-1">
                                                             <div class="col-6">
-                                                                <p class="mb-0 f-20">Total Comission</p>
+                                                                <p class="mb-0 f-20">Total Commission</p>
                                                             </div>
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_comission = $accountHelper['total_comission'] ?? null;
+                                                                            $total_comission = $accountHelper['total_commission'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_comission = $accountHelper->total_comission ?? null;
+                                                                            $total_comission = $accountHelper->Commission ?? null;
                                                                         }
                                                                         if (!is_null($total_comission)) {
                                                                             echo "$" . number_format($total_comission, 2);
@@ -358,14 +358,16 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    // Handle both array and object forms
+                                                                        // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $total_swap = $accountHelper['total_swap'] ?? null;
+                                                                            $total_swap = $account->accountType->ac_swap ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_swap = $accountHelper->total_swap ?? null;
+                                                                            $total_swap = $account->accountType->ac_swap ?? null;
                                                                         }
-                                                                        if (!is_null($total_swap)) {
-                                                                            echo "$" . number_format($total_swap, 2);
+                                                                        if (($total_swap == null) && ($total_swap == '')) {
+                                                                            echo ('No');
+                                                                        }else {
+                                                                            echo ('Yes');
                                                                         }
                                                                     ?>
                                                                 </h4>
@@ -392,10 +394,10 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $total_trades = $accountHelper['total_trades'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $total_trades = $accountHelper->total_trades ?? null;
+                                                                            $total_trades = $accountHelper->TotalTrades ?? null;
                                                                         }
                                                                         if (!is_null($total_trades)) {
-                                                                            echo "$" . number_format($total_trades, 2);
+                                                                            echo ($total_trades);
                                                                         }
                                                                     ?>
                                                                 </h4>
@@ -447,7 +449,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $feed_margin = $accountHelper['margin_free'];
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $feed_margin = $accountHelper->margin_free ?? 0;
+                                                                            $feed_margin = $accountHelper->MarginFree ?? 0;
                                                                         }
                                                                         if (!is_null($feed_margin)) {
                                                                             echo "$" . number_format($feed_margin, 2);
@@ -478,7 +480,7 @@ if ($getUser) {
                                                                         if (is_array($accountHelper)) {
                                                                             $margin = $accountHelper['margin'];
                                                                         } elseif (is_object($accountHelper)) {
-                                                                            $margin = $accountHelper->margin ?? 0;
+                                                                            $margin = $accountHelper->Margin ?? 0;
                                                                         }
                                                                         if (!is_null($margin)) {
                                                                             echo number_format($margin, 2);

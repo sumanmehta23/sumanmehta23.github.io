@@ -231,16 +231,18 @@
       window.dTtable = $('#tableIbUsers').on("draw.dt", dTSelection).DataTable({
         destroy: true,
         dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-        buttons: [
-          {
-            extend: 'excel',
-            text: 'Export to Excel',
-            filename: 'Pending_IB_Request_' + new Date().toISOString().slice(0, 10),
-            exportOptions: {
-              columns: [6, 7, 0, 2, 3, 4, 8, 9] // Updated column indices to match your use case
-            }
-          },
-          {
+        buttons: (() => {
+          let buttons = [];
+          @hasExportPermission('ib_list')
+            buttons.push({
+              extend: 'excel',
+              text: 'Export to Excel',
+              exportOptions: {
+                columns: [6, 7, 0, 2, 3, 4, 8, 9] // Updated column indices to match your use case
+              }
+            });
+          @endif
+          buttons.push({
             text: 'Bulk Approve',
             className: 'btn-bulk-action', // Optional: Add a custom class for styling
             action: function (e, dt, node, config) {
@@ -262,8 +264,9 @@
                 const modal = new bootstrap.Modal(document.getElementById('ibRequestApprovalModal'));
                 modal.show();
             }
-          }
-        ],
+          });
+          return buttons;
+        })(),
 
         order: [[3, "desc"]],
         processing: true,

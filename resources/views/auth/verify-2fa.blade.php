@@ -44,9 +44,9 @@
                             @endif
 
                             {{-- Toggle link --}}
-                            <div class="d-flex justify-content-between mb-3">
+                            <div class="mb-3 d-flex justify-content-between">
                                 <div>
-                                    <a href="{{ route('logout') }}" id="back_link" class="text-primary small">Go Back</a>
+                                    <a href="{{ route('logout') }}" id="back_link" class="text-primary small">Login with different email</a>
                                 </div>
                                 <div>
                                     <a href="#" id="toggle_mode_link" class="text-primary small">Use Recovery Code</a>
@@ -59,18 +59,18 @@
                             </div>
 
                             {{-- Authenticator Code field --}}
-                            <div id="auth_code_field" class="form-group mb-3">
+                            <div id="auth_code_field" class="mb-3 form-group">
                                 <label for="code" class="form-label">Authenticator Code</label>
                                 <input type="text" name="code" class="form-control" autofocus>
                             </div>
 
                             {{-- Recovery Code field --}}
-                            <div id="recovery_code_field" class="form-group mb-3" style="display: none;">
+                            <div id="recovery_code_field" class="mb-3 form-group" style="display: none;">
                                 <label for="recovery_code" class="form-label">Recovery Code</label>
                                 <input type="text" name="recovery_code" class="form-control">
                             </div>
 
-                            <div class="d-grid mt-3">
+                            <div class="mt-3 d-grid">
                                 <button type="submit" class="btn btn-primary">Verify</button>
                             </div>
                         </form>

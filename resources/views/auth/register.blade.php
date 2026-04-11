@@ -112,7 +112,7 @@
             <div class="auth-wrapper v3">
                 <div class="auth-form register_mob" style="margin: 0;">
                     <div class="auth-header row ">
-                        <div class="my-1 col mob_logo_center"><a href="/login"><img class="mob_logo_center"
+                        <div class="my-1 col mob_logo_center"><a href="{{ $settings['main_website_url'] ?? '#' }}"><img class="mob_logo_center"
                                     src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo"
                                     style="height: 8vh;"></a>
                         </div>
@@ -292,6 +292,13 @@
                                             @endif
 
                                         </div>
+                                        @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
+                                        <div data-v-97e32e5a="" class="row g-3 mb-3">
+                                            <div data-v-97e32e5a="" class="col-sm-12 d-flex justify-content-center">
+                                                <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
+                                            </div>
+                                        </div>
+                                        @endif
                                         <div data-v-97e32e5a="" class="row g-3">
                                             <div data-v-97e32e5a="" class="col-sm-12">
                                                 <div data-v-97e32e5a="" class="d-grid"><button data-v-97e32e5a=""
@@ -418,6 +425,9 @@
         </div>
     </div>
 
+    @if(($turnstileEnabled ?? false) && !empty($turnstileSiteKey ?? ''))
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <script>
         function handlePaste(event) {
             const pasteData = event.clipboardData.getData('text');
