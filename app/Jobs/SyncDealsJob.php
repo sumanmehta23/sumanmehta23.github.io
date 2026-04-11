@@ -23,8 +23,9 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
     public $timeout = 600; // 10 minutes max per job
-    public $tries = 2;
+    public $tries = 3;
     public $maxExceptions = 2;
+    public $backoff = [30, 120]; // retry after 30s, then 2min
     public $uniqueFor = 300; // 5 min uniqueness per account set
 
     protected $accountIds;
@@ -43,6 +44,22 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         $this->accountIds = $accountIds;
         $this->maxPagesPerAccount = $maxPagesPerAccount;
         $this->onQueue('syncaccountstrades');
+    }
+
+    /**
+     * Handle job failure after all retries exhausted.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('SyncDealsJob permanently failed', [
+            'account_ids' => $this->accountIds,
+            'error' => $exception->getMessage(),
+        ]);
+
+        Account::whereIn('id', $this->accountIds)->update([
+            'sync_status' => 'needs_retry',
+            'sync_error' => substr($exception->getMessage(), 0, 500),
+        ]);
     }
 
     public function handle(): void
