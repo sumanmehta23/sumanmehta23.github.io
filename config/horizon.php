@@ -204,8 +204,8 @@ return [
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512,
-            'tries' => 1,
-            'timeout' => 2700,
+            'tries' => 0,      // Defer to job's $tries (SyncDealsJob: 3)
+            'timeout' => 660,  // Slightly above job's 600s to let it exit cleanly
             'nice' => 0,
         ],
         'supervisor-3' => [
