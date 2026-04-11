@@ -92,6 +92,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
      */
     public function handle(): void
     {
+        return;
         // OPTIMIZATION P2: Pre-cache all symbols at job start instead of lazy-loading per order
         // This eliminates cache misses on each job execution
         $this->allSymbols = Symbol::pluck('path', 'symbol')->toArray();
