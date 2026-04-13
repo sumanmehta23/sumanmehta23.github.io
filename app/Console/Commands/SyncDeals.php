@@ -163,25 +163,9 @@ class SyncDeals extends Command
         $this->info("Found {$accounts->count()} accounts needing sync");
         $this->showPriorityBreakdown($accounts);
 
-        // ── Split into smaller batches for never-synced accounts (may have 10k+ deals) ──
-        $neverSynced = $accounts->filter(fn($a) => is_null($a->deals_synced_to));
-        $alreadySynced = $accounts->filter(fn($a) => !is_null($a->deals_synced_to));
-
-        $firstSyncBatchSize = max(1, min(5, $batchSize)); // 5 accounts max for first-time sync
-        $allBatches = collect();
-
-        if ($neverSynced->isNotEmpty()) {
-            $this->info("First-time sync: {$neverSynced->count()} accounts (batch size: {$firstSyncBatchSize})");
-            foreach ($neverSynced->chunk($firstSyncBatchSize) as $chunk) {
-                $allBatches->push($chunk);
-            }
-        }
-        if ($alreadySynced->isNotEmpty()) {
-            $this->info("Incremental sync: {$alreadySynced->count()} accounts (batch size: {$batchSize})");
-            foreach ($alreadySynced->chunk($batchSize) as $chunk) {
-                $allBatches->push($chunk);
-            }
-        }
+        // ── Group accounts by deal volume, then batch accordingly ──
+        // This prevents high-volume accounts from timing out during REST calls
+        $allBatches = $this->buildVolumeLevelBatches($accounts, $batchSize);
 
         // ── Dispatch SyncDealsJob batches ──
         foreach ($allBatches as $batchIndex => $batch) {
@@ -333,6 +317,80 @@ class SyncDeals extends Command
 
         $this->info("Priority: {$retryCount} retry, {$balanceChanged} balance changed, {$neverSynced} never synced, {$stale} stale");
     }
+
+    /**
+     * Group accounts by deal volume and determine optimal batch sizes.
+     * 
+     * High-volume accounts are batched smaller (or alone) to avoid REST timeouts.
+     * Low-volume accounts can be batched larger.
+     */
+    protected function buildVolumeLevelBatches($accounts, int $defaultBatchSize): \Illuminate\Support\Collection
+    {
+        $brackets = config('deals_volume_profile.deals_volume_profile.brackets', [
+            5000 => 20,
+            20000 => 10,
+            100000 => 5,
+            200000 => 2,
+            PHP_INT_MAX => 1,
+        ]);
+        $minDealsForIndividual = config('deals_volume_profile.deals_volume_profile.min_deals_for_individual_sync', 50000);
+        $fallbackBatchSize = config('deals_volume_profile.deals_volume_profile.fallback_batch_size', 5);
+        $maxPerJob = config('deals_volume_profile.deals_volume_profile.max_accounts_per_job', 20);
+
+        // Group accounts by volume bracket
+        $volumeGroups = collect();
+
+        foreach ($accounts as $account) {
+            // Determine batch size based on pending deal count
+            $dealCount = $account->pending_deal_count ?? null;
+            $batchSize = $fallbackBatchSize;
+
+            if ($dealCount !== null) {
+                // Find the bracket for this account's deal count
+                foreach ($brackets as $maxDeals => $bracketBatchSize) {
+                    if ($dealCount <= $maxDeals) {
+                        $batchSize = $bracketBatchSize;
+                        break;
+                    }
+                }
+
+                // For already-synced accounts with high volume, force individual
+                if (!is_null($account->deals_synced_to) && $dealCount >= $minDealsForIndividual) {
+                    $batchSize = 1;
+                }
+            } else {
+                // No count yet, use conservative size for first-time sync
+                $batchSize = is_null($account->deals_synced_to) ? 3 : $defaultBatchSize;
+            }
+
+            // Cap batch size at the global maximum
+            $batchSize = min($batchSize, $maxPerJob);
+
+            $groupKey = "{$batchSize}_per_job";
+            if (!$volumeGroups->has($groupKey)) {
+                $volumeGroups[$groupKey] = collect();
+            }
+            $volumeGroups[$groupKey]->push($account);
+        }
+
+        // Now batch each volume group and return all batches
+        $allBatches = collect();
+
+        foreach ($volumeGroups as $groupKey => $group) {
+            preg_match('/(\d+)_per_job/', $groupKey, $matches);
+            $batchSize = (int) ($matches[1] ?? $fallbackBatchSize);
+
+            $this->info("Volume group: batch size {$batchSize}, {$group->count()} accounts");
+
+            foreach ($group->chunk($batchSize) as $batch) {
+                $allBatches->push($batch);
+            }
+        }
+
+        return $allBatches;
+    }
+
+
 
     // ─────────────────────────────────────────────────────────
     //  Queue Management
