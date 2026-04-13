@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Account;
 use App\Services\X9Service;
 use App\Services\MT5Service;
+use App\Enums\PlatformEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Hash;
@@ -41,7 +42,7 @@ class AccountPasswordUpdateTest extends TestCase
         // Create test accounts
         $this->mt5Account = Account::factory()->create([
             'user_id' => $this->user->id,
-            'platform' => 'mt5',
+            'platform' => PlatformEnum::MT5->value,
             'code' => '12345',
             'trader_password' => 'oldpassword123',
             'invester_password' => 'oldpassword123',
@@ -49,7 +50,7 @@ class AccountPasswordUpdateTest extends TestCase
 
         $this->x9Account = Account::factory()->create([
             'user_id' => $this->user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
             'trader_password' => 'oldpassword123',
             'invester_password' => 'oldpassword123',

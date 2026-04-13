@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PlatformEnum;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendScheduledMaintenanceEmailJob;
 use App\Models\User;
@@ -51,6 +52,7 @@ class MaintenanceEmailController extends Controller
     public function fetchEmails()
     {
         try {
+            $mt5Platform = PlatformEnum::MT5->value;
             $emails = DB::table(DB::raw('(
                 SELECT 
                     u.email,
@@ -60,7 +62,7 @@ class MaintenanceEmailController extends Controller
                 JOIN aspnetusers u ON u.id = a.user_id
                 WHERE LOWER(t.status) IN (\'open\', \'opened\')
                   AND t.open_time >= \'2026-01-01\'
-                  AND a.trade_platform = \'MetaTrader5\'
+                  AND a.platform = \'' . $mt5Platform . '\'
                   AND a.demo = 0
                   AND DATE(a.last_trade_sync_at) = CURDATE()
                   AND u.maintenance_email_sent = 0

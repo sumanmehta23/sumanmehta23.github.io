@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Account;
+use App\Enums\PlatformEnum;
 use App\Services\MT5RestAPIService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -42,7 +43,7 @@ class SyncMT5AccountStatusCommand extends Command
         $this->newLine();
 
         // Get all MetaTrader5 accounts
-        $query = Account::where('trade_platform', 'MetaTrader5')
+        $query = Account::where('platform', PlatformEnum::MT5->value)
             ->whereNotNull('code')
             ->where('account_request_status', 1)
             ->where('code', '!=', '')

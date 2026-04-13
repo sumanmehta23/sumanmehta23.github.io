@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\SyncDealsJob;
 use App\Models\Account;
 use App\Models\Ib1;
+use App\Enums\PlatformEnum;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -239,7 +240,7 @@ class SyncDeals extends Command
             ->whereNull('accounts.deleted_at')
             ->where('accounts.account_request_status', 1)
             ->where('u.status', 1)
-            ->where('accounts.trade_platform', "MetaTrader5")
+            ->where('accounts.platform', PlatformEnum::MT5->value)
             ->whereNotNull('u.ib1')
             ->whereRaw("( (accounts.competition_product_id IS NULL AND accounts.demo = 0)
                     OR (accounts.competition_product_id IS NOT NULL AND accounts.demo = 1) )");

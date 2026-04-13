@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use Carbon\Carbon;
+use App\Enums\PlatformEnum;
 use App\Models\Ib1;
 use App\Models\Task;
 use App\Models\User;
@@ -843,11 +844,11 @@ class AjaxController extends Controller
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
-                    $platformName = 'MT5';
+                    $platformName = PlatformEnum::MT5->displayName();
 
-                    if ($row->platform === 'x9') {
+                    if ($row->platform === PlatformEnum::X9->value) {
                         $platformImage = '/assets/images/x9.png';
-                        $platformName = 'X9';
+                        $platformName = PlatformEnum::X9->displayName();
                         // For X9 accounts, show the account type name instead of group
                         $accountGroup = $row->accountType->ac_name ?? 'Standard';
                     }
@@ -1363,11 +1364,11 @@ class AjaxController extends Controller
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
-                    $platformName = 'MT5';
+                    $platformName = PlatformEnum::MT5->displayName();
 
-                    if ($row->platform === 'x9') {
+                    if ($row->platform === PlatformEnum::X9->value) {
                         $platformImage = '/assets/images/x9.png';
-                        $platformName = 'X9';
+                        $platformName = PlatformEnum::X9->displayName();
                         // For X9 accounts, show the account type name instead of group
                         $accountGroup = $row->accountType->ac_name ?? 'Standard';
                     }

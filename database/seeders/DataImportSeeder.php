@@ -94,7 +94,7 @@ class DataImportSeeder extends Seeder
                 continue;
             }
             unset($account['account_type']);
-            $account['trade_platform'] = $account['tradePlatform'];
+            $account['platform'] = $account['tradePlatform'];
             unset($account['tradePlatform']);
             $account['lots_completed'] = $account['lotsCompleted'];
             unset($account['lotsCompleted']);
@@ -146,7 +146,7 @@ class DataImportSeeder extends Seeder
                 continue;
             }
             unset($account['account_type']);
-            $account['trade_platform'] = $account['tradePlatform'];
+            $account['platform'] = $account['tradePlatform'];
             unset($account['tradePlatform']);
             $account['lots_completed'] = $account['lotsCompleted'];
             unset($account['lotsCompleted']);
