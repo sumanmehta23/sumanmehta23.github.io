@@ -158,12 +158,15 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     }
 
     // ─────────────────────────────────────────────────────────
-    //  REST Batch Path
+    //  Volume-Aware Account Processing
     // ─────────────────────────────────────────────────────────
 
     /**
-     * Fetch deals for all accounts in one (or few) REST calls,
-     * then upsert into DB and detect closed positions.
+     * Process all accounts individually with volume-aware fetching.
+     *
+     * Each account gets its own getDealTotals check, then either:
+     * - Small volume: single REST call
+     * - High volume: adaptive date-range chunking that verifies chunk sizes
      */
     protected function syncViaRestBatch(array $accountWindows): array
     {
@@ -184,24 +187,6 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ];
         }
 
-        // Separate accounts into 3 buckets based on sync recency:
-        // - Fresh incremental: synced within last N days → safe for batch REST
-        // - Stale incremental: synced > N days ago → process individually with volume awareness
-        // - Never-synced: no deals_synced_to → process individually with volume awareness
-        $freshIncrementalAccounts = [];
-        $staleAccounts = []; // stale-incremental + never-synced
-        $staleThresholdDate = Carbon::now()->subDays(self::STALE_INCREMENTAL_DAYS);
-
-        foreach ($accountWindows as $acctId => $w) {
-            if ($w['account']->deals_synced_to === null) {
-                $staleAccounts[$acctId] = $w;
-            } elseif (Carbon::parse($w['account']->deals_synced_to)->lt($staleThresholdDate)) {
-                $staleAccounts[$acctId] = $w;
-            } else {
-                $freshIncrementalAccounts[$acctId] = $w;
-            }
-        }
-
         // Pre-load existing deal_ids for all accounts (one query)
         $allAccountIds = array_keys($accountWindows);
         $existingDealIds = Deal::whereIn('account_id', $allAccountIds)
@@ -209,79 +194,27 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ->flip()
             ->toArray();
 
-        // ── 1. Process fresh incremental accounts via batch REST (tight window) ──
-        if (!empty($freshIncrementalAccounts)) {
-            $globalFrom = PHP_INT_MAX;
-            $globalTo = 0;
-            $logins = [];
+        Log::info('SyncDealsJob: Processing accounts individually with volume awareness', [
+            'account_count' => count($accountWindows),
+        ]);
 
-            foreach ($freshIncrementalAccounts as $acctId => $w) {
-                $globalFrom = min($globalFrom, $w['from']);
-                $globalTo = max($globalTo, $w['to']);
-                $logins[] = $w['login'];
-            }
-
-            Log::info('SyncDealsJob: Fetching fresh incremental deals via REST batch', [
-                'account_count' => count($freshIncrementalAccounts),
-                'global_from' => Carbon::createFromTimestamp($globalFrom)->toDateTimeString(),
-                'global_to' => Carbon::createFromTimestamp($globalTo)->toDateTimeString(),
-            ]);
-
-            $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
-            $dealsByLogin = $batchResult['deals'];
-
-            foreach ($freshIncrementalAccounts as $acctId => $w) {
-                $login = (string) $w['login'];
-                $account = $w['account'];
-                $rawDeals = $dealsByLogin[$login] ?? null;
-
-                if ($rawDeals === null) {
-                    $failedAccountIds[] = $acctId;
-                    continue;
-                }
-
-                $accountFrom = $w['from'];
-                $result = $this->processRestDeals($rawDeals, $acctId, $account, $accountFrom, $existingDealIds);
+        // Process each account individually — no more batching multiple accounts
+        // into one giant REST call that can timeout with high-volume accounts
+        foreach ($accountWindows as $acctId => $w) {
+            try {
+                $result = $this->syncSingleAccount($restService, $acctId, $w, $existingDealIds);
                 $inserted += $result['inserted'];
                 $closedPositions = array_merge($closedPositions, $result['closed_positions']);
-
-                $this->syncTrades($acctId, $account, $result['new_deal_ids']);
 
                 if (count($closedPositions) >= 100) {
                     ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
                         ->onQueue('distributeibcommission');
                 }
-            }
-        }
-
-        // ── 2. Process stale / never-synced accounts individually with volume awareness ──
-        if (!empty($staleAccounts)) {
-            $staleIncrementalCount = count(array_filter($staleAccounts, fn($w) => $w['account']->deals_synced_to !== null));
-            $neverSyncedCount = count($staleAccounts) - $staleIncrementalCount;
-
-            Log::info('SyncDealsJob: Processing stale/never-synced accounts with date-range splitting', [
-                'total' => count($staleAccounts),
-                'stale_incremental' => $staleIncrementalCount,
-                'never_synced' => $neverSyncedCount,
-                'stale_threshold_days' => self::STALE_INCREMENTAL_DAYS,
-            ]);
-
-            foreach ($staleAccounts as $acctId => $w) {
-                try {
-                    $result = $this->syncFirstTimeAccountViaRest($restService, $acctId, $w, $existingDealIds);
-                    $inserted += $result['inserted'];
-                    $closedPositions = array_merge($closedPositions, $result['closed_positions']);
-
-                    if (count($closedPositions) >= 100) {
-                        ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
-                            ->onQueue('distributeibcommission');
-                    }
-                } catch (Exception $e) {
-                    Log::error("SyncDealsJob: First-time sync failed for account {$acctId}", [
-                        'error' => $e->getMessage(),
-                    ]);
-                    $failedAccountIds[] = $acctId;
-                }
+            } catch (Exception $e) {
+                Log::error("SyncDealsJob: Sync failed for account {$acctId}", [
+                    'error' => $e->getMessage(),
+                ]);
+                $failedAccountIds[] = $acctId;
             }
         }
 
@@ -293,13 +226,14 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     }
 
     /**
-     * Sync a never-synced account via REST API with date-range splitting for high-volume accounts.
+     * Sync a single account via REST API with volume-aware fetching.
      *
-     * Uses getDealTotals() to check volume, then:
+     * Uses getDealTotals() to check deal count, then:
+     * - 0 deals: just update cursors
      * - <= MAX_DEALS_PER_REST_CALL: single REST call
-     * - > MAX_DEALS_PER_REST_CALL: split time range into smaller chunks
+     * - > MAX_DEALS_PER_REST_CALL: adaptive date-range chunking
      */
-    protected function syncFirstTimeAccountViaRest(
+    protected function syncSingleAccount(
         MT5RestAPIService $restService,
         string $accountId,
         array $window,
@@ -314,10 +248,18 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         $totals = $restService->getDealTotals([$login], $from, $to);
         $totalDeals = $totals[(string) $login] ?? 0;
 
-        Log::info("SyncDealsJob: First-time account deal count", [
+        // Store the count for future batching decisions by the command
+        Account::where('id', $accountId)->update([
+            'pending_deal_count' => $totalDeals,
+            'pending_deal_count_at' => now(),
+        ]);
+
+        Log::info("SyncDealsJob: Account deal count", [
             'account_id' => $accountId,
             'login' => $login,
             'total_deals' => $totalDeals,
+            'from' => Carbon::createFromTimestamp($from)->toDateTimeString(),
+            'to' => Carbon::createFromTimestamp(min($to, time()))->toDateTimeString(),
         ]);
 
         if ($totalDeals === 0) {
@@ -340,78 +282,101 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             return $result;
         }
 
-        // ── High-volume account: split date range into manageable chunks ──
-        $effectiveTo = Carbon::now()->timestamp;
-        $chunks = $this->calculateDateRangeChunks($from, $effectiveTo, $totalDeals);
+        // ── High-volume account: adaptive date-range chunking ──
+        return $this->syncWithAdaptiveChunking($restService, $accountId, $login, $account, $from, $to, $totalDeals, $existingDealIds);
+    }
 
-        Log::info("SyncDealsJob: Splitting high-volume first-time account into date chunks", [
+    /**
+     * Adaptive date-range chunking for high-volume accounts.
+     *
+     * Unlike fixed chunking, this verifies each chunk's deal count before fetching.
+     * If a chunk has too many deals (uneven distribution), it halves the chunk duration
+     * and retries — guaranteeing no single REST call fetches more than MAX_DEALS_PER_REST_CALL.
+     */
+    protected function syncWithAdaptiveChunking(
+        MT5RestAPIService $restService,
+        string $accountId,
+        int $login,
+        Account $account,
+        int $from,
+        int $to,
+        int $totalDeals,
+        array &$existingDealIds
+    ): array {
+        $effectiveTo = min($to, Carbon::now()->timestamp);
+
+        // Start with estimated chunks (2x safety factor for uneven deal distribution)
+        $numChunks = max(1, (int) ceil($totalDeals / self::MAX_DEALS_PER_REST_CALL) * 2);
+        $chunkDuration = max(3600, (int) ceil(($effectiveTo - $from) / $numChunks)); // min 1 hour
+
+        Log::info("SyncDealsJob: Adaptive chunking for high-volume account", [
             'account_id' => $accountId,
             'login' => $login,
             'total_deals' => $totalDeals,
-            'chunks' => count($chunks),
-            'max_deals_per_call' => self::MAX_DEALS_PER_REST_CALL,
+            'estimated_chunks' => $numChunks,
+            'chunk_duration_hours' => round($chunkDuration / 3600, 1),
         ]);
 
         $totalInserted = 0;
         $allClosedPositions = [];
         $allNewDealIds = [];
+        $currentFrom = $from;
+        $chunkIndex = 0;
+        $maxIterations = $numChunks * 4; // safety limit to prevent infinite loops
 
-        foreach ($chunks as $i => $chunk) {
-            // Use the original far-future $to for the last chunk to catch everything
-            $chunkTo = ($i === count($chunks) - 1) ? $to : $chunk['to'];
+        while ($currentFrom < $effectiveTo && $chunkIndex < $maxIterations) {
+            $chunkIndex++;
+            $currentTo = min($currentFrom + $chunkDuration, $effectiveTo);
+            $isLastChunk = ($currentTo >= $effectiveTo);
 
-            $batchResult = $restService->getBatchDeals([$login], $chunk['from'], $chunkTo);
-            $rawDeals = $batchResult['deals'][(string) $login] ?? [];
+            // For the last chunk, use the original far-future $to to catch everything
+            $fetchTo = $isLastChunk ? $to : $currentTo;
 
-            if (empty($rawDeals)) {
-                Log::info("SyncDealsJob: Chunk " . ($i + 1) . "/" . count($chunks) . " empty for {$login}");
-                continue;
+            // Verify chunk size before fetching (lightweight count call)
+            $chunkTotals = $restService->getDealTotals([$login], $currentFrom, $fetchTo);
+            $chunkCount = $chunkTotals[(string) $login] ?? 0;
+
+            // If chunk is too large and can still be split, halve the duration
+            if ($chunkCount > self::MAX_DEALS_PER_REST_CALL && ($currentTo - $currentFrom) > 3600) {
+                $chunkDuration = max(3600, (int) ($chunkDuration / 2));
+                Log::info("SyncDealsJob: Chunk too large, splitting further", [
+                    'account_id' => $accountId,
+                    'chunk_deals' => $chunkCount,
+                    'new_chunk_duration_hours' => round($chunkDuration / 3600, 1),
+                ]);
+                continue; // retry with smaller chunk (don't advance currentFrom)
             }
 
-            // Only mark complete on the last chunk
-            $isLastChunk = ($i === count($chunks) - 1);
-            $result = $this->processRestDeals($rawDeals, $accountId, $account, $chunk['from'], $existingDealIds, $isLastChunk);
-            $totalInserted += $result['inserted'];
-            $allClosedPositions = array_merge($allClosedPositions, $result['closed_positions']);
-            $allNewDealIds = array_merge($allNewDealIds, $result['new_deal_ids']);
+            // Fetch and process deals for this chunk
+            $batchResult = $restService->getBatchDeals([$login], $currentFrom, $fetchTo);
+            $rawDeals = $batchResult['deals'][(string) $login] ?? [];
 
-            Log::info("SyncDealsJob: Chunk completed", [
-                'account_id' => $accountId,
-                'login' => $login,
-                'chunk' => ($i + 1) . '/' . count($chunks),
-                'deals_in_chunk' => count($rawDeals),
-                'inserted' => $result['inserted'],
-            ]);
+            if (!empty($rawDeals)) {
+                $result = $this->processRestDeals($rawDeals, $accountId, $account, $currentFrom, $existingDealIds, $isLastChunk);
+                $totalInserted += $result['inserted'];
+                $allClosedPositions = array_merge($allClosedPositions, $result['closed_positions']);
+                $allNewDealIds = array_merge($allNewDealIds, $result['new_deal_ids']);
+
+                Log::info("SyncDealsJob: Adaptive chunk completed", [
+                    'account_id' => $accountId,
+                    'chunk' => $chunkIndex,
+                    'deals_in_chunk' => count($rawDeals),
+                    'inserted' => $result['inserted'],
+                    'chunk_from' => Carbon::createFromTimestamp($currentFrom)->toDateTimeString(),
+                    'chunk_to' => Carbon::createFromTimestamp($fetchTo)->toDateTimeString(),
+                ]);
+            } elseif ($isLastChunk) {
+                // Even if empty, mark complete on last chunk
+                $this->processRestDeals([], $accountId, $account, $currentFrom, $existingDealIds, true);
+            }
+
+            $currentFrom = $currentTo;
         }
 
         // Sync trades once with all new deal IDs from all chunks
         $this->syncTrades($accountId, $account, $allNewDealIds);
 
         return ['inserted' => $totalInserted, 'closed_positions' => $allClosedPositions, 'new_deal_ids' => $allNewDealIds];
-    }
-
-    /**
-     * Calculate optimal date-range chunks to keep each REST call under the deal limit.
-     *
-     * Evenly divides the time range based on total deals / max per call.
-     * Deal distribution isn't perfectly uniform, but this keeps each chunk
-     * within a reasonable size for the REST API.
-     */
-    protected function calculateDateRangeChunks(int $from, int $to, int $totalDeals): array
-    {
-        $numChunks = (int) ceil($totalDeals / self::MAX_DEALS_PER_REST_CALL);
-        $totalSeconds = max($to - $from, 1);
-        $chunkDuration = (int) ceil($totalSeconds / $numChunks);
-
-        $chunks = [];
-        $currentFrom = $from;
-        for ($i = 0; $i < $numChunks; $i++) {
-            $currentTo = min($currentFrom + $chunkDuration, $to);
-            $chunks[] = ['from' => $currentFrom, 'to' => $currentTo];
-            $currentFrom = $currentTo;
-        }
-
-        return $chunks;
     }
 
     /**

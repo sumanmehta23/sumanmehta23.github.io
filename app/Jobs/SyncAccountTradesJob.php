@@ -104,7 +104,7 @@ class SyncAccountTradesJob implements ShouldQueue, ShouldBeUnique
             // The QueueSafeMT5Service handles connection management internally
             // Log::info("SyncAccountTradesJob: Starting trade sync for " . count($this->accountIds) . " accounts", [
             //     'account_ids' => $this->accountIds,
-            //     'referral_code' => $this->referral_code,
+            //     'referral_code' => $this->referral_code, 
             // ]);
 
             // Process each account with retry logic for socket errors
