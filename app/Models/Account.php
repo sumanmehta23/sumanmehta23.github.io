@@ -208,4 +208,22 @@ class Account extends Model
         return $this->created_from === 'zapier';
     }
 
+    /**
+     * Scope to filter accounts marked as not found in MT5
+     */
+    public function scopeNotFoundInMt5($query)
+    {
+        return $query->whereNotNull('deletion_type')
+            ->where('account_request_status', 1)
+            ->where('deletion_type', 'like', '%not_found%');
+    }
+
+    /**
+     * Scope to filter accounts with specific deletion type
+     */
+    public function scopeWithDeletionType($query, $type)
+    {
+        return $query->where('deletion_type', $type);
+    }
+
 }

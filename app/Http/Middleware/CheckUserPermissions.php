@@ -13,8 +13,8 @@ class CheckUserPermissions
 {
     public function handle(Request $request, Closure $next, ...$permissions)
     {
-        
-       if(!Auth::check()){
+        // Check if user is authenticated on admin guard
+       if(!Auth::guard('admin')->check()){
             $requestUri = $request->getPathInfo();
             if(str($requestUri)->contains('admin')){
                 return redirect()->route('admin.login');
@@ -49,8 +49,8 @@ class CheckUserPermissions
         //     }
         // }
         // dd($permissions);
-        // $admin=Auth::guard('admin')->user();
-        if (!$request->user()->hasPermissions($permissions)) {
+        $admin = Auth::guard('admin')->user();
+        if (!$admin->hasPermissions($permissions)) {
             return response()->view('errors.401', [], 401); 
         }
         return $next($request);

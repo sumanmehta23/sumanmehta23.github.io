@@ -44,6 +44,7 @@ class SyncMT5AccountStatusCommand extends Command
         // Get all MetaTrader5 accounts
         $query = Account::where('trade_platform', 'MetaTrader5')
             ->whereNotNull('code')
+            ->where('account_request_status', 1)
             ->where('code', '!=', '')
             ->orderBy('id');
 
@@ -117,7 +118,7 @@ class SyncMT5AccountStatusCommand extends Command
                     $this->foundInMT5++;
 
                     // Only update if currently marked as not_found_in_mt5
-                    if ($account->sync_status === 'not_found_in_mt5') {
+                    if ($account->deletion_type === 'not_found_in_mt5') {
                         if (!$isDryRun) {
                             $account->sync_status = 'pending';
                             $account->sync_flagged_at = null;
@@ -136,9 +137,9 @@ class SyncMT5AccountStatusCommand extends Command
                     $this->notFoundInMT5++;
 
                     // Mark as not_found_in_mt5 if not already marked
-                    if ($account->sync_status !== 'not_found_in_mt5') {
+                    if ($account->deletion_type !== 'not_found_in_mt5') {
                         if (!$isDryRun) {
-                            $account->sync_status = 'not_found_in_mt5';
+                            $account->deletion_type = 'not_found_in_mt5';
                             $account->sync_flagged_at = now();
                             $account->sync_flag_reason = 'Account not found in MT5 server during status sync';
                             $account->save();

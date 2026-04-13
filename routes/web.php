@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountNotFoundController;
 use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\ClientAccController;
@@ -298,7 +299,13 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     // Route::get('/orders/{order}', 'OrderController@show')->name('admin.orders.show');
     // Route::get('/products/{product}', 'ProductController@show')->name('admin.products.show');
 
-
+// MT5 Not Found Accounts Routes
+        Route::prefix('accounts/not-found-in-mt5')->name('accounts.not_found_in_mt5.')->group(function () {
+            Route::get('/', [AccountNotFoundController::class, 'index'])->name('index');
+            Route::get('/export', [AccountNotFoundController::class, 'export'])->name('export');
+            Route::get('/stats', [AccountNotFoundController::class, 'stats'])->name('stats');
+            Route::post('/bulk-verify-and-archive', [AccountNotFoundController::class, 'bulkVerifyAndArchive'])->name('bulk_verify_and_archive');
+        });
     Route::middleware(['is_admin'])->group(function () {
         Route::get('/g86t8', function () {
             return config('services.omnisend.api_key');
@@ -438,7 +445,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
-        Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles');
+        Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles.store');
         Route::post('/update_roles', [StaffManagement::class, 'updateRole'])->name('update_roles');
         Route::post('/update_role_status', [StaffManagement::class, 'updateRoleStatus'])->name('update_role_status');
         Route::post('/update_role_permissions', [StaffManagement::class, 'updateRolePermissions'])->name('update_role_permissions');
@@ -519,7 +526,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::prefix('/update_password')->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');
-            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');;
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password.store')->middleware('check.permissions:settings:updatePassword');;
         });
         Route::prefix('/api-token')->group(function () {
             Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:settings:apiToken');
@@ -686,7 +693,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
             Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
         });
+
+        
     });
+    
+        
 });
 // Test route for affiliate reference code functionality
 Route::get('/test-affiliate', function (Request $request) {

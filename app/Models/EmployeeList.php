@@ -33,13 +33,19 @@ class EmployeeList extends Authenticatable
     }
     public function hasPermission($permission)
     {
-        if ($this->role == "Super Admin") {
+        if (!$this->role) {
+            return false;
+        }
+        if ($this->role->name == "Super Admin") {
             return true;
         }
         return $this->role->permissions->contains('name', $permission);
     }
     public function hasPermissions($permissions)
     {
+        if (!$this->role) {
+            return false;
+        }
         if ($this->role->name == "Super Admin") {
             return true;
         }
