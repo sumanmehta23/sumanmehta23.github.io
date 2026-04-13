@@ -109,9 +109,9 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="alert alert-info mt-4" role="alert">
-                                                        <i class="ti ti-alert-circle me-2"></i>
-                                                        <strong>Note:</strong> Transfers are processed instantly. Your transferable balance excludes bonus deposits.
+                                                    <div class="alert alert-info mt-4 mb-0 d-inline-flex align-items-start py-2 px-3" role="alert" style="font-size: 0.9rem; max-width: 100%;">
+                                                        <i class="ti ti-alert-circle me-2 mt-1 flex-shrink-0"></i>
+                                                        <span><strong>Note:</strong> Transfers are processed instantly. Your transferable balance excludes bonus deposits.</span>
                                                     </div>
                                                 </form>
                                             @else
