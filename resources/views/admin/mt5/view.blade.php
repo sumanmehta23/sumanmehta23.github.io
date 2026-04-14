@@ -447,7 +447,7 @@ if ($getUser) {
                                                                     $feed_margin = null;
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $feed_margin = $accountHelper['margin_free'];
+                                                                            $feed_margin = $accountHelper['margin_free'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
                                                                             $feed_margin = $accountHelper->MarginFree ?? 0;
                                                                         }
