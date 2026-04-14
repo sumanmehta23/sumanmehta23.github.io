@@ -110,7 +110,7 @@ if ($getUser) {
                                                             </span>
                                                         @elseif($account->deleted_at && $account->deletion_type == null)
                                                             <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
-                                                        @elseif($account->deleted_at && $account->deletion_type == 'delete')
+                                                        @elseif($account->deleted_at && ($account->deletion_type == 'delete' || $account->deletion_type == 'not_found_in_mt5'))
                                                             <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
                                                         @elseif($account->deleted_at == null)
                                                             <div class="gap-4 flexflex-vertical">
