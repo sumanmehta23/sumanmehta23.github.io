@@ -536,7 +536,7 @@ if ($getUser) {
                                                                     $floating_pl = null;
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $floating_pl = $accountHelper['profit'];
+                                                                            $floating_pl = $accountHelper['profit']??0;
                                                                         } elseif (is_object($accountHelper)) {
                                                                             $floating_pl = $accountHelper->profit ?? 0;
                                                                         }
