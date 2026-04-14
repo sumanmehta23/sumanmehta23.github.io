@@ -593,7 +593,7 @@
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Soft Deleted
                                                                                     </div>
-                                                                                @elseif($acc->deleted_at && $acc->deletion_type == 'delete')
+                                                                                @elseif($acc->deleted_at && ($acc->deletion_type == 'delete' || $acc->deletion_type == 'not_found_in_mt5'))
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Deleted
                                                                                     </div>
