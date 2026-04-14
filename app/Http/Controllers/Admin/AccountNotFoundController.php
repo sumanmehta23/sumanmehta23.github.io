@@ -9,6 +9,9 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Process\Process;
 use App\Http\Controllers\Controller;
 
 class AccountNotFoundController extends Controller
@@ -261,5 +264,60 @@ class AccountNotFoundController extends Controller
         ];
 
         return response()->json($stats, 200);
+    }
+
+    /**
+     * Sync MT5 account status
+     */
+    public function syncMT5AccountStatus(Request $request)
+    {
+        try {
+            Log::info('MT5 Account Status Sync started', [
+                'user_id' => auth('admin')->id(),
+                'user_name' => auth('admin')->user()?->name,
+            ]);
+
+            // Get PHP executable path from Herd
+            $phpPath = '/Users/digvijaysingh/Library/Application Support/Herd/bin/php';
+            
+            // Use StreamedResponse with Process to stream real-time output
+            return new StreamedResponse(function () use ($phpPath) {
+                $process = new Process([
+                    $phpPath,
+                    base_path('artisan'),
+                    'app:sync-mt5-account-status'
+                ]);
+
+                $process->setWorkingDirectory(base_path());
+                $process->setTimeout(null); // No timeout
+
+                $process->run(function ($type, $buffer) {
+                    echo $buffer;
+                    ob_flush();
+                    flush();
+                });
+
+                Log::info('MT5 Account Status Sync process completed', [
+                    'exit_code' => $process->getExitCode(),
+                    'user_id' => auth('admin')->id(),
+                ]);
+            }, 200, [
+                'Content-Type' => 'text/plain',
+                'Cache-Control' => 'no-cache',
+                'X-Accel-Buffering' => 'no',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error running MT5 Account Status Sync', [
+                'error' => $e->getMessage(),
+                'user_id' => auth('admin')->id(),
+            ]);
+
+            return response()->stream(function () use ($e) {
+                echo "Error: " . $e->getMessage() . "\n";
+                flush();
+            }, 500, [
+                'Content-Type' => 'text/plain',
+            ]);
+        }
     }
 }
