@@ -192,7 +192,9 @@
                                                     value="{{ $account->id }}" title="Select this account">
                                             </td>
                                             <td>
-                                                <strong>{{ $account->code }}</strong>
+                                                <a href="{{ route('admin.admin-view-account-details', $account->id) }}" class="text-decoration-none">
+                                                    <strong>{{ $account->code }}</strong>
+                                                </a>
                                             </td>
                                             <td>{{ $account->user?->email ?? 'N/A' }}</td>
                                             <td>
