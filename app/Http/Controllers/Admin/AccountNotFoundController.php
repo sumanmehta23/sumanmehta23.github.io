@@ -9,6 +9,9 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Process\Process;
 use App\Http\Controllers\Controller;
 
 class AccountNotFoundController extends Controller
@@ -261,5 +264,93 @@ class AccountNotFoundController extends Controller
         ];
 
         return response()->json($stats, 200);
+    }
+
+    /**
+     * Sync MT5 account status
+     */
+    public function syncMT5AccountStatus(Request $request)
+    {
+        try {
+            Log::info('MT5 Account Status Sync started', [
+                'user_id' => auth('admin')->id(),
+                'user_name' => auth('admin')->user()?->name,
+            ]);
+
+            // Use StreamedResponse with Process to stream real-time output
+            return new StreamedResponse(function () {
+                $phpBinary = $this->getPhpCliPath();
+                
+                $process = new Process([
+                    $phpBinary,
+                    base_path('artisan'),
+                    'app:sync-mt5-account-status'
+                ]);
+
+                $process->setWorkingDirectory(base_path());
+                $process->setTimeout(null); // No timeout
+
+                $process->run(function ($type, $buffer) {
+                    echo $buffer;
+                    ob_flush();
+                    flush();
+                });
+
+                Log::info('MT5 Account Status Sync process completed', [
+                    'exit_code' => $process->getExitCode(),
+                    'user_id' => auth('admin')->id(),
+                ]);
+            }, 200, [
+                'Content-Type' => 'text/plain',
+                'Cache-Control' => 'no-cache',
+                'X-Accel-Buffering' => 'no',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error running MT5 Account Status Sync', [
+                'error' => $e->getMessage(),
+                'user_id' => auth('admin')->id(),
+            ]);
+
+            return response()->stream(function () use ($e) {
+                echo "Error: " . $e->getMessage() . "\n";
+                flush();
+            }, 500, [
+                'Content-Type' => 'text/plain',
+            ]);
+        }
+    }
+
+    /**
+     * Get the PHP CLI executable path
+     * Handles both FPM and CLI variants
+     */
+    private function getPhpCliPath()
+    {
+        $phpBinary = PHP_BINARY;
+        
+        // If PHP_BINARY points to an FPM executable, try to find the CLI variant
+        if (strpos($phpBinary, 'fpm') !== false) {
+            // Try removing '-fpm' suffix
+            $cliPath = str_replace('-fpm', '', $phpBinary);
+            if (file_exists($cliPath)) {
+                return $cliPath;
+            }
+            
+            // Try removing 'fpm' suffix
+            $cliPath = str_replace('fpm', '', $phpBinary);
+            if (file_exists($cliPath)) {
+                return $cliPath;
+            }
+            
+            // Try the directory of PHP_BINARY for just 'php'
+            $dir = dirname($phpBinary);
+            $cliPath = $dir . '/php';
+            if (file_exists($cliPath)) {
+                return $cliPath;
+            }
+        }
+        
+        // Return PHP_BINARY if it's already CLI or modifications failed (will try system 'php')
+        return $phpBinary;
     }
 }

@@ -154,12 +154,18 @@
                         <div class="card-title">
                             Listed Count : {{ $accounts->total() }}
                         </div>
-                        @if (auth('admin')->check() && auth('admin')->user()->hasPermissions(['accounts:view_not_found']))
-                            <a href="{{ route('admin.accounts.not_found_in_mt5.export', request()->all()) }}"
-                                class="btn btn-success btn-sm">
-                                <i class="fas fa-download"></i> Export
-                            </a>
-                        @endif
+                        <div class="gap-2 d-flex">
+                            <button type="button" class="btn btn-info btn-sm" id="syncAccountStatusBtn" 
+                                title="Sync MT5 Account Status">
+                                <i class="fas fa-sync"></i> Sync Account Status
+                            </button>
+                            @if (auth('admin')->check() && auth('admin')->user()->hasPermissions(['accounts:view_not_found']))
+                                <a href="{{ route('admin.accounts.not_found_in_mt5.export', request()->all()) }}"
+                                    class="btn btn-success btn-sm">
+                                    <i class="fas fa-download"></i> Export
+                                </a>
+                            @endif
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -316,6 +322,24 @@
                 updateBulkActionsVisibility();
             });
 
+            // Sync Account Status Button
+            document.getElementById('syncAccountStatusBtn').addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Sync Account Status?',
+                    text: 'This will sync MT5 account status in the background. The page will refresh when complete.',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#17a2b8',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, sync now!',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        syncAccountStatus();
+                    }
+                });
+            });
            
             // Archive Button
             @if (auth('admin')->check() && auth('admin')->user()->hasPermissions(['accounts:bulk_archive']))
@@ -374,6 +398,141 @@
                         document.getElementById('stats-container').innerHTML = statsHtml;
                     })
                     .catch(error => console.error('Error loading statistics:', error));
+            }
+
+            function syncAccountStatus() {
+                const modal = new bootstrap.Modal(document.getElementById('progressModal'));
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                const statusMessage = document.getElementById('statusMessage');
+                const progressTitle = document.getElementById('progressTitle');
+                const resultsContainer = document.getElementById('resultsContainer');
+                const resultsList = document.getElementById('resultsList');
+
+                progressTitle.textContent = 'Syncing Account Status';
+                statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting sync process...';
+                statusMessage.className = 'alert alert-info';
+                progressBar.style.width = '5%';
+                progressText.textContent = '5%';
+                progressBar.classList.remove('progress-bar-success', 'progress-bar-error');
+                progressBar.classList.add('progress-bar-processing');
+                resultsContainer.style.display = 'block';
+                resultsList.innerHTML = '';
+                modal.show();
+
+                // Create output container
+                const outputContainer = document.createElement('div');
+                outputContainer.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 5px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;';
+                resultsList.innerHTML = '';
+
+                fetch('{{ route('admin.accounts.sync-mt5-account-status') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let lineCount = 0;
+
+                    // Process the stream
+                    const processStream = () => {
+                        return reader.read().then(({ done, value }) => {
+                            if (done) {
+                                // Process any remaining buffer
+                                if (buffer.trim()) {
+                                    addOutputLine(buffer);
+                                    lineCount++;
+                                }
+
+                                // Set completion state
+                                progressBar.style.width = '100%';
+                                progressText.textContent = '100%';
+                                statusMessage.innerHTML = `<strong>✓ Sync completed successfully</strong>`;
+                                statusMessage.className = 'alert alert-success';
+                                progressBar.classList.remove('progress-bar-processing');
+                                progressBar.classList.add('progress-bar-success');
+                                document.getElementById('closeProgressBtn').style.display = 'block';
+                                
+                                // Reload after 2 seconds
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 2000);
+                                return;
+                            }
+
+                            // Decode the chunk and add to buffer
+                            buffer += decoder.decode(value, { stream: true });
+                            
+                            // Split by newlines and process complete lines
+                            const lines = buffer.split('\n');
+                            buffer = lines.pop(); // Keep incomplete line in buffer
+
+                            lines.forEach(line => {
+                                if (line.trim()) {
+                                    addOutputLine(line);
+                                    lineCount++;
+                                }
+                            });
+
+                            // Update progress
+                            const newProgress = Math.min(5 + (lineCount % 95), 95);
+                            progressBar.style.width = newProgress + '%';
+                            progressText.textContent = Math.round(newProgress) + '%';
+
+                            return processStream();
+                        });
+                    };
+
+                    function addOutputLine(line) {
+                        // Remove ANSI color codes
+                        const cleanLine = line.replace(/\x1b\[[0-9;]*m/g, '');
+                        
+                        // Add line to output
+                        const lineDiv = document.createElement('div');
+                        lineDiv.textContent = cleanLine;
+                        outputContainer.appendChild(lineDiv);
+                        
+                        // Auto-scroll to bottom
+                        outputContainer.scrollTop = outputContainer.scrollHeight;
+                    }
+
+                    // Clear previous content and add output container
+                    resultsList.innerHTML = '';
+                    resultsList.appendChild(outputContainer);
+                    resultsContainer.style.display = 'block';
+
+                    return processStream();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.innerHTML = `<strong>✗ Error:</strong> ${error.message || 'Failed to run sync'}`;
+                    statusMessage.className = 'alert alert-danger';
+                    progressBar.style.width = '100%';
+                    progressText.textContent = 'Error';
+                    progressBar.classList.remove('progress-bar-processing', 'progress-bar-success');
+                    progressBar.classList.add('progress-bar-error');
+                    document.getElementById('closeProgressBtn').style.display = 'block';
+                });
+            }
+
+            // Helper function to escape HTML
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
             }
 
             function bulkVerifyAndArchive(accountIds, action) {

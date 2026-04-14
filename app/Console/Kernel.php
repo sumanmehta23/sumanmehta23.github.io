@@ -34,7 +34,7 @@ class Kernel extends ConsoleKernel
 
 
         $schedule->command('app:sync-daily-reports')->daily();
-
+        $schedule->command('app:sync-mt5-account-status')->daily();
         // Sync all non-competition accounts trades - uncomment to enable
         // $schedule->command('app:sync-all-accounts-trades --batch-size=20 --delay=60')->everyThirtyMinutes();
 
