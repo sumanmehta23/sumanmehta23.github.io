@@ -279,7 +279,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     Route::post('/', [Login::class, 'adminLogin']);
     Route::get('/login', [Login::class, 'showLoginForm'])->name('login');
     Route::post('/login', [Login::class, 'adminLogin']);
-
+    Route::get('/logout', [Login::class, 'logout'])->name('logout');
     Route::get('/forgot-password', [Login::class, 'showAdminForgotPasswordForm'])->name('forgot-password');
     Route::post('/forgot-password', [Login::class, 'sendAdminResetLink'])->name('send-reset-link');
     Route::get('/reset-password', [Login::class, 'resetAdminPassword'])->name('reset-password');
