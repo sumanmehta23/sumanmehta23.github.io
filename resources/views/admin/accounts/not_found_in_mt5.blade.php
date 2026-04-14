@@ -246,19 +246,10 @@
                     <div class="alert alert-info" id="statusMessage">
                         Initializing...
                     </div>
-                    <div id="resultsContainer" class="results-table" style="display: none;">
-                        <h6>Results Summary</h6>
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Account</th>
-                                    <th>Status</th>
-                                    <th>Message</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resultsList">
-                            </tbody>
-                        </table>
+                    <div id="resultsContainer" class="results-table" style="display: none; margin-top: 15px;">
+                        <h6>Sync Output</h6>
+                        <div id="resultsList" style="background: #f5f5f5; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto; border: 1px solid #ddd; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -418,18 +409,13 @@
                 progressText.textContent = '5%';
                 progressBar.classList.remove('progress-bar-success', 'progress-bar-error');
                 progressBar.classList.add('progress-bar-processing');
-                resultsContainer.style.display = 'block';
+                resultsContainer.style.display = 'none';
                 resultsList.innerHTML = '';
                 modal.show();
 
                 // Remove any previous hide event listeners
                 const newProgressModal = progressModal.cloneNode(true);
                 progressModal.parentNode.replaceChild(newProgressModal, progressModal);
-
-                // Create output container
-                const outputContainer = document.createElement('div');
-                outputContainer.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 5px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;';
-                resultsList.innerHTML = '';
 
                 fetch('{{ route('admin.accounts.sync-mt5-account-status') }}', {
                     method: 'POST',
@@ -447,6 +433,7 @@
                     const decoder = new TextDecoder();
                     let buffer = '';
                     let lineCount = 0;
+                    let outputLines = []; // Collect all output lines
 
                     // Process the stream
                     const processStream = () => {
@@ -455,13 +442,28 @@
                                 // Process any remaining buffer
                                 if (buffer.trim()) {
                                     addOutputLine(buffer);
+                                    outputLines.push(buffer);
                                     lineCount++;
                                 }
+
+                                // Parse output for summary
+                                const summary = parseSyncOutput(outputLines);
 
                                 // Set completion state
                                 progressBar.style.width = '100%';
                                 progressText.textContent = '100%';
-                                statusMessage.innerHTML = `<strong>✓ Sync completed successfully</strong>`;
+                                
+                                // Build status message with summary
+                                let statusHtml = `<strong>✓ Sync completed successfully</strong><br><small>`;
+                                if (summary.found > 0) {
+                                    statusHtml += `Found in MT5: <strong class="text-success">${summary.found}</strong> accounts reset to normal | `;
+                                }
+                                if (summary.notFound > 0) {
+                                    statusHtml += `Not found in MT5: <strong class="text-danger">${summary.notFound}</strong> accounts`;
+                                }
+                                statusHtml += `</small>`;
+                                
+                                statusMessage.innerHTML = statusHtml;
                                 statusMessage.className = 'alert alert-success';
                                 progressBar.classList.remove('progress-bar-processing');
                                 progressBar.classList.add('progress-bar-success');
@@ -494,6 +496,7 @@
                             lines.forEach(line => {
                                 if (line.trim()) {
                                     addOutputLine(line);
+                                    outputLines.push(line);
                                     lineCount++;
                                 }
                             });
@@ -507,6 +510,24 @@
                         });
                     };
 
+                    function parseSyncOutput(lines) {
+                        let found = 0;
+                        let notFound = 0;
+                        
+                        lines.forEach(line => {
+                            if (line.includes('Found in MT5:')) {
+                                const match = line.match(/Found in MT5:\s*(\d+)/);
+                                if (match) found = parseInt(match[1]);
+                            }
+                            if (line.includes('Not found in MT5:')) {
+                                const match = line.match(/Not found in MT5:\s*(\d+)/);
+                                if (match) notFound = parseInt(match[1]);
+                            }
+                        });
+                        
+                        return { found, notFound };
+                    }
+
                     function addOutputLine(line) {
                         // Remove ANSI color codes
                         const cleanLine = line.replace(/\x1b\[[0-9;]*m/g, '');
@@ -514,15 +535,14 @@
                         // Add line to output
                         const lineDiv = document.createElement('div');
                         lineDiv.textContent = cleanLine;
-                        outputContainer.appendChild(lineDiv);
+                        resultsList.appendChild(lineDiv);
                         
                         // Auto-scroll to bottom
-                        outputContainer.scrollTop = outputContainer.scrollHeight;
+                        resultsList.scrollTop = resultsList.scrollHeight;
                     }
 
-                    // Clear previous content and add output container
+                    // Clear previous content
                     resultsList.innerHTML = '';
-                    resultsList.appendChild(outputContainer);
                     resultsContainer.style.display = 'block';
 
                     return processStream();
