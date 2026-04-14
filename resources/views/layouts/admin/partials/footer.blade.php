@@ -214,7 +214,8 @@
                 initServerTime();
             }
         }, 500);
-    })();
+    });
+});
 </script>
 @yield('scripts')
 @include('sweetalert::alert')

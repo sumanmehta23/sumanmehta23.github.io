@@ -593,7 +593,7 @@
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Soft Deleted
                                                                                     </div>
-                                                                                @elseif($acc->deleted_at && $acc->deletion_type == 'delete')
+                                                                                @elseif($acc->deleted_at && ($acc->deletion_type == 'delete' || $acc->deletion_type == 'not_found_in_mt5'))
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Deleted
                                                                                     </div>
@@ -643,9 +643,9 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    @if ($acc->platform == 'mt5')
+                                                                                    @if ($acc->platform === App\Enums\PlatformEnum::MT5->value)
                                                                                         <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
-                                                                                    @elseif($acc->platform == 'x9')
+                                                                                    @elseif($acc->platform === App\Enums\PlatformEnum::X9->value)
                                                                                         <img src="/assets/images/x9.png" alt="card img" style="width:50px;">
                                                                                     @endif
 

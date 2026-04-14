@@ -16,7 +16,7 @@
         <!-- ROW-1 OPEN -->
         <div class="row">
             <div class="col-12">
-                <form method="post" action="{{route('admin.update_password')}}">
+                <form method="post" action="{{route('admin.update_password.store')}}">
                     @csrf
                     <div class="card">
                         <div class="card-body">

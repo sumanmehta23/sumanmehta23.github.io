@@ -131,9 +131,9 @@
                                 aria-labelledby="analytics-tab-1" tabindex="0">
                                 @if ($liveAccountDetails->count() > 0)
                                     <div>
-                                        <div class="d-block d-md-none p-2">
+                                        <div class="p-2 d-block d-md-none">
                                             @foreach ($liveAccountDetails as $liveAccount)
-                                                <div class="mb-3 border rounded p-3">
+                                                <div class="p-3 mb-3 border rounded">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             @if($liveAccount->platform === 'x9')
@@ -178,7 +178,7 @@
                                                     </div>
 
                                                     @if ($liveAccount->code && $liveAccount->code != 'Rejected')
-                                                        <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
+                                                        <div class="flex-wrap gap-2 mt-3 d-flex justify-content-center">
                                                             <a href="{{ route('view-account-details', $liveAccount->id) }}"
                                                                 class="btn btn-sm btn-outline-secondary">
                                                                 <span>View <svg class="pc-icon">
@@ -358,9 +358,9 @@
                                 aria-labelledby="analytics-tab-2" tabindex="0">
                                 @if ($demoAccountDetails->count() > 0)
                                     <div>
-                                        <div class="d-block d-md-none p-2">
+                                        <div class="p-2 d-block d-md-none">
                                             @foreach ($demoAccountDetails as $demoAccount)
-                                                <div class="mb-3 border rounded p-3">
+                                                <div class="p-3 mb-3 border rounded">
                                                     <div class="d-flex align-items-center">
                                                         <div class="me-2">
                                                             @if($demoAccount->platform === 'x9')
@@ -400,7 +400,7 @@
                                                     </div>
 
                                                     @if ($demoAccount->code && $demoAccount->code != 'Rejected')
-                                                        <div class="gap-2 mt-3 d-flex flex-wrap justify-content-center">
+                                                        <div class="flex-wrap gap-2 mt-3 d-flex justify-content-center">
                                                             <a href="{{ route('view-account-details', $demoAccount->id) }}"
                                                                 class="btn btn-sm btn-outline-secondary">
                                                                 <span>View <svg class="pc-icon">

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Trade;
+use App\Enums\PlatformEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -22,7 +23,7 @@ class Account extends Model
         'phone_password',
     ];
 
-    // Define platform constants
+    // Define platform constants (deprecated - use PlatformEnum instead)
     const PLATFORM_MT5 = 'mt5';
     const PLATFORM_X9 = 'x9';
 
@@ -206,6 +207,25 @@ class Account extends Model
     public function isZapierAccount(): bool
     {
         return $this->created_from === 'zapier';
+    }
+
+    /**
+     * Scope to filter accounts marked as not found in MT5
+     */
+    public function scopeNotFoundInMt5($query)
+    {
+        return $query->whereNotNull('deletion_type')
+            ->where('account_request_status', 1)
+            ->where('platform', PlatformEnum::MT5->value)
+            ->where('deletion_type', 'like', '%not_found%');
+    }
+
+    /**
+     * Scope to filter accounts with specific deletion type
+     */
+    public function scopeWithDeletionType($query, $type)
+    {
+        return $query->where('deletion_type', $type);
     }
 
 }

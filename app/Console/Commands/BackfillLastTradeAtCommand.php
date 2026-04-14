@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\PlatformEnum;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +14,7 @@ class BackfillLastTradeAtCommand extends Command
                             {--dry-run : Preview which accounts would be updated without making changes}
                             {--limit=0 : Max number of accounts to update (0 = no limit)}';
 
-    protected $description = 'Backfill last_trade_at for MetaTrader5 accounts where it is NULL but trades exist (zero N+1: single DB query)';
+    protected $description = 'Backfill last_trade_at for MT5 accounts where it is NULL but trades exist (zero N+1: single DB query)';
 
     public function handle(): int
     {
@@ -25,7 +26,7 @@ class BackfillLastTradeAtCommand extends Command
             ? array_values(array_filter(array_map('trim', explode(',', $codesInput))))
             : [];
 
-        $this->info('=== Backfill last_trade_at for MetaTrader5 Accounts ===');
+        $this->info('=== Backfill last_trade_at for ' . PlatformEnum::MT5->displayName() . ' Accounts ===');
 
         if ($isDryRun) {
             $this->warn('[DRY RUN] No changes will be written to the database.');
@@ -44,17 +45,18 @@ class BackfillLastTradeAtCommand extends Command
         // ------------------------------------------------------------------
         // Step 1 – Count eligible accounts (1 query, no PHP-side data loaded).
         //
-        // Eligible = MetaTrader5, last_trade_at IS NULL, has at least one
+        // Eligible = MT5, last_trade_at IS NULL, has at least one
         // trade row so MAX(open_time) will produce a non-null value.
         // ------------------------------------------------------------------
         $this->info('Counting eligible accounts...');
 
+        $mt5Platform = PlatformEnum::MT5->value;
         $countQuery = DB::table('accounts as a')
             ->join(
                 DB::raw('(SELECT account_id, MAX(open_time) AS latest_open_time FROM trades GROUP BY account_id) t'),
                 't.account_id', '=', 'a.id'
             )
-            ->where('a.trade_platform', 'MetaTrader5')
+            ->where('a.platform', $mt5Platform)
             ->whereNull('a.last_trade_at')
             ->whereNotNull('a.code')
             ->whereNotNull('t.latest_open_time');
@@ -130,7 +132,7 @@ class BackfillLastTradeAtCommand extends Command
                         DB::raw('(SELECT account_id, MAX(open_time) AS latest_open_time FROM trades GROUP BY account_id) t'),
                         't.account_id', '=', 'a.id'
                     )
-                    ->where('a.trade_platform', 'MetaTrader5')
+                    ->where('a.platform', $mt5Platform)
                     ->whereNull('a.last_trade_at')
                     ->whereNotNull('a.code')
                     ->whereNotNull('t.latest_open_time');
@@ -156,7 +158,7 @@ class BackfillLastTradeAtCommand extends Command
                         ) agg ON agg.account_id = a.id
                         SET a.last_trade_at = agg.latest_open_time
                         WHERE a.id IN ({$idPlaceholders})
-                          AND a.trade_platform = 'MetaTrader5'
+                          AND a.platform = '{$mt5Platform}'
                           AND a.last_trade_at IS NULL
                     ", array_merge($limitedIds, $limitedIds));
                 }
@@ -170,14 +172,14 @@ class BackfillLastTradeAtCommand extends Command
                         FROM trades t
                         INNER JOIN accounts a2
                             ON a2.id = t.account_id
-                           AND a2.trade_platform = 'MetaTrader5'
+                           AND a2.platform = '{$mt5Platform}'
                            AND a2.last_trade_at IS NULL
                            AND a2.code IS NOT NULL
                            AND a2.code IN ({$codePlaceholders})
                         GROUP BY t.account_id
                     ) agg ON agg.account_id = a.id
                     SET a.last_trade_at = agg.latest_open_time
-                    WHERE a.trade_platform = 'MetaTrader5'
+                    WHERE a.platform = '{$mt5Platform}'
                       AND a.last_trade_at IS NULL
                       AND a.code IN ({$codePlaceholders})
                 ", array_merge($specificCodes, $specificCodes));
@@ -189,13 +191,13 @@ class BackfillLastTradeAtCommand extends Command
                         FROM trades t
                         INNER JOIN accounts a2
                             ON a2.id = t.account_id
-                           AND a2.trade_platform = 'MetaTrader5'
+                           AND a2.platform = '{$mt5Platform}'
                            AND a2.last_trade_at IS NULL
                            AND a2.code IS NOT NULL
                         GROUP BY t.account_id
                     ) agg ON agg.account_id = a.id
                     SET a.last_trade_at = agg.latest_open_time
-                    WHERE a.trade_platform = 'MetaTrader5'
+                    WHERE a.platform = '{$mt5Platform}'
                       AND a.last_trade_at IS NULL
                 ");
             }

@@ -172,11 +172,11 @@ class AccountHelper
 
         if ($accountData) {
             $liveAccount->update([
-                'balance' => $accountData['balance'],
+                'balance' => $accountData['balance'] ?? 0,
                 'credit' => $accountData['credit'] ?? 0,
-                'margin_free' => $accountData['margin_free'],
+                'margin_free' => $accountData['margin_free'] ?? 0,
                 'margin_level' => $accountData['margin_level'] ?? 0,
-                'equity' => $accountData['equity'],
+                'equity' => $accountData['equity'] ?? 0,
             ]);
         }
 

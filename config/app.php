@@ -197,5 +197,6 @@ return [
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+    'php_cli_path'=>env('PHP_CLI_PATH', null),
 
 ];

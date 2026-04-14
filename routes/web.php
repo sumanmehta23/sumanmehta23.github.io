@@ -1,13 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountNotFoundController;
 use App\Http\Controllers\Admin\AjaxController;
 use App\Http\Controllers\Admin\ApiAjaxController;
 use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\Admin\Dashboard;
-use App\Http\Controllers\Admin\IBController;
+use App\Http\Controllers\Admin\DeletedAccountsController;
 use App\Http\Controllers\Admin\IbCommissionAnalysisController;
+use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\IbWithdrawalController;
 use App\Http\Controllers\Admin\Kyc;
 use App\Http\Controllers\Admin\Leaderboard;
@@ -25,10 +27,12 @@ use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\TwoFactorAuthController;
+use App\Http\Controllers\Admin\WarningUserController;
 use App\Http\Controllers\Admin\ZapierAccountsController;
 use App\Http\Controllers\Api\ZapierWebhookController;
 use App\Http\Controllers\ClientTaskController;
 use App\Http\Controllers\CompetitionController;
+use App\Http\Controllers\ForexNewsController;
 use App\Http\Controllers\Home;
 use App\Http\Controllers\Ib;
 use App\Http\Controllers\InternalTransfer;
@@ -48,7 +52,6 @@ use App\Http\Controllers\TradeWithdrawal;
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Users;
 use App\Http\Controllers\Wallet;
-use App\Http\Controllers\ForexNewsController;
 use App\Models\Account;
 use App\Models\Ib1;
 use App\Models\Ib1Commission;
@@ -61,6 +64,7 @@ use App\Models\WalletDeposit;
 use App\View\Components\AdminTwoFactorAuthentication;
 use App\View\Components\TwoFactorAuthentication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -70,7 +74,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Laravel\Telescope\Telescope;
-
+use Symfony\Component\Process\Process;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use function PHPUnit\Framework\throwException;
 
 Route::get('/competitions-overview', [CompetitionController::class, 'competitionsOverview'])->name('competitionsOverview');
@@ -266,10 +271,7 @@ Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show']
 
 Route::prefix("/admin")->name("admin.")->group(function () {
 
-    Route::get('/memory-limit', function () {
-
-        return ini_get('memory_limit');
-    });
+    
 
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::get('/verify_2fa', [Login::class, 'verify_2fa'])->name('verify_2fa');
@@ -298,7 +300,15 @@ Route::prefix("/admin")->name("admin.")->group(function () {
     // Route::get('/orders/{order}', 'OrderController@show')->name('admin.orders.show');
     // Route::get('/products/{product}', 'ProductController@show')->name('admin.products.show');
 
+// MT5 Not Found Accounts Routes
+        Route::prefix('accounts/not-found-in-mt5')->name('accounts.not_found_in_mt5.')->group(function () {
+            Route::get('/', [AccountNotFoundController::class, 'index'])->name('index');
+            Route::get('/export', [AccountNotFoundController::class, 'export'])->name('export');
+            Route::get('/stats', [AccountNotFoundController::class, 'stats'])->name('stats');
+            Route::post('/bulk-verify-and-archive', [AccountNotFoundController::class, 'bulkVerifyAndArchive'])->name('bulk_verify_and_archive');
+        });
 
+        Route::post('/sync-mt5-account-status', [AccountNotFoundController::class, 'syncMT5AccountStatus'])->name('accounts.sync-mt5-account-status');
     Route::middleware(['is_admin'])->group(function () {
         Route::get('/ajax', [AjaxController::class, 'index']);
 
@@ -360,6 +370,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/getComissionData2', [AjaxController::class, 'getComissionData2']);
 
         Route::get('/getBlockedIPs', [AjaxController::class, 'getBlockedIPs']);
+
+        Route::get('/getWarningLogs', [WarningUserController::class, 'getWarningLogs'])->middleware('check.permissions:settings:warningUsers');
 
         Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
         Route::resource('groups', ProductsController::class);
@@ -435,7 +447,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/roles', [StaffManagement::class, 'roles'])->name('roles')->middleware('check.permissions:role:viewAny');
         Route::get('/rm_dashboard', [StaffManagement::class, 'rmDashboard'])->name('rm_dashboard');
-        Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles');
+        Route::post('/roles', [StaffManagement::class, 'addRole'])->name('roles.store');
         Route::post('/update_roles', [StaffManagement::class, 'updateRole'])->name('update_roles');
         Route::post('/update_role_status', [StaffManagement::class, 'updateRoleStatus'])->name('update_role_status');
         Route::post('/update_role_permissions', [StaffManagement::class, 'updateRolePermissions'])->name('update_role_permissions');
@@ -516,7 +528,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::prefix('/update_password')->group(function () {
             Route::get('/', [SettingsController::class, 'update_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');
-            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password')->middleware('check.permissions:settings:updatePassword');;
+            Route::post('/', [SettingsController::class, 'store_password'])->name('update_password.store')->middleware('check.permissions:settings:updatePassword');;
         });
         Route::prefix('/api-token')->group(function () {
             Route::get('/', [SettingsController::class, 'create_apitoken'])->name('apitoken.create')->middleware('check.permissions:settings:apiToken');
@@ -532,6 +544,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/maintenance-email/fetch', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'fetchEmails'])->name('maintenance.fetch')->middleware('check.permissions:setting:update');
         Route::get('/maintenance-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewEmail'])->name('maintenance.preview')->middleware('check.permissions:setting:update');
         Route::post('/maintenance-email/send', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'sendEmails'])->name('maintenance.send')->middleware('check.permissions:setting:update');
+        
+        // Warning Users
+        Route::get('/warning-users', [WarningUserController::class, 'index'])->name('warning_users')->middleware('check.permissions:settings:warningUsers');
+        Route::post('/warning-users/send', [WarningUserController::class, 'sendWarnings'])->name('send_warnings')->middleware('check.permissions:settings:warningUsers');
+        Route::get('/warning-users/logs', [WarningUserController::class, 'getWarningLogs'])->name('get_warning_logs')->middleware('check.permissions:settings:warningUsers');
 
         // Account Termination Email Preview
         Route::get('/account-termination-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountTerminationEmail'])->name('account-termination.preview')->middleware('check.permissions:setting:update');
@@ -683,7 +700,11 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'index'])->name('index');
             Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
         });
+
+        
     });
+    
+        
 });
 // Test route for affiliate reference code functionality
 Route::get('/test-affiliate', function (Request $request) {

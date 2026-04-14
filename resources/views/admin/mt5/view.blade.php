@@ -77,8 +77,8 @@ if ($getUser) {
                                                 <div class="wideget-user-desc d-flex align-items-center">
                                                     <div class="wideget-user-img">
                                                         <?php
-                                                            $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
-                                                            $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
+                                                            $platformImg = $account->platform === App\Enums\PlatformEnum::X9->value ? '/assets/images/x9.png' : '/assets/images/mt5.png';
+                                                            $platformAlt = $account->platform === App\Enums\PlatformEnum::X9->value ? 'X9 Platform' : 'MT5 Platform';
                                                         ?>
                                                         <img src="<?= $platformImg ?>" class="me-3" alt="<?= $platformAlt ?>"
                                                             style="width:50px">
@@ -87,7 +87,7 @@ if ($getUser) {
                                                         <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
                                                         <h6 class="fs-12 fw-normal text-muted">
                                                             <?php
-                                                                if ($account->platform === 'x9') {
+                                                                if ($account->platform === App\Enums\PlatformEnum::X9->value) {
                                                                     echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
                                                                 } else {
                                                                     echo $getUser->accountType->ac_group;
@@ -110,7 +110,7 @@ if ($getUser) {
                                                             </span>
                                                         @elseif($account->deleted_at && $account->deletion_type == null)
                                                             <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
-                                                        @elseif($account->deleted_at && $account->deletion_type == 'delete')
+                                                        @elseif($account->deleted_at && ($account->deletion_type == 'delete' || $account->deletion_type == 'not_found_in_mt5'))
                                                             <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
                                                         @elseif($account->deleted_at == null)
                                                             <div class="gap-4 flexflex-vertical">
@@ -119,7 +119,7 @@ if ($getUser) {
                                                                     <i class="ti ti-database-import"></i>
                                                                 </span>
                                                                 @if ($account->demo == 0)
-                                                                    @if ($account->trade_platform == 'MetaTrader5' && $account->deletion_type != 'archive')
+                                                                    @if ($account->platform === App\Enums\PlatformEnum::MT5->value && $account->deletion_type != 'archive')
                                                                         <span class="mt-3 badge btn btn-warning" data-bs-toggle="modal"
                                                                         data-bs-target="#accountArchiveModal">Archive Account
                                                                             <i class="ti ti-archive"></i>
@@ -447,7 +447,7 @@ if ($getUser) {
                                                                     $feed_margin = null;
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $feed_margin = $accountHelper['margin_free'];
+                                                                            $feed_margin = $accountHelper['margin_free'] ?? null;
                                                                         } elseif (is_object($accountHelper)) {
                                                                             $feed_margin = $accountHelper->MarginFree ?? 0;
                                                                         }
