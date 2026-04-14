@@ -408,6 +408,8 @@
                 const progressTitle = document.getElementById('progressTitle');
                 const resultsContainer = document.getElementById('resultsContainer');
                 const resultsList = document.getElementById('resultsList');
+                const closeBtn = document.getElementById('closeProgressBtn');
+                const progressModal = document.getElementById('progressModal');
 
                 progressTitle.textContent = 'Syncing Account Status';
                 statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting sync process...';
@@ -419,6 +421,10 @@
                 resultsContainer.style.display = 'block';
                 resultsList.innerHTML = '';
                 modal.show();
+
+                // Remove any previous hide event listeners
+                const newProgressModal = progressModal.cloneNode(true);
+                progressModal.parentNode.replaceChild(newProgressModal, progressModal);
 
                 // Create output container
                 const outputContainer = document.createElement('div');
@@ -459,12 +465,22 @@
                                 statusMessage.className = 'alert alert-success';
                                 progressBar.classList.remove('progress-bar-processing');
                                 progressBar.classList.add('progress-bar-success');
-                                document.getElementById('closeProgressBtn').style.display = 'block';
                                 
-                                // Reload after 2 seconds
-                                setTimeout(function() {
+                                // Show close button
+                                const closeBtn = document.getElementById('closeProgressBtn');
+                                closeBtn.style.display = 'block';
+                                
+                                // Refresh page when close button is clicked
+                                closeBtn.addEventListener('click', function() {
                                     location.reload();
-                                }, 2000);
+                                });
+                                
+                                // Also refresh when modal is closed (hide event)
+                                const updatedModal = document.getElementById('progressModal');
+                                updatedModal.addEventListener('hidden.bs.modal', function() {
+                                    location.reload();
+                                });
+                                
                                 return;
                             }
 
@@ -519,7 +535,20 @@
                     progressText.textContent = 'Error';
                     progressBar.classList.remove('progress-bar-processing', 'progress-bar-success');
                     progressBar.classList.add('progress-bar-error');
-                    document.getElementById('closeProgressBtn').style.display = 'block';
+                    
+                    const closeBtn = document.getElementById('closeProgressBtn');
+                    closeBtn.style.display = 'block';
+                    
+                    // Refresh page when close button is clicked
+                    closeBtn.addEventListener('click', function() {
+                        location.reload();
+                    });
+                    
+                    // Also refresh when modal is closed (hide event)
+                    const updatedModal = document.getElementById('progressModal');
+                    updatedModal.addEventListener('hidden.bs.modal', function() {
+                        location.reload();
+                    });
                 });
             }
 
