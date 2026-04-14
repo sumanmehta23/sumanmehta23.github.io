@@ -279,13 +279,14 @@ class AccountNotFoundController extends Controller
 
             // Use StreamedResponse with Process to stream real-time output
             return new StreamedResponse(function () {
-                $phpBinary = $this->getPhpCliPath();
-                info("Using PHP binary: {$phpBinary}");
+                $php = config('app.php_cli_path') ?: trim(shell_exec('which php')) ?: PHP_BINARY;
+
                 $process = new Process([
-                    $phpBinary,
-                    base_path('artisan'),
+                    $php,
+                    'artisan',
                     'app:sync-mt5-account-status'
                 ]);
+                
 
                 $process->setWorkingDirectory(base_path());
                 $process->setTimeout(null); // No timeout
@@ -325,32 +326,15 @@ class AccountNotFoundController extends Controller
      * Handles both FPM and CLI variants
      */
     private function getPhpCliPath()
-    {
-        $phpBinary = PHP_BINARY;
-        info("Detected PHP binary: {$phpBinary}");
-        // If PHP_BINARY points to an FPM executable, try to find the CLI variant
-        if (strpos($phpBinary, 'fpm') !== false) {
-            // Try removing '-fpm' suffix
-            $cliPath = str_replace('-fpm', '', $phpBinary);
-            if (file_exists($cliPath)) {
-                return $cliPath;
-            }
-            
-            // Try removing 'fpm' suffix
-            $cliPath = str_replace('fpm', '', $phpBinary);
-            if (file_exists($cliPath)) {
-                return $cliPath;
-            }
-            
-            // Try the directory of PHP_BINARY for just 'php'
-            $dir = dirname($phpBinary);
-            $cliPath = $dir . '/php';
-            if (file_exists($cliPath)) {
-                return $cliPath;
-            }
-        }
-        
-        // Return PHP_BINARY if it's already CLI or modifications failed (will try system 'php')
-        return $phpBinary;
+{
+    // Try system php first
+    $whichPhp = trim(shell_exec('which php'));
+
+    if ($whichPhp && file_exists($whichPhp)) {
+        return $whichPhp;
     }
+
+    // fallback to PHP_BINARY (last resort)
+    return PHP_BINARY;
+}
 }
