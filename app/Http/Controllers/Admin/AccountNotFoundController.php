@@ -277,13 +277,12 @@ class AccountNotFoundController extends Controller
                 'user_name' => auth('admin')->user()?->name,
             ]);
 
-            // Get PHP executable path from Herd
-            $phpPath = '/Users/digvijaysingh/Library/Application Support/Herd/bin/php';
-            
             // Use StreamedResponse with Process to stream real-time output
-            return new StreamedResponse(function () use ($phpPath) {
+            return new StreamedResponse(function () {
+                $phpBinary = $this->getPhpCliPath();
+                
                 $process = new Process([
-                    $phpPath,
+                    $phpBinary,
                     base_path('artisan'),
                     'app:sync-mt5-account-status'
                 ]);
@@ -319,5 +318,39 @@ class AccountNotFoundController extends Controller
                 'Content-Type' => 'text/plain',
             ]);
         }
+    }
+
+    /**
+     * Get the PHP CLI executable path
+     * Handles both FPM and CLI variants
+     */
+    private function getPhpCliPath()
+    {
+        $phpBinary = PHP_BINARY;
+        
+        // If PHP_BINARY points to an FPM executable, try to find the CLI variant
+        if (strpos($phpBinary, 'fpm') !== false) {
+            // Try removing '-fpm' suffix
+            $cliPath = str_replace('-fpm', '', $phpBinary);
+            if (file_exists($cliPath)) {
+                return $cliPath;
+            }
+            
+            // Try removing 'fpm' suffix
+            $cliPath = str_replace('fpm', '', $phpBinary);
+            if (file_exists($cliPath)) {
+                return $cliPath;
+            }
+            
+            // Try the directory of PHP_BINARY for just 'php'
+            $dir = dirname($phpBinary);
+            $cliPath = $dir . '/php';
+            if (file_exists($cliPath)) {
+                return $cliPath;
+            }
+        }
+        
+        // Return PHP_BINARY if it's already CLI or modifications failed (will try system 'php')
+        return $phpBinary;
     }
 }
