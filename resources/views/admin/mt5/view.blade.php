@@ -478,7 +478,7 @@ if ($getUser) {
                                                                     $margin = null;
                                                                     // Handle both array and object forms
                                                                         if (is_array($accountHelper)) {
-                                                                            $margin = $accountHelper['margin'];
+                                                                            $margin = $accountHelper['margin']??0;
                                                                         } elseif (is_object($accountHelper)) {
                                                                             $margin = $accountHelper->Margin ?? 0;
                                                                         }
