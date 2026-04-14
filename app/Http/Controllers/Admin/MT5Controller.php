@@ -839,7 +839,7 @@ class MT5Controller extends Controller
             $account->save();
             $account->delete(); // Soft delete to hide it
             return redirect()->back()->with('success', 'X9 Account Archived Successfully');
-        } elseif ($platform === PlatformEnum::MT5->tradePlatform()) {
+        } elseif ($platform === PlatformEnum::MT5->value) {
 
             $trade_user = NULL;
 
