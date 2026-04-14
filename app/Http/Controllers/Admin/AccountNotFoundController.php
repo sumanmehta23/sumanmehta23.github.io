@@ -327,7 +327,7 @@ class AccountNotFoundController extends Controller
     private function getPhpCliPath()
     {
         $phpBinary = PHP_BINARY;
-        
+        info("Detected PHP binary: {$phpBinary}");
         // If PHP_BINARY points to an FPM executable, try to find the CLI variant
         if (strpos($phpBinary, 'fpm') !== false) {
             // Try removing '-fpm' suffix
