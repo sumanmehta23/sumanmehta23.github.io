@@ -280,7 +280,7 @@ class AccountNotFoundController extends Controller
             // Use StreamedResponse with Process to stream real-time output
             return new StreamedResponse(function () {
                 $phpBinary = $this->getPhpCliPath();
-                
+                info("Using PHP binary: {$phpBinary}");
                 $process = new Process([
                     $phpBinary,
                     base_path('artisan'),
