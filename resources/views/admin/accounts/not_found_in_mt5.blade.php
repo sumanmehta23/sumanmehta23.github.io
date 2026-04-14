@@ -253,8 +253,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="closeProgressBtn" data-bs-dismiss="modal"
-                        style="display: none;">
+                    <button type="button" class="btn btn-secondary" id="closeProgressBtn" data-bs-dismiss="modal">
                         Close
                     </button>
                 </div>
@@ -311,6 +310,16 @@
                     checkbox.checked = false;
                 });
                 updateBulkActionsVisibility();
+            });
+
+            // Setup close button listener for progress modal
+            document.getElementById('closeProgressBtn').addEventListener('click', function() {
+                location.reload();
+            });
+
+            // Also refresh when modal is closed via any means (including backdrop)
+            document.getElementById('progressModal').addEventListener('hidden.bs.modal', function() {
+                location.reload();
             });
 
             // Sync Account Status Button
@@ -411,11 +420,8 @@
                 progressBar.classList.add('progress-bar-processing');
                 resultsContainer.style.display = 'none';
                 resultsList.innerHTML = '';
+                
                 modal.show();
-
-                // Remove any previous hide event listeners
-                const newProgressModal = progressModal.cloneNode(true);
-                progressModal.parentNode.replaceChild(newProgressModal, progressModal);
 
                 fetch('{{ route('admin.accounts.sync-mt5-account-status') }}', {
                     method: 'POST',
@@ -468,21 +474,6 @@
                                 progressBar.classList.remove('progress-bar-processing');
                                 progressBar.classList.add('progress-bar-success');
                                 
-                                // Show close button
-                                const closeBtn = document.getElementById('closeProgressBtn');
-                                closeBtn.style.display = 'block';
-                                
-                                // Refresh page when close button is clicked
-                                closeBtn.addEventListener('click', function() {
-                                    location.reload();
-                                });
-                                
-                                // Also refresh when modal is closed (hide event)
-                                const updatedModal = document.getElementById('progressModal');
-                                updatedModal.addEventListener('hidden.bs.modal', function() {
-                                    location.reload();
-                                });
-                                
                                 return;
                             }
 
@@ -500,11 +491,6 @@
                                     lineCount++;
                                 }
                             });
-
-                            // Update progress
-                            const newProgress = Math.min(5 + (lineCount % 95), 95);
-                            progressBar.style.width = newProgress + '%';
-                            progressText.textContent = Math.round(newProgress) + '%';
 
                             return processStream();
                         });
@@ -536,6 +522,16 @@
                         const lineDiv = document.createElement('div');
                         lineDiv.textContent = cleanLine;
                         resultsList.appendChild(lineDiv);
+                        
+                        // Extract progress percentage from output if present
+                        const percentMatch = cleanLine.match(/(\d+)%/);
+                        if (percentMatch) {
+                            const percent = parseInt(percentMatch[1]);
+                            if (percent > 0 && percent <= 100) {
+                                progressBar.style.width = percent + '%';
+                                progressText.textContent = percent + '%';
+                            }
+                        }
                         
                         // Auto-scroll to bottom
                         resultsList.scrollTop = resultsList.scrollHeight;
