@@ -158,15 +158,17 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     }
 
     // ─────────────────────────────────────────────────────────
-    //  Volume-Aware Account Processing
+    //  Hybrid Batch/Adaptive Syncing (Speed + Reliability)
     // ─────────────────────────────────────────────────────────
 
     /**
-     * Process all accounts individually with volume-aware fetching.
+     * Hybrid approach: batch sync most accounts, adaptive chunk only the risky ones.
      *
-     * Each account gets its own getDealTotals check, then either:
-     * - Small volume: single REST call
-     * - High volume: adaptive date-range chunking that verifies chunk sizes
+     * Separates accounts into:
+     * 1. Safe for batching: small volume (<50k) + narrow window (<20 days) → batch REST call
+     * 2. High-risk: high volume (>50k) OR wide window (>20 days) → adaptive chunking
+     *
+     * This maintains performance of batch syncing while protecting against timeouts.
      */
     protected function syncViaRestBatch(array $accountWindows): array
     {
@@ -194,27 +196,84 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             ->flip()
             ->toArray();
 
-        Log::info('SyncDealsJob: Processing accounts individually with volume awareness', [
-            'account_count' => count($accountWindows),
-        ]);
+        // ── Classify accounts: safe for batching vs high-risk ──
+        $safeForBatching = [];
+        $highRisk = [];
+        $minDealsForAdaptive = 50000;  // Threshold for adaptive chunking
+        $minWindowDaysForAdaptive = 20; // If window > 20 days, use adaptive chunking
+        $minWindowSecsForAdaptive = $minWindowDaysForAdaptive * 86400;
 
-        // Process each account individually — no more batching multiple accounts
-        // into one giant REST call that can timeout with high-volume accounts
         foreach ($accountWindows as $acctId => $w) {
-            try {
-                $result = $this->syncSingleAccount($restService, $acctId, $w, $existingDealIds);
-                $inserted += $result['inserted'];
-                $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+            $from = $w['from'];
+            $to = $w['to'];
+            $windowSeconds = $to - $from;
 
-                if (count($closedPositions) >= 100) {
-                    ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
-                        ->onQueue('distributeibcommission');
+            // Quick getDealTotals call to decide routing
+            $login = (int) $w['login'];
+            try {
+                $totals = $restService->getDealTotals([$login], $from, $to);
+                $dealCount = $totals[(string) $login] ?? 0;
+
+                // Store the count
+                Account::where('id', $acctId)->update([
+                    'pending_deal_count' => $dealCount,
+                    'pending_deal_count_at' => now(),
+                ]);
+
+                // Decide routing: high deals OR wide window?
+                if ($dealCount > $minDealsForAdaptive || $windowSeconds > $minWindowSecsForAdaptive) {
+                    $highRisk[$acctId] = $w;
+                    Log::info("SyncDealsJob: High-risk account (adaptive chunking)", [
+                        'account_id' => $acctId,
+                        'deals' => $dealCount,
+                        'window_days' => round($windowSeconds / 86400, 1),
+                    ]);
+                } else {
+                    $safeForBatching[$acctId] = $w;
                 }
             } catch (Exception $e) {
-                Log::error("SyncDealsJob: Sync failed for account {$acctId}", [
+                Log::warning("SyncDealsJob: Could not get deal count for {$acctId}, using adaptive chunking", [
                     'error' => $e->getMessage(),
                 ]);
-                $failedAccountIds[] = $acctId;
+                $highRisk[$acctId] = $w;
+            }
+        }
+
+        // ── 1. Batch sync all safe accounts (fast path) ──
+        if (!empty($safeForBatching)) {
+            Log::info("SyncDealsJob: Batch syncing safe accounts", [
+                'count' => count($safeForBatching),
+                'total_accounts' => count($accountWindows),
+            ]);
+
+            $batchResult = $this->batchSyncSafeAccounts($restService, $safeForBatching, $existingDealIds);
+            $inserted += $batchResult['inserted'];
+            $closedPositions = array_merge($closedPositions, $batchResult['closed_positions']);
+            $failedAccountIds = array_merge($failedAccountIds, $batchResult['failed_account_ids']);
+        }
+
+        // ── 2. Individually sync high-risk accounts with adaptive chunking (reliable path) ──
+        if (!empty($highRisk)) {
+            Log::info("SyncDealsJob: Adaptive chunking high-risk accounts", [
+                'count' => count($highRisk),
+            ]);
+
+            foreach ($highRisk as $acctId => $w) {
+                try {
+                    $result = $this->syncHighRiskAccountWithAdaptiveChunking($restService, $acctId, $w, $existingDealIds);
+                    $inserted += $result['inserted'];
+                    $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+
+                    if (count($closedPositions) >= 100) {
+                        ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
+                            ->onQueue('distributeibcommission');
+                    }
+                } catch (Exception $e) {
+                    Log::error("SyncDealsJob: High-risk sync failed for {$acctId}", [
+                        'error' => $e->getMessage(),
+                    ]);
+                    $failedAccountIds[] = $acctId;
+                }
             }
         }
 
@@ -226,14 +285,82 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
     }
 
     /**
-     * Sync a single account via REST API with volume-aware fetching.
-     *
-     * Uses getDealTotals() to check deal count, then:
-     * - 0 deals: just update cursors
-     * - <= MAX_DEALS_PER_REST_CALL: single REST call
-     * - > MAX_DEALS_PER_REST_CALL: adaptive date-range chunking
+     * Fast path: batch sync multiple safe accounts in one/few REST calls.
      */
-    protected function syncSingleAccount(
+    protected function batchSyncSafeAccounts(
+        MT5RestAPIService $restService,
+        array $safeAccounts,
+        array &$existingDealIds
+    ): array {
+        $inserted = 0;
+        $closedPositions = [];
+        $failedAccountIds = [];
+
+        // Build global time window across all safe accounts
+        $globalFrom = PHP_INT_MAX;
+        $globalTo = 0;
+        $logins = [];
+
+        foreach ($safeAccounts as $acctId => $w) {
+            $globalFrom = min($globalFrom, $w['from']);
+            $globalTo = max($globalTo, $w['to']);
+            $logins[] = $w['login'];
+        }
+
+        Log::info("SyncDealsJob: Batch fetch window", [
+            'from' => Carbon::createFromTimestamp($globalFrom)->toDateTimeString(),
+            'to' => Carbon::createFromTimestamp($globalTo)->toDateTimeString(),
+            'account_count' => count($safeAccounts),
+        ]);
+
+        try {
+            $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
+            $dealsByLogin = $batchResult['deals'];
+
+            // Process deals per account
+            foreach ($safeAccounts as $acctId => $w) {
+                $login = (string) $w['login'];
+                $account = $w['account'];
+                $rawDeals = $dealsByLogin[$login] ?? null;
+
+                if ($rawDeals === null) {
+                    Log::warning("SyncDealsJob: No deals returned for {$acctId} in batch", [
+                        'login' => $login,
+                    ]);
+                    $failedAccountIds[] = $acctId;
+                    continue;
+                }
+
+                $result = $this->processRestDeals($rawDeals, $acctId, $account, $w['from'], $existingDealIds);
+                $inserted += $result['inserted'];
+                $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+
+                $this->syncTrades($acctId, $account, $result['new_deal_ids']);
+
+                if (count($closedPositions) >= 100) {
+                    ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
+                        ->onQueue('distributeibcommission');
+                }
+            }
+        } catch (Exception $e) {
+            Log::error("SyncDealsJob: Batch REST call failed", [
+                'error' => $e->getMessage(),
+                'account_count' => count($safeAccounts),
+            ]);
+            $failedAccountIds = array_keys($safeAccounts);
+        }
+
+        return [
+            'inserted' => $inserted,
+            'closed_positions' => $closedPositions,
+            'failed_account_ids' => $failedAccountIds,
+        ];
+    }
+
+    /**
+     * Reliable path: sync high-risk account individually with adaptive chunking.
+     */
+    protected function syncHighRiskAccountWithAdaptiveChunking(
         MT5RestAPIService $restService,
         string $accountId,
         array $window,
@@ -244,32 +371,24 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         $from = $window['from'];
         $to = $window['to'];
 
-        // Get total deal count to plan fetch strategy (1 lightweight API call)
+        // Get total deal count for chunking strategy
         $totals = $restService->getDealTotals([$login], $from, $to);
         $totalDeals = $totals[(string) $login] ?? 0;
 
-        // Store the count for future batching decisions by the command
-        Account::where('id', $accountId)->update([
-            'pending_deal_count' => $totalDeals,
-            'pending_deal_count_at' => now(),
-        ]);
-
-        Log::info("SyncDealsJob: Account deal count", [
+        Log::info("SyncDealsJob: High-risk account sync started", [
             'account_id' => $accountId,
             'login' => $login,
             'total_deals' => $totalDeals,
-            'from' => Carbon::createFromTimestamp($from)->toDateTimeString(),
-            'to' => Carbon::createFromTimestamp(min($to, time()))->toDateTimeString(),
+            'window_days' => round(($to - $from) / 86400, 1),
         ]);
 
         if ($totalDeals === 0) {
-            // No deals — just update cursors
             $this->processRestDeals([], $accountId, $account, $from, $existingDealIds);
             return ['inserted' => 0, 'closed_positions' => [], 'new_deal_ids' => []];
         }
 
         if ($totalDeals <= self::MAX_DEALS_PER_REST_CALL) {
-            // Small enough — fetch everything in one REST call
+            // Even risky account might be small enough for single call
             $batchResult = $restService->getBatchDeals([$login], $from, $to);
             $rawDeals = $batchResult['deals'][(string) $login] ?? [];
 
@@ -282,7 +401,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             return $result;
         }
 
-        // ── High-volume account: adaptive date-range chunking ──
+        // ── Use adaptive chunking for this high-risk account ──
         return $this->syncWithAdaptiveChunking($restService, $accountId, $login, $account, $from, $to, $totalDeals, $existingDealIds);
     }
 

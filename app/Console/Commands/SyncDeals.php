@@ -239,9 +239,8 @@ class SyncDeals extends Command
             ->whereNotNull('accounts.code')
             ->whereNull('accounts.deleted_at')
             ->where('accounts.account_request_status', 1)
-            ->where('u.status', 1)
+            ->where('u.status1', 1)
             ->where('accounts.platform', PlatformEnum::MT5->value)
-            ->whereNotNull('u.ib1')
             ->whereRaw("( (accounts.competition_product_id IS NULL AND accounts.demo = 0)
                     OR (accounts.competition_product_id IS NOT NULL AND accounts.demo = 1) )");
 
