@@ -182,6 +182,7 @@
                                         <th>Deleted At</th>
                                         <th>Updated At</th>
                                         <th>Account Type</th>
+                                        <th>Demo/Live</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -203,10 +204,18 @@
                                             <td>{{ $account->deleted_at?->format('M d, Y H:i') ?? 'Not deleted' }}</td>
                                             <td>{{ $account->updated_at->format('M d, Y H:i') }}</td>
                                             <td>{{ $account->accountType?->typeName ?? 'N/A' }}</td>
+                                            <td>
+                                                @php
+                                                    $isLive = $account->demo == 0;
+                                                    $badgeClass = $isLive ? 'bg-danger' : 'bg-info';
+                                                    $statusText = $isLive ? 'Live' : 'Demo';
+                                                @endphp
+                                                <span class="badge {{ $badgeClass }}">{{ $statusText }}</span>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="py-4 text-center text-muted">
+                                            <td colspan="8" class="py-4 text-center text-muted">
                                                 No accounts found matching the criteria.
                                             </td>
                                         </tr>
