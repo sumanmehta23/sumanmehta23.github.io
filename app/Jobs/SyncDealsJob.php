@@ -153,10 +153,43 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                     $syncRange = $this->accountSyncRanges[$accountId];
                     $account = $accounts[$accountId];
 
-                    // Update the account with the completed sync range
-                    // Convert timestamps to Carbon datetime strings for database storage
-                    $dealsFromCarbon = Carbon::createFromTimestamp($syncRange['from']);
-                    $dealsToCarbon = Carbon::createFromTimestamp($syncRange['to']);
+                    // Validate timestamps before converting
+                    // Ensure we have valid timestamps (not 0, not null, not too far in future)
+                    $fromTimestamp = $syncRange['from'];
+                    $toTimestamp = $syncRange['to'];
+
+                    // Validate: from should be reasonable (after 2024-01-01)
+                    if (!is_numeric($fromTimestamp) || $fromTimestamp < 1704067200) { // 2024-01-01
+                        Log::warning("SyncDealsJob: Invalid 'from' timestamp, skipping update", [
+                            'account_id' => $accountId,
+                            'from_timestamp' => $fromTimestamp,
+                        ]);
+                        continue;
+                    }
+
+                    // Validate: to should be reasonable (after from, before far future)
+                    if (!is_numeric($toTimestamp) || $toTimestamp <= $fromTimestamp || $toTimestamp < 1704067200) {
+                        Log::warning("SyncDealsJob: Invalid 'to' timestamp, skipping update", [
+                            'account_id' => $accountId,
+                            'from_timestamp' => $fromTimestamp,
+                            'to_timestamp' => $toTimestamp,
+                        ]);
+                        continue;
+                    }
+
+                    // Convert to Carbon safely
+                    $dealsFromCarbon = Carbon::createFromTimestamp($fromTimestamp);
+                    $dealsToCarbon = Carbon::createFromTimestamp($toTimestamp);
+
+                    // Double-check the Carbon objects are valid (not the zero date)
+                    if ($dealsFromCarbon->year < 2024 || $dealsToCarbon->year < 2024) {
+                        Log::warning("SyncDealsJob: Carbon conversion produced invalid date, skipping update", [
+                            'account_id' => $accountId,
+                            'from_carbon' => $dealsFromCarbon->toDateTimeString(),
+                            'to_carbon' => $dealsToCarbon->toDateTimeString(),
+                        ]);
+                        continue;
+                    }
 
                     Account::where('id', $accountId)->update([
                         'sync_status' => 'synced',
@@ -658,13 +691,22 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             $syncRangeTo = Carbon::now()->timestamp;
         }
 
-        if ($syncRangeTo !== null) {
+        // Validate timestamp before storing
+        if ($syncRangeTo !== null && is_numeric($syncRangeTo) && $syncRangeTo > 1704067200) { // Valid if after 2024-01-01
             $this->accountSyncRanges[$accountId]['to'] = $syncRangeTo;
             Log::debug("SyncDealsJob: Updated sync range 'to'", [
                 'account_id' => $accountId,
                 'latest_deal_time' => $latestTimeDone ? $latestTimeDone->timestamp : null,
                 'sync_window_end' => $syncWindowEnd,
                 'final_to' => $syncRangeTo,
+                'final_to_readable' => Carbon::createFromTimestamp($syncRangeTo)->toDateTimeString(),
+            ]);
+        } else {
+            Log::warning("SyncDealsJob: Invalid sync range 'to' value, not updating", [
+                'account_id' => $accountId,
+                'sync_range_to' => $syncRangeTo,
+                'latest_deal_time' => $latestTimeDone ? $latestTimeDone->timestamp : null,
+                'sync_window_end' => $syncWindowEnd,
             ]);
         }
 
