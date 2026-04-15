@@ -254,10 +254,10 @@ class SyncDeals extends Command
                 });
         } else {
             // ── Normal restrictions ──
-            // Only skip: flagged, not_found_in_mt5, and accounts synced within minSyncInterval
-            $query->whereNotIn('accounts.sync_status', ['flagged', 'not_found_in_mt5'])
+            // Only skip: flagged, not_found_in_mt5, pending (already processing), and accounts synced within minSyncInterval
+            $query->whereNotIn('accounts.sync_status', ['flagged', 'not_found_in_mt5', 'pending'])
                 ->where(function ($q) use ($cutoffTime) {
-                    $q->whereIn('accounts.sync_status', ['needs_retry', 'pending'])
+                    $q->whereIn('accounts.sync_status', ['needs_retry'])
                         ->orWhereNull('accounts.last_sync_attempt_at')
                         ->orWhereNull('accounts.deals_synced_to')
                         ->orWhere('accounts.last_sync_attempt_at', '<', $cutoffTime);
