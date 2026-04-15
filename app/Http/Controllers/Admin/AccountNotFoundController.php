@@ -54,7 +54,7 @@ class AccountNotFoundController extends Controller
             $query->where('deletion_type', $request->input('deletion_type'));
         }
 
-        $accounts = $query->paginate(50);
+        $accounts = $query->paginate(200);
         // Get distinct deletion types for filter dropdown
         $deletionTypes = Account::notFoundInMt5()
             ->distinct()
