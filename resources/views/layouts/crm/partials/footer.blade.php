@@ -44,6 +44,8 @@
                     </li>
                     <li><a href="https://www.lqhmarkets.com/privacy-policy"
                             class="text-decoration-none text-dark footer-link-capitalize">Privacy Policy</a></li>
+                    <li><a href="https://www.lqhmarkets.com/client-agreement"
+                            class="text-decoration-none text-dark footer-link-capitalize">Client Agreement</a></li>
                 </ul>
             </div>
 
