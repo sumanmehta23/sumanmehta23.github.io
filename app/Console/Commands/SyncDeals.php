@@ -239,6 +239,7 @@ class SyncDeals extends Command
             ->whereNotNull('accounts.code')
             ->whereNull('accounts.deleted_at')
             ->where('accounts.account_request_status', 1)
+            ->where('deletion_type', '!=', 'not_found_in_mt5')
             ->where('u.status', 1)
             ->where('accounts.platform', PlatformEnum::MT5->value)
             ->whereRaw("( (accounts.competition_product_id IS NULL AND accounts.demo = 0)
