@@ -359,7 +359,8 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                     continue;
                 }
 
-                $result = $this->processRestDeals($rawDeals, $acctId, $account, $w['from'], $existingDealIds);
+                // Pass the window end so sync range advances even with sparse deals
+                $result = $this->processRestDeals($rawDeals, $acctId, $account, $w['from'], $existingDealIds, true, $w['to']);
                 $inserted += $result['inserted'];
                 $closedPositions = array_merge($closedPositions, $result['closed_positions']);
 
@@ -411,7 +412,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         ]);
 
         if ($totalDeals === 0) {
-            $this->processRestDeals([], $accountId, $account, $from, $existingDealIds);
+            $this->processRestDeals([], $accountId, $account, $from, $existingDealIds, true, $to);
             return ['inserted' => 0, 'closed_positions' => [], 'new_deal_ids' => []];
         }
 
@@ -424,7 +425,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                 throw new Exception("REST API returned no data for login {$login} (expected {$totalDeals} deals)");
             }
 
-            $result = $this->processRestDeals($rawDeals, $accountId, $account, $from, $existingDealIds);
+            $result = $this->processRestDeals($rawDeals, $accountId, $account, $from, $existingDealIds, true, $to);
             $this->syncTrades($accountId, $account, $result['new_deal_ids']);
             return $result;
         }
@@ -499,7 +500,8 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             $rawDeals = $batchResult['deals'][(string) $login] ?? [];
 
             if (!empty($rawDeals)) {
-                $result = $this->processRestDeals($rawDeals, $accountId, $account, $currentFrom, $existingDealIds, $isLastChunk);
+                // For adaptive chunking, pass the chunk's end as the window end
+                $result = $this->processRestDeals($rawDeals, $accountId, $account, $currentFrom, $existingDealIds, $isLastChunk, $currentTo);
                 $totalInserted += $result['inserted'];
                 $allClosedPositions = array_merge($allClosedPositions, $result['closed_positions']);
                 $allNewDealIds = array_merge($allNewDealIds, $result['new_deal_ids']);
@@ -513,8 +515,8 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                     'chunk_to' => Carbon::createFromTimestamp($fetchTo)->toDateTimeString(),
                 ]);
             } elseif ($isLastChunk) {
-                // Even if empty, mark complete on last chunk
-                $this->processRestDeals([], $accountId, $account, $currentFrom, $existingDealIds, true);
+                // Even if empty, mark complete on last chunk with the window end
+                $this->processRestDeals([], $accountId, $account, $currentFrom, $existingDealIds, true, $currentTo);
             }
 
             $currentFrom = $currentTo;
@@ -532,7 +534,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
      * Also updates the sync range tracking for this account based on deals processed.
      * Even if no deals are returned, we update the range to mark this interval as synced.
      */
-    protected function processRestDeals(array $rawDeals, string $accountId, Account $account, int $accountFrom, array &$existingDealIds, bool $markComplete = true): array
+    protected function processRestDeals(array $rawDeals, string $accountId, Account $account, int $accountFrom, array &$existingDealIds, bool $markComplete = true, ?int $syncWindowEnd = null): array
     {
         $dealsToInsert = [];
         $closedPositions = [];
@@ -642,13 +644,28 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         }
 
         // Update the sync range for this account
-        // If we have deals, update to the latest deal time
-        // If no deals but we're marking complete, update to now (to indicate this range is synced)
-        if ($latestTimeDone) {
-            $this->accountSyncRanges[$accountId]['to'] = $latestTimeDone->timestamp;
-        } elseif ($markComplete) {
-            // Even with no deals, mark the sync point to avoid re-syncing this range
-            $this->accountSyncRanges[$accountId]['to'] = Carbon::now()->timestamp;
+        // Use the MAXIMUM of:
+        // 1. Latest deal time (if deals exist)
+        // 2. The end of the sync window requested (if provided)
+        // This ensures we advance the cursor even for ranges with sparse deals
+        $syncRangeTo = $latestTimeDone ? $latestTimeDone->timestamp : null;
+
+        if ($syncWindowEnd !== null && ($syncRangeTo === null || $syncWindowEnd > $syncRangeTo)) {
+            // Use the window end if it's later than the latest deal, or if no deals exist
+            $syncRangeTo = $syncWindowEnd;
+        } elseif ($syncRangeTo === null && $markComplete) {
+            // Fallback: if no deals and no window end, use current time
+            $syncRangeTo = Carbon::now()->timestamp;
+        }
+
+        if ($syncRangeTo !== null) {
+            $this->accountSyncRanges[$accountId]['to'] = $syncRangeTo;
+            Log::debug("SyncDealsJob: Updated sync range 'to'", [
+                'account_id' => $accountId,
+                'latest_deal_time' => $latestTimeDone ? $latestTimeDone->timestamp : null,
+                'sync_window_end' => $syncWindowEnd,
+                'final_to' => $syncRangeTo,
+            ]);
         }
 
         // Only update last_fetch_at; cursors (deals_synced_from/to) will be updated after full sync success
