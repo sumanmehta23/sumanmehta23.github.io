@@ -12,11 +12,12 @@ return [
         // Volume brackets: [max_deals_in_bracket => batch_size_for_this_bracket]
         // Accounts with pending_deal_count <= max_deals get batch_size batched together
         'brackets' => [
-            5000 => 20,        // 0-5k deals: batch 20 accounts together
-            20000 => 10,       // 5k-20k deals: batch 10 accounts together
-            100000 => 5,       // 20k-100k deals: batch 5 accounts together
-            200000 => 2,       // 100k-200k deals: batch 2 accounts together
-            PHP_INT_MAX => 1,  // 200k+ deals: individual sync (1 per job)
+            500 => 5,          // 0-500 deals: batch 5 accounts together (default)
+            2000 => 5,         // 500-2k deals: batch 5 accounts together
+            5000 => 4,         // 2k-5k deals: batch 4 accounts together
+            20000 => 3,        // 5k-20k deals: batch 3 accounts together
+            50000 => 2,        // 20k-50k deals: batch 2 accounts together
+            PHP_INT_MAX => 1,  // 50k+ deals: individual sync (1 per job)
         ],
 
         /**
@@ -35,6 +36,6 @@ return [
          * Maximum accounts to process per SyncDealsJob
          * (hard limit regardless of volume bracket)
          */
-        'max_accounts_per_job' => 20,
+        'max_accounts_per_job' => 5,
     ],
 ];
