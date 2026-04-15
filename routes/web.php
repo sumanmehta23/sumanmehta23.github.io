@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\TwoFactorAuthController;
 use App\Http\Controllers\Admin\WarningUserController;
 use App\Http\Controllers\Admin\ZapierAccountsController;
+use App\Http\Controllers\Api\Mt5CommonController;
 use App\Http\Controllers\Api\ZapierWebhookController;
 use App\Http\Controllers\ClientTaskController;
 use App\Http\Controllers\CompetitionController;
@@ -262,6 +263,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/process-transfer', [InternalTransfer::class, 'processTransfer'])->name('process-transfer_store');
 
     Route::post('/verify-promocode', [AjaxController::class, 'verify_promocode'])->name('verify.promocode');
+
+   
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
@@ -307,7 +310,8 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/stats', [AccountNotFoundController::class, 'stats'])->name('stats');
             Route::post('/bulk-verify-and-archive', [AccountNotFoundController::class, 'bulkVerifyAndArchive'])->name('bulk_verify_and_archive');
         });
-
+ // MT5 server information endpoint
+    Route::get('/common/get', [Mt5CommonController::class, 'get'])->name('server.common.get')->middleware('throttle:500,1');
         Route::post('/sync-mt5-account-status', [AccountNotFoundController::class, 'syncMT5AccountStatus'])->name('accounts.sync-mt5-account-status');
     Route::middleware(['is_admin'])->group(function () {
         Route::get('/ajax', [AjaxController::class, 'index']);
