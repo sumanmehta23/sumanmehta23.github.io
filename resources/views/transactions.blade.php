@@ -62,7 +62,7 @@
                 </div>
               </div>
             </div>
-            <ul class="nav nav-tabs analytics-tab" id="myTab" role="tablist">
+            <ul class="nav nav-tabs analytics-tab flex-nowrap" id="myTab" role="tablist" style="overflow-x: auto; flex-wrap: nowrap;">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#deposits" type="button" role="tab" aria-controls="deposits" aria-selected="true">Deposits</button>
               </li>
