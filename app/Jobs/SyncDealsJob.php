@@ -104,7 +104,10 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             $from = $lastSync
                 ? Carbon::parse($lastSync)->subHour()->timestamp
                 : Carbon::parse('2024-09-01')->timestamp;
-            $to = Carbon::parse('2080-03-31')->timestamp;
+
+            // Cap window end to current time (not into far future like 2080)
+            // This prevents unrealistic timestamps that MySQL rejects
+            $to = Carbon::now()->timestamp;
 
             $accountWindows[$acct->id] = [
                 'account' => $acct,
