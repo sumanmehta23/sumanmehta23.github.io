@@ -249,7 +249,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                 ]);
 
                 // Decide routing: high deals OR wide window?
-                if ($dealCount > $minDealsForAdaptive || $windowSeconds > $minWindowSecsForAdaptive) {
+                if ($dealCount > $minDealsForAdaptive && $windowSeconds > $minWindowSecsForAdaptive) {
                     $highRisk[$acctId] = $w;
                     Log::info("SyncDealsJob: High-risk account (adaptive chunking)", [
                         'account_id' => $acctId,
