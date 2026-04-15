@@ -292,10 +292,10 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                     $inserted += $result['inserted'];
                     $closedPositions = array_merge($closedPositions, $result['closed_positions']);
 
-                    if (count($closedPositions) >= 100) {
+//                    if (count($closedPositions) >= 100) {
                         ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
                             ->onQueue('distributeibcommission');
-                    }
+//                    }
                 } catch (Exception $e) {
                     Log::error("SyncDealsJob: High-risk sync failed for {$acctId}", [
                         'error' => $e->getMessage(),
