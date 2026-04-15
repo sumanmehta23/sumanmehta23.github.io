@@ -241,7 +241,6 @@ class SyncDeals extends Command
             ->where('accounts.account_request_status', 1)
             ->where('u.status', 1)
             ->where('accounts.platform', PlatformEnum::MT5->value)
-            ->whereNotNull('u.ib1')
             ->whereRaw("( (accounts.competition_product_id IS NULL AND accounts.demo = 0)
                     OR (accounts.competition_product_id IS NOT NULL AND accounts.demo = 1) )");
 
@@ -294,13 +293,15 @@ class SyncDeals extends Command
             }
         }
 
-        // ── Priority ordering ──
-        $query
-            ->orderByRaw("CASE WHEN accounts.sync_status = 'needs_retry' THEN 0 ELSE 1 END")
-            ->orderByRaw("CASE WHEN accounts.has_balance_activity = 1 AND accounts.last_balance_changed_at > COALESCE(accounts.last_sync_attempt_at, '1970-01-01') THEN 0 ELSE 1 END")
-            ->orderBy('accounts.last_balance_changed_at', 'desc')
-            ->orderByRaw('accounts.deals_synced_to IS NULL DESC')
-            ->orderByRaw('COALESCE(accounts.deals_synced_to, \'2000-01-01\') ASC');
+        // ── Priority ordering: needs_retry → never synced → stale ──
+        $query->orderByRaw(
+            "CASE
+                WHEN accounts.sync_status = 'needs_retry' THEN 0
+                WHEN accounts.deals_synced_to IS NULL THEN 1
+                ELSE 2
+            END,
+            COALESCE(accounts.deals_synced_to, '2000-01-01') ASC"
+        );
 
         // Limit to a reasonable number per cycle
         $limit = $batchSize * 10;
