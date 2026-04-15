@@ -53,6 +53,117 @@ class MT5RestAPIService
 
         return $balances;
     }
+    /**
+     * Get MT5 server common information via REST API
+     *
+     * @return array|null Server configuration and limits, or null on error
+     */
+    public function getServerCommon(): ?array
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (! $apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool for server common info');
+
+            return null;
+        }
+
+        try {
+            // Make request to server common info endpoint
+            $result = $apiRequest->Get('/api/common/get');
+
+            if ($result === false) {
+                Log::warning('MT5RestAPI: Server common info request failed');
+                $this->connectionPool->reportConnectionError($apiRequest);
+
+                return null;
+            }
+
+            return $this->processServerCommonResponse($result);
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception in getServerCommon', [
+                'error' => $e->getMessage(),
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+
+            return null;
+        }
+    }
+
+    /**
+     * Process server common response from REST API
+     */
+    private function processServerCommonResponse($response): ?array
+    {
+        // Decode JSON if needed
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (! $response) {
+                Log::warning('MT5RestAPI: Invalid JSON in server common response');
+                return null;
+            }
+        }
+
+        // Check for API error
+        if (isset($response['retcode']) && $response['retcode'] !== '0 Done') {
+            Log::warning('MT5RestAPI: Server common API error', [
+                'retcode' => $response['retcode'],
+                'retmsg' => $response['retmsg'] ?? 'Unknown error',
+            ]);
+            return null;
+        }
+
+        // Extract server data from different possible response formats
+        $serverData = null;
+        if (isset($response['answer']) && is_array($response['answer'])) {
+            $serverData = $response['answer'];
+        } elseif (isset($response['data']) && is_array($response['data'])) {
+            $serverData = $response['data'];
+        } elseif (is_array($response) && ! isset($response['retcode'])) {
+            // Direct array response
+            $serverData = $response;
+        } else {
+            Log::warning('MT5RestAPI: Invalid server common response format', [
+                'response' => $response,
+            ]);
+
+            return null;
+        }
+
+        if (! is_array($serverData)) {
+            Log::warning('MT5RestAPI: Server data is not an array', [
+                'server_data_type' => gettype($serverData),
+            ]);
+
+            return null;
+        }
+
+        // Return normalized server common data
+        return [
+            'name' => $serverData['Name'] ?? $serverData['name'] ?? '',
+            'owner' => $serverData['Owner'] ?? $serverData['owner'] ?? '',
+            'owner_id' => $serverData['OwnerID'] ?? $serverData['owner_id'] ?? '',
+            'owner_host' => $serverData['OwnerHost'] ?? $serverData['owner_host'] ?? '',
+            'owner_email' => $serverData['OwnerEmail'] ?? $serverData['owner_email'] ?? '',
+            'product' => $serverData['Product'] ?? $serverData['product'] ?? '',
+            'expiration_license' => (int) ($serverData['ExpirationLicense'] ?? $serverData['expiration_license'] ?? 0),
+            'expiration_support' => (int) ($serverData['ExpirationSupport'] ?? $serverData['expiration_support'] ?? 0),
+            'limit_trade_servers' => (int) ($serverData['LimitTradeServers'] ?? $serverData['limit_trade_servers'] ?? 0),
+            'limit_web_servers' => (int) ($serverData['LimitWebServers'] ?? $serverData['limit_web_servers'] ?? 0),
+            'limit_accounts' => (int) ($serverData['LimitAccounts'] ?? $serverData['limit_accounts'] ?? 0),
+            'limit_deals' => (int) ($serverData['LimitDeals'] ?? $serverData['limit_deals'] ?? 0),
+            'limit_symbols' => (int) ($serverData['LimitSymbols'] ?? $serverData['limit_symbols'] ?? 0),
+            'limit_groups' => (int) ($serverData['LimitGroups'] ?? $serverData['limit_groups'] ?? 0),
+            'live_update_mode' => (int) ($serverData['LiveUpdateMode'] ?? $serverData['live_update_mode'] ?? 0),
+            'total_users' => (int) ($serverData['TotalUsers'] ?? $serverData['total_users'] ?? 0),
+            'total_users_real' => (int) ($serverData['TotalUsersReal'] ?? $serverData['total_users_real'] ?? 0),
+            'total_deals' => (int) ($serverData['TotalDeals'] ?? $serverData['total_deals'] ?? 0),
+            'total_orders' => (int) ($serverData['TotalOrders'] ?? $serverData['total_orders'] ?? 0),
+            'total_orders_history' => (int) ($serverData['TotalOrdersHistory'] ?? $serverData['total_orders_history'] ?? 0),
+            'total_positions' => (int) ($serverData['TotalPositions'] ?? $serverData['total_positions'] ?? 0),
+            'account_url' => $serverData['AccountURL'] ?? $serverData['account_url'] ?? '',
+            'account_auto' => (int) ($serverData['AccountAuto'] ?? $serverData['account_auto'] ?? 0),
+        ];
+    }
 
     /**
      * Get batch balances using the /api/user/get_batch REST API endpoint

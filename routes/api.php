@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TradeController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\WithdrawalController;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,9 +47,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/tokens/fetch', [Users::class, 'api_call']);
 Route::post('/calculate-lot-size', [LotSizeCalculatorController::class, 'index']);
-
-//Cell Expert Integration API
-
 // X9 CRM API Routes
 Route::middleware(['auth:sanctum'])->prefix('crm')->group(function () {
     Route::get('/connection', [\App\Http\Controllers\Api\X9Controller::class, 'testConnection']);
