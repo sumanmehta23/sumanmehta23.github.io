@@ -599,9 +599,7 @@
                         allowEscapeKey: false
                     }).then((result) => {
                         $('#addBankModal2').modal('hide');
-                        // Different approach: use location.replace() for cleaner redirect
-                        location.replace('/user-profile#wallets');
-                        location.reload(); // Ensure the page reloads to show updated wallet list
+                        window.location.href = '/user-profile#wallets';
                     });
                 } else {
                     Swal.fire({
