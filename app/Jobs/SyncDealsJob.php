@@ -30,6 +30,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
     protected $accountIds;
     protected $maxPagesPerAccount;
+    protected $accountSyncRanges = []; // Track [from => timestamp, to => timestamp] per account
 
     /** Max deals to fetch in a single REST call per account */
     protected const MAX_DEALS_PER_REST_CALL = 5000;
@@ -111,6 +112,12 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                 'from' => $from,
                 'to' => $to,
             ];
+
+            // Initialize sync range tracking for this account
+            $this->accountSyncRanges[$acct->id] = [
+                'from' => $from,
+                'to' => $from, // will be updated as we process deals
+            ];
         }
 
         // ── Sync all accounts via REST batch API (no socket fallback) ──
@@ -141,11 +148,21 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         // Mark successfully synced accounts
         $successfulIds = array_diff($this->accountIds, $failedAccountIds);
         if (!empty($successfulIds)) {
-            Account::whereIn('id', $successfulIds)->update([
-                'sync_status' => 'synced',
-                'sync_error' => null,
-                'sync_stuck_count' => 0,
-            ]);
+            foreach ($successfulIds as $accountId) {
+                if (isset($this->accountSyncRanges[$accountId])) {
+                    $syncRange = $this->accountSyncRanges[$accountId];
+                    $account = $accounts[$accountId];
+
+                    // Update the account with the completed sync range
+                    Account::where('id', $accountId)->update([
+                        'sync_status' => 'synced',
+                        'sync_error' => null,
+                        'sync_stuck_count' => 0,
+                        'deals_synced_from' => Carbon::createFromTimestamp($syncRange['from']),
+                        'deals_synced_to' => Carbon::createFromTimestamp($syncRange['to']),
+                    ]);
+                }
+            }
         }
 
         Log::info("SyncDealsJob completed", [
@@ -500,6 +517,9 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
     /**
      * Transform REST deal arrays into DB rows, upsert, and detect closes.
+     *
+     * Also updates the sync range tracking for this account based on deals processed.
+     * Even if no deals are returned, we update the range to mark this interval as synced.
      */
     protected function processRestDeals(array $rawDeals, string $accountId, Account $account, int $accountFrom, array &$existingDealIds, bool $markComplete = true): array
     {
@@ -610,21 +630,29 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
             }
         }
 
-        // Always update sync cursors — even if no new deals were found
+        // Update the sync range for this account
+        // If we have deals, update to the latest deal time
+        // If no deals but we're marking complete, update to now (to indicate this range is synced)
+        if ($latestTimeDone) {
+            $this->accountSyncRanges[$accountId]['to'] = $latestTimeDone->timestamp;
+        } elseif ($markComplete) {
+            // Even with no deals, mark the sync point to avoid re-syncing this range
+            $this->accountSyncRanges[$accountId]['to'] = Carbon::now()->timestamp;
+        }
+
+        // Only update last_fetch_at; cursors (deals_synced_from/to) will be updated after full sync success
         $syncUpdate = [
             'deals_last_fetch_at' => now(),
-            'trade_sync_status' => 'success',
-            'last_trade_sync_at' => now(),
-            'deals_synced_to' => $latestTimeDone ?? now(),
-            'deals_synced_from' => $account->deals_synced_from ?? Carbon::parse('2024-09-01'),
         ];
-        if ($markComplete) {
-            $syncUpdate['deals_sync_complete'] = true;
-        }
         Account::where('id', $accountId)->update($syncUpdate);
         Cache::forget("account:{$accountId}");
 
-        return ['inserted' => count($dealsToInsert), 'closed_positions' => $closedPositions, 'new_deal_ids' => $newDealIds];
+        return [
+            'inserted' => count($dealsToInsert),
+            'closed_positions' => $closedPositions,
+            'new_deal_ids' => $newDealIds,
+            'latest_deal_time' => $latestTimeDone,
+        ];
     }
 
     // ─────────────────────────────────────────────────────────
