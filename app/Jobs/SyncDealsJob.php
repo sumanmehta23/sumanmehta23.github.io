@@ -154,12 +154,23 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                     $account = $accounts[$accountId];
 
                     // Update the account with the completed sync range
+                    // Convert timestamps to Carbon datetime strings for database storage
+                    $dealsFromCarbon = Carbon::createFromTimestamp($syncRange['from']);
+                    $dealsToCarbon = Carbon::createFromTimestamp($syncRange['to']);
+
                     Account::where('id', $accountId)->update([
                         'sync_status' => 'synced',
                         'sync_error' => null,
                         'sync_stuck_count' => 0,
-                        'deals_synced_from' => Carbon::createFromTimestamp($syncRange['from']),
-                        'deals_synced_to' => Carbon::createFromTimestamp($syncRange['to']),
+                        'deals_synced_from' => $dealsFromCarbon->toDateTimeString(),
+                        'deals_synced_to' => $dealsToCarbon->toDateTimeString(),
+                    ]);
+
+                    Log::info("SyncDealsJob: Updated sync range for account", [
+                        'account_id' => $accountId,
+                        'account_code' => $account->code,
+                        'deals_synced_from' => $dealsFromCarbon->toDateTimeString(),
+                        'deals_synced_to' => $dealsToCarbon->toDateTimeString(),
                     ]);
                 }
             }
@@ -333,7 +344,7 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         try {
             $batchResult = $restService->getBatchDeals($logins, $globalFrom, $globalTo);
             $dealsByLogin = $batchResult['deals'];
-
+            Log::info("SyncDealsJob: Batch REST call completed", $batchResult);
             // Process deals per account
             foreach ($safeAccounts as $acctId => $w) {
                 $login = (string) $w['login'];
