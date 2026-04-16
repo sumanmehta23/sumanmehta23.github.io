@@ -634,17 +634,17 @@
                     toggle_wallet: "true",
                     id: trans
                 },
-                beforeSend: function() {
-                    swal.fire({
-                        showConfirmButton: false,
-                        showCancelButton: false,
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: function() {
-                            swal.showLoading();
-                        }
-                    });
-                },
+                // beforeSend: function() {
+                //     swal.fire({
+                //         showConfirmButton: false,
+                //         showCancelButton: false,
+                //         allowOutsideClick: false,
+                //         allowEscapeKey: false,
+                //         didOpen: function() {
+                //             swal.showLoading();
+                //         }
+                //     });
+                // },
                 success: function(data) {
                     swal.close();
                     if (data.success == true) {
