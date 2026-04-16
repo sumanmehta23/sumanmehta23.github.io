@@ -298,7 +298,7 @@
                                                 ? (($history->admin_remark == 'Manually Approved')
                                                     ? 'Approved'
                                                     : 'Processing')
-                                                : ($history->admin_remark ?? 'Cancelled')))
+                                                : ((($history->admin_remark == 'InvalidAddress') ? 'Invalid cryptocurrency address' : $history->admin_remark) ?? 'Cancelled')))
                                     }}
                                 </p>
 
