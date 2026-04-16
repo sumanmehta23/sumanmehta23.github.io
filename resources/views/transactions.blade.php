@@ -378,7 +378,7 @@
                   <table class="table">
                     <thead>
                       <tr>
-                        <th scope="col">#</th>
+                        <th scope="col">Id</th>
                         <th scope="col">TRANSACTION DATE</th>
                         <th scope="col">From</th>
                         <th scope="col">To</th>
