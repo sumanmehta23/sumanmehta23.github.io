@@ -842,6 +842,17 @@ class Wallet extends Controller
         ]);
         $wallet = ClientWallet::where('id', $request->id)->first();
         if ($wallet) {
+            // Check for pending withdrawals from both TradeWithdrawals and WalletWithdraw tables
+            $pendingTradeWithdrawals = TradeWithdrawals::where('client_wallet_id', $wallet->id)->where('status', 0)->count();
+            $pendingWalletWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet->id)->where('status', 0)->count();
+
+            if ($pendingTradeWithdrawals > 0 || $pendingWalletWithdrawals > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot update wallet status with pending withdrawals. Please wait for pending withdrawals to be processed.'
+                ], 422);
+            }
+
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
             return response()->json(['success' => true]);
