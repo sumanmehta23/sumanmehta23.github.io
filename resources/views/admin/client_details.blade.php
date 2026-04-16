@@ -1170,57 +1170,58 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="card-body">
-                                                                <p class="card-text">A request on behalf of client for creating
-                                                                    IB profile for this client.</p>
+                                                            @can('client:introducingBrokerButton')
+                                                                <div class="card-body">
+                                                                    <p class="card-text">A request on behalf of client for creating
+                                                                        IB profile for this client.</p>
 
-                                                                <?php if (!isset($user->ib) || ($user->ib && $user->ib->status != 1)): ?>
-                                                                <?php if (!isset($user->ib) || ($user->ib && $user->ib->status == '0')): ?>
-                                                                <button type="button"
-                                                                    class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                    data-bs-toggle="modal" data-bs-target="#ibModal"
-                                                                    data-fullname="<?= e($user->fullname) ?>"
-                                                                    data-email="<?= e($user->email) ?>"
-                                                                    data-id="<?= $user->id ?>"
-                                                                    data-ib_id="<?= $user->ib ? $user->ib->id : '' ?>"
-                                                                    data-ib_status="<?= $user->ib ? $user->ib->status : '' ?>"
-                                                                    data-ib_group="<?= $user->ib ? $user->ib->ib_plan_details_id : '' ?>">
-                                                                    Approve Request
-                                                                </button>
-                                                                <?php else: ?>
-                                                                <button type="button"
-                                                                    class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
-                                                                    data-bs-toggle="modal" data-bs-target="#ibModal"
-                                                                    data-fullname="<?= e($user->fullname) ?>"
-                                                                    data-email="<?= e($user->email) ?>"
-                                                                    data-id="<?= $user->id ?>"
-                                                                    data-ib_id="<?= $user->ib ? $user->ib->id : '' ?>"
-                                                                    data-ib_status="<?= $user->ib->status ?? '' ?>"
-                                                                    data-ib_group="<?= $user->ib->ib_plan_details_id ?? '' ?>">
-                                                                    Request To become IB
-                                                                </button>
-                                                                <?php endif; ?>
-                                                                <?php else: ?>
-                                                                <hr style="opacity:.1;">
-                                                                <label class="col-form-label col-12 text-lg-start">
-                                                                    Copy this IB referral link to share with potential clients!
-                                                                </label>
-                                                                <div class="mb-4 col-12">
-                                                                    <div class="mb-2 input-group">
-                                                                        <input type="text" class="form-control"
-                                                                            id="pc-clipboard-1"
-                                                                            value="https://<?= $_SERVER['HTTP_HOST'] ?>/register/ref?refercode=<?= $user->ib->referral_code ?>"
-                                                                            readonly>
-                                                                        <button class="btn btn-lg btn-primary cb"
-                                                                            id="ibClient"
-                                                                            data-clipboard-target="#pc-clipboard-1">
-                                                                            <i class="fa fa-copy"></i>
-                                                                        </button>
+                                                                    <?php if (!isset($user->ib) || ($user->ib && $user->ib->status != 1)): ?>
+                                                                    <?php if (!isset($user->ib) || ($user->ib && $user->ib->status == '0')): ?>
+                                                                    <button type="button"
+                                                                        class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                        data-bs-toggle="modal" data-bs-target="#ibModal"
+                                                                        data-fullname="<?= e($user->fullname) ?>"
+                                                                        data-email="<?= e($user->email) ?>"
+                                                                        data-id="<?= $user->id ?>"
+                                                                        data-ib_id="<?= $user->ib ? $user->ib->id : '' ?>"
+                                                                        data-ib_status="<?= $user->ib ? $user->ib->status : '' ?>"
+                                                                        data-ib_group="<?= $user->ib ? $user->ib->ib_plan_details_id : '' ?>">
+                                                                        Approve Request
+                                                                    </button>
+                                                                    <?php else: ?>
+                                                                    <button type="button"
+                                                                        class="py-3 my-2 ibToggle ib-enroll btn btn-outline-dark btn-sm w-100 text-uppercase"
+                                                                        data-bs-toggle="modal" data-bs-target="#ibModal"
+                                                                        data-fullname="<?= e($user->fullname) ?>"
+                                                                        data-email="<?= e($user->email) ?>"
+                                                                        data-id="<?= $user->id ?>"
+                                                                        data-ib_id="<?= $user->ib ? $user->ib->id : '' ?>"
+                                                                        data-ib_status="<?= $user->ib->status ?? '' ?>"
+                                                                        data-ib_group="<?= $user->ib->ib_plan_details_id ?? '' ?>">
+                                                                        Request To become IB
+                                                                    </button>
+                                                                    <?php endif; ?>
+                                                                    <?php else: ?>
+                                                                    <hr style="opacity:.1;">
+                                                                    <label class="col-form-label col-12 text-lg-start">
+                                                                        Copy this IB referral link to share with potential clients!
+                                                                    </label>
+                                                                    <div class="mb-4 col-12">
+                                                                        <div class="mb-2 input-group">
+                                                                            <input type="text" class="form-control"
+                                                                                id="pc-clipboard-1"
+                                                                                value="https://<?= $_SERVER['HTTP_HOST'] ?>/register/ref?refercode=<?= $user->ib->referral_code ?>"
+                                                                                readonly>
+                                                                            <button class="btn btn-lg btn-primary cb"
+                                                                                id="ibClient"
+                                                                                data-clipboard-target="#pc-clipboard-1">
+                                                                                <i class="fa fa-copy"></i>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
+                                                                    <?php endif; ?>
                                                                 </div>
-                                                                <?php endif; ?>
-                                                            </div>
-
+                                                            @endcan
                                                         </div>
                                                     @endcan
                                                 </div>
