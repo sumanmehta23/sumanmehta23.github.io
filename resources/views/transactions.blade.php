@@ -210,12 +210,7 @@
                                     $statusText = 'Approved';
                                 }
                             } else {
-                                if($history->admin_remark == 'InvalidAddress' || $history->admin_remark == 'Invalid cryptocurrency address'){
-                                    $status = 'Invalid cryptocurrency address';
-                                }else{
-                                    $status = $history->admin_remark;
-                                }
-                                $statusText = !empty($history->admin_remark) ? $status : 'Cancelled';
+                                $statusText = !empty($history->admin_remark) ? $history->admin_remark : 'Cancelled';
                             }
                             if($history->status == 1 && !empty($history->payout_res) && $statusText == 'Approved'){
                                         $data = json_decode($history->payout_res, true);
@@ -303,7 +298,7 @@
                                                 ? (($history->admin_remark == 'Manually Approved')
                                                     ? 'Approved'
                                                     : 'Processing')
-                                                : ($history->admin_remark ?? 'Cancelled')))
+                                                : ((($history->admin_remark == 'InvalidAddress') ? 'Invalid cryptocurrency address' : $history->admin_remark) ?? 'Cancelled')))
                                     }}
                                 </p>
 
