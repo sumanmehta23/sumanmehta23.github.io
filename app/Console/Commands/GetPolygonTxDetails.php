@@ -8,154 +8,204 @@ use Illuminate\Support\Facades\Http;
 class GetPolygonTxDetails extends Command
 {
     /**
-     * The name and signature of the console command.
-     *
      * Usage:
-     * php artisan polygon:usd 0x40f26f491818f7cf81ed6060520bb87ace409500024f7bc09e4f22a6772885e8
+     *   php artisan polygon:usd <hash>
+     *   php artisan polygon:usd <hash> --chain=ethereum
+     *   php artisan polygon:usd <hash> --chain=monad
+     *   php artisan polygon:usd <hash> --chain=polygon --api-key=YOUR_KEY
+     *   php artisan polygon:usd <hash> --price=3200
      *
-     * Options:
-     * --api-key=YOUR_KEY   Use PolygonScan/Etherscan API key (optional)
-     * --price=0.17         Manually specify native token USD price (optional)
-     * --native=POL         Force native token symbol (POL or MATIC). Default=AUTO
+     * --chain=AUTO   Try Polygon first, then Ethereum, then Monad (default)
+     * --chain=polygon
+     * --chain=ethereum
+     * --chain=monad
      */
     protected $signature = 'polygon:usd
-                            {hash : The Polygon transaction hash}
-                            {--api-key= : PolygonScan API key (optional)}
-                            {--price= : Manual native/USD price (optional)}
-                            {--native=AUTO : Native token symbol to use: AUTO|POL|MATIC}';
+                            {hash              : Transaction hash (Polygon, Ethereum, or Monad)}
+                            {--chain=AUTO      : Chain to query: AUTO|polygon|ethereum|monad}
+                            {--api-key=        : PolygonScan / Etherscan API key (optional)}
+                            {--price=          : Manually specify native token USD price (optional)}
+                            {--native=AUTO     : Force native symbol override: AUTO|POL|MATIC|MON}';
 
-    protected $description = 'Get transaction value in USD for a given Polygon transaction hash at the time of transaction (supports POL or MATIC as native)';
+    protected $description = 'Get transaction value in USD for a Polygon, Ethereum, or Monad transaction hash';
+
+    // ─── Chain config ──────────────────────────────────────────────────────────
+
+    private array $chains = [
+        'polygon' => [
+            'rpc'          => 'https://polygon-bor-rpc.publicnode.com',
+            'label'        => 'Polygon',
+            'native'       => 'POL',   // resolved dynamically for polygon
+            'explorer_api' => 'https://api.polygonscan.com/api',
+            'explorer_tx'  => 'https://polygonscan.com/tx/%s',
+        ],
+        'ethereum' => [
+            'rpc'          => 'https://ethereum-rpc.publicnode.com',
+            'label'        => 'Ethereum',
+            'native'       => 'ETH',
+            'explorer_api' => 'https://api.etherscan.io/api',
+            'explorer_tx'  => 'https://etherscan.io/tx/%s',
+        ],
+        'monad' => [
+            'rpc'          => 'https://rpc.monad.xyz',
+            'label'        => 'Monad',
+            'native'       => 'MON',
+            'explorer_api' => 'https://monadscan.com',
+            'explorer_tx'  => 'https://monadscan.com/tx/%s',
+        ],
+    ];
+
+    // ─── Known ERC-20 tokens per chain ────────────────────────────────────────
+
+    private array $knownTokens = [
+        // ── Polygon ──────────────────────────────────────────────────────────
+        'polygon' => [
+            '0x2791bca1f2de4661ed88a30c99a7a9449aa84174' => ['symbol' => 'USDC',  'decimals' => 6,  'coingecko_id' => 'usd-coin'],
+            '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' => ['symbol' => 'USDC',  'decimals' => 6,  'coingecko_id' => 'usd-coin'],
+            '0xc2132d05d31c914a87c6611c10748aeb04b58e8f' => ['symbol' => 'USDT',  'decimals' => 6,  'coingecko_id' => 'tether'],
+            '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063' => ['symbol' => 'DAI',   'decimals' => 18, 'coingecko_id' => 'dai'],
+            '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6' => ['symbol' => 'WBTC',  'decimals' => 8,  'coingecko_id' => 'wrapped-bitcoin'],
+            '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' => ['symbol' => 'WETH',  'decimals' => 18, 'coingecko_id' => 'weth'],
+            '0xdab529f40e671a1d4bf91361c21bf9f0c9712ab7' => ['symbol' => 'PYUSD', 'decimals' => 6,  'coingecko_id' => 'paypal-usd'],
+        ],
+        // ── Ethereum ─────────────────────────────────────────────────────────
+        'ethereum' => [
+            '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' => ['symbol' => 'USDC',  'decimals' => 6,  'coingecko_id' => 'usd-coin'],
+            '0xdac17f958d2ee523a2206206994597c13d831ec7' => ['symbol' => 'USDT',  'decimals' => 6,  'coingecko_id' => 'tether'],
+            '0x6b175474e89094c44da98b954eedeac495271d0f' => ['symbol' => 'DAI',   'decimals' => 18, 'coingecko_id' => 'dai'],
+            '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' => ['symbol' => 'WBTC',  'decimals' => 8,  'coingecko_id' => 'wrapped-bitcoin'],
+            '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' => ['symbol' => 'WETH',  'decimals' => 18, 'coingecko_id' => 'weth'],
+            '0x6c3ea9036406852006290770bedfcaba0e23a0e8' => ['symbol' => 'PYUSD', 'decimals' => 6,  'coingecko_id' => 'paypal-usd'],
+            '0x514910771af9ca656af840dff83e8264ecf986ca' => ['symbol' => 'LINK',  'decimals' => 18, 'coingecko_id' => 'chainlink'],
+            '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984' => ['symbol' => 'UNI',   'decimals' => 18, 'coingecko_id' => 'uniswap'],
+            '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' => ['symbol' => 'AAVE',  'decimals' => 18, 'coingecko_id' => 'aave'],
+            '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' => ['symbol' => 'SHIB',  'decimals' => 18, 'coingecko_id' => 'shiba-inu'],
+        ],
+        // ── Monad ────────────────────────────────────────────────────────────
+        'monad' => [],
+    ];
+
+    // ─── handle() ─────────────────────────────────────────────────────────────
 
     public function handle()
     {
-        $hash = (string)$this->argument('hash');
-        $hash = trim($hash);                          // remove whitespace/newlines
-        $hash = preg_replace('/[^a-fA-F0-9x]/', '', $hash); // remove any non-hex chars
+        $hash   = preg_replace('/[^a-fA-F0-9x]/', '', trim((string) $this->argument('hash')));
         $apiKey = $this->option('api-key') ?? env('POLYGONSCAN_API_KEY', '');
+        $chainOpt = strtolower(trim($this->option('chain') ?? 'AUTO'));
 
         $this->info("Fetching transaction: {$hash}");
 
-        // 1️⃣ Fetch transaction data from Polygon RPC
-        $rpcResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
-            'jsonrpc' => '2.0',
-            'method'  => 'eth_getTransactionByHash',
-            'params'  => [$hash],
-            'id'      => 1,
-        ]);
-        if ($rpcResponse->failed() || !isset($rpcResponse['result'])) {
-            $this->error('Failed to fetch transaction data from Polygon RPC.');
+        // 1️⃣ Detect / confirm chain
+        [$chain, $tx] = $this->resolveChain($hash, $chainOpt);
+
+        if (!$chain || !$tx) {
+            $this->error('Transaction not found on Polygon, Ethereum, or Monad.');
+            $this->warn('Possible causes: wrong hash, pending/dropped tx, or wrong chain option.');
             return Command::FAILURE;
         }
 
-        $tx = $rpcResponse->json('result');
+        $rpc   = $this->chains[$chain]['rpc'];
+        $label = $this->chains[$chain]['label'];
+        $this->info("✓ Found on {$label}");
+        $explorerDisplayedUsd = $this->getExplorerDisplayedUsdValue($chain, $hash);
 
-        if (!$tx) {
-            $this->error('Transaction not found.');
-            return Command::FAILURE;
-        }
-
-        // Get block timestamp
+        // 2️⃣ Block timestamp
         $blockNumber = hexdec($tx['blockNumber'] ?? '0x0');
-        $blockResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
-            'jsonrpc' => '2.0',
-            'method' => 'eth_getBlockByNumber',
-            'params' => ['0x' . dechex($blockNumber), false],
-            'id' => 3,
+        $blockResp   = Http::post($rpc, [
+            'jsonrpc' => '2.0', 'method' => 'eth_getBlockByNumber',
+            'params'  => ['0x' . dechex($blockNumber), false], 'id' => 3,
         ]);
-
-        $block = $blockResponse->json('result');
-        $timestamp = hexdec($block['timestamp'] ?? '0x0');
+        $block           = $blockResp->json('result');
+        $timestamp       = hexdec($block['timestamp'] ?? '0x0');
         $transactionDate = date('Y-m-d H:i:s', $timestamp);
-
         $this->info("Transaction date: {$transactionDate} UTC");
 
-        // 2️⃣ Fetch transaction receipt to get logs (for token transfers)
-        $receiptResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
-            'jsonrpc' => '2.0',
-            'method' => 'eth_getTransactionReceipt',
-            'params' => [$hash],
-            'id' => 2,
+        // 3️⃣ Receipt (for ERC-20 logs)
+        $receiptResp = Http::post($rpc, [
+            'jsonrpc' => '2.0', 'method' => 'eth_getTransactionReceipt',
+            'params'  => [$hash], 'id' => 2,
         ]);
+        $receipt = $receiptResp->json('result');
 
-        $receipt = $receiptResponse->json('result');
-
-        // 3️⃣ Check for native value (POL or MATIC)
-        $valueWei = hexdec($tx['value'] ?? '0x0');
+        // 4️⃣ Native value
+        $valueWei    = hexdec($tx['value'] ?? '0x0');
         $valueNative = $valueWei / 1e18;
 
         $result = [
-            'hash' => $hash,
-            'from' => $tx['from'] ?? null,
-            'to' => $tx['to'] ?? null,
+            'chain'       => $label,
+            'hash'        => $hash,
+            'from'        => $tx['from'] ?? null,
+            'to'          => $tx['to']   ?? null,
             'blockNumber' => $blockNumber,
-            'timestamp' => $timestamp,
-            'date' => $transactionDate,
+            'timestamp'   => $timestamp,
+            'date'        => $transactionDate,
         ];
 
-        // 4️⃣ If native value is 0, check for ERC-20 token transfers
-        if ($valueNative == 0 && $receipt && isset($receipt['logs'])) {
-            $this->info("Native value is 0, checking for token transfers...");
+        if ($explorerDisplayedUsd !== null) {
+            $result['explorer_displayed_value_usd'] = $explorerDisplayedUsd;
+        }
 
-            // Look for Transfer events (topic0 = keccak256("Transfer(address,address,uint256)"))
-            $transferEventSignature = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+        // 5️⃣ ERC-20 path (native == 0)
+        if ($valueNative == 0 && $receipt && isset($receipt['logs'])) {
+            $this->info('Native value is 0, checking for ERC-20 token transfers...');
+
+            $transferSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
             foreach ($receipt['logs'] as $log) {
-                if (isset($log['topics'][0]) && $log['topics'][0] === $transferEventSignature) {
-                    // This is a token transfer
-                    $tokenAddress = $log['address'];
-                    $tokenValue = hexdec($log['data'] ?? '0x0');
+                if (($log['topics'][0] ?? '') !== $transferSig) {
+                    continue;
+                }
 
-                    $this->info("Found token transfer. Token contract: {$tokenAddress}");
+                $tokenAddress = $log['address'];
+                $tokenValue   = hexdec($log['data'] ?? '0x0');
+                $this->info("Found token transfer. Contract: {$tokenAddress}");
 
-                    // Try to get token info with historical price
-                    $tokenInfo = $this->getTokenInfo($tokenAddress, $tokenValue, $timestamp, $apiKey);
+                $tokenInfo = $this->getTokenInfo($tokenAddress, $tokenValue, $timestamp, $chain, $rpc, $explorerDisplayedUsd);
 
-                    if ($tokenInfo) {
-                        $result['token_address'] = $tokenAddress;
-                        $result['token_name'] = $tokenInfo['name'];
-                        $result['token_symbol'] = $tokenInfo['symbol'];
-                        $result['token_decimals'] = $tokenInfo['decimals'];
-                        $result['token_amount'] = $tokenInfo['amount'];
-                        $result['token_usd_rate_at_time'] = $tokenInfo['usd_rate'];
-                        $result['value_usd_at_time'] = $tokenInfo['value_usd'];
-
-                        $this->line(json_encode($result, JSON_PRETTY_PRINT));
-                        return Command::SUCCESS;
+                if ($tokenInfo) {
+                    $result['token_address']        = $tokenAddress;
+                    $result['token_name']            = $tokenInfo['name'];
+                    $result['token_symbol']          = $tokenInfo['symbol'];
+                    $result['token_decimals']        = $tokenInfo['decimals'];
+                    $result['token_amount']          = $tokenInfo['amount'];
+                    $result['token_usd_rate_at_time'] = $tokenInfo['usd_rate'];
+                    $result['value_usd_at_time']     = $tokenInfo['value_usd'];
+                    if (!empty($tokenInfo['price_source'])) {
+                        $result['price_source'] = $tokenInfo['price_source'];
                     }
 
-                    // Fallback: show raw token value
-                    $result['token_address'] = $tokenAddress;
-                    $result['token_value_raw'] = $tokenValue;
-                    $result['note'] = 'Token detected but unable to fetch price data';
-
-                    break;
+                    $this->line(json_encode($result, JSON_PRETTY_PRINT));
+                    return Command::SUCCESS;
                 }
+
+                // Partial fallback
+                $result['token_address']   = $tokenAddress;
+                $result['token_value_raw'] = $tokenValue;
+                $result['note']            = 'Token detected but unable to fetch price data';
+                break;
             }
         }
 
-        // 5️⃣ If we have native value, get historical USD price
+        // 6️⃣ Native value path
         if ($valueNative > 0) {
-            // Resolve native symbol: AUTO (cutover date), or forced via --native
-            $nativeOpt = strtoupper((string)($this->option('native') ?? 'AUTO'));
-            $cutoverTs = strtotime('2024-10-26 00:00:00 UTC'); // Approx Polygon POL migration cutover
-            $nativeSymbol = $nativeOpt === 'AUTO'
-                ? (($timestamp >= $cutoverTs) ? 'POL' : 'MATIC')
-                : ($nativeOpt === 'POL' || $nativeOpt === 'MATIC' ? $nativeOpt : 'POL');
-
-            // Check if manual price is provided
-            $manualPrice = $this->option('price');
+            $nativeSymbol = $this->resolveNativeSymbol($chain, $timestamp);
+            $manualPrice  = $this->option('price');
 
             if ($manualPrice && is_numeric($manualPrice) && $manualPrice > 0) {
                 $priceUsd = (float) $manualPrice;
                 $this->info("Using manually specified {$nativeSymbol} price: \${$priceUsd}");
                 $result['price_source'] = 'manual';
+            } elseif ($explorerDisplayedUsd !== null) {
+                $priceUsd = round($explorerDisplayedUsd / $valueNative, 8);
+                $this->info("Using {$label} explorer displayed value: \${$explorerDisplayedUsd}");
+                $result['price_source'] = 'explorer_displayed_current';
             } else {
                 $priceUsd = $this->getHistoricalNativePrice($nativeSymbol, $timestamp, $apiKey);
 
                 if ($priceUsd === null) {
-                    $this->warn("Failed to fetch historical {$nativeSymbol}/USD price, falling back to current price...");
+                    $this->warn("Historical price unavailable, falling back to current price...");
                     $priceUsd = $this->getCurrentNativePrice($nativeSymbol);
-                    $result['note'] = 'Using current price as historical price unavailable';
+                    $result['note'] = 'Using current price — historical unavailable';
                 }
 
                 if ($priceUsd === null) {
@@ -164,299 +214,486 @@ class GetPolygonTxDetails extends Command
                 }
             }
 
-            $valueUsd = $valueNative * $priceUsd;
-
-            $result['native_symbol'] = $nativeSymbol;
-            $result['value_native'] = round($valueNative, 8);
+            $result['native_symbol']         = $nativeSymbol;
+            $result['value_native']           = round($valueNative, 8);
             $result['native_usd_rate_at_time'] = $priceUsd;
-            $result['value_usd_at_time'] = round($valueUsd, 2);
+            $result['value_usd_at_time']      = isset($result['price_source']) && $result['price_source'] === 'explorer_displayed_current'
+                ? $explorerDisplayedUsd
+                : round($valueNative * $priceUsd, 2);
 
-            // Add note about potential price variance
-            if (!isset($result['price_source']) || $result['price_source'] !== 'manual') {
-                $this->comment("Note: Price may vary slightly from PolygonScan due to different data sources/timing");
+            if (!isset($result['price_source'])) {
+                $this->comment('Note: Price may vary slightly due to different data sources/timing.');
             }
         }
 
         $this->line(json_encode($result, JSON_PRETTY_PRINT));
-
         return Command::SUCCESS;
     }
 
-    private function getHistoricalNativePrice(string $symbol, int $timestamp, string $apiKey = '')
+    // ─── Chain detection ───────────────────────────────────────────────────────
+
+    /**
+     * Try to fetch the transaction from the specified chain (or both if AUTO).
+     * Returns [chainKey, txArray] or [null, null].
+     */
+    private function resolveChain(string $hash, string $chainOpt): array
     {
-        $date = date('d-m-Y', $timestamp);
-        $prices = [];
+        $order = match ($chainOpt) {
+            'polygon'  => ['polygon'],
+            'ethereum' => ['ethereum'],
+            'monad'    => ['monad'],
+            default    => ['polygon', 'ethereum', 'monad'],   // AUTO: try Polygon first
+        };
+
+        foreach ($order as $chain) {
+            $rpc  = $this->chains[$chain]['rpc'];
+            $name = $this->chains[$chain]['label'];
+            $this->info("Trying {$name} RPC...");
+
+            try {
+                $resp = Http::timeout(10)->post($rpc, [
+                    'jsonrpc' => '2.0',
+                    'method'  => 'eth_getTransactionByHash',
+                    'params'  => [$hash],
+                    'id'      => 1,
+                ]);
+
+                $tx = $resp->json('result');
+
+                if ($tx && isset($tx['hash'])) {
+                    return [$chain, $tx];
+                }
+            } catch (\Exception $e) {
+                $this->warn("{$name} RPC error: " . $e->getMessage());
+            }
+        }
+
+        return [null, null];
+    }
+
+    // ─── Native symbol resolution ──────────────────────────────────────────────
+
+    private function resolveNativeSymbol(string $chain, int $timestamp): string
+    {
+        if ($chain === 'ethereum') {
+            return 'ETH';
+        }
+
+        if ($chain === 'monad') {
+            return 'MON';
+        }
+
+        // Polygon: MATIC before Oct 2024 cutover, POL after
+        $nativeOpt  = strtoupper((string) ($this->option('native') ?? 'AUTO'));
+        $cutoverTs  = strtotime('2024-10-26 00:00:00 UTC');
+
+        if ($nativeOpt === 'MATIC' || $nativeOpt === 'POL') {
+            return $nativeOpt;
+        }
+
+        return ($timestamp >= $cutoverTs) ? 'POL' : 'MATIC';
+    }
+
+    // ─── Historical price ──────────────────────────────────────────────────────
+
+    private function getHistoricalNativePrice(string $symbol, int $timestamp, string $apiKey = ''): ?float
+    {
+        $date            = date('d-m-Y', $timestamp);
+        $prices          = [];
+        $normalizedSymbol = $this->normalizeMarketSymbol($symbol);
 
         $this->info("Fetching historical {$symbol} price for {$date}...");
 
-        // Resolve provider identifiers by symbol
         [$coingeckoId, $binancePair] = $this->resolveMarketIds($symbol);
 
-        // Try CoinGecko historical price API first (most reliable for historical data)
+        // CoinGecko (daily)
         try {
-            $response = Http::timeout(10)->get("https://api.coingecko.com/api/v3/coins/{$coingeckoId}/history", [
-                'date' => $date,
-                'localization' => false,
+            $resp = Http::timeout(10)->get("https://api.coingecko.com/api/v3/coins/{$coingeckoId}/history", [
+                'date' => $date, 'localization' => false,
             ]);
-
-            if ($response->successful()) {
-                $price = $response->json('market_data.current_price.usd');
-                if ($price && $price > 0) {
-                    $prices['coingecko'] = $price;
-                    $this->info("CoinGecko historical price ({$symbol}): \${$price}");
-                }
+            $price = $resp->json('market_data.current_price.usd');
+            if ($price > 0) {
+                $prices['coingecko'] = $price;
+                $this->info("CoinGecko historical ({$symbol}): \${$price}");
             }
         } catch (\Exception $e) {
-            $this->warn("CoinGecko historical API failed: " . $e->getMessage());
+            $this->warn("CoinGecko historical failed: " . $e->getMessage());
         }
 
-        // Try CryptoCompare historical API (hourly data - more precise)
-        try {
-            $response = Http::timeout(10)->get('https://min-api.cryptocompare.com/data/pricehistorical', [
-                'fsym' => $symbol,
-                'tsyms' => 'USD',
-                'ts' => $timestamp,
-            ]);
-
-            if ($response->successful()) {
-                $price = $response->json($symbol . '.USD');
-                if ($price && $price > 0) {
+        // CryptoCompare is symbol-based, so skip Monad aliases and rely on exact CoinGecko IDs.
+        if (!in_array($normalizedSymbol, ['MON', 'WMON'], true)) {
+            try {
+                $resp  = Http::timeout(10)->get('https://min-api.cryptocompare.com/data/pricehistorical', [
+                    'fsym' => $normalizedSymbol, 'tsyms' => 'USD', 'ts' => $timestamp,
+                ]);
+                $price = $resp->json($normalizedSymbol . '.USD');
+                if ($price > 0) {
                     $prices['cryptocompare'] = $price;
-                    $this->info("CryptoCompare historical price ({$symbol}): \${$price}");
+                    $this->info("CryptoCompare historical ({$symbol}): \${$price}");
                 }
+            } catch (\Exception $e) {
+                $this->warn("CryptoCompare historical failed: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            $this->warn("CryptoCompare historical API failed: " . $e->getMessage());
         }
 
-        // Try Binance historical klines for more accurate timestamp-based pricing
-        try {
-            // Get the 1-minute candle closest to the transaction time
-            $response = Http::timeout(10)->get('https://api.binance.com/api/v3/klines', [
-                'symbol' => $binancePair,
-                'interval' => '1m',
-                'startTime' => ($timestamp - 60) * 1000, // 1 min before
-                'endTime' => ($timestamp + 60) * 1000,   // 1 min after
-                'limit' => 3,
-            ]);
-
-            if ($response->successful() && count($response->json()) > 0) {
-                $candles = $response->json();
-                // Use the close price of the closest candle
-                $closePrice = (float) $candles[0][4];
-                if ($closePrice > 0) {
-                    $prices['binance'] = $closePrice;
-                    $this->info("Binance historical price ({$symbol}) (exact time): \${$closePrice}");
-                }
-            }
-        } catch (\Exception $e) {
-            $this->warn("Binance historical API failed: " . $e->getMessage());
-        }
-
-        // If we have prices, use the most accurate one (Binance > CryptoCompare > CoinGecko)
-        if (isset($prices['binance'])) {
-            $this->info("Using Binance price (most accurate): \${$prices['binance']}");
-            return $prices['binance'];
-        }
-        if (isset($prices['cryptocompare'])) {
-            $this->info("Using CryptoCompare price: \${$prices['cryptocompare']}");
-            return $prices['cryptocompare'];
-        }
-        if (isset($prices['coingecko'])) {
-            $this->info("Using CoinGecko price: \${$prices['coingecko']}");
-            return $prices['coingecko'];
-        }
-
-        // PolygonScan API only provides current price, not historical
-        // So we'll use it as last resort (current price)
-        try {
-            $params = [
-                'module' => 'stats',
-                'action' => 'maticprice', // No POL endpoint available (V1 deprecated), keep for MATIC compat
-            ];
-
-            if ($apiKey) {
-                $params['apikey'] = $apiKey;
-            }
-
-            $response = Http::timeout(10)->get('https://api.polygonscan.com/api', $params);
-
-            if ($response->successful() && $response->json('status') === '1') {
-                $result = $response->json('result');
-                $price = (float) ($result['maticusd'] ?? 0);
-
-                if ($price > 0) {
-                    $this->warn("Using current MATIC price from PolygonScan (historical not available): \${$price}");
-                    return $price;
-                }
-            }
-        } catch (\Exception $e) {
-            $this->warn("PolygonScan API failed: " . $e->getMessage());
-        }
-
-        return null;
-    }
-
-    private function getCurrentNativePrice(string $symbol)
-    {
-        [$coingeckoId, $binancePair] = $this->resolveMarketIds($symbol);
-        // Try PolygonScan current price
-        try {
-            $response = Http::timeout(10)->get('https://api.polygonscan.com/api', [
-                'module' => 'stats',
-                'action' => 'maticprice',
-            ]);
-
-            if ($response->successful() && $response->json('status') === '1') {
-                $result = $response->json('result');
-                $price = (float) ($result['maticusd'] ?? 0);
-
-                if ($price > 0) {
-                    $this->info("Fetched current MATIC price from PolygonScan: \${$price}");
-                    if ($symbol === 'MATIC') {
-                        return $price;
+        // Binance (1-minute candle — most precise)
+        if ($binancePair) {
+            try {
+                $resp = Http::timeout(10)->get('https://api.binance.com/api/v3/klines', [
+                    'symbol'    => $binancePair,
+                    'interval'  => '1m',
+                    'startTime' => ($timestamp - 60) * 1000,
+                    'endTime'   => ($timestamp + 60) * 1000,
+                    'limit'     => 3,
+                ]);
+                $candles = $resp->json();
+                if ($resp->successful() && count($candles) > 0) {
+                    $close = (float) $candles[0][4];
+                    if ($close > 0) {
+                        $prices['binance'] = $close;
+                        $this->info("Binance historical ({$symbol}): \${$close}");
                     }
                 }
+            } catch (\Exception $e) {
+                $this->warn("Binance historical failed: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            $this->warn("PolygonScan failed: " . $e->getMessage());
         }
 
-        // Try CoinGecko
-        try {
-            $response = Http::timeout(10)->get('https://api.coingecko.com/api/v3/simple/price', [
-                'ids' => $coingeckoId,
-                'vs_currencies' => 'usd',
-            ]);
-
-            if ($response->successful()) {
-                $price = $response->json($coingeckoId . '.usd');
-                if ($price && $price > 0) {
-                    $this->info("Fetched {$symbol} price from CoinGecko: \${$price}");
-                    return $price;
-                }
+        // Priority: Binance > CryptoCompare > CoinGecko
+        foreach (['binance', 'cryptocompare', 'coingecko'] as $src) {
+            if (isset($prices[$src])) {
+                $this->info("Using {$src} price: \${$prices[$src]}");
+                return (float) $prices[$src];
             }
-        } catch (\Exception $e) {
-            $this->warn("CoinGecko failed: " . $e->getMessage());
-        }
-
-        // Try CryptoCompare
-        try {
-            $response = Http::timeout(10)->get('https://min-api.cryptocompare.com/data/price', [
-                'fsym' => $symbol,
-                'tsyms' => 'USD',
-            ]);
-
-            if ($response->successful()) {
-                $price = $response->json('USD');
-                if ($price && $price > 0) {
-                    $this->info("Fetched {$symbol} price from CryptoCompare: \${$price}");
-                    return $price;
-                }
-            }
-        } catch (\Exception $e) {
-            $this->warn("CryptoCompare failed: " . $e->getMessage());
-        }
-
-        // Try Binance API as fallback
-        try {
-            $response = Http::timeout(10)->get('https://api.binance.com/api/v3/ticker/price', [
-                'symbol' => $binancePair,
-            ]);
-
-            if ($response->successful()) {
-                $price = (float) $response->json('price');
-                if ($price && $price > 0) {
-                    $this->info("Fetched {$symbol} price from Binance: \${$price}");
-                    return $price;
-                }
-            }
-        } catch (\Exception $e) {
-            $this->warn("Binance failed: " . $e->getMessage());
         }
 
         return null;
     }
+
+    // ─── Current price fallback ────────────────────────────────────────────────
+
+    private function getCurrentNativePrice(string $symbol): ?float
+    {
+        [$coingeckoId, $binancePair] = $this->resolveMarketIds($symbol);
+        $normalizedSymbol = $this->normalizeMarketSymbol($symbol);
+
+        // CoinGecko
+        try {
+            $resp  = Http::timeout(10)->get('https://api.coingecko.com/api/v3/simple/price', [
+                'ids' => $coingeckoId, 'vs_currencies' => 'usd',
+            ]);
+            $price = $resp->json($coingeckoId . '.usd');
+            if ($price > 0) {
+                $this->info("Current {$symbol} price (CoinGecko): \${$price}");
+                return (float) $price;
+            }
+        } catch (\Exception $e) {
+            $this->warn("CoinGecko current price failed: " . $e->getMessage());
+        }
+
+        // CryptoCompare is symbol-based, so skip Monad aliases and rely on exact CoinGecko IDs.
+        if (!in_array($normalizedSymbol, ['MON', 'WMON'], true)) {
+            try {
+                $resp  = Http::timeout(10)->get('https://min-api.cryptocompare.com/data/price', [
+                    'fsym' => $normalizedSymbol, 'tsyms' => 'USD',
+                ]);
+                $price = $resp->json('USD');
+                if ($price > 0) {
+                    $this->info("Current {$symbol} price (CryptoCompare): \${$price}");
+                    return (float) $price;
+                }
+            } catch (\Exception $e) {
+                $this->warn("CryptoCompare current price failed: " . $e->getMessage());
+            }
+        }
+
+        // Binance
+        if ($binancePair) {
+            try {
+                $resp  = Http::timeout(10)->get('https://api.binance.com/api/v3/ticker/price', ['symbol' => $binancePair]);
+                $price = (float) $resp->json('price');
+                if ($price > 0) {
+                    $this->info("Current {$symbol} price (Binance): \${$price}");
+                    return $price;
+                }
+            } catch (\Exception $e) {
+                $this->warn("Binance current price failed: " . $e->getMessage());
+            }
+        }
+
+        return null;
+    }
+
+    // ─── Market ID resolution ──────────────────────────────────────────────────
 
     private function resolveMarketIds(string $symbol): array
     {
-        $symbol = strtoupper($symbol);
-        // Map to CoinGecko id and Binance pair
-        if ($symbol === 'POL') {
-            return ['polygon-ecosystem-token', 'POLUSDT'];
-        }
-        // default MATIC
-        return ['matic-network', 'MATICUSDT'];
+        return match ($this->normalizeMarketSymbol($symbol)) {
+            'ETH'   => ['ethereum',               'ETHUSDT'],
+            'POL'   => ['polygon-ecosystem-token', 'POLUSDT'],
+            'MATIC' => ['matic-network',           'MATICUSDT'],
+            'MON'   => ['monad',                  null],
+            'WMON'  => ['wrapped-mon',            null],
+            'WETH'  => ['weth',                    'ETHUSDT'],
+            'WBTC'  => ['wrapped-bitcoin',         'BTCUSDT'],
+            default => ['matic-network',           'MATICUSDT'],
+        };
     }
 
-    private function getTokenInfo($tokenAddress, $tokenValueRaw, $timestamp, $apiKey = '')
-    {
+    // ─── Token info (ERC-20) ───────────────────────────────────────────────────
+
+    private function getTokenInfo(
+        string $tokenAddress,
+        int    $tokenValueRaw,
+        int    $timestamp,
+        string $chain,
+        string $rpc,
+        ?float $explorerDisplayedUsd = null
+    ): ?array {
         try {
-            $date = date('d-m-Y', $timestamp);
+            $date             = date('d-m-Y', $timestamp);
+            $tokenAddressNorm = strtolower($tokenAddress);
+            $knownList        = $this->knownTokens[$chain] ?? [];
 
-            // Common stablecoins and tokens on Polygon
-            $knownTokens = [
-                '0x2791bca1f2de4661ed88a30c99a7a9449aa84174' => ['symbol' => 'USDC', 'decimals' => 6, 'coingecko_id' => 'usd-coin'],
-                '0xc2132d05d31c914a87c6611c10748aeb04b58e8f' => ['symbol' => 'USDT', 'decimals' => 6, 'coingecko_id' => 'tether'],
-                '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063' => ['symbol' => 'DAI', 'decimals' => 18, 'coingecko_id' => 'dai'],
-                '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6' => ['symbol' => 'WBTC', 'decimals' => 8, 'coingecko_id' => 'wrapped-bitcoin'],
-                '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619' => ['symbol' => 'WETH', 'decimals' => 18, 'coingecko_id' => 'weth'],
-            ];
-
-            $tokenAddress = strtolower($tokenAddress);
-
-            if (isset($knownTokens[$tokenAddress])) {
-                $token = $knownTokens[$tokenAddress];
+            // ── Known token ───────────────────────────────────────────────────
+            if (isset($knownList[$tokenAddressNorm])) {
+                $token    = $knownList[$tokenAddressNorm];
                 $decimals = $token['decimals'];
-                $amount = $tokenValueRaw / pow(10, $decimals);
-
-                // Try to get historical USD price from CoinGecko
-                $priceResponse = Http::timeout(10)->get("https://api.coingecko.com/api/v3/coins/{$token['coingecko_id']}/history", [
-                    'date' => $date,
-                    'localization' => false,
-                ]);
-
-                if ($priceResponse->successful()) {
-                    $usdRate = $priceResponse->json('market_data.current_price.usd', 0);
-
-                    if ($usdRate > 0) {
-                        $this->info("Fetched historical {$token['symbol']} price: \${$usdRate}");
-
-                        return [
-                            'name' => $token['symbol'],
-                            'symbol' => $token['symbol'],
-                            'decimals' => $decimals,
-                            'amount' => round($amount, 8),
-                            'usd_rate' => $usdRate,
-                            'value_usd' => round($amount * $usdRate, 6),
-                        ];
-                    }
-                }
-
-                // Fallback to current price
-                $this->warn("Historical price not available, using current price...");
-                $priceResponse = Http::get('https://api.coingecko.com/api/v3/simple/price', [
-                    'ids' => $token['coingecko_id'],
-                    'vs_currencies' => 'usd',
-                ]);
-
-                if ($priceResponse->successful()) {
-                    $usdRate = $priceResponse->json($token['coingecko_id'] . '.usd', 0);
-
+                $amount   = $tokenValueRaw / pow(10, $decimals);
+                if ($explorerDisplayedUsd !== null && $amount > 0) {
                     return [
-                        'name' => $token['symbol'],
-                        'symbol' => $token['symbol'],
-                        'decimals' => $decimals,
-                        'amount' => round($amount, 8),
-                        'usd_rate' => $usdRate,
-                        'value_usd' => round($amount * $usdRate, 6),
+                        'name'      => $token['symbol'],
+                        'symbol'    => $token['symbol'],
+                        'decimals'  => $decimals,
+                        'amount'    => round($amount, 8),
+                        'usd_rate'  => round($explorerDisplayedUsd / $amount, 8),
+                        'value_usd' => $explorerDisplayedUsd,
+                        'price_source' => 'explorer_displayed_current',
                     ];
                 }
+
+                $price    = $this->fetchTokenUsdPrice($token['coingecko_id'], $token['symbol'], $date);
+
+                return [
+                    'name'      => $token['symbol'],
+                    'symbol'    => $token['symbol'],
+                    'decimals'  => $decimals,
+                    'amount'    => round($amount, 8),
+                    'usd_rate'  => $price['rate'] ?? null,
+                    'value_usd' => $price ? round($amount * $price['rate'], 6) : null,
+                    'price_source' => $price ? 'market_data' : null,
+                ];
             }
 
-            return null;
+            // ── Unknown token — resolve from chain ────────────────────────────
+            $this->info('Token not in known list — fetching metadata from chain...');
+            $meta     = $this->getTokenMetadataFromChain($tokenAddress, $rpc);
+            $symbol   = $meta['symbol'];
+            $decimals = $meta['decimals'];
+            $amount   = $tokenValueRaw / pow(10, $decimals);
+
+            $this->info('Chain metadata — symbol: ' . ($symbol ?? 'unknown') . ", decimals: {$decimals}");
+
+            if ($explorerDisplayedUsd !== null && $amount > 0) {
+                return [
+                    'name'      => $symbol   ?? 'Unknown',
+                    'symbol'    => $symbol   ?? 'Unknown',
+                    'decimals'  => $decimals,
+                    'amount'    => round($amount, 8),
+                    'usd_rate'  => round($explorerDisplayedUsd / $amount, 8),
+                    'value_usd' => $explorerDisplayedUsd,
+                    'price_source' => 'explorer_displayed_current',
+                ];
+            }
+
+            $coingeckoId = $symbol ? $this->resolveCoingeckoId($symbol) : null;
+            $price       = $coingeckoId ? $this->fetchTokenUsdPrice($coingeckoId, $symbol, $date) : null;
+
+            return [
+                'name'      => $symbol   ?? 'Unknown',
+                'symbol'    => $symbol   ?? 'Unknown',
+                'decimals'  => $decimals,
+                'amount'    => round($amount, 8),
+                'usd_rate'  => $price['rate'] ?? null,
+                'value_usd' => $price ? round($amount * $price['rate'], 6) : null,
+                'price_source' => $price ? 'market_data' : null,
+            ];
+
         } catch (\Exception $e) {
+            $this->warn('getTokenInfo exception: ' . $e->getMessage());
             return null;
         }
+    }
+
+    // ─── On-chain token metadata (symbol + decimals via eth_call) ─────────────
+
+    private function getTokenMetadataFromChain(string $tokenAddress, string $rpc): array
+    {
+        $symbol   = null;
+        $decimals = 18;
+
+        // symbol()
+        try {
+            $resp = Http::timeout(10)->post($rpc, [
+                'jsonrpc' => '2.0', 'method' => 'eth_call',
+                'params'  => [['to' => $tokenAddress, 'data' => '0x95d89b41'], 'latest'],
+                'id'      => 10,
+            ]);
+            $hex = $resp->json('result');
+            if ($hex && $hex !== '0x') {
+                $raw    = hex2bin(substr(ltrim($hex, '0x'), 128));
+                $symbol = trim(preg_replace('/[^\x20-\x7E]/', '', $raw)) ?: null;
+            }
+        } catch (\Exception $e) {
+            $this->warn('RPC symbol() failed: ' . $e->getMessage());
+        }
+
+        // decimals()
+        try {
+            $resp = Http::timeout(10)->post($rpc, [
+                'jsonrpc' => '2.0', 'method' => 'eth_call',
+                'params'  => [['to' => $tokenAddress, 'data' => '0x313ce567'], 'latest'],
+                'id'      => 11,
+            ]);
+            $hex = $resp->json('result');
+            if ($hex && $hex !== '0x') {
+                $decimals = hexdec(ltrim($hex, '0x'));
+            }
+        } catch (\Exception $e) {
+            $this->warn('RPC decimals() failed: ' . $e->getMessage());
+        }
+
+        return ['symbol' => $symbol, 'decimals' => (int) $decimals];
+    }
+
+    // ─── CoinGecko ID search ───────────────────────────────────────────────────
+
+    private function resolveCoingeckoId(string $symbol): ?string
+    {
+        $normalizedSymbol = $this->normalizeMarketSymbol($symbol);
+        $directMap = [
+            'ETH'   => 'ethereum',
+            'POL'   => 'polygon-ecosystem-token',
+            'MATIC' => 'matic-network',
+            'MON'   => 'monad',
+            'WMON'  => 'wrapped-mon',
+            'WETH'  => 'weth',
+            'WBTC'  => 'wrapped-bitcoin',
+        ];
+
+        if (isset($directMap[$normalizedSymbol])) {
+            $this->info("Resolved CoinGecko ID for {$symbol} via alias: {$directMap[$normalizedSymbol]}");
+            return $directMap[$normalizedSymbol];
+        }
+
+        try {
+            $resp  = Http::timeout(10)->get('https://api.coingecko.com/api/v3/search', ['query' => $normalizedSymbol]);
+            $coins = $resp->json('coins') ?? [];
+            foreach ($coins as $coin) {
+                if (strtoupper($coin['symbol'] ?? '') === $normalizedSymbol) {
+                    $this->info("Resolved CoinGecko ID for {$symbol}: {$coin['id']}");
+                    return $coin['id'];
+                }
+            }
+        } catch (\Exception $e) {
+            $this->warn('CoinGecko search failed: ' . $e->getMessage());
+        }
+        return null;
+    }
+
+    private function getExplorerDisplayedUsdValue(string $chain, string $hash): ?float
+    {
+        $explorerTx = $this->chains[$chain]['explorer_tx'] ?? null;
+
+        if (!$explorerTx) {
+            return null;
+        }
+
+        try {
+            $resp = Http::timeout(15)
+                ->retry(2, 300)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (compatible; LQHManualPaymentBot/1.0; +https://lqdfx.com)',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                ])
+                ->get(sprintf($explorerTx, $hash));
+
+            if (!$resp->successful()) {
+                return null;
+            }
+
+            $html = $resp->body();
+
+            $patterns = [
+                '/id=[\'"]data-vprice[\'"][^>]*>\s*\$([\d,]+(?:\.\d+)?)/i',
+                '/id=[\'"]ContentPlaceHolder1_spanClosingPrice[\'"][^>]*>.*?\$([\d,]+(?:\.\d+)?)/is',
+                '/<span class=[\'"][^\'"]*text-muted[^\'"]*[\'"][^>]*>\(\$([\d,]+(?:\.\d+)?)\)<\/span>/i',
+            ];
+
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $value = (float) str_replace(',', '', $matches[1]);
+                    if ($value > 0) {
+                        $this->info("Explorer displayed USD value ({$chain}): \${$value}");
+                        return $value;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $this->warn("Explorer USD value fetch failed: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    // ─── CoinGecko price fetch (historical → current fallback) ────────────────
+
+    private function fetchTokenUsdPrice(string $coingeckoId, string $symbol, string $date): ?array
+    {
+        // Historical
+        try {
+            $resp = Http::timeout(10)->get("https://api.coingecko.com/api/v3/coins/{$coingeckoId}/history", [
+                'date' => $date, 'localization' => false,
+            ]);
+            $rate = $resp->json('market_data.current_price.usd', 0);
+            if ($rate > 0) {
+                $this->info("Historical {$symbol} price: \${$rate}");
+                return ['rate' => $rate];
+            }
+        } catch (\Exception $e) {
+            $this->warn("CoinGecko historical failed for {$symbol}: " . $e->getMessage());
+        }
+
+        // Current fallback
+        $this->warn("Historical price unavailable for {$symbol}, using current price...");
+        try {
+            $resp = Http::timeout(10)->get('https://api.coingecko.com/api/v3/simple/price', [
+                'ids' => $coingeckoId, 'vs_currencies' => 'usd',
+            ]);
+            $rate = $resp->json($coingeckoId . '.usd', 0);
+            if ($rate > 0) {
+                $this->info("Current {$symbol} price: \${$rate}");
+                return ['rate' => $rate];
+            }
+        } catch (\Exception $e) {
+            $this->warn("CoinGecko current price failed for {$symbol}: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    private function normalizeMarketSymbol(string $symbol): string
+    {
+        $normalized = strtoupper(trim($symbol));
+        $normalized = str_replace(['-', ' ', '.'], '_', $normalized);
+
+        return match ($normalized) {
+            'ETHEREUM_ETH' => 'ETH',
+            'POLYGON_POL'  => 'POL',
+            'POLYGON_MATIC' => 'MATIC',
+            'MONAD_MON'    => 'MON',
+            'MONAD_WMON', 'WRAPPED_MON' => 'WMON',
+            default        => $normalized,
+        };
     }
 }
