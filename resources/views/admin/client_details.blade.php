@@ -434,7 +434,7 @@
                                                         <div class="p-2 card-body">
                                                             <div class="gap-1 mb-1 d-flex flex-column flex-sm-row justify-content-between align-items-start">
                                                                 <small class="mb-0 fw-bold text-primary" style="font-size: 14px;">
-                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->name ?? 'Admin' }}
+                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->username ?? 'Admin' }}
                                                                 </small>
                                                                 <small class="text-muted text-nowrap" style="font-size: 14px;">
                                                                     <i class="fe fe-clock"></i> {{ $lastNote->created_at->diffForHumans() }}
