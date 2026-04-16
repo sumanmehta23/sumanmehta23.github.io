@@ -5,61 +5,76 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
-class GetPolygonTxDetails extends Command
+class GetChainTxDetails extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * Usage:
-     * php artisan polygon:usd 0x40f26f491818f7cf81ed6060520bb87ace409500024f7bc09e4f22a6772885e8
+     * php artisan chain:usd 0x40f26f491818f7cf81ed6060520bb87ace409500024f7bc09e4f22a6772885e8 --chain=polygon
+     * php artisan chain:usd 0x... --chain=monad
      *
      * Options:
+     * --chain=polygon      Blockchain: polygon|monad (default: polygon)
      * --api-key=YOUR_KEY   Use PolygonScan/Etherscan API key (optional)
      * --price=0.17         Manually specify native token USD price (optional)
-     * --native=POL         Force native token symbol (POL or MATIC). Default=AUTO
+     * --native=AUTO        Force native token symbol (POL, MATIC, MON). Default=AUTO
      */
-    protected $signature = 'polygon:usd
-                            {hash : The Polygon transaction hash}
-                            {--api-key= : PolygonScan API key (optional)}
-                            {--price= : Manual native/USD price (optional)}
-                            {--native=AUTO : Native token symbol to use: AUTO|POL|MATIC}';
+    protected $signature = 'chain:usd
+                             {hash : The transaction hash}
+                             {--chain=polygon : Blockchain: polygon|monad}
+                             {--api-key= : PolygonScan API key (optional)}
+                             {--price= : Manual native/USD price (optional)}
+                             {--native=AUTO : Native token symbol to use: AUTO|POL|MATIC|MON}';
 
-    protected $description = 'Get transaction value in USD for a given Polygon transaction hash at the time of transaction (supports POL or MATIC as native)';
+    protected $description = 'Get transaction value in USD for a given transaction hash on supported blockchains at the time of transaction (supports POL, MATIC, MON as native)';
 
     public function handle()
     {
-        $hash = (string)$this->argument('hash');
+        $chain = strtolower((string) $this->option('chain'));
+        if (! in_array($chain, ['polygon', 'monad'])) {
+            $this->error('Unsupported chain. Supported: polygon, monad');
+
+            return Command::FAILURE;
+        }
+
+        $hash = (string) $this->argument('hash');
         $hash = trim($hash);                          // remove whitespace/newlines
         $hash = preg_replace('/[^a-fA-F0-9x]/', '', $hash); // remove any non-hex chars
         $apiKey = $this->option('api-key') ?? env('POLYGONSCAN_API_KEY', '');
 
-        $this->info("Fetching transaction: {$hash}");
+        $this->info("Fetching transaction: {$hash} on {$chain}");
 
-        // 1️⃣ Fetch transaction data from Polygon RPC
-        $rpcResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
+        // Set RPC URL based on chain
+        $rpcUrl = $chain === 'polygon' ? 'https://polygon-bor-rpc.publicnode.com' : 'https://rpc.monad.xyz';
+
+        // 1️⃣ Fetch transaction data from RPC
+        $rpcResponse = Http::post($rpcUrl, [
             'jsonrpc' => '2.0',
-            'method'  => 'eth_getTransactionByHash',
-            'params'  => [$hash],
-            'id'      => 1,
+            'method' => 'eth_getTransactionByHash',
+            'params' => [$hash],
+            'id' => 1,
         ]);
-        if ($rpcResponse->failed() || !isset($rpcResponse['result'])) {
+        if ($rpcResponse->failed() || ! isset($rpcResponse['result'])) {
             $this->error('Failed to fetch transaction data from Polygon RPC.');
+
             return Command::FAILURE;
         }
 
         $tx = $rpcResponse->json('result');
 
-        if (!$tx) {
+        if (! $tx) {
             $this->error('Transaction not found.');
+
             return Command::FAILURE;
         }
 
         // Get block timestamp
         $blockNumber = hexdec($tx['blockNumber'] ?? '0x0');
-        $blockResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
+        $blockResponse = Http::post($rpcUrl, [
             'jsonrpc' => '2.0',
             'method' => 'eth_getBlockByNumber',
-            'params' => ['0x' . dechex($blockNumber), false],
+            'params' => ['0x'.dechex($blockNumber), false],
             'id' => 3,
         ]);
 
@@ -70,7 +85,7 @@ class GetPolygonTxDetails extends Command
         $this->info("Transaction date: {$transactionDate} UTC");
 
         // 2️⃣ Fetch transaction receipt to get logs (for token transfers)
-        $receiptResponse = Http::post('https://polygon-bor-rpc.publicnode.com', [
+        $receiptResponse = Http::post($rpcUrl, [
             'jsonrpc' => '2.0',
             'method' => 'eth_getTransactionReceipt',
             'params' => [$hash],
@@ -94,7 +109,7 @@ class GetPolygonTxDetails extends Command
 
         // 4️⃣ If native value is 0, check for ERC-20 token transfers
         if ($valueNative == 0 && $receipt && isset($receipt['logs'])) {
-            $this->info("Native value is 0, checking for token transfers...");
+            $this->info('Native value is 0, checking for token transfers...');
 
             // Look for Transfer events (topic0 = keccak256("Transfer(address,address,uint256)"))
             $transferEventSignature = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
@@ -120,6 +135,7 @@ class GetPolygonTxDetails extends Command
                         $result['value_usd_at_time'] = $tokenInfo['value_usd'];
 
                         $this->line(json_encode($result, JSON_PRETTY_PRINT));
+
                         return Command::SUCCESS;
                     }
 
@@ -135,12 +151,18 @@ class GetPolygonTxDetails extends Command
 
         // 5️⃣ If we have native value, get historical USD price
         if ($valueNative > 0) {
-            // Resolve native symbol: AUTO (cutover date), or forced via --native
-            $nativeOpt = strtoupper((string)($this->option('native') ?? 'AUTO'));
-            $cutoverTs = strtotime('2024-10-26 00:00:00 UTC'); // Approx Polygon POL migration cutover
-            $nativeSymbol = $nativeOpt === 'AUTO'
-                ? (($timestamp >= $cutoverTs) ? 'POL' : 'MATIC')
-                : ($nativeOpt === 'POL' || $nativeOpt === 'MATIC' ? $nativeOpt : 'POL');
+            // Resolve native symbol: AUTO (chain default), or forced via --native
+            $nativeOpt = strtoupper((string) ($this->option('native') ?? 'AUTO'));
+            if ($chain === 'polygon') {
+                $cutoverTs = strtotime('2024-10-26 00:00:00 UTC'); // Approx Polygon POL migration cutover
+                $nativeSymbol = $nativeOpt === 'AUTO'
+                    ? (($timestamp >= $cutoverTs) ? 'POL' : 'MATIC')
+                    : ($nativeOpt === 'POL' || $nativeOpt === 'MATIC' ? $nativeOpt : 'POL');
+            } elseif ($chain === 'monad') {
+                $nativeSymbol = $nativeOpt === 'AUTO' ? 'MON' : ($nativeOpt === 'MON' ? $nativeOpt : 'MON');
+            } else {
+                $nativeSymbol = 'UNKNOWN';
+            }
 
             // Check if manual price is provided
             $manualPrice = $this->option('price');
@@ -160,6 +182,7 @@ class GetPolygonTxDetails extends Command
 
                 if ($priceUsd === null) {
                     $this->error("Failed to fetch {$nativeSymbol}/USD price from all sources.");
+
                     return Command::FAILURE;
                 }
             }
@@ -172,8 +195,8 @@ class GetPolygonTxDetails extends Command
             $result['value_usd_at_time'] = round($valueUsd, 2);
 
             // Add note about potential price variance
-            if (!isset($result['price_source']) || $result['price_source'] !== 'manual') {
-                $this->comment("Note: Price may vary slightly from PolygonScan due to different data sources/timing");
+            if (! isset($result['price_source']) || $result['price_source'] !== 'manual') {
+                $this->comment('Note: Price may vary slightly from PolygonScan due to different data sources/timing');
             }
         }
 
@@ -207,7 +230,7 @@ class GetPolygonTxDetails extends Command
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("CoinGecko historical API failed: " . $e->getMessage());
+            $this->warn('CoinGecko historical API failed: '.$e->getMessage());
         }
 
         // Try CryptoCompare historical API (hourly data - more precise)
@@ -219,14 +242,14 @@ class GetPolygonTxDetails extends Command
             ]);
 
             if ($response->successful()) {
-                $price = $response->json($symbol . '.USD');
+                $price = $response->json($symbol.'.USD');
                 if ($price && $price > 0) {
                     $prices['cryptocompare'] = $price;
                     $this->info("CryptoCompare historical price ({$symbol}): \${$price}");
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("CryptoCompare historical API failed: " . $e->getMessage());
+            $this->warn('CryptoCompare historical API failed: '.$e->getMessage());
         }
 
         // Try Binance historical klines for more accurate timestamp-based pricing
@@ -250,20 +273,23 @@ class GetPolygonTxDetails extends Command
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("Binance historical API failed: " . $e->getMessage());
+            $this->warn('Binance historical API failed: '.$e->getMessage());
         }
 
         // If we have prices, use the most accurate one (Binance > CryptoCompare > CoinGecko)
         if (isset($prices['binance'])) {
             $this->info("Using Binance price (most accurate): \${$prices['binance']}");
+
             return $prices['binance'];
         }
         if (isset($prices['cryptocompare'])) {
             $this->info("Using CryptoCompare price: \${$prices['cryptocompare']}");
+
             return $prices['cryptocompare'];
         }
         if (isset($prices['coingecko'])) {
             $this->info("Using CoinGecko price: \${$prices['coingecko']}");
+
             return $prices['coingecko'];
         }
 
@@ -287,11 +313,12 @@ class GetPolygonTxDetails extends Command
 
                 if ($price > 0) {
                     $this->warn("Using current MATIC price from PolygonScan (historical not available): \${$price}");
+
                     return $price;
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("PolygonScan API failed: " . $e->getMessage());
+            $this->warn('PolygonScan API failed: '.$e->getMessage());
         }
 
         return null;
@@ -319,7 +346,7 @@ class GetPolygonTxDetails extends Command
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("PolygonScan failed: " . $e->getMessage());
+            $this->warn('PolygonScan failed: '.$e->getMessage());
         }
 
         // Try CoinGecko
@@ -330,14 +357,15 @@ class GetPolygonTxDetails extends Command
             ]);
 
             if ($response->successful()) {
-                $price = $response->json($coingeckoId . '.usd');
+                $price = $response->json($coingeckoId.'.usd');
                 if ($price && $price > 0) {
                     $this->info("Fetched {$symbol} price from CoinGecko: \${$price}");
+
                     return $price;
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("CoinGecko failed: " . $e->getMessage());
+            $this->warn('CoinGecko failed: '.$e->getMessage());
         }
 
         // Try CryptoCompare
@@ -351,11 +379,12 @@ class GetPolygonTxDetails extends Command
                 $price = $response->json('USD');
                 if ($price && $price > 0) {
                     $this->info("Fetched {$symbol} price from CryptoCompare: \${$price}");
+
                     return $price;
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("CryptoCompare failed: " . $e->getMessage());
+            $this->warn('CryptoCompare failed: '.$e->getMessage());
         }
 
         // Try Binance API as fallback
@@ -368,11 +397,12 @@ class GetPolygonTxDetails extends Command
                 $price = (float) $response->json('price');
                 if ($price && $price > 0) {
                     $this->info("Fetched {$symbol} price from Binance: \${$price}");
+
                     return $price;
                 }
             }
         } catch (\Exception $e) {
-            $this->warn("Binance failed: " . $e->getMessage());
+            $this->warn('Binance failed: '.$e->getMessage());
         }
 
         return null;
@@ -384,7 +414,10 @@ class GetPolygonTxDetails extends Command
         // Map to CoinGecko id and Binance pair
         if ($symbol === 'POL') {
             return ['polygon-ecosystem-token', 'POLUSDT'];
+        } elseif ($symbol === 'MON') {
+            return ['monad', 'MONUSDT'];
         }
+
         // default MATIC
         return ['matic-network', 'MATICUSDT'];
     }
@@ -434,14 +467,14 @@ class GetPolygonTxDetails extends Command
                 }
 
                 // Fallback to current price
-                $this->warn("Historical price not available, using current price...");
+                $this->warn('Historical price not available, using current price...');
                 $priceResponse = Http::get('https://api.coingecko.com/api/v3/simple/price', [
                     'ids' => $token['coingecko_id'],
                     'vs_currencies' => 'usd',
                 ]);
 
                 if ($priceResponse->successful()) {
-                    $usdRate = $priceResponse->json($token['coingecko_id'] . '.usd', 0);
+                    $usdRate = $priceResponse->json($token['coingecko_id'].'.usd', 0);
 
                     return [
                         'name' => $token['symbol'],
