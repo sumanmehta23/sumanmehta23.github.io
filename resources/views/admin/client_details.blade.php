@@ -184,7 +184,7 @@
                                             <div class="mb-2 d-flex justify-content-between align-items-start">
                                                 <h6 class="mb-0">
                                                     <i class="fe fe-user text-primary"></i>
-                                                    {{ $note->admin->name ?? 'Admin' }}
+                                                    {{ $note->admin->username ?? 'Admin' }}
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="fe fe-clock"></i>
