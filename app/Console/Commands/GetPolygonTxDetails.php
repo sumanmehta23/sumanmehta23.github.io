@@ -37,18 +37,21 @@ class GetPolygonTxDetails extends Command
             'label'        => 'Polygon',
             'native'       => 'POL',   // resolved dynamically for polygon
             'explorer_api' => 'https://api.polygonscan.com/api',
+            'explorer_tx'  => 'https://polygonscan.com/tx/%s',
         ],
         'ethereum' => [
             'rpc'          => 'https://ethereum-rpc.publicnode.com',
             'label'        => 'Ethereum',
             'native'       => 'ETH',
             'explorer_api' => 'https://api.etherscan.io/api',
+            'explorer_tx'  => 'https://etherscan.io/tx/%s',
         ],
         'monad' => [
             'rpc'          => 'https://rpc.monad.xyz',
             'label'        => 'Monad',
             'native'       => 'MON',
             'explorer_api' => 'https://monadscan.com',
+            'explorer_tx'  => 'https://monadscan.com/tx/%s',
         ],
     ];
 
@@ -104,6 +107,7 @@ class GetPolygonTxDetails extends Command
         $rpc   = $this->chains[$chain]['rpc'];
         $label = $this->chains[$chain]['label'];
         $this->info("✓ Found on {$label}");
+        $explorerDisplayedUsd = $this->getExplorerDisplayedUsdValue($chain, $hash);
 
         // 2️⃣ Block timestamp
         $blockNumber = hexdec($tx['blockNumber'] ?? '0x0');
@@ -137,6 +141,10 @@ class GetPolygonTxDetails extends Command
             'date'        => $transactionDate,
         ];
 
+        if ($explorerDisplayedUsd !== null) {
+            $result['explorer_displayed_value_usd'] = $explorerDisplayedUsd;
+        }
+
         // 5️⃣ ERC-20 path (native == 0)
         if ($valueNative == 0 && $receipt && isset($receipt['logs'])) {
             $this->info('Native value is 0, checking for ERC-20 token transfers...');
@@ -152,7 +160,7 @@ class GetPolygonTxDetails extends Command
                 $tokenValue   = hexdec($log['data'] ?? '0x0');
                 $this->info("Found token transfer. Contract: {$tokenAddress}");
 
-                $tokenInfo = $this->getTokenInfo($tokenAddress, $tokenValue, $timestamp, $chain, $rpc);
+                $tokenInfo = $this->getTokenInfo($tokenAddress, $tokenValue, $timestamp, $chain, $rpc, $explorerDisplayedUsd);
 
                 if ($tokenInfo) {
                     $result['token_address']        = $tokenAddress;
@@ -162,6 +170,9 @@ class GetPolygonTxDetails extends Command
                     $result['token_amount']          = $tokenInfo['amount'];
                     $result['token_usd_rate_at_time'] = $tokenInfo['usd_rate'];
                     $result['value_usd_at_time']     = $tokenInfo['value_usd'];
+                    if (!empty($tokenInfo['price_source'])) {
+                        $result['price_source'] = $tokenInfo['price_source'];
+                    }
 
                     $this->line(json_encode($result, JSON_PRETTY_PRINT));
                     return Command::SUCCESS;
@@ -184,6 +195,10 @@ class GetPolygonTxDetails extends Command
                 $priceUsd = (float) $manualPrice;
                 $this->info("Using manually specified {$nativeSymbol} price: \${$priceUsd}");
                 $result['price_source'] = 'manual';
+            } elseif ($explorerDisplayedUsd !== null) {
+                $priceUsd = round($explorerDisplayedUsd / $valueNative, 8);
+                $this->info("Using {$label} explorer displayed value: \${$explorerDisplayedUsd}");
+                $result['price_source'] = 'explorer_displayed_current';
             } else {
                 $priceUsd = $this->getHistoricalNativePrice($nativeSymbol, $timestamp, $apiKey);
 
@@ -202,7 +217,9 @@ class GetPolygonTxDetails extends Command
             $result['native_symbol']         = $nativeSymbol;
             $result['value_native']           = round($valueNative, 8);
             $result['native_usd_rate_at_time'] = $priceUsd;
-            $result['value_usd_at_time']      = round($valueNative * $priceUsd, 2);
+            $result['value_usd_at_time']      = isset($result['price_source']) && $result['price_source'] === 'explorer_displayed_current'
+                ? $explorerDisplayedUsd
+                : round($valueNative * $priceUsd, 2);
 
             if (!isset($result['price_source'])) {
                 $this->comment('Note: Price may vary slightly due to different data sources/timing.');
@@ -430,7 +447,8 @@ class GetPolygonTxDetails extends Command
         int    $tokenValueRaw,
         int    $timestamp,
         string $chain,
-        string $rpc
+        string $rpc,
+        ?float $explorerDisplayedUsd = null
     ): ?array {
         try {
             $date             = date('d-m-Y', $timestamp);
@@ -442,6 +460,18 @@ class GetPolygonTxDetails extends Command
                 $token    = $knownList[$tokenAddressNorm];
                 $decimals = $token['decimals'];
                 $amount   = $tokenValueRaw / pow(10, $decimals);
+                if ($explorerDisplayedUsd !== null && $amount > 0) {
+                    return [
+                        'name'      => $token['symbol'],
+                        'symbol'    => $token['symbol'],
+                        'decimals'  => $decimals,
+                        'amount'    => round($amount, 8),
+                        'usd_rate'  => round($explorerDisplayedUsd / $amount, 8),
+                        'value_usd' => $explorerDisplayedUsd,
+                        'price_source' => 'explorer_displayed_current',
+                    ];
+                }
+
                 $price    = $this->fetchTokenUsdPrice($token['coingecko_id'], $token['symbol'], $date);
 
                 return [
@@ -451,6 +481,7 @@ class GetPolygonTxDetails extends Command
                     'amount'    => round($amount, 8),
                     'usd_rate'  => $price['rate'] ?? null,
                     'value_usd' => $price ? round($amount * $price['rate'], 6) : null,
+                    'price_source' => $price ? 'market_data' : null,
                 ];
             }
 
@@ -463,6 +494,18 @@ class GetPolygonTxDetails extends Command
 
             $this->info('Chain metadata — symbol: ' . ($symbol ?? 'unknown') . ", decimals: {$decimals}");
 
+            if ($explorerDisplayedUsd !== null && $amount > 0) {
+                return [
+                    'name'      => $symbol   ?? 'Unknown',
+                    'symbol'    => $symbol   ?? 'Unknown',
+                    'decimals'  => $decimals,
+                    'amount'    => round($amount, 8),
+                    'usd_rate'  => round($explorerDisplayedUsd / $amount, 8),
+                    'value_usd' => $explorerDisplayedUsd,
+                    'price_source' => 'explorer_displayed_current',
+                ];
+            }
+
             $coingeckoId = $symbol ? $this->resolveCoingeckoId($symbol) : null;
             $price       = $coingeckoId ? $this->fetchTokenUsdPrice($coingeckoId, $symbol, $date) : null;
 
@@ -473,6 +516,7 @@ class GetPolygonTxDetails extends Command
                 'amount'    => round($amount, 8),
                 'usd_rate'  => $price['rate'] ?? null,
                 'value_usd' => $price ? round($amount * $price['rate'], 6) : null,
+                'price_source' => $price ? 'market_data' : null,
             ];
 
         } catch (\Exception $e) {
@@ -554,6 +598,51 @@ class GetPolygonTxDetails extends Command
         } catch (\Exception $e) {
             $this->warn('CoinGecko search failed: ' . $e->getMessage());
         }
+        return null;
+    }
+
+    private function getExplorerDisplayedUsdValue(string $chain, string $hash): ?float
+    {
+        $explorerTx = $this->chains[$chain]['explorer_tx'] ?? null;
+
+        if (!$explorerTx) {
+            return null;
+        }
+
+        try {
+            $resp = Http::timeout(15)
+                ->retry(2, 300)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (compatible; LQHManualPaymentBot/1.0; +https://lqdfx.com)',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                ])
+                ->get(sprintf($explorerTx, $hash));
+
+            if (!$resp->successful()) {
+                return null;
+            }
+
+            $html = $resp->body();
+
+            $patterns = [
+                '/id=[\'"]data-vprice[\'"][^>]*>\s*\$([\d,]+(?:\.\d+)?)/i',
+                '/id=[\'"]ContentPlaceHolder1_spanClosingPrice[\'"][^>]*>.*?\$([\d,]+(?:\.\d+)?)/is',
+                '/<span class=[\'"][^\'"]*text-muted[^\'"]*[\'"][^>]*>\(\$([\d,]+(?:\.\d+)?)\)<\/span>/i',
+            ];
+
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $value = (float) str_replace(',', '', $matches[1]);
+                    if ($value > 0) {
+                        $this->info("Explorer displayed USD value ({$chain}): \${$value}");
+                        return $value;
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $this->warn("Explorer USD value fetch failed: " . $e->getMessage());
+        }
+
         return null;
     }
 
