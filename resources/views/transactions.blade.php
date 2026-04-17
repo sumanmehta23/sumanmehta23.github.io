@@ -1,5 +1,47 @@
 @php
     use Carbon\Carbon;
+    use Illuminate\Pagination\LengthAwarePaginator;
+
+    $tabAliases = [
+        'withdrawls' => 'withdrawals',
+        'internaltrans' => 'internal-transfers',
+        'internal_transfer' => 'internal-transfers',
+    ];
+
+    $activeTransactionTab = $tabAliases[request('tab')] ?? request('tab', 'deposits');
+
+    if (! in_array($activeTransactionTab, ['deposits', 'withdrawals', 'internal-transfers'], true)) {
+        $activeTransactionTab = 'deposits';
+    }
+
+    $paginateCollection = function ($items, int $perPage, string $pageName) {
+        if (
+            $items instanceof \Illuminate\Contracts\Pagination\Paginator ||
+            $items instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+        ) {
+            return $items;
+        }
+
+        $items = $items instanceof \Illuminate\Support\Collection ? $items : collect($items);
+        $currentPage = LengthAwarePaginator::resolveCurrentPage($pageName);
+        $currentItems = $items->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        return new LengthAwarePaginator(
+            $currentItems,
+            $items->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'pageName' => $pageName,
+                'query' => request()->query(),
+            ]
+        );
+    };
+
+    $deposit_history = $paginateCollection($deposit_history, 5, 'deposit_page');
+    $withdrawal_history = $paginateCollection($withdrawal_history, 5, 'withdrawal_page');
+    $internal_transfer = $paginateCollection($internal_transfer, 5, 'transfer_page');
 @endphp
 @extends('layouts.crm.crm')
 @section('content')
@@ -30,6 +72,13 @@
         background-color: red; /* Background red on hover */
         color: white;          /* Text white on hover */
         border-color: red;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-pagination-center {
+            display: flex;
+            justify-content: center;
+        }
     }
 </style>
 <div class="pc-container">
@@ -64,19 +113,19 @@
             </div>
             <ul class="nav nav-tabs analytics-tab flex-nowrap" id="myTab" role="tablist" style="overflow-x: auto; flex-wrap: nowrap;">
               <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#deposits" type="button" role="tab" aria-controls="deposits" aria-selected="true">Deposits</button>
+                <button class="nav-link {{ $activeTransactionTab === 'deposits' ? 'active' : '' }}" id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#deposits" type="button" role="tab" aria-controls="deposits" aria-selected="{{ $activeTransactionTab === 'deposits' ? 'true' : 'false' }}">Deposits</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="withdrawls" data-bs-toggle="tab" data-bs-target="#withdrawls-pane" type="button" role="tab" aria-controls="withdrawls-pane" aria-selected="false">Withdrawals</button>
+                <button class="nav-link {{ $activeTransactionTab === 'withdrawals' ? 'active' : '' }}" id="withdrawls" data-bs-toggle="tab" data-bs-target="#withdrawls-pane" type="button" role="tab" aria-controls="withdrawls-pane" aria-selected="{{ $activeTransactionTab === 'withdrawals' ? 'true' : 'false' }}">Withdrawals</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="internaltrans" data-bs-toggle="tab" data-bs-target="#internaltrans-pane" type="button" role="tab" aria-controls="internaltrans-pane" aria-selected="false">Internal Transfers</button>
+                <button class="nav-link {{ $activeTransactionTab === 'internal-transfers' ? 'active' : '' }}" id="internaltrans" data-bs-toggle="tab" data-bs-target="#internaltrans-pane" type="button" role="tab" aria-controls="internaltrans-pane" aria-selected="{{ $activeTransactionTab === 'internal-transfers' ? 'true' : 'false' }}">Internal Transfers</button>
               </li>
             </ul>
           </div>
           <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="deposits" role="tabpanel" aria-labelledby="analytics-tab-1">
-              @if($deposit_history->isNotEmpty())
+            <div class="tab-pane fade {{ $activeTransactionTab === 'deposits' ? 'show active' : '' }}" id="deposits" role="tabpanel" aria-labelledby="analytics-tab-1">
+              @if($deposit_history->count() > 0)
                 {{-- Mobileview Deposit --}}
                 <div class="p-2 d-block d-md-none">
                   @foreach ($deposit_history as $history)
@@ -162,9 +211,12 @@
                   <hr>
                   <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
-                      <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $deposit_history->count() }} of {{ $deposit_history->count() }} entries</div>
+                      {{-- <div class="dt-info" aria-live="polite" role="status">Showing {{ $deposit_history->firstItem() ?? 0 }} to {{ $deposit_history->lastItem() ?? 0 }} of {{ $deposit_history->total() }} entries</div> --}}
                     </div>
                   </div>
+                </div>
+                <div class="px-5 pb-3 mobile-pagination-center">
+                  {{ $deposit_history->withQueryString()->appends(['tab' => 'deposits'])->links('pagination::bootstrap-5') }}
                 </div>
               @else
                 <div class="px-5 table-responsive">
@@ -186,8 +238,8 @@
                 </div>
               </div>
             </div>
-            <div class="tab-pane fade" id="withdrawls-pane" role="tabpanel" aria-labelledby="withdrawls">
-              @if($withdrawal_history->isNotEmpty())
+            <div class="tab-pane fade {{ $activeTransactionTab === 'withdrawals' ? 'show active' : '' }}" id="withdrawls-pane" role="tabpanel" aria-labelledby="withdrawls">
+              @if($withdrawal_history->count() > 0)
                 {{-- Mobile View Withdrawal --}}
                 <div class="p-2 d-block d-md-none">
                   @foreach ($withdrawal_history as $history)
@@ -504,9 +556,12 @@
                   <hr>
                   <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
-                      <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $withdrawal_history->count() }} of {{ $withdrawal_history->count() }} entries</div>
+                      {{-- <div class="dt-info" aria-live="polite" role="status">Showing {{ $withdrawal_history->firstItem() ?? 0 }} to {{ $withdrawal_history->lastItem() ?? 0 }} of {{ $withdrawal_history->total() }} entries</div> --}}
                     </div>
                   </div>
+                </div>
+                <div class="px-5 pb-3 mobile-pagination-center">
+                  {{ $withdrawal_history->withQueryString()->appends(['tab' => 'withdrawals'])->links('pagination::bootstrap-5') }}
                 </div>
               @else
                 <div class="px-5 table-responsive">
@@ -528,8 +583,8 @@
                 </div>
               </div>
             </div>
-            <div class="tab-pane fade" id="internaltrans-pane" role="tabpanel" aria-labelledby="internaltrans">
-              @if($internal_transfer->isNotEmpty())
+            <div class="tab-pane fade {{ $activeTransactionTab === 'internal-transfers' ? 'show active' : '' }}" id="internaltrans-pane" role="tabpanel" aria-labelledby="internaltrans">
+              @if($internal_transfer->count() > 0)
                 {{-- Mobile View Internal Transfer --}}
                 <div class="p-2 d-block d-md-none">
                   @foreach ($internal_transfer as $history)
@@ -660,9 +715,12 @@
                   <hr>
                   <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
-                      <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $internal_transfer->count() }} of {{ $internal_transfer->count() }} entries</div>
+                      {{-- <div class="dt-info" aria-live="polite" role="status">Showing {{ $internal_transfer->firstItem() ?? 0 }} to {{ $internal_transfer->lastItem() ?? 0 }} of {{ $internal_transfer->total() }} entries</div> --}}
                     </div>
                   </div>
+                </div>
+                <div class="px-5 pb-3 mobile-pagination-center">
+                  {{ $internal_transfer->withQueryString()->appends(['tab' => 'internal-transfers'])->links('pagination::bootstrap-5') }}
                 </div>
               @else
                 <div class="px-5 table-responsive">
