@@ -1172,8 +1172,6 @@
                                                             </div>
                                                             @can('client:introducingBrokerButton')
                                                                 <div class="card-body">
-                                                                    <p class="card-text">A request on behalf of client for creating
-                                                                        IB profile for this client.</p>
 
                                                                     <?php if (!isset($user->ib) || ($user->ib && $user->ib->status != 1)): ?>
                                                                     <?php if (!isset($user->ib) || ($user->ib && $user->ib->status == '0')): ?>
