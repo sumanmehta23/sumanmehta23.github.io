@@ -1148,28 +1148,28 @@
                                                         data-bs-toggle="modal" data-bs-target="#addTicketModal">
                                                         CREATE TICKET
                                                     </button> --}}
-                                                    @can('ib:viewAny')
-                                                        <div class="card custom-card">
-                                                            <div class="card-header">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <div class="card-title">INTRODUCING BROKER</div>
-                                                                    <div>
-                                                                        <?php if (isset($user->ib)): ?>
-                                                                        <?php if ($user->ib->status == 0): ?>
-                                                                        <span
-                                                                            class="badge bg-outline-warning text-end">Pending</span>
-                                                                        <?php elseif ($user->ib->status == 1): ?>
-                                                                        <span class="badge bg-outline-success text-end">Active
-                                                                            IB</span>
-                                                                        <?php endif; ?>
-                                                                        <?php else: ?>
-                                                                        <span class="badge bg-outline-info text-end">Not
-                                                                            Requested</span>
-                                                                        <?php endif; ?>
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="card-title">INTRODUCING BROKER</div>
+                                                                <div>
+                                                                    <?php if (isset($user->ib)): ?>
+                                                                    <?php if ($user->ib->status == 0): ?>
+                                                                    <span
+                                                                        class="badge bg-outline-warning text-end">Pending</span>
+                                                                    <?php elseif ($user->ib->status == 1): ?>
+                                                                    <span class="badge bg-outline-success text-end">Active
+                                                                        IB</span>
+                                                                    <?php endif; ?>
+                                                                    <?php else: ?>
+                                                                    <span class="badge bg-outline-info text-end">Not
+                                                                        Requested</span>
+                                                                    <?php endif; ?>
 
-                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                        @can('ib:viewAny')
                                                             @can('client:introducingBrokerButton')
                                                                 <div class="card-body">
                                                                     <p class="card-text">A request on behalf of client for creating
@@ -1222,8 +1222,8 @@
                                                                     <?php endif; ?>
                                                                 </div>
                                                             @endcan
-                                                        </div>
-                                                    @endcan
+                                                        @endcan
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
