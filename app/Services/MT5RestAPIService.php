@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Mt5User;
 use App\Models\Account;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -614,6 +613,7 @@ class MT5RestAPIService
 
         foreach ($chunks as $chunk) {
             $result = $this->fetchDealBatchChunk($chunk, $from, $to);
+            Log::info('MT5RestAPI: Deal batch chunk data is ', [$result,$chunk, $from, $to]);
             if ($result === null) {
                 continue;
             }

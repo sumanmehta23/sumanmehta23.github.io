@@ -101,9 +101,33 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         $accountWindows = [];
         foreach ($accounts as $acct) {
             $lastSync = $acct->deals_synced_to;
-            $from = $lastSync
-                ? Carbon::parse($lastSync)->subHour()->timestamp
-                : Carbon::parse('2024-09-01')->timestamp;
+
+            // Validate lastSync before using it
+            // If it's corrupted (zero date, invalid, etc), default to standard start
+            $from = null;
+            if ($lastSync && $lastSync !== '0000-00-00 00:00:00') {
+                try {
+                    $lastSyncCarbon = Carbon::parse($lastSync);
+                    $fromTimestamp = $lastSyncCarbon->subHour()->timestamp;
+
+                    // Validate the calculated from timestamp is reasonable (after 2024-01-01)
+                    if ($fromTimestamp > 1704067200) {
+                        $from = $fromTimestamp;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("SyncDealsJob: Could not parse deals_synced_to, using default", [
+                        'account_id' => $acct->id,
+                        'deals_synced_to' => $lastSync,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Fall through to use default
+                }
+            }
+
+            // Use default if lastSync was invalid
+            if ($from === null) {
+                $from = Carbon::parse('2024-09-01')->timestamp;
+            }
 
             // Cap window end to current time (not into far future like 2080)
             // This prevents unrealistic timestamps that MySQL rejects
@@ -163,11 +187,12 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
                     // Validate: from should be reasonable (after 2024-01-01)
                     if (!is_numeric($fromTimestamp) || $fromTimestamp < 1704067200) { // 2024-01-01
-                        Log::warning("SyncDealsJob: Invalid 'from' timestamp, skipping update", [
+                        Log::warning("SyncDealsJob: Invalid 'from' timestamp, resetting to default", [
                             'account_id' => $accountId,
                             'from_timestamp' => $fromTimestamp,
                         ]);
-                        continue;
+                        // Use the start date as fallback
+                        $fromTimestamp = Carbon::parse('2024-09-01')->timestamp;
                     }
 
                     // Validate: to should be reasonable (after from, before far future)
@@ -388,10 +413,22 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                 $rawDeals = $dealsByLogin[$login] ?? null;
 
                 if ($rawDeals === null) {
-                    Log::warning("SyncDealsJob: No deals returned for {$acctId} in batch", [
+                    // No deals returned, but this is NOT a failure
+                    // It just means there are no trades in this range
+                    // Still need to update sync range to mark this period as checked
+                    Log::info("SyncDealsJob: No deals found for {$acctId} in batch (normal, not an error)", [
                         'login' => $login,
                     ]);
-                    $failedAccountIds[] = $acctId;
+
+                    // Treat as successful with empty deals list
+                    $result = $this->processRestDeals([], $acctId, $account, $w['from'], $existingDealIds, true, $w['to']);
+                    $inserted += $result['inserted'];
+                    $closedPositions = array_merge($closedPositions, $result['closed_positions']);
+
+                    $this->syncTrades($acctId, $account, $result['new_deal_ids']);
+
+                    ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
+                        ->onQueue('distributeibcommission');
                     continue;
                 }
 
@@ -402,10 +439,8 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
 
                 $this->syncTrades($acctId, $account, $result['new_deal_ids']);
 
-                if (count($closedPositions) >= 100) {
-                    ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
+                ProcessClosedDealCommissionJob::dispatch(array_splice($closedPositions, 0, 100))
                         ->onQueue('distributeibcommission');
-                }
             }
         } catch (Exception $e) {
             Log::error("SyncDealsJob: Batch REST call failed", [
