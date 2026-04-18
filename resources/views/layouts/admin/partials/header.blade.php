@@ -320,12 +320,12 @@ if (app()->environment('local') || app()->environment('development')) {
                     <!-- End::header-element -->
 
                     <!-- Start::header-element: Language Dropdown -->
-                    <li class="header-element">
+                    {{-- <li class="header-element">
                         @include('components.language-dropdown', [
                             'selectId' => 'custom_translate_select_header',
                             'flagPreviewId' => 'flag-preview-admin-header'
                         ])
-                    </li>
+                    </li> --}}
                     <!-- End::header-element: Language Dropdown -->
 
                     <!-- Start::header-element -->
