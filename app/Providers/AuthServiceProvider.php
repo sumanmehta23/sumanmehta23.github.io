@@ -16,7 +16,39 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        // Admin managing client/user resources
+        \App\Models\User::class => \App\Policies\ClientPolicy::class,
+
+        // Admin managing trading accounts
+        \App\Models\Account::class => \App\Policies\AccountPolicy::class,
+
+        // Admin managing system roles
+        \App\Models\Role::class => \App\Policies\RolePolicy::class,
+
+        // Admin managing system permissions
+        \App\Models\Permission::class => \App\Policies\PermissionPolicy::class,
+
+        // Admin managing staff/employees
+        \App\Models\EmployeeList::class => \App\Policies\EmployeePolicy::class,
+
+        // Admin managing trades
+        \App\Models\Trade::class => \App\Policies\TradePolicy::class,
+
+        // API-specific policies (registered for reference, mostly used via middleware)
+        'api_user' => \App\Policies\Api\ApiUserPolicy::class,
+        'api_trade' => \App\Policies\Api\ApiTradePolicy::class,
+        'api_transaction' => \App\Policies\Api\ApiTransactionPolicy::class,
+        'api_withdrawal' => \App\Policies\Api\ApiWithdrawalPolicy::class,
+        'api_deposit' => \App\Policies\Api\ApiDepositPolicy::class,
+        'api_webhook' => \App\Policies\Api\ApiWebhookPolicy::class,
+
+        // User/Trader-side policies (user operations authorization)
+        'user_dashboard' => \App\Policies\UserDashboardPolicy::class,
+        'user_profile' => \App\Policies\UserProfilePolicy::class,
+        'user_trade' => \App\Policies\UserTradePolicy::class,
+        'user_transaction' => \App\Policies\UserTransactionPolicy::class,
+        'user_kyc' => \App\Policies\UserKycPolicy::class,
+        'user_affiliate' => \App\Policies\UserAffiliatePolicy::class,
     ];
 
     /**

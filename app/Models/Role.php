@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class Role extends Model
 {
     use HasFactory,HasUuids;
-
+    protected $guarded = [];
     public function permissions()
     {
         return $this->belongsToMany(Permission::class);

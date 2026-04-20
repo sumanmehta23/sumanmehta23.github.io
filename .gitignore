@@ -30,3 +30,5 @@ package-lock.json
 local-scripts/
 docs
 debug.log
+/.github/
+/postman/
