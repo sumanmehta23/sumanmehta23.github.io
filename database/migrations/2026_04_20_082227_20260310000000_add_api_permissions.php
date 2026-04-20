@@ -64,7 +64,10 @@ return new class extends Migration
         foreach ($permissions as $permission) {
             $permission['id'] = Str::uuid()->toString();
             $permission['permission_group_id'] = $existing ? $existing->id : $groupId;
-            DB::table('permissions')->insertOrIgnore($permission);
+            DB::table('permissions')->updateOrCreate(
+                ['name' => $permission['name']],
+                $permission
+            );
         }
     }
 
