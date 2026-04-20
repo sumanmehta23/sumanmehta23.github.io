@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Permission;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -62,9 +63,9 @@ return new class extends Migration
 
         // Insert permissions, ignoring duplicates
         foreach ($permissions as $permission) {
-            $permission['id'] = Str::uuid()->toString();
+//            $permission['id'] = Str::uuid()->toString();
             $permission['permission_group_id'] = $existing ? $existing->id : $groupId;
-            DB::table('permissions')->updateOrCreate(
+            Permission::updateOrCreate(
                 ['name' => $permission['name']],
                 $permission
             );
