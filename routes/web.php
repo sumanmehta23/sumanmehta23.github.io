@@ -27,7 +27,7 @@ use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Admin\Transaction;
 use App\Http\Controllers\Admin\TwoFactorAuthController;
-//use App\Http\Controllers\Admin\WarningUserController;
+use App\Http\Controllers\Admin\WarningUserController;
 use App\Http\Controllers\Admin\ZapierAccountsController;
 use App\Http\Controllers\Api\Mt5CommonController;
 use App\Http\Controllers\Api\ZapierWebhookController;
@@ -375,7 +375,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
 
         Route::get('/getBlockedIPs', [AjaxController::class, 'getBlockedIPs']);
 
-//        Route::get('/getWarningLogs', [WarningUserController::class, 'getWarningLogs'])->middleware('check.permissions:settings:warningUsers');
+        Route::get('/getWarningLogs', [WarningUserController::class, 'getWarningLogs'])->middleware('check.permissions:settings:warningUsers');
 
         Route::get('/getClientIbProfile', [AjaxController::class, 'getClientIbProfile']);
         Route::resource('groups', ProductsController::class);
@@ -550,9 +550,9 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::post('/maintenance-email/send', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'sendEmails'])->name('maintenance.send')->middleware('check.permissions:setting:update');
 
 //        // Warning Users
-//        Route::get('/warning-users', [WarningUserController::class, 'index'])->name('warning_users')->middleware('check.permissions:settings:warningUsers');
-//        Route::post('/warning-users/send', [WarningUserController::class, 'sendWarnings'])->name('send_warnings')->middleware('check.permissions:settings:warningUsers');
-//        Route::get('/warning-users/logs', [WarningUserController::class, 'getWarningLogs'])->name('get_warning_logs')->middleware('check.permissions:settings:warningUsers');
+        Route::get('/warning-users', [WarningUserController::class, 'index'])->name('warning_users')->middleware('check.permissions:settings:warningUsers');
+        Route::post('/warning-users/send', [WarningUserController::class, 'sendWarnings'])->name('send_warnings')->middleware('check.permissions:settings:warningUsers');
+        Route::get('/warning-users/logs', [WarningUserController::class, 'getWarningLogs'])->name('get_warning_logs')->middleware('check.permissions:settings:warningUsers');
 
         // Account Termination Email Preview
 //        Route::get('/account-termination-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountTerminationEmail'])->name('account-termination.preview')->middleware('check.permissions:setting:update');
