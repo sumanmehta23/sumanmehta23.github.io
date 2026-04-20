@@ -14,9 +14,9 @@ class AccountController extends Controller
     /**
      * Display a listing of accounts.
      * Supports filtering by user ID, account type, status, and creation date range.
-     * 
+     *
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
     {
@@ -85,7 +85,7 @@ class AccountController extends Controller
 
     /**
      * Display a single account.
-     * 
+     *
      * @param string $id Account ID
      * @return \Illuminate\Http\Response
      */
@@ -108,7 +108,7 @@ class AccountController extends Controller
 
     /**
      * Get accounts for a specific user.
-     * 
+     *
      * @param string $userId User ID
      * @param Request $request
      * @return \Illuminate\Http\Response
@@ -147,7 +147,7 @@ class AccountController extends Controller
     /**
      * Get account statistics.
      * Returns total accounts, total balance, etc.
-     * 
+     *
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
@@ -190,7 +190,7 @@ class AccountController extends Controller
 
     /**
      * Check if user has specific permission
-     * 
+     *
      * @param object $user
      * @param string $permission
      * @return bool

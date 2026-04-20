@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Glhd\Bits\Snowflake;
 use Illuminate\Support\Str;
 
 return new class extends Migration

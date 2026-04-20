@@ -28,10 +28,10 @@ class UserTransactionPolicy
         }
 
         // Check if user KYC is verified (if required)
-        if (isset($user->kyc_verify) && $user->kyc_verify !== 'verified') {
-            // Allow withdrawal for non-KYC requiring users or those with pending KYC
-            // Adjust based on your business rules
-        }
+//        if (isset($user->kyc_verify) && $user->kyc_verify !== 'verified') {
+//            // Allow withdrawal for non-KYC requiring users or those with pending KYC
+//            // Adjust based on your business rules
+//        }
 
         return true;
     }

@@ -13,9 +13,9 @@ class TradeController extends Controller
     /**
      * Display a listing of trades.
      * Supports filtering by open time range, user ID, symbol, and status.
-     * 
+     *
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -134,7 +134,7 @@ class TradeController extends Controller
      *
      * @param string $id
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id, Request $request)
     {
@@ -169,7 +169,7 @@ class TradeController extends Controller
      * Get trade statistics.
      *
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function statistics(Request $request)
     {

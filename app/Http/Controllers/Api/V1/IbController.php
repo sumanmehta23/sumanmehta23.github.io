@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\IbResource;
-use App\Models\Ib;
+use App\Models\Ib1;
 use Illuminate\Http\Request;
 
 class IbController extends Controller
@@ -37,7 +37,7 @@ class IbController extends Controller
 
         $includeArchived = filter_var($request->input('include_archived', false), FILTER_VALIDATE_BOOLEAN);
 
-        $query = Ib::query();
+        $query = Ib1::query();
 
         // Handle archived records
         if (! $includeArchived) {
@@ -112,7 +112,7 @@ class IbController extends Controller
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
-        $ib = Ib::with('parent')->find($id);
+        $ib = Ib1::with('parent')->find($id);
 
         if (! $ib) {
             return response()->json(['error' => 'IB not found'], 404);
