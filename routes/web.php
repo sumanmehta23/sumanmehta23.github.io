@@ -7,7 +7,7 @@ use App\Http\Controllers\Admin\ClientAccController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CompetitionProductController;
 use App\Http\Controllers\Admin\Dashboard;
-use App\Http\Controllers\Admin\DeletedAccountsController;
+//use App\Http\Controllers\Admin\DeletedAccountsController;
 use App\Http\Controllers\Admin\IbCommissionAnalysisController;
 use App\Http\Controllers\Admin\IBController;
 use App\Http\Controllers\Admin\IbWithdrawalController;
@@ -22,7 +22,7 @@ use App\Http\Controllers\Admin\ProductsController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StaffManagement;
-use App\Http\Controllers\Admin\SumsubController;
+//use App\Http\Controllers\Admin\SumsubController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\Ticket;
 use App\Http\Controllers\Admin\Transaction;
@@ -150,7 +150,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [Home::class, 'dashboard'])->name('dashboard');
     Route::get('/forex-news', [ForexNewsController::class, 'index'])->name('forex-news.index');
     Route::get('/view_account_details', [MT5Accounts::class, 'viewAccountDetails'])->name('view_account_details');
-    Route::get('/select_account_deposit', [MT5Accounts::class, 'select_account_deposit'])->name('select_account_deposit');
+//    Route::get('/select_account_deposit', [MT5Accounts::class, 'select_account_deposit'])->name('select_account_deposit');
 
     // Route::get('/wallet', [Wallet::class, 'index'])->name('wallet');
     Route::get('/transactions', [Transactions::class, 'index'])->name('transactions');
@@ -248,7 +248,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/trade-deposit', [TradeDepositController::class, 'index'])->name('trade-deposit');
     Route::post('/trade-deposit', [TradeDepositController::class, 'deposit'])->name('trade-deposit_store');
-    Route::post('/new_trade_deposit', [TradeDepositController::class, 'new_trade_deposit'])->name('new_trade_deposit_store');
+//    Route::post('/new_trade_deposit', [TradeDepositController::class, 'new_trade_deposit'])->name('new_trade_deposit_store');
 
     Route::get('/sync_amount', [TradeDepositController::class, 'sync_amount']);
 
@@ -264,7 +264,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/verify-promocode', [AjaxController::class, 'verify_promocode'])->name('verify.promocode');
 
-   
+
 });
 Route::post('/cryptochill/callback', [Wallet::class, 'secureProcessPayment'])->name('secure_wallet_payment');
 
@@ -274,7 +274,7 @@ Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show']
 
 Route::prefix("/admin")->name("admin.")->group(function () {
 
-    
+
 
     Route::get('/', [Login::class, 'showLoginForm']);
     Route::get('/verify_2fa', [Login::class, 'verify_2fa'])->name('verify_2fa');
@@ -548,17 +548,17 @@ Route::prefix("/admin")->name("admin.")->group(function () {
         Route::get('/maintenance-email/fetch', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'fetchEmails'])->name('maintenance.fetch')->middleware('check.permissions:setting:update');
         Route::get('/maintenance-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewEmail'])->name('maintenance.preview')->middleware('check.permissions:setting:update');
         Route::post('/maintenance-email/send', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'sendEmails'])->name('maintenance.send')->middleware('check.permissions:setting:update');
-        
-        // Warning Users
+
+//        // Warning Users
         Route::get('/warning-users', [WarningUserController::class, 'index'])->name('warning_users')->middleware('check.permissions:settings:warningUsers');
         Route::post('/warning-users/send', [WarningUserController::class, 'sendWarnings'])->name('send_warnings')->middleware('check.permissions:settings:warningUsers');
         Route::get('/warning-users/logs', [WarningUserController::class, 'getWarningLogs'])->name('get_warning_logs')->middleware('check.permissions:settings:warningUsers');
 
         // Account Termination Email Preview
-        Route::get('/account-termination-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountTerminationEmail'])->name('account-termination.preview')->middleware('check.permissions:setting:update');
+//        Route::get('/account-termination-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountTerminationEmail'])->name('account-termination.preview')->middleware('check.permissions:setting:update');
 
         // Account Review Email Preview
-        Route::get('/account-review-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountReviewEmail'])->name('account-review.preview')->middleware('check.permissions:setting:update');
+//        Route::get('/account-review-email/preview', [\App\Http\Controllers\Admin\MaintenanceEmailController::class, 'previewAccountReviewEmail'])->name('account-review.preview')->middleware('check.permissions:setting:update');
 
 
         Route::get('/ip_ban', [SettingsController::class, 'ip_ban'])->name('ip_ban')->middleware('check.permissions:settings:banIps');
@@ -632,7 +632,7 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/', [TaskController::class, 'index'])->name('index')->middleware('check.permissions:task:viewAny');
             Route::get('/client_tasks', [TaskController::class, 'client_tasks'])->name('client_tasks')->middleware('check.permissions:clientTask:viewAny');
             Route::post('/store', [TaskController::class, 'store'])->name('store')->middleware('check.permissions:task:viewAny');
-            Route::put('/edit', [TaskController::class, 'edit'])->name('edit')->middleware('check.permissions:task:viewAny');
+//            Route::put('/edit', [TaskController::class, 'edit'])->name('edit')->middleware('check.permissions:task:viewAny');
             Route::put('/{task}', [TaskController::class, 'update'])->name('update')->middleware('check.permissions:task:viewAny');
             // Route::put('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject');
             Route::post('/approve_reject', [TaskController::class, 'approve_reject'])->name('approve_reject')->middleware('check.permissions:task:viewAny');
@@ -705,10 +705,10 @@ Route::prefix("/admin")->name("admin.")->group(function () {
             Route::get('/data', [\App\Http\Controllers\Admin\InactiveUsersController::class, 'getInactiveUsers'])->name('data');
         });
 
-        
+
     });
-    
-        
+
+
 });
 // Test route for affiliate reference code functionality
 Route::get('/test-affiliate', function (Request $request) {
