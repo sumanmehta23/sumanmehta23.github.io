@@ -270,14 +270,14 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     $equity = null;
-                                                                    
+
                                                                     // Handle both array and object forms
                                                                     if (is_array($accountHelper)) {
                                                                         $equity = $accountHelper['equity'] ?? null;
                                                                     } elseif (is_object($accountHelper)) {
                                                                         $equity = $accountHelper->equity ?? ($accountHelper->Equity ?? null);
                                                                     }
-                                                                    
+
                                                                     if (!is_null($equity)) {
                                                                         echo "$" . number_format($equity, 2);
                                                                     }
@@ -1481,7 +1481,7 @@ if ($getUser) {
             if (modal) {
                 modal.hide();
             }
-
+        });
         </script>
         <script>
             // MT5 Update Password Modal Fields Validation
