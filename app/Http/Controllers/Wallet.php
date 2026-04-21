@@ -352,6 +352,8 @@ class Wallet extends Controller
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
+            '<p><strong>Wallet Name:</strong><br>' . e($request->wallet_name) . '</p>' .
+            '<p><strong>Wallet Network:</strong><br>' . e($request->wallet_network) . '</p>' .
             '<p><strong>Wallet Address:</strong><br>' .
             '<span style="
                 word-break: break-all;
@@ -405,6 +407,8 @@ class Wallet extends Controller
         $content =
             '<p>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . '!</p>' .
             '<p>You are receiving this email because you have added a new wallet address to your account.</p>' .
+            '<p><strong>Wallet Name:</strong><br>' . e($ClientWallet->wallet_name) . '</p>' .
+            '<p><strong>Wallet Network:</strong><br>' . e($ClientWallet->wallet_network) . '</p>' .
             '<p><strong>Wallet Address:</strong><br>' .
             '<span style="
                 word-break: break-all;
