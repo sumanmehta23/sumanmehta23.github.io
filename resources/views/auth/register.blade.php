@@ -336,7 +336,7 @@
                             for <?= $settings['admin_title'] ?> to contact me for marketing purposes. <br
                                 data-v-97e32e5a=""> By
                             registering you agree
-                            to our <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/privacy-policy">Privacy Policy</a>, <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/terms-conditions">Client
+                            to our <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/privacy-policy">Privacy Policy</a>, <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/client-agreement">Client
                                 Agreement </a>&amp; <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/risk-disclaimer">Trading Risk
                                 Warning</a>. </p>
                     </div>
