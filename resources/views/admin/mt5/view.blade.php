@@ -957,20 +957,8 @@ if ($getUser) {
                                 <h5 class="p-2 f-w-400"><?= $account->code ?></h5>
                             </div>
                         </div>
-                        <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your
-                            Investor and
-                            Master passwords for your trading accounts here.</p>
+                        <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your Investor and Master passwords for your trading accounts here.</p>
                         <div class="mt-0 mb-0 row">
-                            <div class="col-lg-6">
-                                <div class="p-3 border card">
-                                    <div class="form-check"><input type="radio" name="password_type"
-                                            class="form-check-input input-primary" id="customCheckdefhor1"
-                                            value="investor" checked><label class="form-check-label d-block"
-                                            for="customCheckdefhor1"><span><span class="h6">Investor
-                                                    Password</span></span></label></div>
-                                </div>
-                            </div>
-                            <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your Investor and Master passwords for your trading accounts here.</p>
                             <div class="mt-0 mb-0 row">
                                 <div class="col-lg-6">
                                     <div class="p-3 border card">
@@ -1484,7 +1472,6 @@ if ($getUser) {
         });
         </script>
         <script>
-            // MT5 Update Password Modal Fields Validation
             const mt5Password = document.getElementById('password');
             const mt5ConfirmPassword = document.getElementById('confirm_password');
             const toggleMT5UpdatePassword = document.getElementById('togglePassword');
