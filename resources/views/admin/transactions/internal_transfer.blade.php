@@ -125,21 +125,25 @@
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
-                        extend: 'excel',
-                        text: 'Export to Excel',
-                        exportOptions: {
-                            columns: [0,1,2,3,4,6,7] // Updated column indices to match your use case
-                        }
-                    },
-                    {
-                        text: 'Export All',
-                        action: function () {
-                            window.location.href = "/admin/export-all-internal-transfer";
-                        }
-                    }
-                ],
+            buttons: (() => {
+                    let buttons = [];
+                    @hasExportPermission('internal_transfer')
+                        buttons.push({
+                            extend: 'excel',
+                            text: 'Export to Excel',
+                            exportOptions: {
+                                columns: [0,1,2,3,4,6,7] // Updated column indices to match your use case
+                            }
+                        });
+                        buttons.push({
+                            text: 'Export All',
+                            action: function () {
+                                window.location.href = "/admin/export-all-internal-transfer";
+                            }
+                        });
+                    @endif
+                    return buttons;
+                })(),
 
             order: [[3, "desc"]],
             lengthMenu: [
@@ -163,14 +167,14 @@
                 }
             },
             columns: [
-              { data: 'name', name: 'name' },
-              { data: 'email', name: 'email' },
-              { data: 'amount', name: 'amount' },
-              { data: 'transfer_from', name: 'transfer_from' },
-              { data: 'transfer_to', name: 'transfer_to' },
-              { data: 'date', name: 'date' },
-              { data: 'status', name: 'status' },
-              { data: 'created_at', name: 'created_at', visible:false },
+              { data: 'name', name: 'name', orderable: true },
+              { data: 'email', name: 'email', orderable: true },
+              { data: 'amount', name: 'amount', orderable: true },
+              { data: 'transfer_from', name: 'transfer_from', orderable: true },
+              { data: 'transfer_to', name: 'transfer_to', orderable: true },
+              { data: 'date', name: 'date', orderable: true, orderSequence: ['desc', 'asc'] },
+              { data: 'status', name: 'status', orderable: true },
+              { data: 'created_at', name: 'created_at', visible:false, orderable: false },
               // { data: 'action', name: 'action', orderable: false, searchable: false },
             ]
           });

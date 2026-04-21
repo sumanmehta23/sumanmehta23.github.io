@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Account;
 use App\Models\User;
 use App\Models\AccountType;
+use App\Enums\PlatformEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -35,7 +36,6 @@ class AccountFactory extends Factory
             'currency' => $this->faker->currencyCode(),
             'balance' => $this->faker->randomFloat(2, 0, 10000),
             'equity' => $this->faker->randomFloat(2, 0, 10000),
-            'trade_platform' => $this->faker->randomElement(['MetaTrader4', 'MetaTrader5']),
             'lots_completed' => $this->faker->randomFloat(2, 0, 100),
             'margin_free' => $this->faker->randomFloat(2, 0, 10000),
             'margin_level' => $this->faker->randomFloat(2, 0, 500),
@@ -48,7 +48,7 @@ class AccountFactory extends Factory
             'trader_password' => $this->faker->password(8, 16),
             'invester_password' => $this->faker->password(8, 16),
             'phone_password' => $this->faker->password(8, 16),
-            'platform' => $this->faker->randomElement(['mt5', 'x9']),
+            'platform' => $this->faker->randomElement(PlatformEnum::all()),
             'registered_date' => $this->faker->dateTimeThisYear(),
             'status' => $this->faker->randomElement(['active', 'inactive', 'suspended']),
             'bonus_deposit' => $this->faker->randomFloat(2, 0, 10000),

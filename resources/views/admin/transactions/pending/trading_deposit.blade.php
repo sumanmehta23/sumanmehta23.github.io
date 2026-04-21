@@ -179,16 +179,20 @@
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('pending_trading_deposit')
+                    buttons.push({
                         extend: 'excel',
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Deposit_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
                             columns: [0,1,2,3,4,8,9,6] // Updated column indices to match your use case
                         }
-                    }
-                ],
+                    });
+                @endif
+                return buttons;
+            })(),
 
             order: [[3, "desc"]],
             processing: true,

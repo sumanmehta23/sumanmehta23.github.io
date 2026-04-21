@@ -75,20 +75,25 @@
                                             class="table ajaxDataTable table-bordered text-nowrap w-100">
                                             <thead>
                                                 <tr>
-                                                    <th>Name</th>
-                                                    <th>Email</th>
-                                                    <th>Account No</th>
-                                                    <th>Withdrawal Amount</th>
+                                                    <th>Name/Email</th>
+                                                    <th>Current Withdraw Amount</th>
+                                                    <th>Withdraw Fee</th>
+                                                    <th>Total Current Withdrawal Amount</th>
                                                     <th>Withdraw Type</th>
+                                                    <th>Date</th>
+                                                    <th>Time</th>
+                                                    <th>Status</th>
+                                                    <th>Withdraw From</th>
+                                                    <th>Total Deposit</th>
+                                                    <th>Total Withdrawal</th>
+                                                    <th>Floating Balance</th>
+
+                                                    <th>Name</th>
+                                                    <th>Balance</th>
                                                     <th>Withdraw From</th>
                                                     <th>Withdraw To Wallet</th>
                                                     <th>Withdraw Date</th>
-                                                    <th>Status</th>
                                                     <th>Actions</th>
-                                                    <th>Withdraw Fee</th>
-                                                    <th>Total Withdraw</th>
-                                                    <th>Date</th>
-                                                    <th>Time</th>
                                                     <th>Email</th>
                                                 </tr>
                                             </thead>
@@ -116,16 +121,20 @@
             // order: [[0, "desc"]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                    {
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('pending_trading_withdrawal')
+                    buttons.push({
                         extend: 'excel',
                         text: 'Export to Excel',
                         filename: 'Pending_Trading_Withdrawal_' + new Date().toISOString().slice(0, 10),
                         exportOptions: {
-                            columns: [0,14,3,10,11,4,5,12,13,8] // Updated column indices to match your use case
+                            columns: [12,18,1,2,3,4,5,6,7,8,9,10,11] // Updated column indices to match your use case
                         }
-                    }
-                ],
+                    });
+                @endif
+                return buttons; 
+            })(),
 
             // order: [[3, "desc"]],
             lengthMenu: [
@@ -148,20 +157,25 @@
                 }
             },
             columns: [
-              { data: 'name', name: 'name' },
               { data: 'email', name: 'email'},
-              { data: 'code', name: 'code' },
               { data: 'withdrawal_amount', name: 'withdrawal_amount' },
+              { data: 'withdrawal_fee', name: 'withdrawal_fee'},
+              { data: 'total_withdrawal', name: 'total_withdrawal'},
               { data: 'withdraw_type', name: 'withdraw_type' },
-              { data: 'withdraw_from', name: 'withdraw_from' },
-              { data: 'withdraw_to', name: 'withdraw_to' },
-              { data: 'withdraw_date', name: 'withdraw_date'},
+              { data: 'created_date', name: 'created_date'},
+              { data: 'created_time', name: 'created_time'},
               { data: 'status', name: 'status' },
+              { data: 'code', name: 'code' },
+              { data: 'new_total_deposit', name: 'new_total_deposit' },
+              { data: 'new_total_withdrawal', name: 'new_total_withdrawal' },
+              { data: 'floating_balance', name: 'floating_balance' },
+
+              { data: 'name', name: 'name', visible: false },
+              { data: 'balance', name: 'balance', visible: false },
+              { data: 'withdraw_from', name: 'withdraw_from', visible: false },
+              { data: 'withdraw_to', name: 'withdraw_to', visible: false },
+              { data: 'withdraw_date', name: 'withdraw_date', visible: false},
               { data: 'action', name: 'action', orderable: false, searchable: false },
-              { data: 'withdrawal_fee', name: 'withdrawal_fee', visible: false},
-              { data: 'total_withdrawal', name: 'total_withdrawal', visible: false},
-              { data: 'created_date', name: 'created_date', visible: false},
-              { data: 'created_time', name: 'created_time', visible: false},
               { data: 'client_email', name: 'client_email', visible: false},
             ]
           });

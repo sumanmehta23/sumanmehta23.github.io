@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use Carbon\Carbon;
+use App\Enums\PlatformEnum;
 use App\Models\Ib1;
 use App\Models\Task;
 use App\Models\User;
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AjaxController extends Controller
@@ -173,6 +175,9 @@ class AjaxController extends Controller
                         break;
                     case 'getAdminDetails':
                         $result = $this->getAdminDetails($id);
+                        break;
+                    case 'deleteAdminUser':
+                        $result = $this->deleteAdminUser($requestData);
                         break;
                     case 'getPaymentDetails':
                         $result = $this->getPaymentDetails($id);
@@ -795,7 +800,11 @@ class AjaxController extends Controller
         $rmCondition = $this->buildLiveAccountsBaseQuery();
         $this->applyLiveAccountsFilters($rmCondition, $request);
 
-        $rmCondition->orderBy('id', 'desc');
+        // Don't set a default order here - let DataTables handle ordering
+        // Only apply default order if no order is requested
+        if (!$request->has('order') || empty($request->input('order'))) {
+            $rmCondition->orderBy('id', 'desc');
+        }
 
         if ($request->ajax()) {
             // dd(DataTables::of($rmCondition));
@@ -835,11 +844,11 @@ class AjaxController extends Controller
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
-                    $platformName = 'MT5';
+                    $platformName = PlatformEnum::MT5->displayName();
 
-                    if ($row->platform === 'x9') {
+                    if ($row->platform === PlatformEnum::X9->value) {
                         $platformImage = '/assets/images/x9.png';
-                        $platformName = 'X9';
+                        $platformName = PlatformEnum::X9->displayName();
                         // For X9 accounts, show the account type name instead of group
                         $accountGroup = $row->accountType->ac_name ?? 'Standard';
                     }
@@ -895,11 +904,10 @@ class AjaxController extends Controller
                     return "<span class='{$class}'>{$days} days</span>";
                 })
                 ->addColumn('deposited', function ($row) {
-                    $hasDeposits = $row->successful_trade_deposits_count > 0;
-
                     $badgeStyle = 'padding:0.35rem 0.5rem';
-                    if ($hasDeposits) {
-                        $green = '#00b894';
+
+                    // Check for CryptoChill, CreditCardPayissa, RagaPay deposits (Yes)
+                    if ($row->successful_trade_deposits_count > 0) {
                         return "
                             <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
                                   style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
@@ -913,6 +921,42 @@ class AjaxController extends Controller
                         ";
                     }
 
+                    // Check for Wallet Transfer deposits
+                    if ($row->wallet_deposit_count > 0) {
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-info d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(23,162,184,0.1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#17a2b8' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <circle cx='12' cy='12' r='1' />
+                                    <path d='M12 1v6m0 6v6' />
+                                    <path d='M4.22 4.22l4.24 4.24m5.08 0l4.24-4.24' />
+                                    <path d='M1 12h6m6 0h6' />
+                                    <path d='M4.22 19.78l4.24-4.24m5.08 0l4.24 4.24' />
+                                </svg>
+                                <span class='fw-bold' style='color:#17a2b8'>Wallet Deposit</span>
+                            </span>
+                        ";
+                    }
+
+                    // Check for Internal Transfer deposits
+                    if ($row->internal_transfer_count > 0) {
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-warning d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(255,193,7,0.1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#ffc107' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <line x1='12' y1='5' x2='12' y2='19' />
+                                    <polyline points='19 12 12 19 5 12' />
+                                </svg>
+                                <span class='fw-bold' style='color:#ffc107'>Internal Transfer</span>
+                            </span>
+                        ";
+                    }
+
+                    // No deposits
                     return "
                         <span class='gap-1 border badge rounded-pill border-danger d-inline-flex align-items-center justify-content-center'
                               style='background-color:rgba(255,0,0,0.08);{$badgeStyle}'>
@@ -1045,6 +1089,38 @@ class AjaxController extends Controller
                         END {$order}
                     ");
                 })
+                ->orderColumn('created_at', function ($query, $order) {
+                    $query->orderBy('accounts.created_at', $order);
+                })
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->orderBy('accounts.balance', $order);
+                })
+                ->orderColumn('leverage', function ($query, $order) {
+                    $query->orderBy('accounts.leverage', $order);
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('accounts.email', $order);
+                })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('accounts.code', $order);
+                })
+                ->orderColumn('deposited', function ($query, $order) {
+                    $query->orderBy('successful_trade_deposits_count', $order);
+                })
+                ->orderColumn('traded', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.last_trade_at IS NULL THEN 1 ELSE 0 END ' . $order)
+                        ->orderBy('accounts.last_trade_at', $order);
+                })
+                ->orderColumn('account_status', function ($query, $order) {
+                    $query->orderByRaw('CASE WHEN accounts.deleted_at IS NULL THEN 0 ELSE 1 END ' . $order)
+                        ->orderBy('accounts.deleted_at', $order);
+                })
+                ->orderColumn('total_deposit', function ($query, $order) {
+                    $query->orderByRaw('(SELECT SUM(deposit_amount) FROM trade_deposits WHERE account_id = accounts.id AND status = 1 AND deposit_type IN ("CryptoChill", "CreditCardPayissa", "RagaPay")) ' . $order);
+                })
+                ->orderColumn('total_withdraw', function ($query, $order) {
+                    $query->orderByRaw('(SELECT SUM(transaction_fee + withdrawal_amount) FROM trade_withdrawal WHERE account_id = accounts.id AND status = 1 AND withdraw_type IN ("Trade Withdrawal")) ' . $order);
+                })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'last_trade_date', 'days_since_last_trade', 'deposited_not_traded', 'created_at', 'fullname', 'fullemail', 'account_status', 'actions', 'deposited','traded', 'user_country'])
                 ->make(true);
         }
@@ -1066,6 +1142,12 @@ class AjaxController extends Controller
             ->withCount([
                 'tradeDeposits as successful_trade_deposits_count' => function ($q) {
                     $q->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay']);
+                },
+                'tradeDeposits as wallet_deposit_count' => function ($q) {
+                    $q->where('status', 1)->where('deposit_type', 'Wallet Transfer');
+                },
+                'tradeDeposits as internal_transfer_count' => function ($q) {
+                    $q->where('status', 1)->where('deposit_type', 'Internal Transfer');
                 },
                 'trades as trades_count',
             ]);
@@ -1161,6 +1243,25 @@ class AjaxController extends Controller
               AND td.deleted_at IS NULL
         )";
 
+        $hasSuccessfulWAlletDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deposit_type ='Wallet Transfer'
+              AND td.deposit_from = 'Wallet Transfer'
+              AND td.deleted_at IS NULL
+        )";
+
+        $hasSuccessfulInternalDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deposit_type ='Internal Transfer'
+              AND td.deleted_at IS NULL
+        )";
+
         $hasTradesSql = "(accounts.last_trade_at IS NOT NULL OR EXISTS (
             SELECT 1
             FROM trades tr
@@ -1174,7 +1275,12 @@ class AjaxController extends Controller
             $query->whereRaw($hasSuccessfulDepositSql);
         } elseif ($deposited === 'no') {
             $query->whereRaw("NOT {$hasSuccessfulDepositSql}");
+        } elseif ($deposited === 'wallet_deposit') {
+            $query->whereRaw($hasSuccessfulWAlletDepositSql);
+        } elseif ($deposited === 'internal_transfer') {
+            $query->whereRaw($hasSuccessfulInternalDepositSql);
         }
+        
 
         // Separate Not Traded filter
         $Traded = $request->get('traded');
@@ -1228,11 +1334,11 @@ class AjaxController extends Controller
                     if (!empty($request->search['value'])) {
                         $searchValue = $request->search['value'];
                         $rmCondition->where(function ($q) use ($searchValue) {
-                            $q->where('code', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('balance', 'LIKE', "%{$searchValue}%")
-                                ->orWhere('email', 'LIKE', "%{$searchValue}%")
+                            $q->where('accounts.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.balance', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('accounts.email', 'LIKE', "%{$searchValue}%")
                                 // ->orWhere('user.email', 'LIKE', "%{$searchValue}%")
-                                ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
+                                ->orWhereRaw("DATE_FORMAT(accounts.created_at, '%Y-%m-%d') LIKE ?", ["%{$searchValue}%"]);
                         });
                     }
                 })
@@ -1258,11 +1364,11 @@ class AjaxController extends Controller
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
-                    $platformName = 'MT5';
+                    $platformName = PlatformEnum::MT5->displayName();
 
-                    if ($row->platform === 'x9') {
+                    if ($row->platform === PlatformEnum::X9->value) {
                         $platformImage = '/assets/images/x9.png';
-                        $platformName = 'X9';
+                        $platformName = PlatformEnum::X9->displayName();
                         // For X9 accounts, show the account type name instead of group
                         $accountGroup = $row->accountType->ac_name ?? 'Standard';
                     }
@@ -1319,6 +1425,21 @@ class AjaxController extends Controller
                 ->addColumn('created_time', function ($row) {
                     // return date('H:i:s', strtotime($row->created_at));
                     return Carbon::parse($row->created_at)->addHours(3)->format('H:i:s');
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('accounts.email', $order);
+                })
+                ->orderColumn('code', function ($query, $order) {
+                    $query->orderBy('accounts.code', $order);
+                })
+                ->orderColumn('leverage', function ($query, $order) {
+                    $query->orderBy('accounts.leverage', $order);
+                })
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->orderBy('accounts.balance', $order);
+                })
+                ->orderColumn('created_at', function ($query, $order) {
+                    $query->orderBy('accounts.created_at', $order);
                 })
                 ->rawColumns(['email', 'code', 'leverage', 'balance', 'created_at', 'fullname', 'fullemail'])
                 ->make(true);
@@ -1786,6 +1907,8 @@ class AjaxController extends Controller
             $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
+        $query->orderByDesc('trade_withdrawal.created_at');
+
         // Fetch data
         // $query->orderByDesc('id')->get();
 
@@ -1804,8 +1927,50 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.withdraw_type', $order);
                 })
 
+                ->orderColumn('created_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('created_time', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('new_total_deposit', function ($query, $order) {
+                    $query->join('trade_deposits as td', 'td.user_id', '=', 'trade_withdrawal.user_id')
+                        ->where('td.status', 1)
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(td.deposit_amount), 0) as total_deposit')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_deposit', $order);
+                })
+
+                ->orderColumn('new_total_withdrawal', function ($query, $order) {
+                    $query->join('trade_withdrawal as tw', function ($join) {
+                            $join->on('tw.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('tw.status', 1);
+                        })
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(tw.withdrawal_amount), 0) as total_withdrawal')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_withdrawal', $order);
+                })
+
                 ->orderColumn('code', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.code', $order);
+                })
+
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->join('accounts as acc', 'acc.id', '=', 'trade_withdrawal.account_id')
+                        ->orderBy('acc.balance', $order)
+                        ->select('trade_withdrawal.*');
+                })
+
+                ->orderColumn('floating_balance', function ($query, $order) {
+                    $query->leftJoin('accounts as live_acc', function ($join) {
+                            $join->on('live_acc.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('live_acc.balance', '>', 0);
+                        })
+                        ->orderByRaw("COALESCE(SUM(live_acc.balance), 0) {$order}")
+                        ->groupBy('trade_withdrawal.id')
+                        ->select('trade_withdrawal.*');
                 })
 
                 ->orderColumn('transaction_fee', function ($query, $order) {
@@ -1938,6 +2103,26 @@ class AjaxController extends Controller
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
                 })
+
+                ->addColumn('balance', function ($row) {
+                    return $row->account->balance <= 0 ? '0.00' : $row->account->balance;
+                })
+
+                ->addColumn('floating_balance', function ($row) {
+                    $balance = round($row->user->liveAccounts->where('balance', '>', 0)->sum('balance') ?? 0,2);
+                    return $balance;
+                })
+
+                ->addColumn('new_total_deposit', function ($row) {
+                    $total_deposit = round($row->user->NewTotalDeposit ?? 0, 2);
+                    return $total_deposit;
+                })
+
+                ->addColumn('new_total_withdrawal', function ($row) {
+                    $new_total_withdrawal = round($row->user->NewTotalWithdrawal ?? 0, 2);
+                    return $new_total_withdrawal;
+                })
+
                 ->addColumn('total_withdrawal', function ($row) {
                     return $row->transaction_fee + $row->withdrawal_amount;
                 })
@@ -2031,10 +2216,10 @@ class AjaxController extends Controller
                 })
                 ->addColumn('open_time_display', function ($row) {
                     if (!$row->open_time) return '-';
-                    $date = Carbon::parse($row->open_time);
+
                     return '<div class="d-grid">
-                        <div class="date">' . $date->format('Y-m-d') . '</div>
-                        <div class="time text-muted">' . $date->format('H:i:s') . '</div>
+                        <div class="date">' . $row->open_time->copy()->setTimezone('UTC')->format('Y-m-d') . '</div>
+                        <div class="time text-muted">' . $row->open_time->copy()->setTimezone('UTC')->format('H:i:s') . '</div>
                     </div>';
                 })
                 ->addColumn('action', function ($row) {
@@ -2260,6 +2445,22 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+
+                        $query->where(function ($q) use ($searchValue) {
+                            $q->where('trade_deposits.email', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_from', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhereHas('accountDepositFrom', function ($query2) use ($searchValue) {
+                                    $query2->where('code', 'LIKE', "%{$searchValue}%");
+                                });
+                        });
+                    }
+                })
                 ->addColumn('name', function ($row) {
                     return $row->user->fullname ?? '-';
                 })
@@ -2290,6 +2491,11 @@ class AjaxController extends Controller
                 ->addColumn('transfer_to', function ($row) {
                     return $row->account->code ?? '-';
                 })
+                ->addColumn('date', function ($row) {
+                    $created = Carbon::parse($row->created_at)->addHours(3);
+                    return "<div class='lh-1'>{$created->format('Y-m-d')}</div>
+                            <div class='lh-2 text-muted'>{$created->format('H:i:s')}</div>";
+                })
                 ->addColumn('status', function ($row) {
                     return match ($row->status) {
                         1 => "<div class='badge bg-outline-success'>Approved</div>",
@@ -2297,10 +2503,29 @@ class AjaxController extends Controller
                         default => "<div class='badge bg-outline-primary'>Pending</div>",
                     };
                 })
-                ->addColumn('date', function ($row) {
-                    $created = Carbon::parse($row->created_at)->addHours(3);
-                    return "<div class='lh-1'>{$created->format('Y-m-d')}</div>
-                            <div class='lh-2 text-muted'>{$created->format('H:i:s')}</div>";
+                ->orderColumn('name', function($query, $direction) {
+                    return $query->leftJoin('aspnetusers', 'aspnetusers.email', '=', 'trade_deposits.email')
+                                 ->orderBy('aspnetusers.fullname', $direction);
+                })
+                ->orderColumn('email', function($query, $direction) {
+                    return $query->leftJoin('aspnetusers', 'aspnetusers.email', '=', 'trade_deposits.email')
+                                 ->orderBy('aspnetusers.email', $direction);
+                })
+                ->orderColumn('amount', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.deposit_amount', $direction);
+                })
+                ->orderColumn('transfer_from', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.deposit_from', $direction);
+                })
+                ->orderColumn('transfer_to', function($query, $direction) {
+                    return $query->leftJoin('accounts', 'accounts.id', '=', 'trade_deposits.account_id')
+                                 ->orderBy('accounts.code', $direction);
+                })
+                ->orderColumn('date', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.created_at', $direction);
+                })
+                ->orderColumn('status', function($query, $direction) {
+                    return $query->orderBy('trade_deposits.status', $direction);
                 })
                 ->rawColumns(['name', 'email', 'amount', 'transfer_from', 'transfer_to', 'date', 'status'])
                 ->make(true);
@@ -3017,6 +3242,48 @@ class AjaxController extends Controller
                     $query->orderBy('trade_withdrawal.code', $order);
                 })
 
+                ->orderColumn('balance', function ($query, $order) {
+                    $query->join('accounts as acc', 'acc.id', '=', 'trade_withdrawal.account_id')
+                        ->orderBy('acc.balance', $order)
+                        ->select('trade_withdrawal.*');
+                })
+
+                ->orderColumn('created_date', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('created_time', function ($query, $order) {
+                    $query->orderBy('trade_withdrawal.created_at', $order);
+                })
+
+                ->orderColumn('new_total_deposit', function ($query, $order) {
+                    $query->join('trade_deposits as td', 'td.user_id', '=', 'trade_withdrawal.user_id')
+                        ->where('td.status', 1)
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(td.deposit_amount), 0) as total_deposit')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_deposit', $order);
+                })
+
+                ->orderColumn('new_total_withdrawal', function ($query, $order) {
+                    $query->join('trade_withdrawal as tw', function ($join) {
+                            $join->on('tw.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('tw.status', 1);
+                        })
+                        ->selectRaw('trade_withdrawal.*, COALESCE(SUM(tw.withdrawal_amount), 0) as total_withdrawal')
+                        ->groupBy('trade_withdrawal.id')
+                        ->orderBy('total_withdrawal', $order);
+                })
+
+                ->orderColumn('floating_balance', function ($query, $order) {
+                    $query->leftJoin('accounts as live_acc', function ($join) {
+                            $join->on('live_acc.user_id', '=', 'trade_withdrawal.user_id')
+                                ->where('live_acc.balance', '>', 0);
+                        })
+                        ->orderByRaw("COALESCE(SUM(live_acc.balance), 0) {$order}")
+                        ->groupBy('trade_withdrawal.id')
+                        ->select('trade_withdrawal.*');
+                })
+
                 ->orderColumn('transaction_fee', function ($query, $order) {
                     $query->orderBy('trade_withdrawal.transaction_fee', $order);
                 })
@@ -3046,6 +3313,10 @@ class AjaxController extends Controller
                 ->addColumn('amount', function ($row) {
                     // dd($row);
                     return $row->withdrawal_amount;
+                })
+                ->addColumn('balance', function ($row) {
+                    // dd($row);
+                    return $row->account ? ($row->account->balance <= 0 ? '0.00' : $row->account->balance) : '';
                 })
                 ->addColumn('withdraw_type', function ($row) {
                     return $row->withdraw_type;
@@ -3112,6 +3383,25 @@ class AjaxController extends Controller
                 })
                 ->addColumn('withdrawal_fee', function ($row) {
                     return $row->transaction_fee;
+                })
+
+                ->addColumn('balance', function ($row) {
+                    return $row->account->balance <= 0 ? '0.00' : $row->account->balance;
+                })
+
+                ->addColumn('floating_balance', function ($row) {
+                    $balance = round($row->user->liveAccounts->where('balance', '>', 0)->sum('balance') ?? 0,2);
+                    return $balance;
+                })
+
+                ->addColumn('new_total_deposit', function ($row) {
+                    $total_deposit = round($row->user->NewTotalDeposit ?? 0, 2);
+                    return $total_deposit;
+                })
+
+                ->addColumn('new_total_withdrawal', function ($row) {
+                    $new_total_withdrawal = round($row->user->NewTotalWithdrawal ?? 0, 2);
+                    return $new_total_withdrawal;
                 })
                 ->addColumn('total_withdrawal', function ($row) {
                     return ($row->transaction_fee + $row->withdrawal_amount);
@@ -3355,6 +3645,7 @@ class AjaxController extends Controller
         $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, e.two_factor_secret, e.two_factor_recovery_codes, e.two_factor_confirmed_at, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN roles r ON e.role_id = r.id
+                WHERE e.deleted_at IS NULL
                 -- LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.id";
         $query = DB::select($sql);
@@ -3761,14 +4052,50 @@ class AjaxController extends Controller
             $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
             $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
 
+            $link = '';
+            if ($row->status == 1 && !empty($row->payout_res)) {
+                // Decode JSON
+                $payoutData = json_decode($row->payout_res, true);
+
+                // Get txid
+                $txid = $payoutData['result']['txid'] ?? null;
+
+                // Example: BTC, ETH_TRC, ETH-ERC20 → ETH
+                $kind = $payoutData['result']['kind'] ?? '';
+                $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0] ?? '');
+
+                if ($coin == 'ETH') {
+                    $link = "https://etherscan.io/tx/{$txid}";
+                } elseif ($coin != 'USDT' && $coin != '') {
+                    $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                } elseif ($coin == 'USDT') {
+                    $link = "https://tokenview.io/en/search/{$txid}";
+                }
+            }
+            $paymentMethod = $link
+                ? '<a class="text-success" target="_blank" rel="noopener noreferrer" href="' . $link . '">' . $row->withdraw_type . '</a>'
+                : '<span class="text-success">' . $row->withdraw_type . '</span>';
+            $status = '<span class="badge bg-outline-primary">Pending</span>';
+
+            if ($row->status == 1) {
+                if($row->admin_remark == 'new' || $row->admin_remark == 'draft'){
+                    $status = '<span class="badge bg-outline-danger">Processing (Cryptochill Draft)</span>';
+                } else {
+                    $status = '<div class="badge bg-outline-success">' . $row->admin_remark . '</div>';
+                }
+            } elseif ($row->status == 2) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by Admin</span>';
+            } elseif ($row->status == 3) {
+                $status = '<span class="badge bg-outline-danger">Cancelled by User</span>';
+            }
+
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
+                'payment_method' => $paymentMethod,
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
-                'status' => $row->status == 1 ? '<div class="badge bg-outline-success">Approved</div>' : ($row->status == 2 ? '<span class="badge bg-outline-danger">Cancelled by Admin</span>' : ($row->status == 3 ? '<span class="badge bg-outline-danger">Cancelled by User</span>' :
-                    '<span class="badge bg-outline-primary">Pending</span>')),
+                'status' => $status,
                 'action' => ' <a class="btn btn-sm btn-primary" href="/admin/trading_withdrawal_details?id=' . ($row->id) . '">View</a>'
             ];
         }
@@ -4193,6 +4520,39 @@ class AjaxController extends Controller
         // unset($result->password);
         // return $result;
     }
+
+    public function deleteAdminUser($data)
+    {
+        header('Content-Type: application/json');
+        $id = $data['id'] ?? null;
+
+        if (!$id) {
+            return ['status' => false, 'message' => 'User ID is required'];
+        }
+
+        $user = EmployeeList::find($id);
+
+        if (!$user) {
+            return ['status' => false, 'message' => 'User not found'];
+        }
+
+        // Check if user has Super Admin or admin role
+        $role = $user->role;
+        if (!$role || !in_array(strtolower($role->name), ['super admin', 'admin'])) {
+            return ['status' => false, 'message' => 'Only users with Super Admin or admin role can be deleted'];
+        }
+
+        // Check if trying to delete yourself
+        $currentUser = Auth::guard('admin')->user();
+        if ($currentUser && $currentUser->id == $id) {
+            return ['status' => false, 'message' => 'You cannot delete your own account'];
+        }
+
+        // Soft delete the user
+        $user->delete();
+
+        return ['status' => true, 'message' => 'User deleted successfully'];
+    }
     public function getPaymentDetails($id)
     {
 
@@ -4448,7 +4808,6 @@ class AjaxController extends Controller
 
                 // Attempt to fetch the IB record
                 $ibRecord = Ib1::with('user')->find($clientId);
-
                 // If IB record exists, authorize and update
                 if ($ibRecord) {
                     Gate::forUser($admin)->authorize('ib:update', $ibRecord);
@@ -4699,21 +5058,21 @@ class AjaxController extends Controller
                 'ID',
                 'Name',
                 'Email',
-                'Country',
                 'Code',
                 'Account Group',
                 'Leverage',
                 'Balance',
                 'Equity',
+                'Status',
+                'Total Deposit',
+                'Total Withdraw',
                 'Last Trade Date',
                 'Days Since Last Trade',
                 'Deposited',
                 'Traded',
-                'Status',
-                'Total Deposit',
-                'Total Withdrawal',
                 'Date',
                 'Time',
+                'Country',
             ]);
 
             $chunkCount = 0;
@@ -4745,25 +5104,26 @@ class AjaxController extends Controller
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
                         $Traded = $hasTrades ? 'Yes' : 'No';
 
+
                         fputcsv($handle, [
                         $account->id,
                         $account->user->fullname ?? '',
                         $account->email,
-                        $account->user->country ?? '',
                         $account->code,
                         $account->accountType->ac_group ?? '',
                         $account->leverage,
                         $account->balance,
                         $account->equity,
+                        $account->deleted_at ? 'Deleted' : 'Active',
+                        number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
+                        number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
                         $lastTradeDate,
                         $daysSinceLastTrade,
                         $isDeposited,
                         $Traded,
-                        $account->deleted_at ? 'Deleted' : 'Active',
-                        number_format($account->tradeDeposits()->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay'])->sum('deposit_amount'), 2),
-                        number_format($account->tradeWithdrawals()->where('status', 1)->where('withdraw_type', 'Trade Withdrawal')->sum(DB::raw('transaction_fee + withdrawal_amount')), 2),
                         $account->created_at->format('Y-m-d'),
                         $account->created_at->format('H:i:s'),
+                        $account->user->country ?? '',
                     ]);
                     } catch (\Exception $e) {
                         Log::error("Error writing account ID {$account->id}: " . $e->getMessage());
@@ -4912,50 +5272,32 @@ class AjaxController extends Controller
 
     public function getBlockedIPs(Request $request)
     {
-        $query = RestrictIps::select(
-            'restrict_ips.*',
-        )->with(['user']);
-
+        $query = RestrictIps::leftJoin('aspnetusers', 'aspnetusers.email', '=', 'restrict_ips.email')
+                ->select(
+                    'restrict_ips.*',
+                    'aspnetusers.fullname'
+                );
         // Apply search filter
         if (!empty($request->search['value'])) {
-            $searchValue = $request->search['value'];
+            $searchValue = '%' . $request->search['value'] . '%';
             $query->where(function ($q) use ($searchValue) {
-                $q->where('ip', 'LIKE', "%{$searchValue}%")
-                    ->orWhereHas('user', function ($q) use ($searchValue) {
-                        $q->where('fullname', 'LIKE', "%{$searchValue}%")
-                            ->orWhere('email', 'LIKE', "%{$searchValue}%");
-                    })
-                    ->orWhere('block_reason', 'LIKE', "%{$searchValue}%");
+                $q->where('restrict_ips.ip', 'LIKE', $searchValue)
+                    ->orWhere('restrict_ips.block_reason', 'LIKE', $searchValue)
+                    ->orWhere('aspnetusers.fullname', 'LIKE', $searchValue)
+                    ->orWhere('aspnetusers.email', 'LIKE', $searchValue);
             });
         }
 
         if ($request->ajax()) {
             return DataTables::of($query)
-                ->orderColumn('ip', function ($query, $order) {
-                    $query->orderBy('restrict_ips.ip', $order);
-                })
-                ->orderColumn('email', function ($query, $order) {
-                    $query->orderBy('restrict_ips.email', $order);
-                })
-                ->orderColumn('reason', function ($query, $order) {
-                    $query->orderBy('restrict_ips.block_reason', $order);
-                })
-                ->orderColumn('date', function ($query, $order) {
-                    $query->orderBy('restrict_ips.created_at', $order);
-                })
-                ->orderColumn('fullname', function ($query, $order) {
-                    $query->orderBy(User::select('fullname')
-                        ->whereColumn('email', 'restrict_ips.email'), $order);
-                })
                 ->addColumn('ip', function ($row) {
                     return $row->ip;
                 })
                 ->addColumn('fullname', function ($row) {
-
-                    return $row->user->fullname;
+                    return $row->fullname ?? 'N/A';
                 })
                 ->addColumn('email', function ($row) {
-                    return $row->user->email;
+                    return $row->email;
                 })
                 ->addColumn('reason', function ($row) {
                     return $row->block_reason;
@@ -4963,17 +5305,27 @@ class AjaxController extends Controller
                 ->addColumn('date', function ($row) {
                     $date = date('Y-m-d', strtotime($row->created_at));
                     $time = date('H:i:s', strtotime($row->created_at));
-                    return "<div class='lh-1'>
-                                $date
-                            </div>
-                            <div class='lh-2 text-muted'>
-                                $time
-                            </div>";
+                    return "<div class='lh-1'>$date</div><div class='lh-2 text-muted'>$time</div>";
                 })
                 ->addColumn('action', function ($row) {
                     return "<a class='btn btn-sm btn-danger' href='/admin/delete_ip_ban?id={$row->id}&ip={$row->ip}'>Delete</a>";
                 })
-                ->rawColumns(['ip', 'name', 'email', 'reason', 'date', 'action'])
+                ->orderColumn('ip', function ($query, $order) {
+                    $query->orderBy('restrict_ips.ip', $order);
+                })
+                ->orderColumn('fullname', function ($query, $order) {
+                    $query->orderBy('aspnetusers.fullname', $order);
+                })
+                ->orderColumn('email', function ($query, $order) {
+                    $query->orderBy('aspnetusers.email', $order);
+                })
+                ->orderColumn('reason', function ($query, $order) {
+                    $query->orderBy('restrict_ips.block_reason', $order);
+                })
+                ->orderColumn('date', function ($query, $order) {
+                    $query->orderBy('restrict_ips.created_at', $order);
+                })
+                ->rawColumns(['ip', 'fullname', 'email', 'reason', 'date', 'action'])
                 ->make(true);
         }
 
@@ -5508,7 +5860,7 @@ class AjaxController extends Controller
 
         $promocode = Promocode::where('code', $code)->first();
         if ($promocode) {
-            $message = 'Promo code is valid. Deposit between ' . $promocode->min_deposit . ' and ' . $promocode->max_deposit . ' and receive ' . $promocode->promo_percentage . '% extra bonus.';
+            $message = 'Code verified! Get a ' . (int)$promocode->promo_percentage . '% deposit bonus. Maximum bonus you can receive is $' . $promocode->max_deposit . '.';
 
             // if (!is_null($promocode->max_deposit) && $promocode->max_deposit != 0) {
             //     $message .= ' The maximum discount is ' . $promocode->max_deposit . '!';

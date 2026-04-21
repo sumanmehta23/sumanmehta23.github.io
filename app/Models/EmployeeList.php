@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-
+use App\Traits\AuthorizationHelpers;
 class EmployeeList extends Authenticatable
 {
-    use HasApiTokens, HasUuids, HasUuids,TwoFactorAuthenticatable;
+    use HasApiTokens, HasUuids, HasUuids, TwoFactorAuthenticatable, SoftDeletes,AuthorizationHelpers;
     protected $table = 'emplist';
     // protected $primaryKey = 'id';
     protected $guarded = [];
@@ -32,17 +33,31 @@ class EmployeeList extends Authenticatable
     }
     public function hasPermission($permission)
     {
-        if ($this->role == "Super Admin") {
+        if (!$this->role) {
+            return false;
+        }
+        if ($this->role->name == "Super Admin") {
             return true;
         }
         return $this->role->permissions->contains('name', $permission);
     }
     public function hasPermissions($permissions)
     {
+        if (!$this->role) {
+            return false;
+        }
         if ($this->role->name == "Super Admin") {
             return true;
         }
         // info("Permissions to check ".json_encode([$permissions]));
         return $this->role->permissions->pluck('name')->intersect($permissions)->isNotEmpty();
+    }
+    public function isAdmin()
+    {
+        return $this->role->name === 'Admin';
+    }
+    public function isSuperAdmin()
+    {
+        return $this->role->name === 'Super Admin';
     }
 }

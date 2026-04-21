@@ -323,6 +323,11 @@ class DealSyncJob implements ShouldQueue
                     continue;
                 }
 
+                // Skip entries without symbol (deposits/withdrawals from MT5 API)
+                if (empty(trim($dealData->Symbol ?? ''))) {
+                    continue;
+                }
+
                 $dealRecord = $this->prepareDealData($account, $dealData);
                 if ($dealRecord) {
                     $dealsToInsert[] = $dealRecord;

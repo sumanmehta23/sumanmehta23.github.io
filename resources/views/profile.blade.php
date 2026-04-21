@@ -357,32 +357,37 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane" id="security" role="tabpanel" aria-labelledby="profile-tab-4">
-                                    <form id="changePasswordForm" method="post">
+                                    <form id="changePasswordForm" method="post" action="{{ route('password.change') }}">
                                         @csrf
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5>Change Password</h5>
                                             </div>
                                             <div class="card-body">
+                                                <!-- Success Message -->
+                                                <div id="passwordSuccessMessage" class="alert alert-success d-none"></div>
+                                                <!-- Error Message -->
+                                                <div id="passwordErrorMessage" class="alert alert-danger d-none"></div>
+
                                                 <div class="row">
                                                     <div class="col-sm-6">
                                                         <div class="form-group">
                                                             <label class="form-label">Current Password</label>
                                                             <input type="password" name="current_password" required
-                                                                class="form-control">
+                                                                class="form-control" id="current_password">
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">New Password</label>
                                                             <input type="password" class="form-control"
-                                                                name="new_password" required>
+                                                                name="new_password" required id="new_password">
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">Confirm Password</label>
                                                             <input type="password" name="new_password_confirmation"
-                                                                required class="form-control">
+                                                                required class="form-control" id="new_password_confirmation">
                                                         </div>
                                                     </div>
-                                                    <div class="col-sm-6">
+                                                    {{-- <div class="col-sm-6">
                                                         <h5>New Password Must Contain:</h5>
                                                         <ul class="list-group list-group-flush">
                                                             <li class="list-group-item"><i
@@ -404,12 +409,18 @@
                                                                     class="ti ti-circle-minus text-danger f-16 me-2"></i>Passwords
                                                                 do not match</li>
                                                         </ul>
+                                                    </div> --}}
+
+                                                    <div class="col-sm-6">
+                                                        @include('partials.password-validation-rules')
                                                     </div>
+
                                                 </div>
                                             </div>
                                             <div class="card-footer text-end btn-page">
                                                 <div class="btn btn-outline-secondary">Cancel</div>
                                                 <button type="submit" name="password_changed"
+                                                    id="password_changed"
                                                     class="btn btn-primary">Update
                                                     Password</button>
                                             </div>
@@ -444,8 +455,8 @@
                                                                         <th>Currency</th>
                                                                         <th>Network</th>
                                                                         <th>Crypto Address</th>
-                                                                        <th class="text-center">Wallet Details</th>
-                                                                        <th class="text-center">Status / Action</th>
+                                                                        <th class="text-center">Status</th>
+                                                                        <th class="text-center">Action</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -460,7 +471,7 @@
                                                                                     $verification = 'Pending';
                                                                                     $tdClass = 'varification-pending';
                                                                                 } else {
-                                                                                    $verification = 'Approved';
+                                                                                    $verification = 'Verified';
                                                                                     $tdClass = 'varification-plus';
                                                                                 }
                                                                             @endphp
@@ -490,14 +501,14 @@
                                                                                             </a>
                                                                                         @endif
 
-                                                                                        <span class="badge text-warning edit_wallet_address" data-id="{{ $acc->id }}" data-bs-toggle="tooltip" title="Edit Wallet Address">
+                                                                                        {{-- <span class="badge text-warning edit_wallet_address" data-id="{{ $acc->id }}" data-bs-toggle="tooltip" title="Edit Wallet Address">
                                                                                             <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'>
                                                                                                 <path stroke='none' d='M0 0h24v24H0z' fill='none' />
                                                                                                 <path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' />
                                                                                                 <path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' />
                                                                                                 <path d='M16 5l3 3' />
                                                                                             </svg>
-                                                                                        </span>
+                                                                                        </span> --}}
                                                                                     </div>
                                                                                 @elseif ($acc->wallet_delete_verification == 1)
                                                                                     <span class="text-warning">Deletion Not Verified</span>
@@ -568,7 +579,14 @@
                 text: '{{ session('success') }}',
                 message: 'Kindly check your new email address and complete the verification process for this update.'
             }).then(() => {
-                window.location.href = '{{ route('user-profile') }}';
+                // Preserve the tab parameter if it exists in the current URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const tabParam = urlParams.get('tab');
+                let redirectUrl = '{{ route('user-profile') }}';
+                if (tabParam) {
+                    redirectUrl += '?tab=' + tabParam;
+                }
+                window.location.href = redirectUrl;
             });
         </script>
     @endif
@@ -586,35 +604,64 @@
         $("#changePasswordForm").submit(function(e) {
             e.preventDefault();
 
+            // Clear previous messages
+            $('#passwordSuccessMessage').addClass('d-none').text('');
+            $('#passwordErrorMessage').addClass('d-none').text('');
+
             $.ajax({
                 type: "POST",
-                url: "{{ route('password.change') }}",
+                url: $(this).attr('action'),
                 data: $(this).serialize(),
                 success: function(response) {
                     console.log("Success Response:", response);
+                    $('#passwordSuccessMessage').removeClass('d-none').text(response.success);
                     Swal.fire({
                         icon: 'success',
                         title: response.success,
                     }).then(() => {
-                        location.reload();
+                        // Clear form after successful password change
+                        $('#changePasswordForm')[0].reset();
+                        // Reset validation UI
+                        $('.rule-icon').removeClass('ti-check text-success').addClass('ti-x text-red-500');
+                        $('#rule-length, #rule-uppercase, #rule-lowercase, #rule-digit, #rule-special, #rule-no-spaces, #rule-match')
+                            .removeClass('text-success').addClass('text-red-500');
                     });
                 },
                 error: function(xhr) {
                     console.log("Error Response:", xhr);
                     let errorMessage = "Something went wrong";
+
                     if (xhr.responseJSON?.errors) {
-                        let errorList = xhr.responseJSON.errors.map(error => `<li>${error}</li>`).join(
-                            "");
-                        errorMessage =
-                            `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        // Handle array of errors from controller
+                        const errors = xhr.responseJSON.errors;
+                        if (Array.isArray(errors)) {
+                            let errorList = errors.map(error => `<li>${error}</li>`).join("");
+                            errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        } else {
+                            // Handle object errors
+                            let errorList = '';
+                            for (const [key, value] of Object.entries(xhr.responseJSON.errors)) {
+                                if (Array.isArray(value)) {
+                                    value.forEach(msg => {
+                                        errorList += `<li>${msg}</li>`;
+                                    });
+                                } else {
+                                    errorList += `<li>${value}</li>`;
+                                }
+                            }
+                            errorMessage = `<ul style="text-align: left; list-style-type: disc; margin-left: 20px;">${errorList}</ul>`;
+                        }
                     } else if (xhr.responseJSON?.message) {
                         errorMessage = xhr.responseJSON.message;
                     }
 
+                    // Show error in both SweetAlert and inline message
+                    $('#passwordErrorMessage').removeClass('d-none').html(errorMessage);
+
                     Swal.fire({
                         icon: 'error',
                         title: "Password Requirements Not Met",
-                        html: errorMessage, // Use `html` instead of `text` for bullet formatting
+                        html: errorMessage,
                     });
                 }
             });
@@ -629,17 +676,17 @@
                     toggle_wallet: "true",
                     id: trans
                 },
-                beforeSend: function() {
-                    swal.fire({
-                        showConfirmButton: false,
-                        showCancelButton: false,
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: function() {
-                            swal.showLoading();
-                        }
-                    });
-                },
+                // beforeSend: function() {
+                //     swal.fire({
+                //         showConfirmButton: false,
+                //         showCancelButton: false,
+                //         allowOutsideClick: false,
+                //         allowEscapeKey: false,
+                //         didOpen: function() {
+                //             swal.showLoading();
+                //         }
+                //     });
+                // },
                 success: function(data) {
                     swal.close();
                     if (data.success == true) {
@@ -647,14 +694,44 @@
                             icon: "success",
                             title: "Wallet Address Status Updated"
                         }).then((val) => {
-                            location.reload();
+                            // Dynamically update the toggle icon and classes
+                            var $toggleBtn = $(".wallet-action[data-toggle='" + trans + "']");
+                            var $icon = $toggleBtn.find('i');
+                            var $container = $toggleBtn.parent();
+
+                            // Toggle between left and right icons
+                            if ($icon.hasClass('ti-toggle-left')) {
+                                $icon.removeClass('ti-toggle-left').addClass('ti-toggle-right');
+                                $toggleBtn.attr('title', 'Active Wallet Address');
+                                $container.removeClass('text-warning').addClass('text-success');
+                            } else {
+                                $icon.removeClass('ti-toggle-right').addClass('ti-toggle-left');
+                                $toggleBtn.attr('title', 'Inactive Wallet Address');
+                                $container.removeClass('text-success').addClass('text-warning');
+                            }
+
+                            // Reinitialize tooltip
+                            $toggleBtn.tooltip('dispose').tooltip();
                         });
                     } else {
                         swal.fire({
-                            icon: "warning",
-                            title: data
+                            icon: "error",
+                            title: "Cannot Update Wallet Status",
+                            text: data.message || "An error occurred while updating wallet status"
                         });
                     }
+                },
+                error: function(xhr) {
+                    swal.close();
+                    var errorMessage = "An error occurred while updating wallet status. Please try again.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: errorMessage
+                    });
                 }
             });
         });
@@ -707,40 +784,40 @@
             });
         });
 
-        $(".edit_wallet_address").click(function(e) {
-            e.preventDefault();
+        // $(".edit_wallet_address").click(function(e) {
+        //     e.preventDefault();
 
-            const wallet_id = this.getAttribute("data-id");
+        //     const wallet_id = this.getAttribute("data-id");
 
-            // Send an AJAX request to fetch the wallet details
-            $.ajax({
-                url: "/get_editing_wallet_details", // Change to your actual API endpoint
-                type: "GET",
-                data: {
-                    id: wallet_id
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Populate modal fields with the fetched data
-                        $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
-                        $("#editBankModal2 select[name='wallet_network']").val(response.data
-                            .wallet_network);
-                        $("#editBankModal2 input[name='wallet_address']").val(response.data
-                            .wallet_address);
-                        $("#editBankModal2 select[name='status']").val(response.data.status);
-                        $("#editBankModal2 input[name='id']").val(response.data.id);
+        //     // Send an AJAX request to fetch the wallet details
+        //     $.ajax({
+        //         url: "/get_editing_wallet_details", // Change to your actual API endpoint
+        //         type: "GET",
+        //         data: {
+        //             id: wallet_id
+        //         },
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 // Populate modal fields with the fetched data
+        //                 $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
+        //                 $("#editBankModal2 select[name='wallet_network']").val(response.data
+        //                     .wallet_network);
+        //                 $("#editBankModal2 input[name='wallet_address']").val(response.data
+        //                     .wallet_address);
+        //                 $("#editBankModal2 select[name='status']").val(response.data.status);
+        //                 $("#editBankModal2 input[name='id']").val(response.data.id);
 
-                        // Show the modal
-                        $("#editBankModal2").modal("show");
-                    } else {
-                        alert("Failed to fetch wallet details.");
-                    }
-                },
-                error: function() {
-                    alert("Error fetching wallet details.");
-                }
-            });
-        });
+        //                 // Show the modal
+        //                 $("#editBankModal2").modal("show");
+        //             } else {
+        //                 alert("Failed to fetch wallet details.");
+        //             }
+        //         },
+        //         error: function() {
+        //             alert("Error fetching wallet details.");
+        //         }
+        //     });
+        // });
 
 
 
@@ -880,5 +957,108 @@
             });
         }
 
+        // Handle tab navigation from query parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+
+            if (tabParam === 'wallets') {
+                // Get the wallets tab link and click it
+                const walletsTab = document.getElementById('profile-tab-5');
+                if (walletsTab) {
+                    const bsTab = new bootstrap.Tab(walletsTab);
+                    bsTab.show();
+                }
+            }
+        });
+
+    </script>
+
+    @include('partials.password-validation-script')
+
+    <script>
+
+
+        // Validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Check if all validation rules are satisfied
+        function validateRegistrationForm() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const continueBtn = document.getElementById('password_changed');
+
+            if (!emailInput || !passwordInput || !confirmPasswordInput || !continueBtn) return;
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Check email is valid
+            const isEmailValid = email && isValidEmail(email);
+
+            // Check password rules
+            const rules = window.checkPasswordRules(password, confirmPassword);
+
+            // All rules must be satisfied
+            const allRulesSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.match === true;
+
+            // Enable button only if email is valid AND all password rules are satisfied
+            const isFormValid = isEmailValid && allRulesSatisfied;
+
+            continueBtn.disabled = !isFormValid;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('new_password');
+            const confirmPasswordInput = document.getElementById('new_password_confirmation');
+            const continueBtn = document.getElementById('password_changed');
+
+            if (!passwordInput) return;
+            // Email validation
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    validateRegistrationForm();
+                });
+            }
+
+            // Password validation
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+                const rules = window.checkPasswordRules(password, confirmPassword);
+
+                window.updateRuleUI('rule-length', rules.length);
+                window.updateRuleUI('rule-uppercase', rules.uppercase);
+                window.updateRuleUI('rule-lowercase', rules.lowercase);
+                window.updateRuleUI('rule-digit', rules.digit);
+                window.updateRuleUI('rule-special', rules.special);
+                window.updateRuleUI('rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                validateRegistrationForm();
+            });
+
+            // Confirm password validation
+            if (confirmPasswordInput) {
+                confirmPasswordInput.addEventListener('input', function () {
+                    const password = passwordInput.value;
+                    const confirmPassword = this.value;
+                    const rules = window.checkPasswordRules(password, confirmPassword);
+
+                    window.updateRuleUI('rule-match', confirmPassword ? rules.match : null);
+
+                    validateRegistrationForm();
+                });
+            }
+
+            // Initial state - button should be disabled
+            validateRegistrationForm();
+        });
     </script>
 @endsection

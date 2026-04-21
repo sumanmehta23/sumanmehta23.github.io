@@ -152,12 +152,12 @@ class StaffManagement extends Controller
     {
 
         $request->validate([
-            'permissions' => 'required|array',
+            'permissions' => 'nullable|array',
         ]);
         $roleId = $request->input('role_id');
         // Permission::where('role_id', $roleId)->delete();
 
-        $permissions = $request->input('permissions');
+        $permissions = $request->input('permissions', []);
         $createdBy = session('userData')['client_index'];
         activity()
             ->causedBy(auth()->guard('admin')->user())
@@ -176,7 +176,7 @@ class StaffManagement extends Controller
         // $currentPermissions = Permission::where('role_id', $roleId)->pluck('page_id')->toArray();
         // $pagesToAdd = array_diff($pages, $currentPermissions);
         // $pagesToRemove = array_diff($currentPermissions, $pages);
-        Role::find($roleId)->permissions()->sync($permissions);
+        Role::find($roleId)->permissions()->sync($permissions ?? []);
         // foreach ($pagesToAdd as $pageId) {
         //     Permission::updateOrCreate(
         //         [
@@ -211,7 +211,7 @@ class StaffManagement extends Controller
         //     ];
         // }
         // Permission::insert($permissions);
-        return redirect()->back()->with('permissions', 'Permissions updated successfully');
+        return redirect()->route('admin.role_permissions', ['role_id' => $roleId])->with('permissions', 'Permissions updated successfully');
     }
     public function saveUser(Request $request, $userId = null)
     {
@@ -221,7 +221,7 @@ class StaffManagement extends Controller
             'role_id' => 'required',
             'email' => 'required|email|max:255|unique:emplist,email,' . $userId . ',id',
             'number' => 'required|string|max:15',
-            'password' => $userId ? 'nullable|string' : 'required|string',
+            'password' => $userId ? ['nullable', new \App\Rules\ValidPassword()] : ['required', new \App\Rules\ValidPassword()],
             'company_name' => 'required|string|max:255',
         ]);
         if ($userId) {

@@ -193,17 +193,41 @@ class SyncClosedTradesByGroup extends Command
                         continue;
                     }
 
-                    // Create new trade record
-                    Trade::create(array_merge([
-                        'account_id' => $accountId,
-                        'order_id' => (string) $ticketNumber,
-                        'code' => (string) $accountNumber,
-                    ], $tradeData_to_save));
+                    try {
+                        // Create new trade record
+                        Trade::create(array_merge([
+                            'account_id' => $accountId,
+                            'order_id' => (string) $ticketNumber,
+                            'code' => (string) $accountNumber,
+                        ], $tradeData_to_save));
 
-                    $saved++;
+                        $saved++;
 
-                    if ($enableLogging) {
-                        Log::info("X9 Trade saved: {$accountNumber} - Ticket: {$ticketNumber}");
+                        if ($enableLogging) {
+                            Log::info("X9 Trade saved: {$accountNumber} - Ticket: {$ticketNumber}");
+                        }
+                    } catch (\Illuminate\Database\QueryException $qe) {
+                        $errors++;
+                        Log::error("X9 Trade save query error", [
+                            'account' => $accountNumber ?? 'unknown',
+                            'ticket' => $ticketNumber ?? 'unknown',
+                            'error' => $qe->getMessage(),
+                            'trace' => $qe->getTraceAsString()
+                        ]);
+                        if ($enableLogging) {
+                            $this->error("Failed to save trade (query error): {$qe->getMessage()}");
+                        }
+                    } catch (\Exception $e) {
+                        $errors++;
+                        Log::error("X9 Trade save error", [
+                            'account' => $accountNumber ?? 'unknown',
+                            'ticket' => $ticketNumber ?? 'unknown',
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        if ($enableLogging) {
+                            $this->error("Failed to save trade: {$e->getMessage()}");
+                        }
                     }
                 } catch (\Exception $e) {
                     $errors++;

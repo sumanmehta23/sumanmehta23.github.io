@@ -336,32 +336,34 @@
                                                         class="m-1 btn btn-danger btn-space">Reject</button>
                                                 </div> --}}
                                                 @can("trade_withdrawals:update")
-                                                    <div class="my-auto btn-list ms-auto">
-                                                        @php
-                                                            $userData = json_encode(session('userData'));
-                                                        @endphp
-                                                        <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
-                                                            type="button" class="m-1 btn btn-success btn-space">
-                                                        Approve
-                                                        </button>
-                                                            {{-- <button
-                                                            onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
-                                                            type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
-                                                        @if (($details->status == 0) || ($details->payout_res != null))
-                                                            <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',2)" type="submit" class="m-1 btn btn-danger btn-space">
-                                                            Reject
+                                                    @can("trade_withdrawals:payout")
+                                                        <div class="my-auto btn-list ms-auto">
+                                                            @php
+                                                                $userData = json_encode(session('userData'));
+                                                            @endphp
+                                                            <button type="button" class="m-1 btn btn-primary btn-space" data-bs-toggle="modal" data-bs-target="#editModal">
+                                                                Edit
                                                             </button>
-                                                            {{-- {{ dd($details) }} --}}
-                                                            <div class="form-check d-inline-block me-2">
-                                                                <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ (int)$details->withdrawal_amount }}','{{ (int)$details->transaction_fee }}',1)">
-                                                                <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
-                                                            </div>
-                                                        @endif
-                                                    </div>
+                                                            <button
+                                                                onclick="takeAction('{{ $userData }}', '{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee }}',1)"
+                                                                type="button" class="m-1 btn btn-success btn-space">
+                                                            Approve
+                                                            </button>
+                                                                {{-- <button
+                                                                onclick="takeAction('{{ $details->email }}','{{ $details->withdraw_amount }}',2)"
+                                                                type="submit" class="m-1 btn btn-danger btn-space">Reject</button> --}}
+                                                            @if (($details->status == 0) || ($details->payout_res != null))
+                                                                <button onclick="takeAction('{{ json_encode($details->id) }}','{{ $details->email }}','{{ $details->withdraw_amount + $details->transaction_fee}}',2)" type="submit" class="m-1 btn btn-danger btn-space">
+                                                                Reject
+                                                                </button>
+                                                                {{-- {{ dd($details) }} --}}
+                                                                <div class="form-check d-inline-block me-2">
+                                                                    <input class="form-check-input" type="checkbox" id="manualPayCheckbox" style="margin-top: 2px;" onclick="handleCheckboxClick(this,'{{ json_encode($details->id) }}','{{ $userData }}', '{{ $details->email }}','{{ (int)$details->withdrawal_amount }}','{{ (int)$details->transaction_fee }}',1)">
+                                                                    <label class="form-check-label" for="manualPayCheckbox">Manually pay</label>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @endcan
                                                 @endcan
 
 
@@ -386,7 +388,12 @@
                                                             <span class="fs-11 text-muted">ADMIN ACTION TAKEN</span>
                                                         </div>
                                                         <div class="mt-2 lh-1">
-                                                            <span>{{ $details->approved_date }}</span>
+                                                            <div>
+                                                                <span>{{ $details->approved_date }}</span>
+                                                            </div>
+                                                            <div class="pt-2">
+                                                                <span>{{ $details->approved_by ?? '' }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

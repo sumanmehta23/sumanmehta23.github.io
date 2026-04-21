@@ -16,6 +16,9 @@ use App\Models\BonusTransaction;
 use App\Observers\TradeDepositObserver;
 use App\Observers\TradeWithdrawalObserver;
 use App\Observers\BonusTransactionObserver;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Auth;
+use App\Models\EmployeeList;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,7 +45,10 @@ class AppServiceProvider extends ServiceProvider
         TradeDeposit::observe(TradeDepositObserver::class);
         TradeWithdrawals::observe(TradeWithdrawalObserver::class);
         BonusTransaction::observe(BonusTransactionObserver::class);
-
+        // Gate::define('viewPulse', function (EmployeeList $user) {
+        //     return true;
+        //     // return $user->isSuperAdmin();
+        // });
 
         RateLimiter::for('deposit', function ($request) {
             // Limit to 1 request every 10 seconds
@@ -83,6 +89,15 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('register', function ($request) {
             // Limit to 1 request every 10 seconds
             return Limit::perSeconds(10, 1)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        // Register Blade directive for checking export permissions
+        Blade::if('hasExportPermission', function ($exportType) {
+            $user = Auth::guard('admin')->user();
+            if (!$user) {
+                return false;
+            }
+            return $user->hasPermission('export:' . $exportType);
         });
     }
 }

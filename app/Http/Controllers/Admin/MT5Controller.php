@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
+use App\Enums\PlatformEnum;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Promocode;
@@ -253,7 +254,7 @@ class MT5Controller extends Controller
             }
 
             // Handle based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 platform
                 return $this->updateX9AccountDetails($account, $acc, $leverage, $code, $account_type);
             } else {
@@ -310,7 +311,7 @@ class MT5Controller extends Controller
                     'code' => $code,
                     'leverage' => $leverage,
                     'account_type_id' => $account_type,
-                    'platform' => 'x9',
+                    'platform' => PlatformEnum::X9->value,
                     'x9_group_id' => $x9GroupId,
                     'group_updated' => $x9GroupId ? true : false,
                     'remark' => 'CRM Update Group Leverage (X9)'
@@ -394,7 +395,7 @@ class MT5Controller extends Controller
             }
 
             // Handle password update based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 return $this->updateX9Password($account, $login, $pass_type, $new_password);
             } else {
                 return $this->updateMT5Password($account, $login, $pass_type, $new_password);
@@ -434,7 +435,7 @@ class MT5Controller extends Controller
                     'admin_id' => auth()->guard('admin')->user()->id,
                     'code' => $login,
                     'new_password' => $new_password,
-                    'platform' => 'x9',
+                    'platform' => PlatformEnum::X9->value,
                     'password_type' => $x9PasswordType,
                     'remark' => 'CRM Update ' . ucfirst($pass_type) . ' Password (X9)'
                 ])
@@ -525,7 +526,7 @@ class MT5Controller extends Controller
             $comment = 'CRM Deposited';
 
             // Handle based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 deposit
                 $response = $this->x9Service->manageBalance(
                     intval($login),
@@ -627,7 +628,7 @@ class MT5Controller extends Controller
 
         $platform = $request->input('platform');
 
-        if ($platform === 'x9') {
+        if ($platform === PlatformEnum::X9->value) {
             $response = $this->x9Service->getUserDetails($login);
             if ($response['data']['trading_account']['client_group_type_id'] != 1) {
                 if ($response['data']['balance']['balance'] > 0) {
@@ -647,7 +648,7 @@ class MT5Controller extends Controller
             $account->save();
             $account->delete();
             return redirect()->back()->with('success', 'X9 Account Soft Deleted Successfully');
-        } elseif ($platform === 'mt5') {
+        } elseif ($platform === PlatformEnum::MT5->value) {
             $trade_user = NULL;
             if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
                 return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
@@ -658,7 +659,6 @@ class MT5Controller extends Controller
                     return redirect()->back()->with('error', 'Account has balance, please transfer amount to another account.');
                 }
             }
-
             // MT5 deletion logic
             $error_code = $this->api->DisableTrading($login);
             if (!$error_code['status']) {
@@ -688,7 +688,7 @@ class MT5Controller extends Controller
 
         $platform = $request->input('platform');
 
-        if ($platform === 'x9') {
+        if ($platform === PlatformEnum::X9->value) {
             $response = $this->x9Service->getUserDetails($login);
 
             if ($response['data']['trading_account']['client_group_type_id'] != 1) {
@@ -709,7 +709,7 @@ class MT5Controller extends Controller
             $account->save();
             $account->delete();
             return redirect()->route('admin.dashboard')->with('success', 'X9 Account Deleted Successfully');
-        } elseif ($platform === 'mt5') {
+        } elseif ($platform === PlatformEnum::MT5->value) {
             $trade_user = NULL;
             if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
                 return redirect()->back()->with('error', 'MT5 Account Deletion Failed: ' . MTRetCode::GetError($error_code));
@@ -756,7 +756,7 @@ class MT5Controller extends Controller
 
         $platform = $request->input('platform');
 
-        if ($platform === 'x9') {
+        if ($platform === PlatformEnum::X9->value) {
             $response = $this->x9Service->getUserDetails($login);
 
             if ($response['data']['trading_account']['client_group_type_id'] != 1) {
@@ -777,7 +777,7 @@ class MT5Controller extends Controller
             $account->save();
             $account->restore();
             return redirect()->back()->with('success', 'X9 Account Restored Successfully');
-        } elseif ($platform === 'mt5') {
+        } elseif ($platform === PlatformEnum::MT5->value) {
             // $trade_user = NULL;
             // if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
             //     return redirect()->back()->with('error', 'MT5 Account Restoration Failed. Account not present in mt5 server. '. MTRetCode::GetError($error_code));
@@ -813,11 +813,11 @@ class MT5Controller extends Controller
 
         // Validate platform selection
         $request->validate([
-            'platform' => 'required|in:MetaTrader5,x9',
+            'platform' => 'required|in:' . implode(',', PlatformEnum::all()),
         ]);
 
         $platform = $request->input('platform');
-        if ($platform === 'x9') {
+        if ($platform === PlatformEnum::X9->value) {
             $response = $this->x9Service->getUserDetails($login);
 
             if ($response['data']['trading_account']['client_group_type_id'] != 1) {
@@ -839,7 +839,7 @@ class MT5Controller extends Controller
             $account->save();
             $account->delete(); // Soft delete to hide it
             return redirect()->back()->with('success', 'X9 Account Archived Successfully');
-        } elseif ($platform === 'MetaTrader5') {
+        } elseif ($platform === PlatformEnum::MT5->value) {
 
             $trade_user = NULL;
 
@@ -889,7 +889,7 @@ class MT5Controller extends Controller
             $comment = 'CRM Deposited';
 
             // Handle based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 deposit
                 $response = $this->x9Service->manageBalance(
                     intval($login),
@@ -1024,7 +1024,7 @@ class MT5Controller extends Controller
             $comment = $type === 'in' ? 'Bonus Deposit' : 'Bonus Withdraw';
 
             // Handle based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 bonus using the correct bonus operation
                 $response = $this->x9Service->manageBonus(
                     intval($login),
@@ -1162,7 +1162,7 @@ class MT5Controller extends Controller
 
             // Handle based on platform
             $success = false;
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 bonus credit using the correct bonus operation
                 $response = $this->x9Service->manageBonus(
                     intval($login),
@@ -1278,7 +1278,7 @@ class MT5Controller extends Controller
             $comment = 'CRM Withdrawal';
 
             // Handle based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 withdrawal
                 $response = $this->x9Service->manageBalance(
                     intval($login),
@@ -1381,7 +1381,7 @@ class MT5Controller extends Controller
             $comment = 'CRM Withdrawal';
 
             // Handle based on platform
-            if ($account->platform === 'x9') {
+            if ($account->platform === PlatformEnum::X9->value) {
                 // Handle X9 withdrawal
                 $response = $this->x9Service->manageBalance(
                     intval($login),
@@ -1551,7 +1551,7 @@ class MT5Controller extends Controller
 
         // Handle platform-specific account data retrieval
         $accountHelper = null;
-        if ($account->platform === 'x9') {
+        if ($account->platform === PlatformEnum::X9->value) {
             // For X9 accounts, use X9Service to get account details
             $x9Service = app(\App\Services\X9Service::class);
             $response = $x9Service->getUserDetails($account->code);
@@ -1567,6 +1567,15 @@ class MT5Controller extends Controller
                 if (isset($balanceData['free_margin'])) {
                     $balanceData['free_margin'] = str_replace(',', '', $balanceData['free_margin']);
                 }
+
+                $openTrades = $x9Service->getOpenTrades($account->code);
+                $openTradesCount = $openTrades['data']['total_positions'] ?? 0;
+                $closedTrades = $x9Service->getClosedTradesByAccount($account->code);
+                $closedTradesCount = $closedTrades['data']['summary']['total_trades'] ?? 0;
+                $profit = $closedTrades['data']['summary']['net_profit_loss'] ?? 0;
+                $commission = collect($closedTrades['data']['trades'])->sum('commission') ?? 0;
+
+                $totalTrades = $openTradesCount + $closedTradesCount;
                 // Update account with fresh data from X9
                 try {
                     // Extract balance data from the correct nested structure
@@ -1590,7 +1599,6 @@ class MT5Controller extends Controller
                 } catch (\Exception $e) {
                     Log::warning('Failed to update X9 account in admin panel: ' . $e->getMessage());
                 }
-
                 $accountHelper = (object) [
                     'Balance' => floatval($balanceData['balance'] ?? $account->balance),
                     'Credit' => floatval($balanceData['credit'] ?? 0),
@@ -1599,6 +1607,9 @@ class MT5Controller extends Controller
                     'Margin' => floatval($balanceData['margin'] ?? 0),
                     'MarginFree' => floatval($balanceData['free_margin'] ?? 0),
                     'MarginLevel' => floatval($balanceData['margin_level'] ?? 0),
+                    'Profit' => $profit,
+                    'Commission' => $commission,
+                    'TotalTrades' => $totalTrades,
                 ];
 
                 // Get X9 group name for display
@@ -1615,7 +1626,7 @@ class MT5Controller extends Controller
             $x9Leverage = null;
         }
 
-        $title = $account->platform === 'x9' ? 'X9 Account Details' : 'MT5 Account Details';
+        $title = $account->platform === PlatformEnum::X9->value ? 'X9 Account Details' : 'MT5 Account Details';
 
         return view("admin.mt5.view", [
             "id" => $code,

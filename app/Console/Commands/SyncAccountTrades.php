@@ -2,157 +2,185 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\DistributeIbCommissionJob;
+use App\Jobs\SyncDealsJob;
 use App\Models\Ib1;
-use App\Models\Account;
-use App\Models\IbPlanDetails;
 use Illuminate\Console\Command;
-use App\Jobs\SyncAccountTradesJob;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class SyncAccountTrades extends Command
 {
-    protected $totalAccountsProcessed = 0;
-    protected $signature = 'app:sync-account-trades {--batch-size=10 : Number of accounts per job} {--max-jobs=500 : Maximum number of jobs to create} {--accounts-per-ib=100 : Maximum accounts to process per IB in one pass} {--active-only : Only sync accounts with recent activity} {--email= : Sync only for a specific IB email} {--code= : Sync only for a specific account code}';
-    protected $description = 'Sync account trades for IBs';
+    protected $signature = 'app:sync-account-trades
+        {--batch-size=10 : Number of accounts per job}
+        {--max-jobs=0 : Maximum number of jobs to create (0=unlimited)}
+        {--active-only : Only sync accounts with recent activity}
+        {--email= : Sync only accounts under a specific IB email}
+        {--code= : Sync only for a specific account code}
+        {--backfill-commissions : Also dispatch legacy DistributeIbCommissionJob for unprocessed commissions}';
 
-    // private function interpolateQuery($query, $bindings)
-    // {
-    //     foreach ($bindings as $binding) {
-    //         // Quote strings, leave numbers as is
-    //         $binding = is_numeric($binding) ? $binding : "'" . addslashes($binding) . "'";
-    //         $query = preg_replace('/\?/', $binding, $query, 1);
-    //     }
-    //     return $query;
-    // }
+    protected $description = 'Sync account deals from MT5 and distribute IB commissions';
+
     public function handle()
     {
-        // Log::info('Starting SyncAccountTrades command every x minutes');
-        // DB::listen(function ($query) {
-        //     $fullSql = $this->interpolateQuery($query->sql, $query->bindings);
-        //     Log::info("Full SQL: $fullSql");
-        // });
-        $batchSize = (int) $this->option('batch-size');
+        $batchSize = max(1, (int) $this->option('batch-size'));
         $maxJobs = (int) $this->option('max-jobs');
-        $accountsPerIb = (int) $this->option('accounts-per-ib'); // New option to limit accounts per IB
         $activeOnly = $this->option('active-only');
         $email = $this->option('email');
         $code = $this->option('code');
-
         $totalJobsCreated = 0;
 
-        Log::info('SyncAccountTrades command started', [
-            'batch_size' => $batchSize,
-            'max_jobs' => $maxJobs,
-            'accounts_per_ib' => $accountsPerIb,
-            'active_only' => $activeOnly,
-        ]);
-        $ibQuery = Ib1::with(['planDetails', 'user'])
-            ->where('status', 1)
-            ->whereNotNull('ib_plan_details_id');
+        Log::info('SyncAccountTrades command started (deal-based)', compact('batchSize', 'maxJobs', 'activeOnly', 'email', 'code'));
 
-        // Apply email filter only if provided
+        // ── STEP 1: Query accounts ──
+        $accountQuery = DB::table('accounts as a')
+            ->join('aspnetusers as u', 'a.user_id', '=', 'u.id')
+            ->select('a.id', 'a.code', 'a.user_id')
+            ->where('a.demo', false)
+            ->where('a.account_request_status', 1)
+            ->whereNull('a.deleted_at')
+            ->where('u.status', 1)
+            ->where(function ($q) {
+                // Exclude accounts marked as not found in MT5
+                $q->whereNull('a.deletion_type')
+                    ->orWhere('a.deletion_type', 'not like', '%not_found%');
+            })
+            ->where(function ($q) {
+                $q->whereNotNull('u.ib1');
+            });
+
+        if ($email) {
+            $ib = Ib1::where('email', $email)->where('status', 1)->first();
+            if (!$ib) {
+                $this->error("No active IB found with email: {$email}");
+                return;
+            }
+            $referralCode = $ib->referral_code ?: $ib->email;
+            $accountQuery->where(function ($q) use ($referralCode) {
+                for ($i = 1; $i <= 15; $i++) {
+                    $q->orWhere("u.ib{$i}", $referralCode);
+                }
+            });
+            $this->info("Filtering accounts under IB: {$referralCode} ({$email})");
+        }
+
+        if ($code) {
+            $accountQuery->where('a.code', $code);
+        }
+
+        if ($activeOnly) {
+            $accountQuery->where(function ($q) {
+                $q->where('a.last_trade_at', '>=', now()->subDays(30))
+                    ->orWhereNull('a.last_trade_at');
+            });
+        }
+
+        // Oldest-synced first so stale accounts get priority
+        $accountQuery->orderByRaw('COALESCE(a.deals_synced_to, "2000-01-01") ASC');
+
+        $totalAccounts = $accountQuery->count();
+        $this->info("Total accounts to sync: {$totalAccounts}");
+
+        // ── STEP 2: Dispatch SyncDealsJob batches ──
+        // SyncDealsJob handles: MT5 deal fetch → deals table → detect closes → commission distribution
+        // No separate commission dispatch step needed.
+        $accountQuery->chunk($batchSize * 50, function ($accounts) use ($batchSize, $maxJobs, &$totalJobsCreated) {
+            $batched = $accounts->pluck('id')->chunk($batchSize);
+
+            foreach ($batched as $accountIdBatch) {
+                if ($maxJobs > 0 && $totalJobsCreated >= $maxJobs) {
+                    $this->info("Reached maximum job limit of {$maxJobs}.");
+                    return false;
+                }
+
+                SyncDealsJob::dispatch($accountIdBatch->values()->toArray())
+                    ->onQueue('syncaccountstrades');
+                $totalJobsCreated++;
+            }
+        });
+
+        $this->info("Dispatched {$totalJobsCreated} SyncDealsJob(s) for {$totalAccounts} accounts.");
+
+        // ── STEP 3 (Optional): Backfill legacy unprocessed commissions ──
+        // Only needed during transition period while old ib1_commission records still have status=0
+        if ($this->option('backfill-commissions')) {
+            $this->dispatchLegacyCommissionJobs($email, $code);
+        }
+
+        Log::info('SyncAccountTrades command completed', [
+            'sync_jobs' => $totalJobsCreated,
+            'total_accounts' => $totalAccounts,
+        ]);
+    }
+
+    /**
+     * Dispatch DistributeIbCommissionJob for legacy unprocessed ib1_commission records.
+     * This is only needed during the transition period from order-based to deal-based sync.
+     */
+    protected function dispatchLegacyCommissionJobs(?string $email, ?string $code): void
+    {
+        $this->info("Checking for legacy unprocessed commissions...");
+
+        $unprocessedCount = DB::table('ib1_commission')
+            ->where('orderstate', 4)
+            ->whereNotIn('status', [1, 10])
+            ->count();
+
+        if ($unprocessedCount === 0) {
+            $this->info("No legacy unprocessed commissions. Backfill not needed.");
+            return;
+        }
+
+        $this->info("Found {$unprocessedCount} legacy unprocessed commissions. Dispatching jobs...");
+
+        // Find distinct IB codes with unprocessed work
+        $unprocessedQuery = DB::table('ib1_commission as c')
+            ->join('aspnetusers as u', 'c.user_id', '=', 'u.id')
+            ->where('c.orderstate', 4)
+            ->whereNotIn('c.status', [1, 10]);
+
+        if ($code) {
+            $unprocessedQuery->where('c.code', $code);
+        }
+
+        $ibCodesWithWork = collect();
+        for ($i = 1; $i <= 15; $i++) {
+            $codes = (clone $unprocessedQuery)
+                ->whereNotNull("u.ib{$i}")
+                ->where("u.ib{$i}", '!=', '')
+                ->distinct()
+                ->pluck("u.ib{$i}");
+            $ibCodesWithWork = $ibCodesWithWork->merge($codes);
+        }
+        $ibCodesWithWork = $ibCodesWithWork->unique()->values();
+
+        if ($ibCodesWithWork->isEmpty()) {
+            $this->info("No unprocessed commissions found. Skipping.");
+            return;
+        }
+
+        $ibQuery = Ib1::where('status', 1)
+            ->whereNotNull('ib_plan_details_id')
+            ->whereNotNull('user_id');
+
         if ($email) {
             $ibQuery->where('email', $email);
         }
-        Log::debug("Total IBs to process: " . $ibQuery->count());
-        $ibQuery->cursor()  // More memory efficient for large datasets
-            ->each(function ($ib1) use ($batchSize, $maxJobs, $accountsPerIb, $activeOnly, $code, &$totalJobsCreated) {
-                $plan_id = $ib1->planDetails->ib_category_id ?? null;
 
-                if (!$plan_id) return;
+        $ibQuery->where(function ($q) use ($ibCodesWithWork) {
+            $q->whereIn('referral_code', $ibCodesWithWork)
+                ->orWhereIn('email', $ibCodesWithWork);
+        });
 
-                $userId = $ib1->user_id;
-                $referral_code = $ib1->referral_code ?: $ib1->email;
+        $commissionJobsCreated = 0;
+        $ibQuery->cursor()->each(function ($ib) use (&$commissionJobsCreated) {
+            DistributeIbCommissionJob::dispatch(
+                $ib->referral_code ?: $ib->email,
+                $ib->user_id
+            )->onQueue('distributeibcommission');
+            $commissionJobsCreated++;
+        });
 
-                // Cache IB Plans
-                $ibPlans = Cache::remember("ibPlans:$userId", 3600, function () use ($plan_id) {
-                    return IbPlanDetails::where('ib_category_id', $plan_id)
-                        ->where('status', 1)
-                        ->whereNull('deleted_at')
-                        ->get()
-                        ->toArray();
-                });
-
-                // Transform IB Plans for easy access
-                $ib_acc_plans = [];
-                foreach ($ibPlans as $plan) {
-                    for ($i = 1; $i <= $plan['level_id']; $i++) {
-                        $ib_acc_plans[$plan['account_type_id']][$plan['level_id']]["d$i"] = $plan["d$i"];
-                    }
-                }
-
-                // Fetch accounts in smaller batches - only those with recent activity
-                $accountQuery = Account::select('id', 'code', 'user_id', 'account_type_id', 'last_trade_at')
-                    ->where('demo', false)
-                    ->where('account_request_status', 1);
-
-                // Apply code filter if provided
-                if ($code) {
-                    // Log::info("synced account for code : $code");
-                    $accountQuery->where('code', $code);
-                }
-
-                // Apply activity filter if requested
-                if ($activeOnly) {
-                    $accountQuery->where(function ($query) {
-                        $query->where('last_trade_at', '>=', now()->subDays(30))
-                            ->orWhereNull('last_trade_at');
-                    });
-                }
-                // Log suppressed to reduce noise - use debug logging if needed
-                // Log::debug("Total accounts to process for IB $referral_code: " . $accountQuery->whereHas(
-                //     'user',
-                //     fn($query) =>
-                //     $query->where(function ($q) use ($referral_code) {
-                //         for ($i = 1; $i <= 15; $i++) {
-                //             $q->orWhere("ib$i", $referral_code);
-                //         }
-                //     })->where('status', 1)
-                // )->count());
-
-                $accountQuery->whereHas(
-                    'user',
-                    fn($query) =>
-                    $query->where(function ($q) use ($referral_code) {
-                        for ($i = 1; $i <= 15; $i++) {
-                            $q->orWhere("ib$i", $referral_code);
-                        }
-                    })->where('status', 1)
-                )
-                    ->chunk($accountsPerIb, function ($accounts) use ($referral_code, $userId, $ib_acc_plans, $batchSize, &$totalJobsCreated, $maxJobs) {
-                        $this->totalAccountsProcessed += $accounts->count();
-                        // Stop creating jobs if we've reached the limit
-                        if ($totalJobsCreated >= $maxJobs) {
-                            $this->info("Reached maximum job limit of $maxJobs. Stopping further job creation.");
-                            return false; // Stop chunking
-                        }
-                        $this->info("Processing accounts for IB: $referral_code, User ID: $userId");
-                        // Process accounts in smaller batches within each job
-                        $accountChunks = $accounts->chunk($batchSize);
-                        $jobs = [];
-                        foreach ($accountChunks as $accountChunk) {
-                            if ($totalJobsCreated >= $maxJobs) {
-                                $this->info("Reached maximum job limits of $maxJobs. Stopping further job creation.");
-                                break;
-                            }
-
-                            $accountIds = $accountChunk->pluck('id')->toArray();
-                            $this->info("Dispatching sync for accounts: " . implode(', ', $accountIds));
-
-                            $jobs[] = new SyncAccountTradesJob($accountIds, $referral_code, $userId, $ib_acc_plans);
-                            $totalJobsCreated++;
-                        }
-
-                        // Dispatch jobs in batches
-                        if (!empty($jobs)) {
-                            Bus::batch($jobs)->onQueue('syncaccountstrades')->dispatch();
-                        }
-                    });
-            });
-        $this->info("Total jobs created: $totalJobsCreated");
-        $this->info("Total accounts processed: $this->totalAccountsProcessed");
+        $this->info("Dispatched {$commissionJobsCreated} legacy DistributeIbCommissionJob(s).");
     }
 }

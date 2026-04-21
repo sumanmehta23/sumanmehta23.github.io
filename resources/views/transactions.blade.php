@@ -210,7 +210,7 @@
                                     $statusText = 'Approved';
                                 }
                             } else {
-                                $statusText = 'Cancelled';
+                                $statusText = !empty($history->admin_remark) ? $history->admin_remark : 'Cancelled';
                             }
                             if($history->status == 1 && !empty($history->payout_res) && $statusText == 'Approved'){
                                         $data = json_decode($history->payout_res, true);
@@ -298,7 +298,7 @@
                                                 ? (($history->admin_remark == 'Manually Approved')
                                                     ? 'Approved'
                                                     : 'Processing')
-                                                : 'Cancelled'))
+                                                : ((($history->admin_remark == 'InvalidAddress') ? 'Invalid cryptocurrency address' : $history->admin_remark) ?? 'Cancelled')))
                                     }}
                                 </p>
 
@@ -412,7 +412,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="ms-2">
-                                        <h6 class="mb-0">{{ $history['source'] }}</h6>
+                                        <h6 class="mb-0">{{ $history['raw_id'] }}</h6>
                                     </div>
                                 </div>
                             </td>

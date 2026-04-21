@@ -81,8 +81,8 @@ if ($getUser) {
                                                 <div class="wideget-user-desc d-flex align-items-center">
                                                     <div class="wideget-user-img">
                                                         <?php
-                                                        $platformImg = $account->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
-                                                        $platformAlt = $account->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
+                                                            $platformImg = $account->platform === App\Enums\PlatformEnum::X9->value ? '/assets/images/x9.png' : '/assets/images/mt5.png';
+                                                            $platformAlt = $account->platform === App\Enums\PlatformEnum::X9->value ? 'X9 Platform' : 'MT5 Platform';
                                                         ?>
                                                         <img src="<?= $platformImg ?>" class="me-3"
                                                             alt="<?= $platformAlt ?>" style="width:50px">
@@ -91,11 +91,11 @@ if ($getUser) {
                                                         <h4 class="mb-0 fw-bold"><?= $getUser->code ?></h4>
                                                         <h6 class="fs-12 fw-normal text-muted">
                                                             <?php
-                                                            if ($account->platform === 'x9') {
-                                                                echo $x9_group_name ?? ($getUser->accountType->ac_name ?? 'Standard');
-                                                            } else {
-                                                                echo $getUser->accountType->ac_group;
-                                                            }
+                                                                if ($account->platform === App\Enums\PlatformEnum::X9->value) {
+                                                                    echo $x9_group_name ?? $getUser->accountType->ac_name ?? 'Standard';
+                                                                } else {
+                                                                    echo $getUser->accountType->ac_group;
+                                                                }
                                                             ?>
                                                         </h6>
                                                     </div>
@@ -113,11 +113,9 @@ if ($getUser) {
                                                                 <i class="ti ti-database-import"></i>
                                                             </span>
                                                         @elseif($account->deleted_at && $account->deletion_type == null)
-                                                            <label class="mt-1 fs-18 text-danger fw-bold"
-                                                                for="">Deleted</label>
-                                                        @elseif($account->deleted_at && $account->deletion_type == 'delete')
-                                                            <label class="mt-1 fs-18 text-danger fw-bold"
-                                                                for="">Deleted</label>
+                                                            <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
+                                                        @elseif($account->deleted_at && ($account->deletion_type == 'delete' || $account->deletion_type == 'not_found_in_mt5'))
+                                                            <label class="mt-1 fs-18 text-danger fw-bold" for="">Deleted</label>
                                                         @elseif($account->deleted_at == null)
                                                             <div class="gap-4 flexflex-vertical">
                                                                 <span class="badge btn btn-danger" data-bs-toggle="modal"
@@ -125,11 +123,9 @@ if ($getUser) {
                                                                     <i class="ti ti-database-import"></i>
                                                                 </span>
                                                                 @if ($account->demo == 0)
-                                                                    @if ($account->trade_platform == 'MetaTrader5' && $account->deletion_type != 'archive')
-                                                                        <span class="mt-3 badge btn btn-warning"
-                                                                            data-bs-toggle="modal"
-                                                                            data-bs-target="#accountArchiveModal">Archive
-                                                                            Account
+                                                                    @if ($account->platform === App\Enums\PlatformEnum::MT5->value && $account->deletion_type != 'archive')
+                                                                        <span class="mt-3 badge btn btn-warning" data-bs-toggle="modal"
+                                                                        data-bs-target="#accountArchiveModal">Archive Account
                                                                             <i class="ti ti-archive"></i>
                                                                         </span>
                                                                     @else
@@ -306,16 +302,16 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $total_profit;
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $total_profit;
-                                                                    }
-                                                                    
-                                                                    if (!is_null($total_profit)) {
-                                                                        echo "$" . number_format($total_profit, 2);
-                                                                    }
+                                                                        // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_profit = $accountHelper['profit'] ?? null;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_profit = $accountHelper->Profit ?? null;
+                                                                        }
+
+                                                                        if (!is_null($total_profit)) {
+                                                                            echo "$" . number_format($total_profit, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -332,20 +328,20 @@ if ($getUser) {
                                                     <div class="flex-grow-1 ms-3">
                                                         <div class="row g-1">
                                                             <div class="col-6">
-                                                                <p class="mb-0 f-20">Total Comission</p>
+                                                                <p class="mb-0 f-20">Total Commission</p>
                                                             </div>
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $total_comission;
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $total_comission;
-                                                                    }
-                                                                    if (!is_null($total_comission)) {
-                                                                        echo "$" . number_format($total_comission, 2);
-                                                                    }
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_comission = $accountHelper['total_commission'] ?? null;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_comission = $accountHelper->Commission ?? null;
+                                                                        }
+                                                                        if (!is_null($total_comission)) {
+                                                                            echo "$" . number_format($total_comission, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -367,15 +363,17 @@ if ($getUser) {
                                                             <div class="col-6 text-end">
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
-                                                                    // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $total_swap;
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $total_swap;
-                                                                    }
-                                                                    if (!is_null($total_swap)) {
-                                                                        echo "$" . number_format($total_swap, 2);
-                                                                    }
+                                                                        // Handle both array and object forms
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_swap = $account->accountType->ac_swap ?? null;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_swap = $account->accountType->ac_swap ?? null;
+                                                                        }
+                                                                        if (($total_swap == null) && ($total_swap == '')) {
+                                                                            echo ('No');
+                                                                        }else {
+                                                                            echo ('Yes');
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -398,14 +396,14 @@ if ($getUser) {
                                                                 <h4 class="mb-1 f-w-400">
                                                                     <?php
                                                                     // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $total_trades;
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $total_trades;
-                                                                    }
-                                                                    if (!is_null($total_trades)) {
-                                                                        echo "$" . number_format($total_trades, 2);
-                                                                    }
+                                                                        if (is_array($accountHelper)) {
+                                                                            $total_trades = $accountHelper['total_trades'] ?? null;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $total_trades = $accountHelper->TotalTrades ?? null;
+                                                                        }
+                                                                        if (!is_null($total_trades)) {
+                                                                            echo ($total_trades);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -453,14 +451,14 @@ if ($getUser) {
                                                                     <?php
                                                                     $feed_margin = null;
                                                                     // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $feed_margin = $accountHelper['margin_free'];
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $feed_margin = $accountHelper->margin_free ?? 0;
-                                                                    }
-                                                                    if (!is_null($feed_margin)) {
-                                                                        echo "$" . number_format($feed_margin, 2);
-                                                                    }
+                                                                        if (is_array($accountHelper)) {
+                                                                            $feed_margin = $accountHelper['margin_free'] ?? null;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $feed_margin = $accountHelper->MarginFree ?? 0;
+                                                                        }
+                                                                        if (!is_null($feed_margin)) {
+                                                                            echo "$" . number_format($feed_margin, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -484,14 +482,14 @@ if ($getUser) {
                                                                     <?php
                                                                     $margin = null;
                                                                     // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $margin = $accountHelper['margin'];
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $margin = $accountHelper->margin ?? 0;
-                                                                    }
-                                                                    if (!is_null($margin)) {
-                                                                        echo number_format($margin, 2);
-                                                                    }
+                                                                        if (is_array($accountHelper)) {
+                                                                            $margin = $accountHelper['margin']??0;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $margin = $accountHelper->Margin ?? 0;
+                                                                        }
+                                                                        if (!is_null($margin)) {
+                                                                            echo number_format($margin, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -542,14 +540,14 @@ if ($getUser) {
                                                                     // }
                                                                     $floating_pl = null;
                                                                     // Handle both array and object forms
-                                                                    if (is_array($accountHelper)) {
-                                                                        $floating_pl = $accountHelper['profit'];
-                                                                    } elseif (is_object($accountHelper)) {
-                                                                        $floating_pl = $accountHelper->profit ?? 0;
-                                                                    }
-                                                                    if (!is_null($floating_pl)) {
-                                                                        echo "$" . number_format($floating_pl, 2);
-                                                                    }
+                                                                        if (is_array($accountHelper)) {
+                                                                            $floating_pl = $accountHelper['profit']??0;
+                                                                        } elseif (is_object($accountHelper)) {
+                                                                            $floating_pl = $accountHelper->profit ?? 0;
+                                                                        }
+                                                                        if (!is_null($floating_pl)) {
+                                                                            echo "$" . number_format($floating_pl, 2);
+                                                                        }
                                                                     ?>
                                                                 </h4>
                                                             </div>
@@ -972,42 +970,69 @@ if ($getUser) {
                                                     Password</span></span></label></div>
                                 </div>
                             </div>
-                            <div class="col-lg-6">
-                                <div class="p-3 border card">
-                                    <div class="form-check"><input type="radio" name="password_type"
-                                            class="form-check-input input-primary" id="customCheckdefhor2"
-                                            value="main"><label class="form-check-label d-block"
-                                            for="customCheckdefhor2"><span><span class="h6">Master
-                                                    Password</span></span></label></div>
+                            <p class="p-2 mt-0 mb-2 text-gray-500 f-12 text-muted"> You have the ability to update your Investor and Master passwords for your trading accounts here.</p>
+                            <div class="mt-0 mb-0 row">
+                                <div class="col-lg-6">
+                                    <div class="p-3 border card">
+                                        <div class="form-check"><input type="radio" name="password_type"
+                                                class="form-check-input input-primary" id="customCheckdefhor1"
+                                                value="investor" checked><label class="form-check-label d-block"
+                                                for="customCheckdefhor1"><span><span class="h6">Investor
+                                                        Password</span></span></label></div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="p-3 border card">
+                                        <div class="form-check"><input type="radio" name="password_type"
+                                                class="form-check-input input-primary" id="customCheckdefhor2"
+                                                value="main"><label class="form-check-label d-block"
+                                                for="customCheckdefhor2"><span><span class="h6">Master
+                                                        Password</span></span></label></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mt-0 mb-0 row">
-                            <div class="form-group"><label class="form-label" for="exampleInputPassword1">New
-                                    Password</label><input type="password" class="form-control" name="password"
-                                    required id="password" placeholder="Password">
-                            </div>
-                            <div class="mt-3 mb-2 row">
-                                <div class="col-6"><span class="pc-micon me-2"><i
-                                            class="ti ti-point"></i></span><span class="pc-mtext f-12">Minimum 8
-                                        characters</span><br><span class="pc-micon me-2"><i
-                                            class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
-                                        uppercase
-                                        letter</span><br><span class="pc-micon me-2"><i
-                                            class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
-                                        lowercase letter</span></div>
-                                <div class="col-6"><span class="pc-micon me-2"><i
-                                            class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
-                                        special character</span><br><span class="pc-micon me-2"><i
-                                            class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
-                                        digit</span></div>
-                            </div>
-                            <div class="mb-2 form-group"><label class="form-label"
-                                    for="exampleInputPassword1">Confirm
-                                    Password</label><input type="password" class="form-control"
-                                    name="confirm_password" required id="confirm_password" placeholder="Password">
-                            </div>
+                            <div class="mt-0 mb-0 row">
+                                <div class="form-group"><label class="form-label" for="exampleInputPassword1">New
+                                        Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" name="password"
+                                            required id="password" placeholder="Password">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="ti ti-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {{-- <div class="mt-3 mb-2 row">
+                                    <div class="col-6"><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">Minimum 8
+                                            characters</span><br><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            uppercase
+                                            letter</span><br><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            lowercase letter</span></div>
+                                    <div class="col-6"><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            special character</span><br><span class="pc-micon me-2"><i
+                                                class="ti ti-point"></i></span><span class="pc-mtext f-12">At least 1
+                                            digit</span></div>
+                                </div> --}}
+                                <div class="mb-2 form-group"><label class="form-label"
+                                        for="exampleInputPassword1">Confirm
+                                        Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control"
+                                            name="confirm_password" required id="confirm_password" placeholder="Password">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                            <i class="ti ti-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
 
+                            </div>
+                            <div class="mt-2 col-12">
+                                @include('partials.password-validation-rules-admin', ['prefix' => 'mt5-update-'])
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer"><button type="button" class="btn btn-primary"
@@ -1019,7 +1044,8 @@ if ($getUser) {
     </div>
 @endsection
 
-@section('scripts')
+    @section('scripts')
+        @include('partials.password-validation-script')
     <script>
         const canViewTradeDeposit = @json(auth()->user()->can('trade_deposit:view'));
         const canViewTradeWithdrawal = @json(auth()->user()->can('trade_withdrawals:view'));
@@ -1456,8 +1482,86 @@ if ($getUser) {
                 modal.hide();
             }
 
-            // Trigger download
-            window.location.href = exportUrl;
-        });
-    </script>
-@endsection
+        </script>
+        <script>
+            // MT5 Update Password Modal Fields Validation
+            const mt5Password = document.getElementById('password');
+            const mt5ConfirmPassword = document.getElementById('confirm_password');
+            const toggleMT5UpdatePassword = document.getElementById('togglePassword');
+            const toggleMT5UpdateConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+            if (mt5Password && mt5ConfirmPassword) {
+                // Initialize all rules to false
+                window.updateRuleUI('mt5-update-rule-length', false);
+                window.updateRuleUI('mt5-update-rule-uppercase', false);
+                window.updateRuleUI('mt5-update-rule-lowercase', false);
+                window.updateRuleUI('mt5-update-rule-digit', false);
+                window.updateRuleUI('mt5-update-rule-special', false);
+                window.updateRuleUI('mt5-update-rule-no-spaces', false);
+                window.updateRuleUI('mt5-update-rule-match', false);
+
+                const handleMT5PasswordInput = () => {
+                    const password = mt5Password.value;
+                    const confirmPassword = mt5ConfirmPassword.value;
+
+                    if (!password) {
+                        // Reset all rules when password is empty
+                        window.updateRuleUI('mt5-update-rule-length', false);
+                        window.updateRuleUI('mt5-update-rule-uppercase', false);
+                        window.updateRuleUI('mt5-update-rule-lowercase', false);
+                        window.updateRuleUI('mt5-update-rule-digit', false);
+                        window.updateRuleUI('mt5-update-rule-special', false);
+                        window.updateRuleUI('mt5-update-rule-no-spaces', false);
+                        window.updateRuleUI('mt5-update-rule-match', false);
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('mt5-update-rule-length', rules.length);
+                        window.updateRuleUI('mt5-update-rule-uppercase', rules.uppercase);
+                        window.updateRuleUI('mt5-update-rule-lowercase', rules.lowercase);
+                        window.updateRuleUI('mt5-update-rule-digit', rules.digit);
+                        window.updateRuleUI('mt5-update-rule-special', rules.special);
+                        window.updateRuleUI('mt5-update-rule-no-spaces', rules.noSpaces);
+                        window.updateRuleUI('mt5-update-rule-match', confirmPassword ? rules.match : null);
+                    }
+                    // Enable/disable submit button based on all rules being satisfied
+                    window.checkAllRulesSatisfied('mt5UpdatePassword', 'mt5UpdateConfirmPassword', 'mt5UpdatePasswordSubmitBtn');
+                };
+
+                const handleMT5ConfirmInput = () => {
+                    const password = mt5Password.value;
+                    const confirmPassword = mt5ConfirmPassword.value;
+
+                    if (!confirmPassword) {
+                        window.updateRuleUI('mt5-update-rule-match', false);
+                    } else {
+                        const rules = window.checkPasswordRules(password, confirmPassword);
+                        window.updateRuleUI('mt5-update-rule-match', confirmPassword ? rules.match : null);
+                    }
+                    // Enable/disable submit button based on all rules being satisfied
+                    window.checkAllRulesSatisfied('mt5UpdatePassword', 'mt5UpdateConfirmPassword', 'mt5UpdatePasswordSubmitBtn');
+                };
+
+                mt5Password.addEventListener('input', handleMT5PasswordInput);
+                mt5ConfirmPassword.addEventListener('input', handleMT5ConfirmInput);
+            }
+
+            // Password Visibility Toggles
+            if (toggleMT5UpdatePassword && mt5Password) {
+                toggleMT5UpdatePassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = mt5Password.type === 'password' ? 'text' : 'password';
+                    mt5Password.type = type;
+                    toggleMT5UpdatePassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
+
+            if (toggleMT5UpdateConfirmPassword && mt5ConfirmPassword) {
+                toggleMT5UpdateConfirmPassword.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const type = mt5ConfirmPassword.type === 'password' ? 'text' : 'password';
+                    mt5ConfirmPassword.type = type;
+                    toggleMT5UpdateConfirmPassword.innerHTML = type === 'password' ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+                });
+            }
+        </script>
+    @endsection

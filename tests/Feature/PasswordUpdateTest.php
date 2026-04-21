@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Account;
+use App\Enums\PlatformEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -51,7 +52,7 @@ class PasswordUpdateTest extends TestCase
         // Create an X9 account
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
             'trader_password' => 'oldpassword123',
             'invester_password' => 'oldpassword123',
@@ -83,7 +84,7 @@ class PasswordUpdateTest extends TestCase
         // Create an MT5 account
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'mt5',
+            'platform' => PlatformEnum::MT5->value,
             'code' => '12345',
             'trader_password' => 'oldpassword123',
             'invester_password' => 'oldpassword123',
@@ -115,7 +116,7 @@ class PasswordUpdateTest extends TestCase
         // Create an account
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
         ]);
 
@@ -143,7 +144,7 @@ class PasswordUpdateTest extends TestCase
         // Create an account
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
         ]);
 
@@ -172,7 +173,7 @@ class PasswordUpdateTest extends TestCase
         // Create an account
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
         ]);
 
@@ -195,7 +196,7 @@ class PasswordUpdateTest extends TestCase
         $user = User::factory()->create();
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
         ]);
 
@@ -213,7 +214,7 @@ class PasswordUpdateTest extends TestCase
         $user = User::factory()->create();
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'x9',
+            'platform' => PlatformEnum::X9->value,
             'code' => '67890',
         ]);
 

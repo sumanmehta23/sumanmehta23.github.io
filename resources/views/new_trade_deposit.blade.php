@@ -1,5 +1,15 @@
 @extends('layouts.crm.crm')
 @section('content')
+<style>
+@media (max-width: 575.98px) {
+    #accountDropdownBtn {
+        width: 100% !important;
+    }
+    #accountDropdownMenu {
+        width: 100% !important;
+    }
+}
+</style>
     <div class="pc-container">
         <div class="pc-content">
             <div class="pb-0 mb-0 page-header">
@@ -39,43 +49,48 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="my-4 divider"><span>SELECT MT5 ACCOUNT</span></div>
-                                            <div class="row g-1">
+                                            {{-- Hidden radio inputs to maintain existing JS behaviour --}}
+                                            <div style="display:none">
                                                 @foreach ($liveaccount_details as $liveaccount)
-                                                    <div class="col-md-3 col-lg-4 col-xl-4">
-                                                        <div class="border rounded address-check">
-                                                            <div class="form-check paycard">
-                                                                <input id="{{ $liveaccount->code }}"
-                                                                    type="radio" name="live-account"
-                                                                    class="select-liveaccount form-check-input input-primary"
-                                                                    data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
-                                                                    data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
-                                                                    data-group="{{ $liveaccount->accountType->ac_group }}"
-                                                                    value="{{ $liveaccount->id }}">
-                                                                <label class="form-check-label d-block" required>
-                                                                    <div class="p-1 my-1">
-                                                                        <span class="row">
-                                                                            <span class="mt-1 col-6">
-                                                                                <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
-                                                                                    <img src="/assets/images/mt5.png" alt="user-image" class="wid-25 me-1 ms-1">{{ $liveaccount->code }}</span>
-                                                                            </span>
-                                                                            <span class="pb-0 mb-0 col-6 text-end pe-3">
-                                                                                <span class="mb-0 h5 d-block f-w-500">
-                                                                                    ${{ $liveaccount->balance - $liveaccount->totalBonusDeposit }}
-                                                                                </span>
-                                                                                <span class="mb-0 text-muted f-10">Current Balance</span>
-                                                                            </span>
-                                                                        </span>
-                                                                    </div>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    <input id="{{ $liveaccount->code }}"
+                                                        type="radio" name="live-account"
+                                                        class="select-liveaccount"
+                                                        data-mindeposit="{{ $liveaccount->accountType->ac_min_deposit }}"
+                                                        data-maxdeposit="{{ $liveaccount->accountType->ac_max_deposit }}"
+                                                        data-group="{{ $liveaccount->accountType->ac_group }}"
+                                                        value="{{ $liveaccount->id }}">
                                                 @endforeach
+                                            </div>
+                                            {{-- Custom account dropdown --}}
+                                            <div class="mb-3 dropdown">
+                                                <button class="px-3 py-3 btn btn-outline-secondary dropdown-toggle w-50 d-flex justify-content-between align-items-center" type="button" id="accountDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="background:#fff; border-radius:8px; width:50%;">
+                                                    <span id="accountDropdownLabel" class="text-muted w-100 text-start">Select Account</span>
+
+                                                </button>
+                                                <ul class="shadow dropdown-menu w-50 w-sm-100" id="accountDropdownMenu" aria-labelledby="accountDropdownBtn" style="border-radius:8px; overflow:hidden;">
+                                                    @foreach ($liveaccount_details as $liveaccount)
+                                                        <li>
+                                                            <a class="py-2 dropdown-item d-flex justify-content-between align-items-center account-dropdown-item"
+                                                               href="#"
+                                                               data-account-code="{{ $liveaccount->code }}"
+                                                               data-account-balance="{{ number_format($liveaccount->balance - $liveaccount->totalBonusDeposit, 2) }}">
+                                                                <span class="d-flex align-items-center">
+                                                                    <img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">
+                                                                    <span class="fw-medium">{{ $liveaccount->code }}</span>
+                                                                </span>
+                                                                <span class="text-end">
+                                                                    <span class="d-block fw-medium">${{ number_format($liveaccount->balance - $liveaccount->totalBonusDeposit, 2) }}</span>
+                                                                    <small class="text-muted">Current Balance</small>
+                                                                </span>
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
                                             </div>
                                             <div class="my-4 divider"><span>SELECT PAYMENT METHOD</span></div>
                                             <div class="row g-1">
-                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' && 
-                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') || 
+                                                @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1' &&
+                                                    (($isUkUser && isset($settings['enable_ragapay']) && $settings['enable_ragapay'] === '1') ||
                                                      (isset($settings['enable_creditcardpayissa']) && $settings['enable_creditcardpayissa'] === '1')))
                                                     <div class="col-6 col-lg-6 col-xl-6">
                                                         <div class="border rounded address-check">
@@ -125,7 +140,7 @@
 
                                             <!-- Credit Services Selection (shown when credit is selected) -->
                                             @if(isset($settings['enable_credit']) && $settings['enable_credit'] === '1')
-                                                <div id="credit-services-section" class="row g-1 mt-3" style="display:none;">
+                                                <div id="credit-services-section" class="mt-3 row g-1" style="display:none;">
                                                     <div class="col-12">
                                                         <h6 class="mb-3" style="margin-left: 10px;">SELECT CREDIT SERVICE</h6>
                                                     </div>
@@ -210,9 +225,9 @@
                                                                 </div>
                                                                 <div class="row">
                                                                     <div class="col-lg-4"></div>
-                                                                    <div class="col-lg-8 pb-4">
+                                                                    <div class="pb-4 col-lg-8">
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="ragaWarningCheckbox" name="confirmcryptoCheckbox">
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="ragaWarningCheckbox" name="confirmcryptoCheckbox">
                                                                             <label class="form-check-label" for="ragaWarningCheckbox">
                                                                                 I confirm that I have reviewed the payment details and understand that this transaction will be processed through RagaPay payment gateway. I agree to proceed with this payment.
                                                                             </label>
@@ -281,9 +296,9 @@
                                                                 </div>
                                                                 <div class="row">
                                                                     <div class="col-lg-4"></div>
-                                                                    <div class="col-lg-8 pb-4">
+                                                                    <div class="pb-4 col-lg-8">
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="cryptoWarningCheckbox" name="confirmcryptoCheckbox" required>
                                                                             <label class="form-check-label" for="cryptoWarningCheckbox">
                                                                                 Please ensure you select the correct cryptocurrency to the correct account and network. Transactions are irreversible, and we are not responsible for any loss of funds due to incorrect deposits. Double-check all details before proceeding.
                                                                             </label>
@@ -351,15 +366,15 @@
                                                                 </div>
                                                                 <div class="row">
                                                                     <div class="col-lg-4"></div>
-                                                                    <div class="col-lg-8 pb-4">
+                                                                    <div class="pb-4 col-lg-8">
                                                                         <div class="form-check">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditWarningCheckbox" name="confirmcryptoCheckbox">
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="creditWarningCheckbox" name="confirmcryptoCheckbox">
                                                                             <label class="form-check-label" for="creditWarningCheckbox">
                                                                                 Card deposit options vary by country. If your card is not accepted, try a different card & phone number. If the issue persists, this option may not be available in your country. In that case, please use cryptocurrency to deposit.
                                                                             </label>
                                                                         </div>
-                                                                         <div class="form-check mt-2">
-                                                                            <input class="form-check-input mt-1" type="checkbox" id="creditusdcCheckbox" name="confirmusdcCheckbox">
+                                                                         <div class="mt-2 form-check">
+                                                                            <input class="mt-1 form-check-input" type="checkbox" id="creditusdcCheckbox" name="confirmusdcCheckbox">
                                                                             <label class="form-check-label" for="creditusdcCheckbox">
                                                                                 I understand this credit card option processes payments only in USDC.
                                                                             </label>
@@ -463,11 +478,11 @@
                         </div>
                     </div>
                 @else
-                    <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
-                        <div class="row p-3">
-                            <div class="card-body text-center">
+                    <div class="pb-1 border shadow-none card support-tickets ribbon-box ribbon-fill">
+                        <div class="p-3 row">
+                            <div class="text-center card-body">
                                 <div class="text-center me-4"><a href="/transactions/deposit#"><img src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
-                                <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !</h6>
+                                <h6 class="mt-2 mb-0 mb-3 text-center text-secondary f-w-400 f-16">KYC Not Yet Verified !</h6>
                                 <a id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span class="text-truncate">Verify Now To Proceed</span></button></a>
                             </div>
                         </div>
@@ -517,7 +532,7 @@
         const cryptoPromocodeStatus = $('#promocodeStatus');
         const cryptoVerifyButton = $('#verifyPromocodeBtn');
         let isCryptoPromocodeValid = false;
-        let isCryptoPromocodeEntered = false;        
+        let isCryptoPromocodeEntered = false;
 
         // CreditCard form handling
         const ccPromocodeInput = $('#cc_promocode');
@@ -590,7 +605,7 @@ function updateRagaButtonState() {
     const amount = parseFloat(ragaAmountInput.val());
     const isAmountValid = amount >= minDeposit;
     const isCheckboxChecked = $('#ragaWarningCheckbox').is(':checked');
-    
+
     if (isRagaPromocodeEntered) {
         ragaDepositButton.prop('disabled', !isRagaPromocodeValid || !isAmountValid || !isCheckboxChecked);
         ragaDepositButton.css('opacity', isRagaPromocodeValid && isAmountValid && isCheckboxChecked ? '1' : '0.5');
@@ -810,6 +825,27 @@ function updateRagaButtonState() {
             updateCryptoButtonState();
             updateCcButtonState();
             updateRagaButtonState();
+        });
+
+        // Account dropdown selection handler
+        $(document).on('click', '.account-dropdown-item', function(e) {
+            e.preventDefault();
+            const accountCode = $(this).data('account-code');
+            const balance = $(this).data('account-balance');
+            $('#accountDropdownLabel').html(
+                '<div class="d-flex justify-content-between align-items-center w-100">' +
+                    '<div class="d-flex align-items-center">' +
+                        '<img src="/assets/images/mt5.png" alt="mt5" class="wid-25 me-2">' +
+                        '<span class="text-muted">' + accountCode + '</span>' +
+                    '</div>' +
+                    '<div class="pr-4 d-flex flex-column text-end">' +
+                        '<span class="text-muted">$' + balance + '</span>' +
+                        '<small class="text-muted">Current Balance</small>' +
+                    '</div>' +
+                '</div>'
+            );
+            // $('#accountDropdownLabel').removeClass('text-muted');
+            $('#' + accountCode).prop('checked', true).trigger('change');
         });
 
         // Prevent form submission if no account selected

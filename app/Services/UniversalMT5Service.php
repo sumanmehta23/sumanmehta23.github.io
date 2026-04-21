@@ -112,14 +112,17 @@ class UniversalMT5Service
         return $this->executeOperation(function ($api) use ($login) {
             $account = null;
             $result = $api->UserAccountGet($login, $account);
+            // dump($account);
             if ($result === MTRetCode::MT_RET_OK && $account) {
                 return [
                     'balance' => $account->Balance ?? 0,
                     'equity' => $account->Equity ?? 0,
                     'margin' => $account->Margin ?? 0,
+                    'margin_level' => $account->MarginLevel ?? 0,
                     'margin_free' => $account->MarginFree ?? 0,
                     'profit' => $account->Profit ?? 0,
                     'credit' => $account->Credit ?? 0,
+                    'total_commission' => $account->Commission ?? 0,
                 ];
             }
             return null;
@@ -251,7 +254,23 @@ class UniversalMT5Service
             return false;
         }
     }
+/**
+     * Get MT5 server common information (REST API pattern)
+     *
+     * Returns an array with server configuration and limits
+     */
+    public function getServerCommon(): ?array
+    {
+        try {
+            $restService = new MT5RestAPIService;
 
+            return $restService->getServerCommon();
+        } catch (\Exception $e) {
+            Log::error('UniversalMT5: Failed to get server common info: '.$e->getMessage());
+
+            return null;
+        }
+    }
     /**
      * Report connection error
      */

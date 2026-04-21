@@ -249,8 +249,8 @@
                                                     <table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-1" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">
                                                         <tr>
                                                             <td class="pad" style="padding-bottom:15px;padding-left:25px;padding-right:25px;padding-top:15px;">
-                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:120%;text-align:justify;mso-line-height-alt:18px;">
-                                                                    <p style="margin: 0; margin-bottom: 16px;"><strong>Welcome to LQH Markets!</strong></p>
+                                                                <div style="color:#101112;direction:ltr;font-family:Arial, Helvetica, sans-serif;font-size:15px;font-weight:400;letter-spacing:0px;line-height:150%;text-align:justify;mso-line-height-alt:22px;">
+                                                                    <p style="margin: 0; margin-bottom: 12px;"><strong>Welcome to LQH Markets!</strong></p>
                                                                     <p style="margin: 0;">We have received a request to reset the password associated with your account. If you made this request, please click the link below to reset your password.</p>
                                                                 </div>
                                                             </td>

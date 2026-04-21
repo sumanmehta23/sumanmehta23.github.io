@@ -112,7 +112,11 @@ class Home extends Controller
             ->whereNull('competition_start_date')
             ->whereNull('competition_end_date')
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id','user_id', 'code', 'trade_platform', 'registered_date','account_nick_name','account_type_id','platform' ,'created_from']);
+            ->paginate(
+                5,
+                ['leverage', 'currency', 'balance', 'equity', 'id', 'user_id', 'code', 'registered_date', 'account_nick_name', 'account_type_id', 'platform', 'created_from'],
+                'live_page'
+            );
 
         return $liveaccount_details;
     }
@@ -123,7 +127,11 @@ class Home extends Controller
             ->whereNull('competition_start_date')
             ->whereNull('competition_end_date')
             ->orderBy('id', 'desc')
-            ->get(['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date','platform','account_type_id']);
+            ->paginate(
+                5,
+                ['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'registered_date', 'platform', 'account_type_id'],
+                'demo_page'
+            );
         return $demoaccount_details;
     }
     public function getIb1Details($userId)

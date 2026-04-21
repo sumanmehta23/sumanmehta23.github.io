@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Country;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use App\Services\MailService;
 use App\Models\TradeWithdrawals;
@@ -20,7 +21,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use  HasFactory, Notifiable, HasUuids, TwoFactorAuthenticatable;
+    use  HasFactory, Notifiable, HasUuids, TwoFactorAuthenticatable,SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

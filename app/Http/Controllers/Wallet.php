@@ -44,6 +44,7 @@ class Wallet extends Controller
     protected $paymentController;
     protected $mailService;
     protected $mt5Service;
+    protected $api;
 
     public function __construct(Payment $paymentController, MailService $mailService, UniversalMT5Service $mt5Service)
     {
@@ -51,6 +52,21 @@ class Wallet extends Controller
         $this->paymentController = $paymentController;
         $this->mailService = $mailService;
         $this->mt5Service = $mt5Service;
+    }
+
+    private function ensureMT5Connection()
+    {
+        if (!$this->mt5Service) {
+            $this->mt5Service = new UniversalMT5Service();
+        }
+
+        if (!$this->mt5Service->connect()) {
+            Log::error('Failed to establish MT5 connection in Transaction');
+            return false;
+        }
+
+        $this->api = $this->mt5Service->getApi();
+        return true;
     }
     public function alldeposits()
     {
@@ -349,7 +365,7 @@ class Wallet extends Controller
         $templateVars = [
             'name' => $user->fullname,
             'server_name' => $settings['mt5_company_name'],
-            'site_link' => $settings['copyright_site_name_text'] . "/wallet_address_verify?id={$user->id}&clientWallet_id=$ClientWallet->id",
+            'site_link' => $settings['copyright_site_name_text'] . "/wallet_address_verify?id={$user->id}&clientWallet_id={$ClientWallet->id}",
             'email' => $from,
             "content" => $content,
             "title_right" => "Activate",
@@ -650,7 +666,7 @@ class Wallet extends Controller
         if (isset($wallet_details['wallet_address']) && isset($wallet_details['wallet_network'])) {
             $validation = $this->validateWalletAddress($wallet_details['wallet_address'], $wallet_details['wallet_network']);
             if (!$validation['valid']) {
-                return redirect()->route('user-profile')->with('error', $validation['message']);
+                return redirect()->to('/user-profile?tab=wallets')->with('error', $validation['message']);
             }
         }
 
@@ -702,9 +718,9 @@ class Wallet extends Controller
                 "btn_text" => "Login"
             ];
             $this->mailService->sendEmail($wallet->user->email, $emailSubject, $headers, '', $templateVars);
-            return redirect()->route('user-profile')->with('status', 'Your Wallet Details succesfully updated');
+            return redirect()->to('/user-profile?tab=wallets')->with('success', 'Your Wallet Details succesfully updated');
         }
-        return redirect()->route('user-profile')->with('error', 'Something went wrong');
+        return redirect()->to('/user-profile?tab=wallets')->with('error', 'Something went wrong');
     }
 
     public function delete_wallet_address(Request $request)
@@ -809,12 +825,12 @@ class Wallet extends Controller
                     "btn_text" => "Login"
                 ];
                 $this->mailService->sendEmail($new_wallet_address->user->email, $emailSubject, $headers, '', $templateVars);
-                return redirect()->route('trade-withdrawal')->with('success', 'Your wallet address is now verified');
+                return redirect()->to('/user-profile?tab=wallets')->with('success', 'Your wallet address is now verified');
             } else {
-                return redirect()->route('dashboard')->with('error', 'Sorry, your wallet address is already verified');
+                return redirect()->to('/user-profile?tab=wallets')->with('error', 'Sorry, your wallet address is already verified');
             }
         } else {
-            return redirect()->route('dashboard')->with('error', 'Sorry! No Adress Found. Signup here');
+            return redirect()->to('/user-profile?tab=wallets')->with('error', 'Sorry! No Adress Found. Signup here');
         }
     }
 
@@ -826,6 +842,17 @@ class Wallet extends Controller
         ]);
         $wallet = ClientWallet::where('id', $request->id)->first();
         if ($wallet) {
+            // Check for pending withdrawals from both TradeWithdrawals and WalletWithdraw tables
+            $pendingTradeWithdrawals = TradeWithdrawals::where('client_wallet_id', $wallet->id)->where('status', 0)->count();
+            $pendingWalletWithdrawals = WalletWithdraw::where('client_wallet_id', $wallet->id)->where('status', 0)->count();
+
+            if ($pendingTradeWithdrawals > 0 || $pendingWalletWithdrawals > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot update wallet status with pending withdrawals. Please wait for pending withdrawals to be processed.'
+                ], 422);
+            }
+
             $wallet->status = $wallet->status == 0 ? 1 : 0;
             $wallet->save();
             return response()->json(['success' => true]);
@@ -1083,7 +1110,7 @@ class Wallet extends Controller
 
             if (isset($payload['transaction'])) {
                 Log::channel('cryptochillcallback')->error('Transaction data missing in payload: ' . json_encode($payload));
-            } elseif (isset($payload['callback_status']) && in_array($payload['callback_status'], ['payout_pending', 'payout_confirmed', 'payout_complete'])) {
+            } elseif (isset($payload['callback_status']) && in_array($payload['callback_status'], ['payout_pending', 'payout_confirmed', 'payout_complete','payout_rejected'])) {
                 Log::channel('cryptochillcallback')->info('Payout callback received, no action taken: ' . json_encode($payload));
                 $this->handlePayoutCallback($payload);
                 return response()->json(['status' => 'payout callback processed'], 200);
@@ -1294,6 +1321,7 @@ class Wallet extends Controller
                                     $promo = Promocode::where('code', $promocode)->first();
                                     if ($promo) {
                                         $min_depsoit = $promo->min_deposit;
+                                        Log::info("Promocode found: " . $promo->code . " with minimum deposit: " . $min_depsoit);
                                         if ($promo && $amount >= $min_depsoit) {
                                             $ticket = NULL;
                                             if (isset($promo->max_deposit) && $amount >= $promo->max_deposit) {
@@ -1301,7 +1329,7 @@ class Wallet extends Controller
                                             } else {
                                                 $bonus_amount = ($promo->promo_percentage / 100) * $amount;
                                             }
-
+                                            Log::info("Calculated bonus amount: " . $bonus_amount);
                                             $errorCode = $this->mt5Service->tradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $bonus_amount, 'Promo Bonus', $ticket, true);
                                             if ($errorCode !== MTRetCode::MT_RET_OK) {
                                                 DB::select('SELECT RELEASE_LOCK(?)', ["cryptochill_deposit_{$transactionId}"]);
@@ -1473,7 +1501,8 @@ class Wallet extends Controller
         if (!in_array($callbackStatus, [
             'payout_pending',
             'payout_confirmed',
-            'payout_complete'
+            'payout_complete',
+            'payout_rejected'
         ])) {
             return;
         }
@@ -1504,6 +1533,22 @@ class Wallet extends Controller
         $payoutResult = [
             'result' => $payoutData
         ];
+
+        if($payoutStatus == 'complete'){
+            $transaction->status = 1; // Mark as completed
+        }elseif(($payoutStatus == 'rejected' || $payoutStatus == 'failed') && $transaction->status != 3){
+            $transaction->status = 3; // Mark as failed
+
+            $comment = 'Cancelled Withdrawal';
+            $ticket = null;
+            $errorCode = $this->api->TradeBalance($transaction->code, MTEnDealAction::DEAL_BALANCE, ($transaction->withdrawal_amount + $transaction->transaction_fee), $comment, $ticket, true);
+
+            if ($errorCode != MTRetCode::MT_RET_OK) {
+                $error = MTRetCode::GetError($errorCode);
+            } else {
+                Log::info("Withdrawal refund successful for Withdrawal ID: {$transactionId}");
+            }
+        }
 
         $transaction->payout_callback_status = $payoutStatus;
         $transaction->transaction_id = $payoutTxId;

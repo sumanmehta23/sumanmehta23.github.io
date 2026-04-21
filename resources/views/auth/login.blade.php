@@ -17,11 +17,11 @@
                     <div  class="auth-form">
                         <div  class="auth-header row">
                             <div  class="my-1 col mob_logo_center">
-                                <a href="{{ route('login') }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
+                                <a href="{{ $settings['main_website_url'] ?? '#' }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
-                        
+
                         <div  class="my-3 card">
                             <div  class="card-body">
                                 <form method="POST" action="{{ route('login') }}" id="login-form">
@@ -32,12 +32,12 @@
                                     </div>
                                     @if (session('status'))
                                         <div class="alert alert-success">
-                                            {{ session('status') }}
+                                            {!! session('status') !!}
                                         </div>
                                     @endif
                                     @if (session('error'))
                                         <div class="alert alert-danger" id="rate-limit-error">
-                                            <span id="error-message">{{ session('error') }}</span>
+                                            <span id="error-message">{!! session('error') !!}</span>
                                             @if (session('retry_after'))
                                                 <span id="countdown-timer"></span>
                                             @endif
@@ -195,8 +195,56 @@
                 'flagPreviewId' => 'flag-preview-client-login'
             ])
         </div>
+        <script>
+            window.intercomSettings = {
+                api_base: "https://api-iam.intercom.io",
+                app_id: "hcaolnkq"
+            };
+        </script>
 
-        @if (session('retry_after'))
+        <script>
+            (function () {
+                var w = window;
+                var ic = w.Intercom;
+                if (typeof ic === "function") {
+                    ic('reattach_activator');
+                    ic('update', w.intercomSettings);
+                } else {
+                    var d = document;
+                    var i = function () { i.c(arguments); };
+                    i.q = [];
+                    i.c = function (args) { i.q.push(args); };
+                    w.Intercom = i;
+                    var l = function () {
+                        var s = d.createElement('script');
+                        s.type = 'text/javascript';
+                        s.async = true;
+                        s.src = 'https://widget.intercom.io/widget/hcaolnkq';
+                        var x = d.getElementsByTagName('script')[0];
+                        x.parentNode.insertBefore(s, x);
+                    };
+                    if (document.readyState === 'complete') {
+                        l();
+                    } else if (w.attachEvent) {
+                        w.attachEvent('onload', l);
+                    } else {
+                        w.addEventListener('load', l, false);
+                    }
+                }
+            })();
+
+            // 👇 This clears cached user and reboots as anonymous when Intercom button is clicked
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('#intercom-button, .intercom-launcher, [class*="intercom"]')) {
+                    window.Intercom('shutdown');
+                    window.Intercom('boot', {
+                        api_base: "https://api-iam.intercom.io",
+                        app_id: "hcaolnkq"
+                    });
+                }
+            });
+        </script>
+    @if (session('retry_after'))
         <script>
             (function() {
                 let retryAfter = {{ session('retry_after') }};
@@ -205,7 +253,7 @@
                 const errorAlert = document.getElementById('rate-limit-error');
                 const loginForm = document.getElementById('login-form');
                 const loginBtn = document.getElementById('login-submit-btn');
-                
+
                 // Disable form and button
                 if (loginForm && loginBtn) {
                     loginBtn.disabled = true;
@@ -218,7 +266,7 @@
                         }
                     });
                 }
-                
+
                 if (countdownElement && errorMessage && retryAfter > 0) {
                     function updateCountdown() {
                         if (retryAfter <= 0) {
@@ -233,25 +281,25 @@
                             }
                             return;
                         }
-                        
+
                         const minutes = Math.floor(retryAfter / 60);
                         const seconds = retryAfter % 60;
                         const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                        
+
                         errorMessage.textContent = `Too many requests. Please wait `;
                         countdownElement.textContent = timeString + ` before trying again.`;
-                        
+
                         retryAfter--;
-                        
+
                         if (retryAfter >= 0) {
                             setTimeout(updateCountdown, 1000);
                         }
                     }
-                    
+
                     updateCountdown();
                 }
             })();
         </script>
-        @endif
+    @endif
 
 @endsection

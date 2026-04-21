@@ -24,9 +24,12 @@
                                 <label for="subject" class="form-label">Restrict Reason</label>
                                 <select class="form-select" required name="reason">
                                     <option value="" selected disabled>Select Reason</option>
-                                    <option value="HFT">HFT</option>
-                                    <option value="Latency Arbitrage">Latency Arbitrage</option>
+                                    <option value="HFT">HFT - Sends notification email</option>
+                                    <option value="Latency Arbitrage">Latency Arbitrage - Sends notification email</option>
                                     <option value="Manually">Restrict (With no email sent)</option>
+                                    <option value="General_Ban">
+                                        General Ban - Sends notification email
+                                    </option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Block IP & Email</button>
@@ -89,16 +92,20 @@
         var tableBlockedIP = $('#tableBlockedIP').DataTable({
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
 
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    filename: 'Blocked_Ips_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: {
-                    columns: [0,1,2,3,4] // Updated column indices to match your use case
-                    }
-                },
-            ],
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('ip_ban')
+                    buttons.push({
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        filename: 'Blocked_Ips_' + new Date().toISOString().slice(0, 10),
+                        exportOptions: {
+                            columns: [0,1,2,3,4] // Updated column indices to match your use case
+                        }
+                    });
+                @endif
+                return buttons;
+            })(),
 
             order: [[3, "desc"]],
             processing: true,
@@ -118,10 +125,11 @@
             { data: 'email', name: 'email' },
             { data: 'reason', name: 'reason' },
             { data: 'date', name: 'date' },
-            { data: 'action', name: 'action' },
+            { data: 'action', name: 'action', orderable: false },
             ]
         });
 
     });
 </script>
+@endpush
 @endsection

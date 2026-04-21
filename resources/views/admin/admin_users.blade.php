@@ -23,7 +23,26 @@
                                 </div>
                                 <div class="col-6">
                                     <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" name="password" required>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" name="password" id="addAdminPassword" required>
+                                        <span class="cursor-pointer input-group-text showPassword"
+                                            id="toggleAddAdminPassword">
+                                            <i class="fa fa-eye-slash"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="password_confirmation" class="form-label">Confirm Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" name="password_confirmation" id="addAdminConfirmPassword" required>
+                                        <span class="cursor-pointer input-group-text showPassword"
+                                            id="toggleAddAdminConfirmPassword">
+                                            <i class="fa fa-eye-slash"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    @include('partials.password-validation-rules-admin', ['prefix' => 'add-admin-'])
                                 </div>
                                 <div class="col-6">
                                     <label for="number" class="form-label">Phone</label>
@@ -52,7 +71,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <input type="submit" class="btn btn-primary" value="Add">
+                            <input type="submit" class="btn btn-primary" id="addAdminSubmitBtn" value="Add">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </form>
@@ -83,7 +102,26 @@
                                 </div>
                                 <div class="col-6">
                                     <label for="password" class="form-label">Password</label>
-                                    <input type="password" class="form-control" name="password" id="password">
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" name="password" id="updateAdminPassword">
+                                        <span class="cursor-pointer input-group-text showPassword"
+                                            id="toggleUpdateAdminPassword">
+                                            <i class="fa fa-eye-slash"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="password_confirmation" class="form-label">Confirm Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" name="password_confirmation" id="updateAdminConfirmPassword">
+                                        <span class="cursor-pointer input-group-text showPassword"
+                                            id="toggleUpdateAdminConfirmPassword">
+                                            <i class="fa fa-eye-slash"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    @include('partials.password-validation-rules-admin', ['prefix' => 'update-admin-'])
                                 </div>
                                 <div class="col-6">
                                     <label for="number" class="form-label">Phone</label>
@@ -112,7 +150,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <input type="submit" class="btn btn-primary" value="Update">
+                            <input type="submit" class="btn btn-primary" id="updateAdminSubmitBtn" value="Update">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         </div>
                     </form>
@@ -171,10 +209,15 @@
             var return_data = '';
             var admin_role = '@can("employee:update")1 @endcan';
             var admin_role_id = @json(session('userData')['role_id']);
+            var user_role = @json(session('userData')['userRole'] ?? session('userRole'));
             if (admin_role ) {
               return_data += '<a data-id="' + row_data.enc_id + '" class="update-user" data-bs-toggle="modal" data-bs-target="#updateUserModal" ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"></path><path d="M16 5l3 3"></path></svg></a>';
               if (row_data.role_id == 2) {
                 return_data += '<a href="/admin/rm_dashboard?id=' + row_data.enc_id + '" class="ms-2" ><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye"><path class="text-primary" stroke="none" d="M0 0h24v24H0z" fill="none"></path><path class="text-primary" d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path class="text-primary" d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"></path></svg></a>';
+              }
+              // Add delete button for Super Admin or admin roles
+              if (user_role && (user_role.toLowerCase() === 'super admin' || user_role.toLowerCase() === 'admin')) {
+                return_data += '<a data-id="' + row_data.enc_id + '" class="ms-2 delete-user text-danger" href="javascript:void(0)" title="Delete User"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7v-4a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v4"></path></svg></a>';
               }
             }
             return return_data;
@@ -217,8 +260,253 @@
           });
 
         });
+
+        // Delete user handler
+        $(document).off("click", ".delete-user");
+        $(document).on("click", ".delete-user", function () {
+          let id = $(this).data("id");
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to delete this user. This action can be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                url: "/admin/ajax",
+                type: "GET",
+                data: {
+                  action: 'deleteAdminUser',
+                  id: id
+                },
+                success: function (response) {
+                  if (response.status) {
+                    Swal.fire(
+                      'Deleted!',
+                      response.message,
+                      'success'
+                    );
+                    $('#tableAdminUsers').DataTable().draw();
+                  } else {
+                    Swal.fire(
+                      'Error!',
+                      response.message,
+                      'error'
+                    );
+                  }
+                },
+                error: function (xhr, status, error) {
+                  console.error('AJAX Error:', status, error);
+                  Swal.fire(
+                    'Error!',
+                    'An error occurred while deleting the user',
+                    'error'
+                  );
+                }
+              });
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+              Swal.fire(
+                'Cancelled',
+                'User deletion has been cancelled',
+                'info'
+              );
+            }
+          });
+        });
       }
 
+    });
+  </script>
+  @include('partials.password-validation-script')
+  <script>
+    $(document).ready(function() {
+    // Add User Modal Password Validation
+    const addAdminPassword = document.getElementById('addAdminPassword');
+    const addAdminConfirmPassword = document.getElementById('addAdminConfirmPassword');
+    const toggleAddAdminPassword = document.getElementById('toggleAddAdminPassword');
+    const toggleAddAdminConfirmPassword = document.getElementById('toggleAddAdminConfirmPassword');
+
+    if (addAdminPassword && addAdminConfirmPassword) {
+        // Initialize all rules to false
+        window.updateRuleUI('add-admin-rule-length', false);
+        window.updateRuleUI('add-admin-rule-uppercase', false);
+        window.updateRuleUI('add-admin-rule-lowercase', false);
+        window.updateRuleUI('add-admin-rule-digit', false);
+        window.updateRuleUI('add-admin-rule-special', false);
+        window.updateRuleUI('add-admin-rule-no-spaces', false);
+        window.updateRuleUI('add-admin-rule-match', false);
+
+        const handleAddAdminPasswordInput = () => {
+            const password = addAdminPassword.value;
+            const confirmPassword = addAdminConfirmPassword.value;
+
+            if (!password) {
+                window.updateRuleUI('add-admin-rule-length', false);
+                window.updateRuleUI('add-admin-rule-uppercase', false);
+                window.updateRuleUI('add-admin-rule-lowercase', false);
+                window.updateRuleUI('add-admin-rule-digit', false);
+                window.updateRuleUI('add-admin-rule-special', false);
+                window.updateRuleUI('add-admin-rule-no-spaces', false);
+                window.updateRuleUI('add-admin-rule-match', false);
+            } else {
+                const rules = window.checkPasswordRules(password, confirmPassword);
+                window.updateRuleUI('add-admin-rule-length', rules.length);
+                window.updateRuleUI('add-admin-rule-uppercase', rules.uppercase);
+                window.updateRuleUI('add-admin-rule-lowercase', rules.lowercase);
+                window.updateRuleUI('add-admin-rule-digit', rules.digit);
+                window.updateRuleUI('add-admin-rule-special', rules.special);
+                window.updateRuleUI('add-admin-rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('add-admin-rule-match', confirmPassword ? rules.match : null);
+            }
+            window.checkAllRulesSatisfied('addAdminPassword', 'addAdminConfirmPassword', 'addAdminSubmitBtn');
+        };
+
+        const handleAddAdminConfirmInput = () => {
+            const password = addAdminPassword.value;
+            const confirmPassword = addAdminConfirmPassword.value;
+
+            if (!confirmPassword) {
+                window.updateRuleUI('add-admin-rule-match', false);
+            } else {
+                const rules = window.checkPasswordRules(password, confirmPassword);
+                window.updateRuleUI('add-admin-rule-match', confirmPassword ? rules.match : null);
+            }
+            window.checkAllRulesSatisfied('addAdminPassword', 'addAdminConfirmPassword', 'addAdminSubmitBtn');
+        };
+
+        addAdminPassword.addEventListener('input', handleAddAdminPasswordInput);
+        addAdminConfirmPassword.addEventListener('input', handleAddAdminConfirmInput);
+    }
+
+    // Password Visibility Toggles for Add Admin
+    if (toggleAddAdminPassword && addAdminPassword) {
+        toggleAddAdminPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = addAdminPassword.type === 'password' ? 'text' : 'password';
+            addAdminPassword.type = type;
+            toggleAddAdminPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+        });
+    }
+
+    if (toggleAddAdminConfirmPassword && addAdminConfirmPassword) {
+        toggleAddAdminConfirmPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = addAdminConfirmPassword.type === 'password' ? 'text' : 'password';
+            addAdminConfirmPassword.type = type;
+            toggleAddAdminConfirmPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+        });
+    }
+
+    // Update User Modal Password Validation
+    const updateAdminPassword = document.getElementById('updateAdminPassword');
+    const updateAdminConfirmPassword = document.getElementById('updateAdminConfirmPassword');
+    const toggleUpdateAdminPassword = document.getElementById('toggleUpdateAdminPassword');
+    const toggleUpdateAdminConfirmPassword = document.getElementById('toggleUpdateAdminConfirmPassword');
+    const updateAdminSubmitBtn = document.getElementById('updateAdminSubmitBtn');
+
+    if (updateAdminPassword && updateAdminConfirmPassword) {
+        // Initialize all rules to false
+        window.updateRuleUI('update-admin-rule-length', false);
+        window.updateRuleUI('update-admin-rule-uppercase', false);
+        window.updateRuleUI('update-admin-rule-lowercase', false);
+        window.updateRuleUI('update-admin-rule-digit', false);
+        window.updateRuleUI('update-admin-rule-special', false);
+        window.updateRuleUI('update-admin-rule-no-spaces', false);
+        window.updateRuleUI('update-admin-rule-match', false);
+
+        const handleUpdateAdminPasswordInput = () => {
+            const password = updateAdminPassword.value;
+            const confirmPassword = updateAdminConfirmPassword.value;
+
+            if (!password) {
+                // If password is empty, reset rules and enable button
+                window.updateRuleUI('update-admin-rule-length', false);
+                window.updateRuleUI('update-admin-rule-uppercase', false);
+                window.updateRuleUI('update-admin-rule-lowercase', false);
+                window.updateRuleUI('update-admin-rule-digit', false);
+                window.updateRuleUI('update-admin-rule-special', false);
+                window.updateRuleUI('update-admin-rule-no-spaces', false);
+                window.updateRuleUI('update-admin-rule-match', false);
+                if (updateAdminSubmitBtn) updateAdminSubmitBtn.disabled = false;
+            } else {
+                // If password has text, check rules and disable/enable button accordingly
+                const rules = window.checkPasswordRules(password, confirmPassword);
+                window.updateRuleUI('update-admin-rule-length', rules.length);
+                window.updateRuleUI('update-admin-rule-uppercase', rules.uppercase);
+                window.updateRuleUI('update-admin-rule-lowercase', rules.lowercase);
+                window.updateRuleUI('update-admin-rule-digit', rules.digit);
+                window.updateRuleUI('update-admin-rule-special', rules.special);
+                window.updateRuleUI('update-admin-rule-no-spaces', rules.noSpaces);
+                window.updateRuleUI('update-admin-rule-match', confirmPassword ? rules.match : null);
+
+                // Disable button only if password has text but not all rules satisfied
+                const allSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit &&
+                                    rules.special && rules.noSpaces && (confirmPassword ? rules.match : false);
+                if (updateAdminSubmitBtn) updateAdminSubmitBtn.disabled = !allSatisfied;
+            }
+        };
+
+        const handleUpdateAdminConfirmInput = () => {
+            const password = updateAdminPassword.value;
+            const confirmPassword = updateAdminConfirmPassword.value;
+
+            if (!password) {
+                // If password is empty, enable button
+                window.updateRuleUI('update-admin-rule-match', false);
+                if (updateAdminSubmitBtn) updateAdminSubmitBtn.disabled = false;
+            } else {
+                const rules = window.checkPasswordRules(password, confirmPassword);
+                window.updateRuleUI('update-admin-rule-match', confirmPassword ? rules.match : null);
+
+                // Disable button only if password has text but not all rules satisfied
+                const allSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit &&
+                                    rules.special && rules.noSpaces && (confirmPassword ? rules.match : false);
+                if (updateAdminSubmitBtn) updateAdminSubmitBtn.disabled = !allSatisfied;
+            }
+        };
+
+        updateAdminPassword.addEventListener('input', handleUpdateAdminPasswordInput);
+        updateAdminConfirmPassword.addEventListener('input', handleUpdateAdminConfirmInput);
+
+        // Clear password fields when modal opens and enable button
+        const updateUserModal = document.getElementById('updateUserModal');
+        if (updateUserModal) {
+            updateUserModal.addEventListener('show.bs.modal', () => {
+                updateAdminPassword.value = '';
+                updateAdminConfirmPassword.value = '';
+                window.updateRuleUI('update-admin-rule-length', false);
+                window.updateRuleUI('update-admin-rule-uppercase', false);
+                window.updateRuleUI('update-admin-rule-lowercase', false);
+                window.updateRuleUI('update-admin-rule-digit', false);
+                window.updateRuleUI('update-admin-rule-special', false);
+                window.updateRuleUI('update-admin-rule-no-spaces', false);
+                window.updateRuleUI('update-admin-rule-match', false);
+                if (updateAdminSubmitBtn) updateAdminSubmitBtn.disabled = false;
+            });
+        }
+    }
+
+    // Password Visibility Toggles for Update Admin
+    if (toggleUpdateAdminPassword && updateAdminPassword) {
+        toggleUpdateAdminPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = updateAdminPassword.type === 'password' ? 'text' : 'password';
+            updateAdminPassword.type = type;
+            toggleUpdateAdminPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+        });
+    }
+
+    if (toggleUpdateAdminConfirmPassword && updateAdminConfirmPassword) {
+        toggleUpdateAdminConfirmPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = updateAdminConfirmPassword.type === 'password' ? 'text' : 'password';
+            updateAdminConfirmPassword.type = type;
+            toggleUpdateAdminConfirmPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+        });
+    }
     });
   </script>
 @endsection

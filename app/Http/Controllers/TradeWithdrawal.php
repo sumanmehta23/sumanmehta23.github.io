@@ -395,6 +395,9 @@ class TradeWithdrawal extends Controller
             // Validate wallet setup
             $this->validateWithdrawalRequest($request);
 
+            if (!$request->filled('client_wallet_id')) {
+                return redirect()->back()->with('error', 'Please set up wallet address.');
+            }
             // Ensure MT5 connection
             if (!$this->ensureMT5Connection()) {
                 return redirect()->back()->with('error', 'Failed to connect to MT5 server');
@@ -523,7 +526,7 @@ class TradeWithdrawal extends Controller
                     'amount' => $withdrawalAmount
                 ]);
 
-                return redirect()->route('trade-withdrawal')->with('success', 'Verification email sent successfully.');
+                return redirect()->route('transactions', ['tab' => 'withdrawals'])->with('success', 'Verification email sent successfully.');
 
             } catch (\Exception $e) {
                 DB::rollBack();

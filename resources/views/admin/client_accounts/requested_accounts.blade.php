@@ -306,16 +306,19 @@
             pageLength: 10,
             // lengthMenu: [[10, 25, 50, 100, 500, 1000], [10, 25, 50, 100, 500, 1000]],
             dom: '<"row" <"col"B><"col text-center"l><"col"f>><"row"<"col"t>><"row"<"col"i><"col"p>>',
-            buttons: [
-                {
-                    extend: 'excel',
-                    text: 'Export to Excel',
-                    filename: 'Requested_Accounts_' + new Date().toISOString().slice(0, 10),
-                    exportOptions: {
-                        columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
-                    }
-                },
-                {
+            buttons: (() => {
+                let buttons = [];
+                @hasExportPermission('requested_accounts')
+                    buttons.push({
+                        extend: 'excel',
+                        text: 'Export to Excel',
+                        filename: 'Requested_Accounts_' + new Date().toISOString().slice(0, 10),
+                        exportOptions: {
+                            columns: [5, 6, 7, 8, 2, 3, 9, 10] // Updated column indices to match your use case
+                        }
+                    });
+                @endif
+                buttons.push({
                     text: 'Bulk Approve',
                     className: 'btn-bulk-action', // Optional: Add a custom class for styling
                     action: function (e, dt, node, config) {
@@ -337,8 +340,9 @@
                         const modal = new bootstrap.Modal(document.getElementById('bulkAccountUpdatemodal'));
                         modal.show();
                     }
-                }
-            ]
+                });
+                return buttons;
+            })(),
         });
 
     });

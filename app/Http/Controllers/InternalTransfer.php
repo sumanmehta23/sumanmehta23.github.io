@@ -232,8 +232,40 @@ class InternalTransfer extends Controller
             }
             $apiOperations['dest_deposit'] = true;
 
+            // Sync account balances
+            Artisan::call('app:sync-account-balances', [
+                '--accounts' => $fromAccount->code,
+                '--force' => true
+            ]);
+
+            // Calculate bonus amounts
+            $bonusData = $this->calculateBonusAmounts($fromAccount->id);
+            $totalBonus = $bonusData['total_bonus'];
+            $promoLeft = $bonusData['promo_left'];
+            // Log::info("Calculated bonus amounts", [
+            //     'total_bonus' => $totalBonus,
+            //     'promo_left' => $promoLeft
+            // ]);
+            // Validate sufficient balance
+            $this->validateSufficientBalance($transferable_amount, $fromAccount->balance, $totalBonus);
+
+            // Calculate withdrawal balance
+            $balance = (float)$transferable_amount > (float)$fromAccount->balance
+                ? abs((float)$transferable_amount - ((float)$transferable_amount - (float)$fromAccount->balance)) * -1
+                : abs((float)$transferable_amount) * -1;
+            // Log::info("Calculated withdrawal balance", [
+            //     'transferable_amount' => $transferable_amount,
+            //     'account_balance' => $fromAccount->balance,
+            //     'calculated_balance' => $balance
+            // ]);
+
+            $totalPromoDeducted = $this->handlePromoDeductions($fromAccount, $transferable_amount, $userId, $promoLeft);
+            Log::info("message".$totalPromoDeducted);
+
+            $userFullname = auth()->user()->fullname;
+
             // Step 5: All API operations succeeded, now execute DB transaction
-            DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount, $sourceBonusAmount, $destBonusAmount) {
+            DB::transaction(function () use ($email, $fromAccount, $toAccount, $transferable_amount, $sourceBonusAmount, $destBonusAmount, $userId, $totalPromoDeducted, $request) {
                 $customerID = auth()->user()->id;
 
                 // Create withdrawal record
@@ -241,11 +273,13 @@ class InternalTransfer extends Controller
                     'email' => $email,
                     'user_id' => $customerID,
                     'account_id' => $fromAccount->id,
+                    'code' => $fromAccount->code,
                     'withdrawal_amount' => $transferable_amount,
                     'withdraw_type' => 'Internal Transfer',
                     'withdraw_to' => $toAccount->id,
                     'withdraw_date' => now(),
-                    'status' => 1
+                    'status' => 1,
+                    'promo_deduction' => $totalPromoDeducted
                 ]);
 
                 // Log source account bonus deduction if it was applied
@@ -358,5 +392,205 @@ class InternalTransfer extends Controller
             return redirect()->back()->with('error', 'Transfer failed: ' . $th->getMessage());
         }
         return redirect()->back()->with('success', 'Internal Transfer Successfully Done');
+    }
+
+    private function calculateBonusAmounts($accountId)
+    {
+        // log::info("Calculating bonus amounts for account", ['account_id' => $accountId]);
+        $bonus = BonusTransaction::where('account_id', $accountId)
+            ->where(function ($query) {
+                $query->where('bonus_type', 'Bonus In')
+                    ->orWhere('bonus_type', 'Bonus Out');
+            })
+            ->selectRaw("
+                SUM(CASE
+                    WHEN admin_remark NOT LIKE '%Credit%'
+                    AND admin_remark NOT LIKE '%10x Trader Leverage%'
+                    AND admin_remark NOT LIKE '%Promo Bonus%'
+                    AND admin_remark NOT LIKE '%Promo Deduction%'
+                    AND admin_remark NOT LIKE '%Promo Addition%'
+                    AND admin_remark NOT LIKE '%Bonus Pay Off%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_bonus,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Bonus%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_promo_bonus_amount,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Bonus%'
+                    THEN bonus_used
+                    ELSE 0
+                END) AS total_promo_bonus_used,
+
+                SUM(CASE
+                    WHEN admin_remark LIKE '%Promo Deduction%'
+                    THEN bonus_amount
+                    ELSE 0
+                END) AS total_promo_deduction
+            ")
+            ->first();
+
+        return [
+            'total_bonus' => $bonus->total_bonus ?? 0,
+            'promo_left' => ($bonus->total_promo_bonus_amount ?? 0) - ($bonus->total_promo_bonus_used ?? 0),
+            'total_promo_bonus' => $bonus->total_promo_bonus_amount ?? 0,
+            'total_promo_bonus_used' => $bonus->total_promo_bonus_used ?? 0,
+        ];
+    }
+
+    private function validateSufficientBalance($amount, $accountBalance, $totalBonus)
+    {
+        if ((float)$amount > ((float)$accountBalance - (float)$totalBonus)) {
+            throw new \Exception('Insufficient balance');
+        }
+    }
+
+    private function handlePromoDeductions($account, $amount, $userId, $promoLeft)
+    {
+        if (!$promoLeft) {
+            return 0;
+        }
+
+        $tradeDeposits = $account->tradeDeposits->where('deposit_amount', '>', 0)->sum('deposit_amount');
+        $tradeWithdrawals = $account->tradeWithdrawals->where('withdrawal_amount', '>', 0)
+            ->where('status', '!=', 3)
+            ->sum(function ($item) {
+                return $item->withdrawal_amount + $item->transaction_fee;
+            });
+
+        $depositsWithoutPromo = $account->tradeDeposits->whereNull('promocode_code')->sum('deposit_amount');
+        $pnl = $account->balance - $tradeDeposits + $tradeWithdrawals;
+        $amountToDeduct = $amount - $depositsWithoutPromo - $pnl;
+
+        $totalBonusDepositValue = BonusTransaction::select(DB::raw('SUM(bonus_amount / (promocode.promo_percentage / 100)) as total'))
+            ->leftJoin('promocode', 'bonus_transactions.promocode_id', '=', 'promocode.id')
+            ->where('bonus_transactions.account_id', $account->id)
+            ->value('total');
+
+        $mt5Account = new \stdClass();
+        if ($this->api->UserAccountGet($account->code, $mt5Account) !== MTRetCode::MT_RET_OK) {
+            throw new \Exception('Unable to get MT5 account details');
+        }
+
+        // Adjust deductible amount based on balance threshold
+
+        if ($mt5Account->Balance < $totalBonusDepositValue && $account->balance > $totalBonusDepositValue) {
+            $amountToDeduct = $amount - ($account->balance - $totalBonusDepositValue);
+        } elseif ($mt5Account->Balance < $totalBonusDepositValue && $account->balance <= $totalBonusDepositValue) {
+            $amountToDeduct = $amount;
+        }
+
+        $totalDeductableAmount = $amountToDeduct;
+        $totalPromoDeducted = 0;
+        $deductedAmounts = 0;
+
+        $promos = $account->BonusTransaction()
+            ->where('admin_remark', 'Promo Bonus')
+            ->with('promocode')
+            ->where(function ($query) {
+                $query->whereRaw('CAST(bonus_amount AS DECIMAL(10,2)) > CAST(COALESCE(bonus_used, 0) AS DECIMAL(10,2))')
+                    ->orWhereNull('bonus_used');
+            })
+            ->get()
+            ->sortByDesc(function ($transaction) {
+                return optional($transaction->promocode)->promo_percentage;
+            });
+
+        Log::info("Processing promo deductions", [
+            'account' => $account->code,
+            'amount_to_deduct' => $amountToDeduct,
+            'promo_count' => $promos->count()
+        ]);
+
+        foreach ($promos as $promo) {
+            $promoPercentage = $promo->promocode ? $promo->promocode->promo_percentage : 0;
+
+            if (!$promoPercentage || $amountToDeduct <= 0 || $mt5Account->Balance >= $totalBonusDepositValue) {
+                break;
+            }
+
+            $depositAmountOfBonus = $promo->bonus_amount / ($promoPercentage / 100);
+            $depositAmountOfBonusUsed = $promo->bonus_used > 0 ? $promo->bonus_used / ($promoPercentage / 100) : 0;
+            $depositAmountOfBonusLeft = $depositAmountOfBonus - $depositAmountOfBonusUsed;
+
+            $threshold = $amountToDeduct;
+
+            $promoDeduction = 0;
+
+            if ($depositAmountOfBonusLeft >= $threshold) {
+                $promoDeduction = $threshold * ($promoPercentage / 100);
+                $deductedAmounts += $threshold;
+            } else {
+                $promoDeduction = $depositAmountOfBonusLeft * ($promoPercentage / 100);
+                $amountToDeduct -= $depositAmountOfBonusLeft;
+                $deductedAmounts += $depositAmountOfBonusLeft;
+            }
+
+            if ($mt5Account->Balance == 0) {
+                $maxDeductible = $promo->bonus_amount - $promo->bonus_used;
+                $promoDeduction = $maxDeductible;
+
+                // Reset leverage to original
+                $tradeUser = null;
+                if ($this->api->UserGet($account->code, $tradeUser) === MTRetCode::MT_RET_OK) {
+                    $tradeUser->Leverage = $account->leverage;
+                    $updatedUser = "";
+                    $this->api->UserUpdate($tradeUser, $updatedUser);
+                }
+            }
+
+            if ($promoDeduction > 0) {
+                if($promoDeduction > $mt5Account->Credit){
+                    $promoDeduction = $mt5Account->Credit;
+                }
+                $deduction = abs((float)$promoDeduction) * -1;
+                $ticket = null;
+
+                if ($this->api->TradeBalance($account->code, MTEnDealAction::DEAL_BONUS, $deduction, 'Promo Deduction', $ticket, true) !== MTRetCode::MT_RET_OK) {
+                    throw new \Exception('Failed to apply promo deduction');
+                }
+
+                $promo->bonus_used += $promoDeduction;
+                $promo->save();
+                $totalPromoDeducted += $promoDeduction;
+
+                BonusTransaction::create([
+                    'email' => $account->email,
+                    'user_id' => $userId,
+                    'account_id' => $account->id,
+                    'code' => $account->code,
+                    'bonus_amount' => $deduction,
+                    'bonus_type' => 'Bonus Out',
+                    'status' => 1,
+                    'admin_remark' => 'Promo Deduction',
+                    'bonus_currency' => 'USD',
+                ]);
+
+                if ($mt5Account->Balance > 0) {
+                    $tradeUser = null;
+                    if ($this->api->UserGet($account->code, $tradeUser) === MTRetCode::MT_RET_OK) {
+                        $leverage = round($account->leverage * ($tradeDeposits) / ($tradeDeposits + $tradeUser->Credit), 2);
+                        $tradeUser->Leverage = $leverage;
+                        $updatedUser = "";
+                        $this->api->UserUpdate($tradeUser, $updatedUser);
+                    }
+                }
+            }
+
+            if ($deductedAmounts >= $totalDeductableAmount) {
+                break;
+            }
+        }
+
+        Log::info("Promo deductions completed", [
+            'account' => $account->code,
+            'total_deducted' => $totalPromoDeducted
+        ]);
+
+        return $totalPromoDeducted;
     }
 }

@@ -6,6 +6,9 @@ use App\Models\Ib1;
 use App\Models\User;
 use App\Models\Account;
 use App\Models\Setting;
+use App\Models\PopupImpression;
+use App\Support\PopupCampaigns\ReviewPopupCampaign;
+use App\Rules\ValidPassword;
 use App\Models\RestrictIps;
 use App\Models\ToggleGroup;
 use App\Models\EmployeeList;
@@ -56,6 +59,46 @@ class SettingsController extends Controller
         $showingRecoveryCodes = '';
         $toggle = ToggleGroup::first();
         return view("admin.ui_settings", compact('enabled', 'showingRecoveryCodes', 'toggle'));
+    }
+
+    public function reviewPopupSettings()
+    {
+        $campaign = new ReviewPopupCampaign(settings());
+        $campaignKey = $campaign->key();
+
+        $baseQuery = PopupImpression::query()->where('popup_key', $campaignKey);
+        $usersSawPopup = (clone $baseQuery)->count();
+        $usersClickedCta = (clone $baseQuery)->whereNotNull('cta_clicked_at')->count();
+        $pureDismissals = (clone $baseQuery)
+            ->whereNotNull('dismissed_at')
+            ->whereNull('cta_clicked_at')
+            ->count();
+        $clickedThenDismissed = (clone $baseQuery)
+            ->whereNotNull('dismissed_at')
+            ->whereNotNull('cta_clicked_at')
+            ->count();
+        $usersDismissedPopup = (clone $baseQuery)->whereNotNull('dismissed_at')->count();
+
+        $pct = static function (int $numerator, int $denominator): ?float {
+            if ($denominator <= 0) {
+                return null;
+            }
+
+            return round(($numerator / $denominator) * 100, 1);
+        };
+
+        $reviewPopupMetrics = [
+            'campaign_key' => $campaignKey,
+            'users_saw_popup' => $usersSawPopup,
+            'users_dismissed_popup' => $usersDismissedPopup,
+            'users_clicked_cta' => $usersClickedCta,
+            'pure_dismissals' => $pureDismissals,
+            'clicked_then_dismissed' => $clickedThenDismissed,
+            'pure_dismissal_rate_pct' => $pct($pureDismissals, $usersSawPopup),
+            'cta_click_rate_pct' => $pct($usersClickedCta, $usersSawPopup),
+        ];
+
+        return view('admin.review_popup_settings', compact('reviewPopupMetrics'));
     }
 
     public function logs(Request $request)
@@ -169,10 +212,18 @@ class SettingsController extends Controller
         }
 
         foreach ($req as $key => $value) {
-            Setting::where("name", $key)->update(["value" => $value]);
+            Setting::updateOrCreate(
+                ['name' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
         }
         alert()->success("Settings Successfully Updated");
         return redirect()->back();
+    }
+
+    public function updateReviewPopupSettings(Request $request)
+    {
+        return $this->store($request);
     }
     public function update_password()
     {
@@ -182,7 +233,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'oldpassword' => 'required',
-            'newpassword' => 'required|confirmed',
+            'newpassword' => ['required', 'confirmed', new ValidPassword()],
         ]);
         $user = EmployeeList::where('email', session('alogin'))->first();
 
@@ -294,8 +345,8 @@ class SettingsController extends Controller
         try {
             foreach ($emails as $email) {
                 $settings = settings();
-                $user = User::where('email', $email)->firstOrFail();
 
+                $user = User::where('email', $email)->firstOrFail();
 
                 // Create RestrictIps entries for all IPs for this email
                 foreach ($ips as $ip) {
@@ -343,6 +394,33 @@ class SettingsController extends Controller
                         Compliance Team<br>
                         LQH Markets
                     </p>';
+                    $emailSubject = $settings['admin_title'] . ' - ' . $type;
+                    $templateVars = [
+                        'name' => $user->fullname,
+                        'email' => settings()['email_from_address'],
+                        'content' => $content,
+                        "title_right" => "",
+                        "subtitle_right" => ""
+                    ];
+                    $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+                    $processedEmails[] = $email;
+                } elseif ($reason === 'General_Ban') {
+                    $type = 'Account Review Notification';
+
+                    $content = '<p>Following a review of trading activity on your account, we have identified patterns that constitute a breach of the Restricted Trading Activities section of our Terms and Conditions (<a href="https://www.lqhmarkets.com/terms-conditions">https://www.lqhmarkets.com/terms-conditions</a>).</p>' .
+
+                        '<p>Our Terms prohibit activity that disrupts fair market operation, including manipulative tactics and high-frequency trading exploits. The activity identified on your account falls within these restrictions.</p>' .
+
+                        '<p>Accordingly:</p>' .
+                        '<p>• Trading on your account has been restricted with immediate effect<br>' .
+                        '• Profits derived from the restricted activity have been removed<br>' .
+                        '• Your original deposit(s), less any amounts previously withdrawn, will be returned to your active wallet within 10 business days</p>' .
+
+                        '<p>This decision has been made following a documented review of trading data associated with your account.</p>' .
+
+                        '<p>If you wish to request a review, please contact us at <a href="mailto:compliance@lqhmarkets.com">compliance@lqhmarkets.com</a>, and your case will be assessed by our Compliance Team.</p>' .
+
+                        '<p>Kind regards,<br>LQH Markets Compliance Team</p>';
                     $emailSubject = $settings['admin_title'] . ' - ' . $type;
                     $templateVars = [
                         'name' => $user->fullname,

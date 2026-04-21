@@ -184,7 +184,7 @@
                                             <div class="mb-2 d-flex justify-content-between align-items-start">
                                                 <h6 class="mb-0">
                                                     <i class="fe fe-user text-primary"></i>
-                                                    {{ $note->admin->name ?? 'Admin' }}
+                                                    {{ $note->admin->username ?? 'Admin' }}
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="fe fe-clock"></i>
@@ -210,7 +210,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="ibModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="ibModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -435,7 +434,7 @@
                                                         <div class="p-2 card-body">
                                                             <div class="gap-1 mb-1 d-flex flex-column flex-sm-row justify-content-between align-items-start">
                                                                 <small class="mb-0 fw-bold text-primary" style="font-size: 14px;">
-                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->name ?? 'Admin' }}
+                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->username ?? 'Admin' }}
                                                                 </small>
                                                                 <small class="text-muted text-nowrap" style="font-size: 14px;">
                                                                     <i class="fe fe-clock"></i> {{ $lastNote->created_at->diffForHumans() }}
@@ -548,12 +547,17 @@
                                                                 </div>
                                                             @endcan
                                                             @can('wallet_withdraw:viewAny')
-                                                                <div class="col-xl-3">
+                                                                <div class="col-xl-2">
                                                                     <h4 class="mb-3 text-muted fw-normal">NEW TOTAL WITHDRAW
                                                                     </h4>
                                                                     <h4 class="fw-normal">@money($total_ntw)</h4>
                                                                 </div>
                                                             @endcan
+                                                            <div class="col-xl-2">
+                                                                <h4 class="mb-3 text-muted fw-normal">FLOATING BALANCE
+                                                                </h4>
+                                                                <h4 class="fw-normal">@money(($user->accounts()->withTrashed()->where('demo', 0)->where('balance', '>', 0)->sum('balance')))</h4>
+                                                            </div>
                                                         </div>
                                                         @can('account:viewLiveAccounts')
                                                             <div class="mt-3 row">
@@ -589,7 +593,7 @@
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Soft Deleted
                                                                                     </div>
-                                                                                @elseif($acc->deleted_at && $acc->deletion_type == 'delete')
+                                                                                @elseif($acc->deleted_at && ($acc->deletion_type == 'delete' || $acc->deletion_type == 'not_found_in_mt5'))
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Deleted
                                                                                     </div>
@@ -639,9 +643,9 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    @if ($acc->platform == 'mt5')
+                                                                                    @if ($acc->platform === App\Enums\PlatformEnum::MT5->value)
                                                                                         <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
-                                                                                    @elseif($acc->platform == 'x9')
+                                                                                    @elseif($acc->platform === App\Enums\PlatformEnum::X9->value)
                                                                                         <img src="/assets/images/x9.png" alt="card img" style="width:50px;">
                                                                                     @endif
 
@@ -1084,18 +1088,28 @@
                                                                                         <div class="col-6">
                                                                                             <label for="input-label"
                                                                                                 class="form-label">Password:</label>
-                                                                                            <input type="password"
-                                                                                                class="form-control"
-                                                                                                name="password">
+                                                                                            <div class="input-group">
+                                                                                                <input type="password"
+                                                                                                    class="form-control"
+                                                                                                    name="password" id="editUserPassword">
+                                                                                                <span class="cursor-pointer input-group-text togglePassword" id="toggleEditUserPassword">
+                                                                                                    <i class="fa fa-eye-slash"></i>
+                                                                                                </span>
+                                                                                            </div>
                                                                                         </div>
                                                                                         <div class="col-6">
                                                                                             <label for="input-label"
                                                                                                 class="form-label">Confirm
                                                                                                 Password:</label>
-                                                                                            <input type="password"
-                                                                                                class="form-control"
-                                                                                                id="input"
-                                                                                                name="confirm_password">
+                                                                                            <div class="input-group">
+                                                                                                <input type="password"
+                                                                                                    class="form-control"
+                                                                                                    id="editUserConfirmPassword"
+                                                                                                    name="confirm_password">
+                                                                                                <span class="cursor-pointer input-group-text togglePassword" id="toggleEditUserConfirmPassword">
+                                                                                                    <i class="fa fa-eye-slash"></i>
+                                                                                                </span>
+                                                                                            </div>
                                                                                         </div>
 
                                                                                         <div
@@ -1111,10 +1125,14 @@
                                                                                                     Notification Email</label>
                                                                                             </div>
                                                                                         </div>
+
+                                                                                        <div class="my-2 col-12">
+                                                                                            @include('partials.password-validation-rules-admin', ['prefix' => 'edit-'])
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div class="modal-footer">
-                                                                                    <button type="submit" name="updateUser"
+                                                                                    <button type="submit" id="editUserSubmitBtn" name="updateUser"
                                                                                         value="update"
                                                                                         class="btn btn-primary">Update</button>
                                                                                 </div>
@@ -1130,28 +1148,28 @@
                                                         data-bs-toggle="modal" data-bs-target="#addTicketModal">
                                                         CREATE TICKET
                                                     </button> --}}
-                                                    @can('ib:viewAny')
-                                                        <div class="card custom-card">
-                                                            <div class="card-header">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <div class="card-title">INTRODUCING BROKER</div>
-                                                                    <div>
-                                                                        <?php if (isset($user->ib)): ?>
-                                                                        <?php if ($user->ib->status == 0): ?>
-                                                                        <span
-                                                                            class="badge bg-outline-warning text-end">Pending</span>
-                                                                        <?php elseif ($user->ib->status == 1): ?>
-                                                                        <span class="badge bg-outline-success text-end">Active
-                                                                            IB</span>
-                                                                        <?php endif; ?>
-                                                                        <?php else: ?>
-                                                                        <span class="badge bg-outline-info text-end">Not
-                                                                            Requested</span>
-                                                                        <?php endif; ?>
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="card-title">INTRODUCING BROKER</div>
+                                                                <div>
+                                                                    <?php if (isset($user->ib)): ?>
+                                                                    <?php if ($user->ib->status == 0): ?>
+                                                                    <span
+                                                                        class="badge bg-outline-warning text-end">Pending</span>
+                                                                    <?php elseif ($user->ib->status == 1): ?>
+                                                                    <span class="badge bg-outline-success text-end">Active
+                                                                        IB</span>
+                                                                    <?php endif; ?>
+                                                                    <?php else: ?>
+                                                                    <span class="badge bg-outline-info text-end">Not
+                                                                        Requested</span>
+                                                                    <?php endif; ?>
 
-                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                        @can('client:introducingBrokerButton')
                                                             <div class="card-body">
                                                                 <p class="card-text">A request on behalf of client for creating
                                                                     IB profile for this client.</p>
@@ -1202,9 +1220,8 @@
                                                                 </div>
                                                                 <?php endif; ?>
                                                             </div>
-
-                                                        </div>
-                                                    @endcan
+                                                        @endcan
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1463,200 +1480,209 @@
                                         </div>
                                     </div>
                                     <?php endif; ?>
-                                    <div class="p-0 tab-pane" id="tab-info">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <div class="card custom-card">
-                                                    <div class="card-header">
-                                                        <div class="card-title">Bank Details</div>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <ul class="list-group">
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                ACCOUNT HOLDER NAME
-                                                                <span>{{ $bank_details->ClientName ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                BANK NAME
-                                                                <span>{{ $bank_details->bankName ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                ACCOUNT NUMBER
-                                                                <span>{{ $bank_details->accountNumber ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                IFSC CODE
-                                                                <span>{{ $bank_details->code ?? '' }}</span>
-                                                            </li>
-                                                            <li
-                                                                class="list-group-item d-flex justify-content-between align-items-center fw-medium">
-                                                                SWIFT CODE
-                                                                <span>{{ $bank_details->swift_code ?? '' }}</span>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="card custom-card">
-                                                    <div class="card-header justify-content-between">
-                                                        <div class="card-title">Client Wallet Details</div>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <div class="table-responsive">
-                                                            <table class="table text-nowrap" id="tableClientWallets">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th scope="col">Created On</th>
-                                                                        <th scope="col">Wallet Name</th>
-                                                                        <th scope="col">Currency</th>
-                                                                        <th scope="col">Network</th>
-                                                                        <th scope="col">Address</th>
-                                                                        <th scope="col">Verified</th>
-                                                                        <th scope="col">Status</th>
-                                                                        @can("client_wallet:update")
-                                                                            <th scope="col">Action</th>
-                                                                        @endcan
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="card custom-card">
-                                                    <div class="card-header">
-                                                        <div class="card-title">Client Documents</div>
-                                                    </div>
-                                                    <?php
-                                                    $imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
-                                                    $pdfExtensions = ['pdf'];
-                                                    $mimeTypes = [
-                                                        'jpeg' => 'image/jpeg',
-                                                        'jpg' => 'image/jpeg',
-                                                        'png' => 'image/png',
-                                                        'pdf' => 'application/pdf',
-                                                        'gif' => 'image/gif',
-                                                    ];
-                                                    ?>
 
-                                                    <div class="card-body">
-                                                        <?php foreach ($kyc_details as $kyc): ?>
-                                                        <?php
-                                                        $files = [
-                                                            'front_image' => strtolower(pathinfo($kyc->front_image, PATHINFO_EXTENSION)),
-                                                            'kyc_frontside' => strtolower(pathinfo($kyc->kyc_frontside, PATHINFO_EXTENSION)),
-                                                            'kyc_backside' => strtolower(pathinfo($kyc->kyc_backside, PATHINFO_EXTENSION)),
-                                                        ];
-                                                        $statusText = $kyc->status == '1' ? 'Approved' : ($kyc->status == '2' ? 'Rejected' : 'Pending');
-                                                        [$badgeClass, $icon] = getBadgeProperties($kyc->status);
-                                                        ?>
-
-                                                        <?php    if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
-                                                        <div
-                                                            class="m-0 overflow-visible media card-body media-xs d-sm-flex d-block justify-content-between">
-                                                            <div class="mb-2 d-flex mb-sm-0">
-                                                                <div class="my-auto media-body valign-middle"
-                                                                    style="max-width: 100px; display: flex; flex-direction: column;">
-                                                                    <?php        foreach (['front_image' => $files['front_image'], 'kyc_frontside' => $files['kyc_frontside'], 'kyc_backside' => $files['kyc_backside']] as $key => $extension): ?>
-                                                                    <?php            if (in_array($extension, $imageExtensions) || in_array($extension, $pdfExtensions)): ?>
-                                                                    <button
-                                                                        class="mt-1 btn btn-lg btn-icon btn-light text-info me-2"
-                                                                        data-bs-toggle="modal" data-bs-target="#kycModal"
-                                                                        data-bs-kyc="{{ asset('storage' . $kyc->$key) }}"
-                                                                        data-bs-type="{{ $mimeTypes[$extension] }}">
-                                                                        <i
-                                                                            class="ri-{{ in_array($extension, $pdfExtensions) ? 'file-pdf-2-line' : 'image-2-fill' }}"></i>
-                                                                    </button>
-                                                                    <?php            endif; ?>
-                                                                    <?php        endforeach; ?>
-                                                                </div>
-                                                                <div class="my-auto media-body valign-middle">
-                                                                    <a href=""
-                                                                        class="fw-semibold text-dark">{{ $kyc->kyc_type }}</a>
-                                                                    <p class="m-0 text-muted">
-                                                                        {{ $kyc->registered_date_js }}
-                                                                    </p>
-                                                                </div>
+                                        <div class="p-0 tab-pane" id="tab-info">
+                                            <div class="row">
+                                                @can('client:viewBankDetails')
+                                                    <div class="col-6">
+                                                        <div class="card custom-card">
+                                                            <div class="card-header">
+                                                                <div class="card-title">Bank Details</div>
                                                             </div>
-                                                            <div
-                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
-                                                                <span
-                                                                    class="badge {{ $badgeClass }}">{!! $icon !!}
-                                                                    <?= $statusText ?>
-                                                                </span>
-                                                            </div>
-                                                            <div
-                                                                class="my-auto overflow-visible media-body valign-middle text-sm-end">
-                                                                <?php        if ($kyc->status == 2 || $kyc->status == 0) { ?>
-                                                                <button class="btn btn-lg btn-icon btn-light text-success"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="Approve"
-                                                                    onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',1)">
-                                                                    <i class="ri-check-line"></i>
-                                                                </button>
-                                                                <?php        }
-            if ($kyc->status == 1 || $kyc->status == 0) { ?>
-                                                                <button class="btn btn-lg btn-icon btn-light text-danger"
-                                                                    data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                    title="Reject"
-                                                                    onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',2)">
-                                                                    <i class="ri-close-circle-line"></i>
-                                                                </button>
-                                                                <?php        } ?>
+                                                            <div class="card-body">
+                                                                <ul class="list-group">
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        ACCOUNT HOLDER NAME
+                                                                        <span>{{ $bank_details->ClientName ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        BANK NAME
+                                                                        <span>{{ $bank_details->bankName ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        ACCOUNT NUMBER
+                                                                        <span>{{ $bank_details->accountNumber ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        IFSC CODE
+                                                                        <span>{{ $bank_details->code ?? '' }}</span>
+                                                                    </li>
+                                                                    <li
+                                                                        class="list-group-item d-flex justify-content-between align-items-center fw-medium">
+                                                                        SWIFT CODE
+                                                                        <span>{{ $bank_details->swift_code ?? '' }}</span>
+                                                                    </li>
+                                                                </ul>
                                                             </div>
                                                         </div>
-                                                        <?php    endif; ?>
-                                                        <?php endforeach; ?>
                                                     </div>
-
-                                                </div>
-                                                <?php if (!isset($kyc)) { ?>
-                                                <form method="post" enctype="multipart/form-data">
+                                                @endcan
+                                                <div class="col-6">
                                                     <div class="card custom-card">
-                                                        <div class="card-header">
-                                                            <div class="card-title">Upload Documents</div>
+                                                        <div class="card-header justify-content-between">
+                                                            <div class="card-title">Client Wallet Details</div>
                                                         </div>
                                                         <div class="card-body">
-                                                            <div class="mb-3">
-                                                                <label for="formFile" class="form-label">ID Proof Front
-                                                                    Side</label>
-                                                                <input class="form-control" id="formFile" name="image"
-                                                                    type="file" accept="image/png,image/jpeg">
+                                                            <div class="table-responsive">
+                                                                <table class="table text-nowrap" id="tableClientWallets">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th scope="col">Created On</th>
+                                                                            <th scope="col">Wallet Name</th>
+                                                                            <th scope="col">Currency</th>
+                                                                            <th scope="col">Network</th>
+                                                                            <th scope="col">Address</th>
+                                                                            <th scope="col">Verified</th>
+                                                                            <th scope="col">Status</th>
+                                                                            @can("client_wallet:update")
+                                                                                <th scope="col">Action</th>
+                                                                            @endcan
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                    </tbody>
+                                                                </table>
                                                             </div>
-                                                            <div class="mb-3">
-                                                                <label for="formFile" class="form-label">ID Proof Back
-                                                                    Side</label>
-                                                                <input class="form-control" id="formFile" name="image1"
-                                                                    type="file" accept="image/png,image/jpeg">
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label for="formFile" class="form-label">Address Proof
-                                                                    Front Side</label>
-                                                                <input class="form-control" id="formFile" name="image2"
-                                                                    type="file" accept="image/png,image/jpeg">
-                                                            </div>
-                                                        </div>
-                                                        <div class="card-footer">
-                                                            <input type="hidden" name="email"
-                                                                value="{{ $user->email }}">
-                                                            <input type="submit" href="javascript:void(0);"
-                                                                class="btn btn-primary d-grid" value="Upload Document"
-                                                                name="upload_kyc">
                                                         </div>
                                                     </div>
-                                                </form>
-                                                <?php } ?>
+                                                </div>
+
+                                                    <div class="col-6">
+                                                         @can('client:viewClientDocuments')
+                                                            <div class="card custom-card">
+                                                                <div class="card-header">
+                                                                    <div class="card-title">Client Documents</div>
+                                                                </div>
+                                                                <?php
+                                                                $imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                                                                $pdfExtensions = ['pdf'];
+                                                                $mimeTypes = [
+                                                                    'jpeg' => 'image/jpeg',
+                                                                    'jpg' => 'image/jpeg',
+                                                                    'png' => 'image/png',
+                                                                    'pdf' => 'application/pdf',
+                                                                    'gif' => 'image/gif',
+                                                                ];
+                                                                ?>
+
+                                                                <div class="card-body">
+                                                                    <?php foreach ($kyc_details as $kyc): ?>
+                                                                    <?php
+                                                                    $files = [
+                                                                        'front_image' => strtolower(pathinfo($kyc->front_image, PATHINFO_EXTENSION)),
+                                                                        'kyc_frontside' => strtolower(pathinfo($kyc->kyc_frontside, PATHINFO_EXTENSION)),
+                                                                        'kyc_backside' => strtolower(pathinfo($kyc->kyc_backside, PATHINFO_EXTENSION)),
+                                                                    ];
+                                                                    $statusText = $kyc->status == '1' ? 'Approved' : ($kyc->status == '2' ? 'Rejected' : 'Pending');
+                                                                    [$badgeClass, $icon] = getBadgeProperties($kyc->status);
+                                                                    ?>
+
+                                                                    <?php    if ($kyc->kyc_type == 'Address Proof' || $kyc->kyc_type == 'ID Proof'): ?>
+                                                                    <div
+                                                                        class="m-0 overflow-visible media card-body media-xs d-sm-flex d-block justify-content-between">
+                                                                        <div class="mb-2 d-flex mb-sm-0">
+                                                                            <div class="my-auto media-body valign-middle"
+                                                                                style="max-width: 100px; display: flex; flex-direction: column;">
+                                                                                <?php        foreach (['front_image' => $files['front_image'], 'kyc_frontside' => $files['kyc_frontside'], 'kyc_backside' => $files['kyc_backside']] as $key => $extension): ?>
+                                                                                <?php            if (in_array($extension, $imageExtensions) || in_array($extension, $pdfExtensions)): ?>
+                                                                                <button
+                                                                                    class="mt-1 btn btn-lg btn-icon btn-light text-info me-2"
+                                                                                    data-bs-toggle="modal" data-bs-target="#kycModal"
+                                                                                    data-bs-kyc="{{ asset('storage' . $kyc->$key) }}"
+                                                                                    data-bs-type="{{ $mimeTypes[$extension] }}">
+                                                                                    <i
+                                                                                        class="ri-{{ in_array($extension, $pdfExtensions) ? 'file-pdf-2-line' : 'image-2-fill' }}"></i>
+                                                                                </button>
+                                                                                <?php            endif; ?>
+                                                                                <?php        endforeach; ?>
+                                                                            </div>
+                                                                            <div class="my-auto media-body valign-middle">
+                                                                                <a href=""
+                                                                                    class="fw-semibold text-dark">{{ $kyc->kyc_type }}</a>
+                                                                                <p class="m-0 text-muted">
+                                                                                    {{ $kyc->registered_date_js }}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div
+                                                                            class="my-auto overflow-visible media-body valign-middle text-sm-end">
+                                                                            <span
+                                                                                class="badge {{ $badgeClass }}">{!! $icon !!}
+                                                                                <?= $statusText ?>
+                                                                            </span>
+                                                                        </div>
+                                                                        <div
+                                                                            class="my-auto overflow-visible media-body valign-middle text-sm-end">
+                                                                            <?php        if ($kyc->status == 2 || $kyc->status == 0) { ?>
+                                                                            <button class="btn btn-lg btn-icon btn-light text-success"
+                                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                                title="Approve"
+                                                                                onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',1)">
+                                                                                <i class="ri-check-line"></i>
+                                                                            </button>
+                                                                            <?php        }
+                        if ($kyc->status == 1 || $kyc->status == 0) { ?>
+                                                                            <button class="btn btn-lg btn-icon btn-light text-danger"
+                                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                                title="Reject"
+                                                                                onclick="takeAction('{{ $kyc->id }}','{{ $kyc->email }}',2)">
+                                                                                <i class="ri-close-circle-line"></i>
+                                                                            </button>
+                                                                            <?php        } ?>
+                                                                        </div>
+                                                                    </div>
+                                                                    <?php    endif; ?>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+
+                                                            </div>
+                                                        @endcan
+                                                        <?php if (!isset($kyc)) { ?>
+                                                        @can('client:viewClientDocuments')
+                                                        <form method="post" enctype="multipart/form-data">
+                                                            <div class="card custom-card">
+                                                                <div class="card-header">
+                                                                    <div class="card-title">Upload Documents</div>
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="mb-3">
+                                                                        <label for="formFile" class="form-label">ID Proof Front
+                                                                            Side</label>
+                                                                        <input class="form-control" id="formFile" name="image"
+                                                                            type="file" accept="image/png,image/jpeg">
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="formFile" class="form-label">ID Proof Back
+                                                                            Side</label>
+                                                                        <input class="form-control" id="formFile" name="image1"
+                                                                            type="file" accept="image/png,image/jpeg">
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="formFile" class="form-label">Address Proof
+                                                                            Front Side</label>
+                                                                        <input class="form-control" id="formFile" name="image2"
+                                                                            type="file" accept="image/png,image/jpeg">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-footer">
+                                                                    <input type="hidden" name="email"
+                                                                        value="{{ $user->email }}">
+                                                                    <input type="submit" href="javascript:void(0);"
+                                                                        class="btn btn-primary d-grid" value="Upload Document"
+                                                                        name="upload_kyc">
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                        @endcan
+                                                        <?php } ?>
+                                                    </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    {{-- @endcan --}}
                                     <div class="p-0 tab-pane" id="tab-profile">
                                         <div class="row">
                                             <div class="col-lg-5 col-xl-4 col-xl-12 col-sm-12">
@@ -2428,5 +2454,118 @@
                 });
             });
 
+        </script>
+        @include('partials.password-validation-script')
+        <script>
+            $(document).ready(function() {
+                // Edit User Modal Password Validation
+                const editUserModal = document.getElementById('editUserModal');
+                const editUserPasswordInput = document.getElementById('editUserPassword');
+                const editUserConfirmInput = document.getElementById('editUserConfirmPassword');
+                const editUserSubmitBtn = document.getElementById('editUserSubmitBtn');
+
+                if (editUserPasswordInput && editUserConfirmInput && editUserModal) {
+                    // Initialize all rules to false
+                    window.updateRuleUI('edit-rule-length', false);
+                    window.updateRuleUI('edit-rule-uppercase', false);
+                    window.updateRuleUI('edit-rule-lowercase', false);
+                    window.updateRuleUI('edit-rule-digit', false);
+                    window.updateRuleUI('edit-rule-special', false);
+                    window.updateRuleUI('edit-rule-no-spaces', false);
+                    window.updateRuleUI('edit-rule-match', false);
+
+                    // For edit modal, password is optional - enable button by default if no password entered
+                    if (editUserSubmitBtn && !editUserPasswordInput.value) {
+                        editUserSubmitBtn.disabled = false;
+                    }
+
+                    const handleEditUserPasswordInput = () => {
+                        const password = editUserPasswordInput.value;
+                        const confirmPassword = editUserConfirmInput.value;
+
+                        if (!password) {
+                            // Password is optional for edit - reset rules and enable button
+                            window.updateRuleUI('edit-rule-length', false);
+                            window.updateRuleUI('edit-rule-uppercase', false);
+                            window.updateRuleUI('edit-rule-lowercase', false);
+                            window.updateRuleUI('edit-rule-digit', false);
+                            window.updateRuleUI('edit-rule-special', false);
+                            window.updateRuleUI('edit-rule-no-spaces', false);
+                            window.updateRuleUI('edit-rule-match', false);
+
+                            // Enable submit button when password is empty
+                            if (editUserSubmitBtn) {
+                                editUserSubmitBtn.disabled = false;
+                            }
+                        } else {
+                            const rules = window.checkPasswordRules(password, confirmPassword);
+                            window.updateRuleUI('edit-rule-length', rules.length);
+                            window.updateRuleUI('edit-rule-uppercase', rules.uppercase);
+                            window.updateRuleUI('edit-rule-lowercase', rules.lowercase);
+                            window.updateRuleUI('edit-rule-digit', rules.digit);
+                            window.updateRuleUI('edit-rule-special', rules.special);
+                            window.updateRuleUI('edit-rule-no-spaces', rules.noSpaces);
+                            window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+
+                            // Only enable button if all rules satisfied
+                            const allSatisfied = rules.length && rules.uppercase && rules.lowercase && rules.digit && rules.special && rules.noSpaces && rules.match === true;
+                            if (editUserSubmitBtn) {
+                                editUserSubmitBtn.disabled = !allSatisfied;
+                            }
+                        }
+                    };
+
+                    const handleEditUserConfirmInput = () => {
+                        const password = editUserPasswordInput.value;
+                        const confirmPassword = editUserConfirmInput.value;
+
+                        if (!password) {
+                            // No password entered, no validation needed
+                            window.updateRuleUI('edit-rule-match', false);
+                            if (editUserSubmitBtn) {
+                                editUserSubmitBtn.disabled = false;
+                            }
+                        } else {
+                            if (!confirmPassword) {
+                                window.updateRuleUI('edit-rule-match', false);
+                            } else {
+                                const rules = window.checkPasswordRules(password, confirmPassword);
+                                window.updateRuleUI('edit-rule-match', confirmPassword ? rules.match : null);
+
+                                // Check all rules for button state
+                                const allPasswordRules = window.checkPasswordRules(password, '');
+                                const allSatisfied = allPasswordRules.length && allPasswordRules.uppercase && allPasswordRules.lowercase && allPasswordRules.digit && allPasswordRules.special && allPasswordRules.noSpaces && rules.match === true;
+                                if (editUserSubmitBtn) {
+                                    editUserSubmitBtn.disabled = !allSatisfied;
+                                }
+                            }
+                        }
+                    };
+
+                    editUserPasswordInput.addEventListener('input', handleEditUserPasswordInput);
+                    editUserConfirmInput.addEventListener('input', handleEditUserConfirmInput);
+                }
+
+                // Password Visibility Toggle - Edit User Modal
+                const toggleEditUserPassword = document.getElementById('toggleEditUserPassword');
+                if (toggleEditUserPassword && editUserPasswordInput) {
+                    toggleEditUserPassword.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const type = editUserPasswordInput.type === 'password' ? 'text' : 'password';
+                        editUserPasswordInput.type = type;
+                        toggleEditUserPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+                    });
+                }
+
+                const toggleEditUserConfirmPassword = document.getElementById('toggleEditUserConfirmPassword');
+                if (toggleEditUserConfirmPassword && editUserConfirmInput) {
+                    toggleEditUserConfirmPassword.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const type = editUserConfirmInput.type === 'password' ? 'text' : 'password';
+                        editUserConfirmInput.type = type;
+                        toggleEditUserConfirmPassword.innerHTML = type === 'password' ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+                    });
+                }
+            });
         </script>
     @endsection
