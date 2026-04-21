@@ -53,6 +53,7 @@ class User extends Authenticatable
         'customerio_last_error' => 'json',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'kyc_synced_at' => 'datetime',
     ];
 
     protected static function booted()
