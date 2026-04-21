@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Permissions;
+use App\Http\Controllers\Controller;
 use App\Models\EmployeeList;
 use App\Models\LoginHistory;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
+use App\Services\MailService;
 use Carbon\Carbon;
-use App\Services\MailService as MailService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
 
 class Login extends Controller
@@ -31,6 +29,7 @@ class Login extends Controller
     {
         return view('admin.login');
     }
+
     public function showLoginForm()
     {
         if (Auth::guard('admin')->check()) {
@@ -41,12 +40,15 @@ class Login extends Controller
                 return redirect()->route('admin.dashboard');
             }
         }
+
         return view('admin.login');
     }
+
     public function verify_2fa()
     {
         return view('admin.verify_2fa');
     }
+
     public function adminLogin(Request $request)
     {
         $request->validate([
@@ -54,16 +56,13 @@ class Login extends Controller
             'password' => 'required',
         ]);
         $credentials = $request->only('username', 'password');
-        $remember = $request->remember;
-        if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password'], 'status' => 1])) {
-            $request->session()->regenerate();
-            // return redirect()->intended('dashboard');
-        }
+        $remember = (bool) $request->input('remember');
+
         // Attempt to log the user in
         $user = EmployeeList::where('email', $credentials['username'])
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->back()->with('error', 'Your login details are invalid or your email is not verified.');
         }
 
@@ -75,94 +74,47 @@ class Login extends Controller
                 return redirect()->back()->with('error', 'Login Details are Invalid');
             }
         } else {
-            if (!Hash::check($request->input('password'), $user->password)) {
+            if (! Hash::check($request->input('password'), $user->password)) {
                 return redirect()->back()->with('error', 'Your login details are invalid.');
             }
         }
-        if ($user->status == '1') {
-            activity()
-                ->causedBy(auth()->guard('admin')->user())
-                ->withProperties([
-                    'ip' => $request->ip(),
-                    'email' => auth()->guard('admin')->user()->email,
-                    'userRole' => auth()->guard('admin')->user()->userRole,
-                    'userAccessLevel' => auth()->guard('admin')->user()->userAccessLevel,
-                    'username' => auth()->guard('admin')->user()->username,
-                    'admin_id' => auth()->guard('admin')->user()->id,
-                    'remark' => 'Login'
-                ])
-                ->log('Authentication');
-            // $credentials = $request->only('email', 'password');
-            // dd($credentials);
-            if (Auth::guard('admin')->attempt(['email' => $credentials['username'], 'password' => $credentials['password']])) {
-                $request->session()->regenerate();
-                // return redirect()->intended('dashboard');
-            }
 
-            // Store user details in session
-            // Auth::login($user);
-            // $request->session()->regenerate();
-            Cache::flush();
-            Session::put('alogin', $user->email);
-            Session::put('userRoleID', $user->role_id);
-            Session::put('userRole', $user->userRole);
-            Session::put('userID', $user->client_index);
-            Session::put('userData', $user->toArray());
-            // Fetch permissions
-            // $permissions = DB::table('permissions as p')
-            //     ->join('pages as pg', 'p.page_id', '=', 'pg.id')
-            //     ->where('p.role_id', $user->role_id)
-            //     ->where('pg.is_submenu', 0)
-            //     ->orderBy('pg.page_order', 'asc')
-            //     ->get(['p.page_id', 'pg.filename']);
-
-            // $current_permissions=[];
-            // foreach ($permissions as $permission) {
-            //     $current_permissions[] = $permission->filename;
-            //     $submenus = DB::table('pages')
-            //         ->where('is_submenu', $permission->page_id)
-            //         ->orderBy('page_order', 'asc')
-            //         ->get();
-            //     foreach ($submenus as $submenu) {
-            //         $current_permissions[] = $submenu->filename;
-            //     }
-            // }
-            // Session::put('current_permissions', $current_permissions);
-
-            // Log user in
-            if ($user->userRole == "Super admin" || $user->userRole == "Relationship Manager") {
-                $this->logLoginHistory($user->email);
-                if ($user->two_factor_secret  && $user->two_factor_confirmed_at) {
-                    return redirect('admin/verify_2fa');
-                } else {
-                    return redirect('admin/dashboard');
-                }
-            }
-            // if (in_array('/admin/dashboard', $current_permissions)) {
-            //     $this->logLoginHistory($user->email);
-            if ($user->two_factor_secret  && $user->two_factor_confirmed_at) {
-                return redirect('admin/verify_2fa');
-            } else {
-                return redirect('admin/dashboard');
-            }
-            // } else {
-            //     $first_php_page = '';
-            //     foreach ($current_permissions as $permission) {
-            //         if (strpos($permission, '.php') !== false) {
-            //             $first_php_page = $permission;
-            //             break;
-            //         }
-            //     }
-            //     if (!empty($first_php_page)) {
-            //         $this->logLoginHistory($user->email);
-            //         return redirect($first_php_page);
-            //     } else {
-            //         return back()->with('error', 'You do not have any page permissions. Please contact the administrator.');
-            //     }
-            // }
-
-        } else {
+        if ($user->status !== 1) {
             return back()->with('error', 'Your account is inactive. Please contact the administrator.');
+        }
+
+        // Authenticate the user with remember functionality
+        Auth::guard('admin')->login($user, $remember);
+        $request->session()->regenerate();
+
+        activity()
+            ->causedBy($user)
+            ->withProperties([
+                'ip' => $request->ip(),
+                'email' => $user->email,
+                'userRole' => $user->userRole,
+                'userAccessLevel' => $user->userAccessLevel,
+                'username' => $user->username,
+                'admin_id' => $user->id,
+                'remark' => 'Login',
+            ])
+            ->log('Authentication');
+
+        // Store user details in session
+        Cache::flush();
+        Session::put('alogin', $user->email);
+        Session::put('userRoleID', $user->role_id);
+        Session::put('userRole', $user->userRole);
+        Session::put('userID', $user->client_index);
+        Session::put('userData', $user->toArray());
+
+        // Log user in
+        $this->logLoginHistory($user->email);
+
+        if ($user->two_factor_secret && $user->two_factor_confirmed_at) {
+            return redirect('admin/verify_2fa');
+        } else {
+            return redirect('admin/dashboard');
         }
     }
 
@@ -170,7 +122,7 @@ class Login extends Controller
     {
         $user = auth()->guard('admin')->user();
 
-        if (!$user || !$user->two_factor_secret) {
+        if (! $user || ! $user->two_factor_secret) {
             return redirect()->back()->with('error', '2FA is not set up.');
         }
 
@@ -179,8 +131,8 @@ class Login extends Controller
             ? $request->input('recovery_code')
             : $request->input('code');
 
-        if (!$inputCode) {
-            return redirect()->back()->with('error', 'Please enter your ' . ($mode === 'recovery' ? 'recovery' : 'authenticator') . ' code.');
+        if (! $inputCode) {
+            return redirect()->back()->with('error', 'Please enter your '.($mode === 'recovery' ? 'recovery' : 'authenticator').' code.');
         }
 
         $isValid = false;
@@ -203,7 +155,7 @@ class Login extends Controller
             );
         }
 
-        if (!$isValid) {
+        if (! $isValid) {
             return redirect()->back()->with(
                 'error',
                 $mode === 'recovery'
@@ -215,7 +167,6 @@ class Login extends Controller
         // ✅ 2FA successful
         return redirect('admin/dashboard');
     }
-
 
     private function logLoginHistory($email)
     {
@@ -230,6 +181,7 @@ class Login extends Controller
         //     'status' => 1
         // ]);
     }
+
     public function logout(Request $request)
     {
         activity()
@@ -241,7 +193,7 @@ class Login extends Controller
                 'userAccessLevel' => auth()->guard('admin')->user()->userAccessLevel,
                 'username' => auth()->guard('admin')->user()->username,
                 'id' => auth()->guard('admin')->user()->id,
-                'remark' => 'Logout'
+                'remark' => 'Logout',
             ])
             ->log('Authentication');
         Auth::logout();
@@ -251,6 +203,7 @@ class Login extends Controller
         session()->forget(['userData', 'alogin']);
         unset($_SESSION['alogin']);
         unset($_SESSION['userData']);
+
         return redirect('/admin/login');
     }
 
@@ -262,6 +215,7 @@ class Login extends Controller
         if (Auth::guard('admin')->check()) {
             return redirect()->route('admin.dashboard');
         }
+
         return view('admin.forgot-password');
     }
 
@@ -270,12 +224,13 @@ class Login extends Controller
      */
     public function sendAdminResetLink(Request $request)
     {
-        $key = 'adminResetLink:' . (auth('admin')->id() ?: $request->ip());
+        $key = 'adminResetLink:'.(auth('admin')->id() ?: $request->ip());
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $retryAfter = RateLimiter::availableIn($key);
             $minutes = floor($retryAfter / 60);
             $seconds = $retryAfter % 60;
             $formattedTime = sprintf('%02d min %02d sec', $minutes, $seconds);
+
             return redirect()->back()->with(
                 'error',
                 "Too many requests. Please wait {$formattedTime} before trying again."
@@ -298,34 +253,35 @@ class Login extends Controller
 
             $settings = settings();
             $from = $settings['email_from_address'];
-            $emailSubject = 'Admin Password Reset - ' . $settings['admin_title'];
-            $headers = "MIME-Version: 1.0" . "\r\n";
-            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            $headers .= 'From:' . $settings['admin_title'] . '<' . $from . '>' . "\r\n";
+            $emailSubject = 'Admin Password Reset - '.$settings['admin_title'];
+            $headers = 'MIME-Version: 1.0'."\r\n";
+            $headers .= 'Content-type:text/html;charset=UTF-8'."\r\n";
+            $headers .= 'From:'.$settings['admin_title'].'<'.$from.'>'."\r\n";
 
-            $content = '<div>Welcome to ' . htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8') . ' Admin Panel!</div>' .
+            $content = '<div>Welcome to '.htmlspecialchars($settings['admin_title'], ENT_QUOTES, 'UTF-8').' Admin Panel!</div>'.
                 '<div>We have received a request to reset the password associated with your admin account. If you initiated this request, please click the link below to reset your password:</div>';
 
             $id = $admin->id;
-            $resetLink = $settings['copyright_site_name_text'] . "/admin/reset-password?id=$id&code=$code";
+            $resetLink = $settings['copyright_site_name_text']."/admin/reset-password?id=$id&code=$code";
 
             $templateVars = [
                 'name' => $admin->username,
                 'site_link' => $resetLink,
-                'after_btn_text' => "<div>If you did not request a password reset, please disregard this email, and no further action is required.</div>" .
-                    "<div>If you have any questions or need assistance, feel free to reach out to our support team.</div>" .
-                    "<div>Best regards,<br>The Administration Team</div>",
-                'btn_text' => "Reset Admin Password",
+                'after_btn_text' => '<div>If you did not request a password reset, please disregard this email, and no further action is required.</div>'.
+                    '<div>If you have any questions or need assistance, feel free to reach out to our support team.</div>'.
+                    '<div>Best regards,<br>The Administration Team</div>',
+                'btn_text' => 'Reset Admin Password',
                 'email' => $settings['email_from_address'],
-                "content" => $content,
-                "title_right" => "",
-                "subtitle_right" => ""
+                'content' => $content,
+                'title_right' => '',
+                'subtitle_right' => '',
             ];
 
             $this->mailService->sendEmail($email, $emailSubject, $headers, '', $templateVars);
+
             return redirect()->back()->with('success', "We have sent a password reset link to $email. Please check your email to reset your password.");
         } else {
-            return redirect()->back()->with('error', "Sorry! This email was not found in admin records.");
+            return redirect()->back()->with('error', 'Sorry! This email was not found in admin records.');
         }
     }
 
@@ -357,7 +313,7 @@ class Login extends Controller
 
             $admin = EmployeeList::where('id', $id)->where('emailToken', $code)->first();
 
-            if (!$admin || $admin->email_token_time < Carbon::now('UTC')->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME', 60))) {
+            if (! $admin || $admin->email_token_time < Carbon::now('UTC')->subMinutes(env('FORGOT_PASSWORD_EXPIRATION_TIME', 60))) {
                 return redirect('/admin/login')->with('error', 'This password reset link is invalid or has expired.');
             }
 
@@ -377,7 +333,7 @@ class Login extends Controller
                     'email' => $admin->email,
                     'username' => $admin->username,
                     'admin_id' => $admin->id,
-                    'remark' => 'Password Reset'
+                    'remark' => 'Password Reset',
                 ])
                 ->log('Authentication');
 
