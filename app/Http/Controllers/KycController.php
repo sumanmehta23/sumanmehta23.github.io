@@ -67,53 +67,183 @@ class KycController extends Controller
         // info($return);
         $type = $payload['type'];
         $email = $payload['externalUserId'];
+        $applicantId = $payload['applicantId'] ?? null;
         // $subscribeToKlaviyoList = new SubscribeToKlaviyoList();
-        if ($type == 'applicantReviewed') {
+        
+        switch ($type) {
+            case 'applicantReviewed':
 
-            $user = User::where("email", $email)->first();
-            if (!$user) {
-                return response()->json(['status' => 'false', 'message' => 'User not found']);
-            }
-            if ($user->kyc_verify) {
+                $user = User::where("email", $email)->first();
+                if (!$user) {
+                    return response()->json(['status' => 'false', 'message' => 'User not found']);
+                }
+                
+                // Update existing log entry or create new one
+                $this->createOrUpdateKycLog($user, $type, $payload, $applicantId);
 
-                KycLog::create([
-                    'client_id' => $email,
-                    'user_id' => $user->id,
-                    'callback_code' => json_encode($type),
-                    'callback_payload' => $payload,
-                ]);
+                // Update user KYC status and reason
+                $this->updateUserKycData($user, $payload);
+                
+                if ($user->kyc_verify) {
 
-                return response()->json(['status' => 'true', 'message' => 'Your KYC Already Verified']);
-            }
-            // Store callback log in the database
-            KycLog::create([
-                'client_id' => $email,
-                'user_id' => $user->id,
-                'callback_code' => json_encode($type),
-                'callback_payload' => $payload,
-            ]);
+                    return response()->json(['status' => 'true', 'message' => 'Your KYC Already Verified']);
+                }
+                // Check review result
+                if (isset($payload['reviewResult']['reviewAnswer']) && $payload['reviewResult']['reviewAnswer'] == 'GREEN') {
+                    // Find the user in the database
+                    // Update user's KYC status to verified
+                    $user->kyc_verify = 1;
+                    $user->save();
 
-            // Check review result
-            if (isset($payload['reviewResult']['reviewAnswer']) && $payload['reviewResult']['reviewAnswer'] == 'GREEN') {
-                // Find the user in the database
-                // Update user's KYC status to verified
-                $user->kyc_verify = 1;
-                $user->save();
+                    // Fire the KycVerifiedEvent for Omnisend integration
+                    event(new KycVerifiedEvent($user));
 
-                // Fire the KycVerifiedEvent for Omnisend integration
-                event(new KycVerifiedEvent($user));
+                    $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
+                    if ($list_id) {
+                        $subscribeToKlaviyoList->handle($user, $list_id);
+                    }
 
-                $list_id = @config('services.klaviyo.list_ids')['KYC_COMPLETED'];
-                if ($list_id) {
-                    $subscribeToKlaviyoList->handle($user, $list_id);
+                    return response()->json(['status' => 'true', 'message' => 'KYC Verified']);
+                } else {
+                    return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
+                }
+                break;
+
+            case 'applicantPending':
+            case 'applicantActionPending':
+
+                $user = User::where("email", $email)->first();
+                if ($user) {
+                    // Update existing log entry or create new one
+                    $this->createOrUpdateKycLog($user, $type, $payload, $applicantId);
+
+                    Log::info('KYC Webhook: Applicant pending', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'type' => $type
+                    ]);
                 }
 
-                return response()->json(['status' => 'true', 'message' => 'KYC Verified']);
-            } else {
-                return response()->json(['status' => 'false', 'message' => 'Something went wrong. Please try again or Create a Support Ticket']);
+                return response()->json(['status' => 'true', 'message' => 'Status in progress...']);
+                break;
+
+            default:
+                return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
+        }
+    }
+
+    /**
+     * Create or update KYC log entry based on applicant_id
+     */
+    private function createOrUpdateKycLog(User $user, string $callbackCode, array $payload, ?string $applicantId = null): void
+    {
+        try {
+            $applicantId = $applicantId ?? ($payload['applicantId'] ?? null);
+
+            if ($applicantId) {
+                // Try to find existing log by applicant_id
+                $existingLog = KycLog::where('applicant_id', $applicantId)->first();
+
+                if ($existingLog) {
+                    // Update existing log
+                    $existingLog->update([
+                        'callback_code' => json_encode($callbackCode),
+                        'callback_payload' => $payload,
+                    ]);
+                    Log::info('KYC log updated', [
+                        'user_id' => $user->id,
+                        'applicant_id' => $applicantId
+                    ]);
+                    return;
+                }
             }
-        } else {
-            return response()->json(['status' => 'false', 'message' => 'Status in progress...']);
+
+            // Create new log if not found
+            KycLog::create([
+                'client_id' => $user->email,
+                'user_id' => $user->id,
+                'applicant_id' => $applicantId,
+                'callback_code' => json_encode($callbackCode),
+                'callback_payload' => $payload,
+            ]);
+            Log::info('KYC log created', [
+                'user_id' => $user->id,
+                'applicant_id' => $applicantId
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create/update KYC log', [
+                'user_id' => $user->id,
+                'applicant_id' => $applicantId ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update user KYC status and reason from payload
+     */
+    private function updateUserKycData(User $user, array $payload): void
+    {
+        try {
+            $reviewAnswer = $payload['reviewResult']['reviewAnswer'] ?? null;
+
+            // Determine status
+            $status = match ($reviewAnswer) {
+                'GREEN' => 'APPROVED',
+                'RED' => 'REJECTED',
+                'YELLOW' => 'PENDING',
+                default => 'PENDING'
+            };
+
+            // Build reason
+            $reason = null;
+            if ($status === 'APPROVED') {
+                $reason = null;
+            } elseif ($status === 'REJECTED') {
+                $reviewResult = $payload['reviewResult'] ?? [];
+                
+                // Priority: moderationComment > clientComment > rejectLabels > reviewRejectType
+                $reason = $reviewResult['moderationComment'] ?? null;
+                if (empty($reason)) {
+                    $reason = $reviewResult['clientComment'] ?? null;
+                }
+                if (empty($reason)) {
+                    $rejectLabels = $reviewResult['rejectLabels'] ?? [];
+                    if (!empty($rejectLabels)) {
+                        $labelsStr = implode(', ', $rejectLabels);
+                        $reviewRejectType = $reviewResult['reviewRejectType'] ?? 'UNKNOWN';
+                        $reason = "Issue: {$labelsStr} | Status: {$reviewRejectType}";
+                    }
+                }
+                if (empty($reason)) {
+                    $reason = $reviewResult['reviewRejectType'] ?? 'KYC verification rejected';
+                }
+            } elseif ($status === 'PENDING') {
+                $reason = 'KYC verification in progress';
+            }
+
+            // Truncate reason to reasonable length
+            if ($reason && strlen($reason) > 5000) {
+                $reason = substr($reason, 0, 5000);
+            }
+
+            // Update user with new columns
+            $user->update([
+                'kyc_status' => $status,
+                'kyc_reason' => $reason,
+                'kyc_synced_at' => now(),
+            ]);
+
+            Log::info('User KYC data updated', [
+                'user_id' => $user->id,
+                'kyc_status' => $status,
+                'has_reason' => !empty($reason)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update user KYC data', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 
@@ -200,3 +330,4 @@ class KycController extends Controller
         return response()->json(['status' => 'false', 'message' => 'Verification not approved yet']);
     }
 }
+

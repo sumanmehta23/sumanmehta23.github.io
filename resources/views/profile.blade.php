@@ -263,51 +263,93 @@
                                                 <div class="col-6">
                                                     <h5>KYC Verification</h5>
                                                 </div>
-
                                             </div>
                                         </div>
-                                        {{-- {{ dd($user) }} --}}
                                         <div class="text-center card-body table-card">
-                                            @if ($user->kyc_verify == 0)
+                                            {{-- APPROVED - KYC Status is APPROVED OR kyc_verify is 1 --}}
+                                            @if ($user->kyc_status === 'APPROVED' || $user->kyc_verify == 1)
                                                 <div class="auth-main">
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
-                                                            <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/KYC.png') }}"
-                                                                    class="w-25" alt="img"></a>
+                                                            <img src="{{ asset('assets/images/kyc_verified.png') }}" class="w-25 mb-3" alt="Verified">
                                                         </div>
-                                                        <h6 class="mb-4 text-center text-secondary f-w-400 f-16"> KYC
-                                                            Verification Required to Create MT5 Accounts</h6>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-success" style="font-size: 14px;">
+                                                                <i class="ti ti-check me-2"></i>KYC Verified
+                                                            </span>
+                                                        </h6>
+                                                        <p class="text-secondary f-w-400 f-14 mb-3">Your KYC verification has been approved. You can now create trading accounts.</p>
+                                                        <button type="button" class="btn btn-light-success ps-5 pe-5" disabled>
+                                                            <i class="ti ti-check me-2"></i>KYC Verified
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                            {{-- REJECTED - KYC Status is REJECTED --}}
+                                            @elseif ($user->kyc_status === 'REJECTED')
+                                                <div class="auth-main">
+                                                    <div class="card-body">
+                                                        <div class="text-center me-4">
+                                                            <img src="{{ asset('assets/images/KYC.png') }}" class="w-25 mb-3" alt="Rejected">
+                                                        </div>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-danger" style="font-size: 14px;">
+                                                                <i class="ti ti-circle-x me-2"></i>KYC Rejected
+                                                            </span>
+                                                        </h6>
+                                                        @if ($user->kyc_reason)
+                                                            <p class="text-secondary f-w-400 f-14 mb-3">
+                                                                <strong>Reason:</strong> {{ $user->kyc_reason }}
+                                                            </p>
+                                                        @endif
+                                                        <p class="text-secondary f-w-400 f-12 mb-3">Rejected by Sumsub API</p>
                                                         <a id="verify-user-kyc" href="#" class="mt-3">
-                                                            <button class="btn btn-outline-primary"><span
-                                                                    class="text-truncate">Process To Verify Now
-                                                                </span></button>
+                                                            <button class="btn btn-outline-danger">
+                                                                <i class="ti ti-refresh me-2"></i>Try Again
+                                                            </button>
                                                         </a>
                                                     </div>
                                                 </div>
-                                            @elseif ($user->kyc_verify == 1)
+
+                                            {{-- PENDING - KYC Status is PENDING --}}
+                                            @elseif ($user->kyc_status === 'PENDING')
                                                 <div class="auth-main">
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
-                                                            <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/kyc_verified.png') }}"
-                                                                    class="w-25" alt="img"></a>
+                                                            <img src="{{ asset('assets/images/KYC.png') }}" class="w-25 mb-3" alt="Pending">
                                                         </div>
-                                                        <h6 class="font-bold text-center btn btn-light-success ps-5 pe-5">
-                                                            KYC Verified</h6>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-warning text-dark" style="font-size: 14px;">
+                                                                <i class="ti ti-loader-2 me-2"></i>Under Review
+                                                            </span>
+                                                        </h6>
+                                                        <p class="text-secondary f-w-400 f-14 mb-2">Under review by Sumsub</p>
+                                                        <p class="text-secondary f-w-400 f-14 mb-3">Your KYC verification is under review. We'll notify you once the review is complete.</p>
+                                                        <button type="button" class="btn btn-light-warning ps-5 pe-5" disabled>
+                                                            <i class="ti ti-clock me-2"></i>Under Review
+                                                        </button>
                                                     </div>
                                                 </div>
+
+                                            {{-- NOT VERIFIED / NOT STARTED --}}
                                             @else
                                                 <div class="auth-main">
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
-                                                            <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/empty.png') }}"
-                                                                    class="w-25" alt="img"></a>
+                                                            <img src="{{ asset('assets/images/KYC.png') }}" class="w-25 mb-3" alt="Not Verified">
                                                         </div>
-                                                        <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No
-                                                            documents
-                                                            added</h6>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-secondary" style="font-size: 14px;">
+                                                                <i class="ti ti-alert-circle me-2"></i>Not Verified
+                                                            </span>
+                                                        </h6>
+                                                        <h6 class="mb-3 text-center text-secondary f-w-400 f-16">KYC Verification Required to Create MT5 Accounts</h6>
+                                                        <p class="text-secondary f-w-400 f-14 mb-3">Complete your KYC verification to unlock trading accounts and features.</p>
+                                                        <a id="verify-user-kyc" href="#" class="mt-3">
+                                                            <button class="btn btn-outline-primary">
+                                                                <i class="ti ti-check me-2"></i>Get KYC Verified
+                                                            </button>
+                                                        </a>
                                                     </div>
                                                 </div>
                                             @endif

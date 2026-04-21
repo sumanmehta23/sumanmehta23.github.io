@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use App\Models\PermissionAudit;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class CheckUserPermissions
 {
@@ -32,7 +36,7 @@ class CheckUserPermissions
         // });
         $requestUri = $request->getPathInfo();
 
-        $path = request()->path(); 
+        $path = request()->path();
 
         $segments = explode('/', $path);
         $filteredPath = implode('/', array_slice($segments, 0, 2));
@@ -51,8 +55,64 @@ class CheckUserPermissions
         // dd($permissions);
         $admin = Auth::guard('admin')->user();
         if (!$admin->hasPermissions($permissions)) {
-            return response()->view('errors.401', [], 401); 
+            $this->logAuthorizationFailure($request, $admin, $permissions);
+            return response()->view('errors.401', [], 401);
         }
         return $next($request);
+    }
+
+    /**
+     * Log authorization failure for audit trail and monitoring.
+     *
+     * @param Request $request
+     * @param mixed $admin
+     * @param array $permissions
+     * @return void
+     */
+    private function logAuthorizationFailure(Request $request, $admin, array $permissions): void
+    {
+        $requestId = Str::uuid();
+
+        $logData = [
+            'request_id' => $requestId,
+            'admin_id' => $admin->id,
+            'admin_email' => $admin->email ?? $admin->name ?? 'unknown',
+            'role_id' => $admin->role_id,
+            'role_name' => $admin->role?->name ?? 'no_role',
+            'path' => $request->path(),
+            'method' => $request->method(),
+            'required_permissions' => $permissions,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        // Log to application logs
+        Log::warning('Authorization failed - permission denied', $logData);
+
+        // Store in database for audit dashboard/reporting
+        try {
+            if (Schema::hasTable('permission_audits')) {
+                PermissionAudit::create([
+                    'ip_address' => $request->ip(),
+                    'employee_id' => $admin->id,
+                    'action' => 'authorization_failed',
+                    'resource' => 'route',
+                    'resource_id' => null,
+                    'old_values' => null,
+                    'new_values' => json_encode([
+                        'path' => $request->path(),
+                        'method' => $request->method(),
+                        'required' => $permissions,
+                    ]),
+                    'description' => "Access denied to {$request->path()} - required: " . implode(', ', $permissions),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to store authorization failure in audit table', [
+                'error' => $e->getMessage(),
+                'admin_id' => $admin->id,
+            ]);
+        }
     }
 }

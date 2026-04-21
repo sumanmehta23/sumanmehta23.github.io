@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-
+use App\Traits\AuthorizationHelpers;
 class EmployeeList extends Authenticatable
 {
-    use HasApiTokens, HasUuids, HasUuids, TwoFactorAuthenticatable, SoftDeletes;
+    use HasApiTokens, HasUuids, HasUuids, TwoFactorAuthenticatable, SoftDeletes,AuthorizationHelpers;
     protected $table = 'emplist';
     // protected $primaryKey = 'id';
     protected $guarded = [];
