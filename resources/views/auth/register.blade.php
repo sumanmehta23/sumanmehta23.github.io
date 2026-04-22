@@ -209,6 +209,7 @@
                                                     Login</a>
                                                 <a href="https://www.lqhmarkets.com/risk-disclaimer"
                                                     class="link-primary ms-auto"
+                                                    target="_blank"
                                                     style="font-size: 14px !important; padding-left: 10px;">
                                                     Risk Disclaimer
                                                 </a>
