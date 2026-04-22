@@ -9,7 +9,7 @@
             align-items: center;
         }
     }
-
+    font { display: contents !important; color: inherit !important; }
 </style>
         <div id="app" data-v-app="">
             <div  class="auth-main">
