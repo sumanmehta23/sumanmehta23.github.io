@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
-
+use App\Traits\AuthorizationHelpers;
 class EmployeeList extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasUuids, SoftDeletes, TwoFactorAuthenticatable,AuthorizationHelpers;
