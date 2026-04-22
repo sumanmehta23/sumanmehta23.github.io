@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class EmployeeList extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasUuids, SoftDeletes, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasUuids, SoftDeletes, TwoFactorAuthenticatable,AuthorizationHelpers;
 
     protected $table = 'emplist';
 
