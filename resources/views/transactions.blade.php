@@ -79,6 +79,28 @@
             display: flex;
             justify-content: center;
         }
+
+        .transactions-tabs-mobile {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .transactions-tabs-mobile::-webkit-scrollbar {
+            display: none;
+        }
+
+        .transactions-tabs-mobile .nav-item {
+            flex: 0 0 auto;
+        }
+
+        .transactions-tabs-mobile .nav-link {
+            white-space: nowrap;
+            font-size: 12px;
+            padding: 0.75rem 0.45rem;
+        }
     }
 </style>
 <div class="pc-container">
@@ -111,7 +133,7 @@
                 </div>
               </div>
             </div>
-            <ul class="nav nav-tabs analytics-tab flex-nowrap" id="myTab" role="tablist" style="overflow-x: auto; flex-wrap: nowrap;">
+            <ul class="nav nav-tabs analytics-tab transactions-tabs-mobile" id="myTab" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link {{ $activeTransactionTab === 'deposits' ? 'active' : '' }}" id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#deposits" type="button" role="tab" aria-controls="deposits" aria-selected="{{ $activeTransactionTab === 'deposits' ? 'true' : 'false' }}">Deposits</button>
               </li>
