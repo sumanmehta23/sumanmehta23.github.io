@@ -227,12 +227,12 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
                         'deals_synced_to' => $dealsToCarbon->toDateTimeString(),
                     ]);
 
-                    Log::info("SyncDealsJob: Updated sync range for account", [
-                        'account_id' => $accountId,
-                        'account_code' => $account->code,
-                        'deals_synced_from' => $dealsFromCarbon->toDateTimeString(),
-                        'deals_synced_to' => $dealsToCarbon->toDateTimeString(),
-                    ]);
+                    // Log::info("SyncDealsJob: Updated sync range for account", [
+                    //     'account_id' => $accountId,
+                    //     'account_code' => $account->code,
+                    //     'deals_synced_from' => $dealsFromCarbon->toDateTimeString(),
+                    //     'deals_synced_to' => $dealsToCarbon->toDateTimeString(),
+                    // ]);
                 }
             }
         }
@@ -732,13 +732,13 @@ class SyncDealsJob implements ShouldQueue, ShouldBeUnique
         // Validate timestamp before storing
         if ($syncRangeTo !== null && is_numeric($syncRangeTo) && $syncRangeTo > 1704067200) { // Valid if after 2024-01-01
             $this->accountSyncRanges[$accountId]['to'] = $syncRangeTo;
-            Log::debug("SyncDealsJob: Updated sync range 'to'", [
-                'account_id' => $accountId,
-                'latest_deal_time' => $latestTimeDone ? $latestTimeDone->timestamp : null,
-                'sync_window_end' => $syncWindowEnd,
-                'final_to' => $syncRangeTo,
-                'final_to_readable' => Carbon::createFromTimestamp($syncRangeTo)->toDateTimeString(),
-            ]);
+            // Log::debug("SyncDealsJob: Updated sync range 'to'", [
+            //     'account_id' => $accountId,
+            //     'latest_deal_time' => $latestTimeDone ? $latestTimeDone->timestamp : null,
+            //     'sync_window_end' => $syncWindowEnd,
+            //     'final_to' => $syncRangeTo,
+            //     'final_to_readable' => Carbon::createFromTimestamp($syncRangeTo)->toDateTimeString(),
+            // ]);
         } else {
             Log::warning("SyncDealsJob: Invalid sync range 'to' value, not updating", [
                 'account_id' => $accountId,
