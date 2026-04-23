@@ -19,7 +19,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'first_name' => $this->firstname ?? null,
             'last_name' => $this->lastname ?? null,
-            'full_name' => ($this->firstname ?? '').' '.($this->lastname ?? ''),
+            'full_name' => $this->fullname ?? '',
             'phone' => $this->number ?? null,
             'country' => $this->country ?? null,
             'status' => $this->status ?? null,
