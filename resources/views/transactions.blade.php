@@ -630,51 +630,36 @@
                         }
                     @endphp
                     <div class="p-3 mb-3 border rounded">
-                      <div class="d-flex align-items-center">
-                        {{-- <div>
-                          <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
-                        </div> --}}
-                        {{-- <div class="ms-2 flex-grow-1">
-                          <h6 class="mb-0">{{ $from }}</h6>
-                          <p class="mb-0 text-muted f-12">Internal Transfer</p>
-                        </div> --}}
-                        <div class="mb-2 d-flex-veritically align-items-center justify-content-between">
-                          {{-- <p class="mb-0 text-muted f-12">Amount</p> --}}
-                          <div>
-                            <h5 class="mb-0">${{ number_format($history['amount'], 2) }}</h5>
-                          </div>
-                          <div>
-                            <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('M-d-Y H:i:s') }}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="mt-3">
-                        {{-- <div class="mb-2 d-flex align-items-center justify-content-between">
-                          <p class="mb-0 text-muted f-12">Date</p>
-                          <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('Y-m-d') }}</p>
-                        </div>
-                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                          <p class="mb-0 text-muted f-12">Time</p>
-                          <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('H:i A') }}</p>
-                        </div> --}}
-                        <div>
-                            <h5>Details:</h5>
-                            <ul>
-                                <li><strong>From:</strong> {{ $from }}</li>
-                                <li><strong>To:</strong> {{ $to }}</li>
-                                <li><strong>Type:</strong> {{ $history['type'] }}</li>
-                            </ul>
-                        </div>
-                        {{-- <div class="mb-2 d-flex align-items-center justify-content-between">
-                          <p class="mb-0 text-muted f-12">Type</p>
-                          <p class="mb-0 f-w-500">{{ $history['type'] }}</p>
-                        </div> --}}
-
                         <div class="d-flex align-items-center justify-content-between">
-                          <h6 class="mb-0">Transaction Id</h6>
-                          <p class="mb-0 f-w-500" style="font-size:10px"> #{{ $history['raw_id'] }}</p>
+                            <h6 class="mb-0">Txn ID:</h6>
+                            <p class="mb-0 f-w-500" style="font-size:12px"> #{{ $history['raw_id'] }}</p>
                         </div>
-                      </div>
+                        <div class="mt-3">
+                            <div class="mb-2 d-flex align-items-center justify-content-between">
+                                <p class="mb-0 text-muted f-12">Amount</p>
+                                <p class="mb-0 f-w-500">${{ number_format($history['amount'], 2) }}</p>
+                            </div>
+                            <div class="mb-2 d-flex align-items-center justify-content-between">
+                                <p class="mb-0 text-muted f-12">From</p>
+                                <p class="mb-0 f-w-500">{{ $from }}</p>
+                            </div>
+                            <div class="mb-2 d-flex align-items-center justify-content-between">
+                                <p class="mb-0 text-muted f-12">To</p>
+                                <p class="mb-0 f-w-500">{{ $to }}</p>
+                            </div>
+                            <div class="mb-2 d-flex align-items-center justify-content-between">
+                                <p class="mb-0 text-muted f-12">Date</p>
+                                <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('Y-m-d') }}</p>
+                            </div>
+                            <div class="mb-2 d-flex align-items-center justify-content-between">
+                                <p class="mb-0 text-muted f-12">Time</p>
+                                <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('H:i A') }}</p>
+                            </div>
+                            <div class="mb-2 d-flex align-items-center justify-content-between">
+                                <p class="mb-0 text-muted f-12">Type</p>
+                                <p class="mb-0 f-w-500">{{ $history['type'] }}</p>
+                            </div>
+                        </div>
                     </div>
                   @endforeach
                 </div>
