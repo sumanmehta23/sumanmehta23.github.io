@@ -629,36 +629,41 @@
                             $to = $history->accountTo ? $history->accountTo->code : '';
                         }
                     @endphp
-                    <div class="p-3 mb-3 border rounded">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <h6 class="mb-0">Txn ID:</h6>
-                            <p class="mb-0 f-w-500" style="font-size:12px"> #{{ $history['raw_id'] }}</p>
+                    <div class="mb-3 overflow-hidden bg-white border rounded-4" style="box-shadow: 0 10px 30px rgba(31, 79, 120, 0.08); border-color: #d9e6ee !important;">
+                        <div class="p-3">
+                            <div class="gap-3 d-flex align-items-start justify-content-between">
+                                <div>
+                                    <h3 class="mb-2 f-w-700 text-success" style="font-size: 32px; line-height: 1;">${{ number_format($history['amount'], 2) }}</h3>
+                                    <p class="mb-0 text-muted" style="font-size: 12px;">
+                                        {{ Carbon::parse($history['date'])->addHours(3)->format('M d, Y') }}
+                                        <span class="mx-1">&middot;</span>
+                                        {{ Carbon::parse($history['date'])->addHours(3)->format('H:i:s') }}
+                                    </p>
+                                </div>
+                                <span class="px-3 py-2 rounded-pill f-w-600" style="font-size: 12px; color: {{ $history['status'] == 1 ? '#1f9d63' : '#dc3545' }}; background: {{ $history['status'] == 1 ? '#edf8f1' : '#fdecec' }};">
+                                    {{ ($history['status']==1 ? 'Successful' : 'Failed') }}
+                                </span>
+                            </div>
+
+                            <div class="mt-4 border-top" style="border-color: #d9e6ee !important;">
+                                <div class="py-3 d-flex align-items-center justify-content-between border-bottom" style="border-color: #e6eff5 !important;">
+                                    <p class="mb-0 text-muted f-12">From</p>
+                                    <p class="mb-0 f-w-600 text-dark">{{ $from }}</p>
+                                </div>
+                                <div class="py-3 d-flex align-items-center justify-content-between border-bottom" style="border-color: #e6eff5 !important;">
+                                    <p class="mb-0 text-muted f-12">To</p>
+                                    <p class="mb-0 f-w-600 text-dark">{{ $to }}</p>
+                                </div>
+                                <div class="py-3 d-flex align-items-center justify-content-between">
+                                    <p class="mb-0 text-muted f-12">Type</p>
+                                    <p class="mb-0 f-w-600 text-dark">{{ $history['type'] }}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mt-3">
-                            <div class="mb-2 d-flex align-items-center justify-content-between">
-                                <p class="mb-0 text-muted f-12">Amount</p>
-                                <p class="mb-0 f-w-500">${{ number_format($history['amount'], 2) }}</p>
-                            </div>
-                            <div class="mb-2 d-flex align-items-center justify-content-between">
-                                <p class="mb-0 text-muted f-12">From</p>
-                                <p class="mb-0 f-w-500">{{ $from }}</p>
-                            </div>
-                            <div class="mb-2 d-flex align-items-center justify-content-between">
-                                <p class="mb-0 text-muted f-12">To</p>
-                                <p class="mb-0 f-w-500">{{ $to }}</p>
-                            </div>
-                            <div class="mb-2 d-flex align-items-center justify-content-between">
-                                <p class="mb-0 text-muted f-12">Date</p>
-                                <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('Y-m-d') }}</p>
-                            </div>
-                            <div class="mb-2 d-flex align-items-center justify-content-between">
-                                <p class="mb-0 text-muted f-12">Time</p>
-                                <p class="mb-0 f-w-500">{{ Carbon::parse($history['date'])->addHours(3)->format('H:i A') }}</p>
-                            </div>
-                            <div class="mb-2 d-flex align-items-center justify-content-between">
-                                <p class="mb-0 text-muted f-12">Type</p>
-                                <p class="mb-0 f-w-500">{{ $history['type'] }}</p>
-                            </div>
+
+                        <div class="px-3 py-3 border-top" style="background: #f7fbfd; border-color: #d9e6ee !important;">
+                            <p class="mb-1 text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.08em;">Transaction ID</p>
+                            <p class="mb-0 f-w-500 text-break" style="font-size: 12px; color: #0b7894;">#{{ $history['raw_id'] }}</p>
                         </div>
                     </div>
                   @endforeach
