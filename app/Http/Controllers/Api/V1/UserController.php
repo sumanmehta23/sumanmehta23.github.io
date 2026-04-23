@@ -29,6 +29,7 @@ class UserController extends Controller
             'last_modified_from' => 'nullable|date',
             'last_modified_to' => 'nullable|date|after_or_equal:last_modified_from',
             'user_id' => 'nullable|string',
+            'email' => 'nullable|string|email',
             'affiliate_id' => 'nullable|string',
             'per_page' => 'nullable|integer|min:1|max:500',
             'sort_by' => 'nullable|string|in:id,email,name,created_at,updated_at',
@@ -37,7 +38,6 @@ class UserController extends Controller
         ]);
 
         $includeArchived = filter_var($request->input('include_archived', false), FILTER_VALIDATE_BOOLEAN);
-
         $query = User::query();
 
         // Handle archived records
@@ -66,6 +66,11 @@ class UserController extends Controller
         // User ID filter
         if ($request->has('user_id')) {
             $query->where('id', $request->input('user_id'));
+        }
+
+        // Email filter
+        if ($request->has('email')) {
+            $query->where('email', $request->input('email'));
         }
 
         // Affiliate ID filter
