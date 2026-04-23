@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Account;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\AccountResource;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
+use App\Models\Account;
+use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
@@ -15,19 +13,19 @@ class AccountController extends Controller
      * Display a listing of accounts.
      * Supports filtering by user ID, account type, status, and creation date range.
      *
-     * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
     {
         // Authorization check for API token permissions
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:accounts:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:accounts:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
         $request->validate([
             'user_id' => 'nullable|string',
+            'email' => 'nullable|string|email',
             'account_type' => 'nullable|string|max:50',
             'status' => 'nullable|string|max:50',
             'created_from' => 'nullable|date',
@@ -35,7 +33,7 @@ class AccountController extends Controller
             'per_page' => 'nullable|integer|min:1|max:500',
             'sort_by' => 'nullable|string|in:id,user_id,account_type,balance,status,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
-            'include_archived' => 'nullable|boolean'
+            'include_archived' => 'nullable|boolean',
         ]);
 
         $includeArchived = filter_var($request->input('include_archived', false), FILTER_VALIDATE_BOOLEAN);
@@ -43,7 +41,7 @@ class AccountController extends Controller
         $query = Account::query();
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $query->whereNull('deleted_at');
         } else {
             $query->withTrashed();
@@ -52,6 +50,14 @@ class AccountController extends Controller
         // User ID filter
         if ($request->has('user_id')) {
             $query->where('user_id', $request->input('user_id'));
+        }
+
+        // Email filter (through related user)
+        if ($request->has('email')) {
+            $email = $request->input('email');
+            $query->whereHas('user', function ($q) use ($email) {
+                $q->where('aspnetusers.email', $email);
+            });
         }
 
         // Account type filter
@@ -86,20 +92,20 @@ class AccountController extends Controller
     /**
      * Display a single account.
      *
-     * @param string $id Account ID
+     * @param  string  $id  Account ID
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
         // Authorization check
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:accounts:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:accounts:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
         $account = Account::find($id);
 
-        if (!$account) {
+        if (! $account) {
             return response()->json(['error' => 'Account not found'], 404);
         }
 
@@ -109,15 +115,14 @@ class AccountController extends Controller
     /**
      * Get accounts for a specific user.
      *
-     * @param string $userId User ID
-     * @param Request $request
+     * @param  string  $userId  User ID
      * @return \Illuminate\Http\Response
      */
     public function userAccounts($userId, Request $request)
     {
         // Authorization check
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:accounts:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:accounts:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
@@ -125,7 +130,7 @@ class AccountController extends Controller
             'status' => 'nullable|string|max:50',
             'per_page' => 'nullable|integer|min:1|max:500',
             'sort_by' => 'nullable|string|in:id,account_type,balance,status,created_at',
-            'sort_order' => 'nullable|string|in:asc,desc'
+            'sort_order' => 'nullable|string|in:asc,desc',
         ]);
 
         $query = Account::query()->where('user_id', $userId);
@@ -148,27 +153,33 @@ class AccountController extends Controller
      * Get account statistics.
      * Returns total accounts, total balance, etc.
      *
-     * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function statistics(Request $request)
     {
         // Authorization check
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:accounts:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:accounts:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
         $request->validate([
             'user_id' => 'nullable|string',
+            'email' => 'nullable|string|email',
             'account_type' => 'nullable|string|max:50',
-            'status' => 'nullable|string|max:50'
+            'status' => 'nullable|string|max:50',
         ]);
 
         $query = Account::query();
 
         if ($request->has('user_id')) {
             $query->where('user_id', $request->input('user_id'));
+        }
+        if ($request->has('email')) {
+            $email = $request->input('email');
+            $query->whereHas('user', function ($q) use ($email) {
+                $q->where('aspnetusers.email', $email);
+            });
         }
         if ($request->has('account_type')) {
             $query->where('account_type', $request->input('account_type'));
@@ -191,8 +202,8 @@ class AccountController extends Controller
     /**
      * Check if user has specific permission
      *
-     * @param object $user
-     * @param string $permission
+     * @param  object  $user
+     * @param  string  $permission
      * @return bool
      */
     private function checkPermission($user, $permission)

@@ -147,6 +147,12 @@
                                     "disabled": true
                                 },
                                 {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                },
+                                {
                                     "key": "affiliate_id",
                                     "value": "aff_001",
                                     "description": "Filter by affiliate ID",
@@ -430,6 +436,12 @@
                                     "disabled": true
                                 },
                                 {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                },
+                                {
                                     "key": "transaction_type",
                                     "value": "wire_transfer",
                                     "description": "Filter by transaction type",
@@ -522,6 +534,12 @@
                                     "value": "user_123",
                                     "description": "Filter by user ID",
                                     "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
                                 }
                             ]
                         },
@@ -592,6 +610,12 @@
                                     "key": "user_id",
                                     "value": "user_123",
                                     "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
                                     "disabled": true
                                 },
                                 {
@@ -692,6 +716,12 @@
                                     "key": "user_id",
                                     "value": "user_123",
                                     "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
                                     "disabled": true
                                 }
                             ]

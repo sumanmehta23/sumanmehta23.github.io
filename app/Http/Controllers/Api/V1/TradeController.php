@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Trade;
 use App\Http\Resources\V1\TradeResource;
-use Illuminate\Support\Facades\Log;
+use App\Models\Trade;
+use Illuminate\Http\Request;
 
 class TradeController extends Controller
 {
@@ -14,14 +13,13 @@ class TradeController extends Controller
      * Display a listing of trades.
      * Supports filtering by open time range, user ID, symbol, and status.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
         // Authorization check for API token permissions
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:trades:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:trades:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
@@ -29,19 +27,21 @@ class TradeController extends Controller
             'open_time_from' => 'nullable|date',
             'open_time_to' => 'nullable|date|after_or_equal:open_time_from',
             'user_id' => 'nullable|string',
+            'email' => 'nullable|string|email',
             'symbol' => 'nullable|string|max:20',
             'status' => 'nullable|string|max:50',
             'type' => 'nullable|string|in:buy,sell',
             'per_page' => 'nullable|integer|min:1|max:500',
             'sort_by' => 'nullable|string|in:id,open_time,close_time,symbol,profit,volume,account_id,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
-            'include_archived' => 'nullable|boolean'
+            'include_archived' => 'nullable|boolean',
         ]);
 
         // Get filters
         $openTimeFrom = $request->input('open_time_from');
         $openTimeTo = $request->input('open_time_to');
         $userId = $request->input('user_id');
+        $email = $request->input('email');
         $symbol = $request->input('symbol');
         $status = $request->input('status');
         $type = $request->input('type');
@@ -55,7 +55,7 @@ class TradeController extends Controller
             ->with(['account', 'user']);
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $query->whereNull('deleted_at');
         } else {
             $query->withTrashed();
@@ -72,16 +72,22 @@ class TradeController extends Controller
 
         if ($userId) {
             $query->whereHas('user', function ($q) use ($userId) {
-                $q->where('id', $userId);
+                $q->where('aspnetusers.id', $userId);
+            });
+        }
+
+        if ($email) {
+            $query->whereHas('user', function ($q) use ($email) {
+                $q->where('aspnetusers.email', $email);
             });
         }
 
         if ($symbol) {
-            $query->where('symbol', 'like', '%' . $symbol . '%');
+            $query->where('symbol', 'like', '%'.$symbol.'%');
         }
 
         if ($status) {
-            $query->where('status', 'like', '%' . $status . '%');
+            $query->where('status', 'like', '%'.$status.'%');
         }
 
         if ($type) {
@@ -132,15 +138,14 @@ class TradeController extends Controller
     /**
      * Display the specified trade.
      *
-     * @param string $id
-     * @param Request $request
+     * @param  string  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show($id, Request $request)
     {
         // Authorization check for API token permissions
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:trades:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:trades:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
@@ -148,7 +153,7 @@ class TradeController extends Controller
 
         $query = Trade::query()->with(['account', 'user']);
 
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $query->whereNull('deleted_at');
         } else {
             $query->withTrashed();
@@ -156,7 +161,7 @@ class TradeController extends Controller
 
         $trade = $query->find($id);
 
-        if (!$trade) {
+        if (! $trade) {
             return response()->json(['error' => 'Trade not found'], 404);
         }
 
@@ -168,27 +173,30 @@ class TradeController extends Controller
     /**
      * Get trade statistics.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function statistics(Request $request)
     {
         // Authorization check for API token permissions
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:trades:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:trades:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
         $request->validate([
             'open_time_from' => 'nullable|date',
             'open_time_to' => 'nullable|date|after_or_equal:open_time_from',
+            'user_id' => 'nullable|string',
+            'email' => 'nullable|string|email',
             'symbol' => 'nullable|string|max:20',
             'type' => 'nullable|string|in:buy,sell',
-            'include_archived' => 'nullable|boolean'
+            'include_archived' => 'nullable|boolean',
         ]);
 
         $openTimeFrom = $request->input('open_time_from');
         $openTimeTo = $request->input('open_time_to');
+        $userId = $request->input('user_id');
+        $email = $request->input('email');
         $symbol = $request->input('symbol');
         $type = $request->input('type');
         $includeArchived = filter_var($request->input('include_archived', false), FILTER_VALIDATE_BOOLEAN);
@@ -196,7 +204,7 @@ class TradeController extends Controller
         $query = Trade::query();
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $query->whereNull('deleted_at');
         } else {
             $query->withTrashed();
@@ -211,8 +219,20 @@ class TradeController extends Controller
             $query->whereDate('open_time', '<=', $openTimeTo);
         }
 
+        if ($userId) {
+            $query->whereHas('user', function ($q) use ($userId) {
+                $q->where('aspnetusers.id', $userId);
+            });
+        }
+
+        if ($email) {
+            $query->whereHas('user', function ($q) use ($email) {
+                $q->where('aspnetusers.email', $email);
+            });
+        }
+
         if ($symbol) {
-            $query->where('symbol', 'like', '%' . $symbol . '%');
+            $query->where('symbol', 'like', '%'.$symbol.'%');
         }
 
         if ($type) {
@@ -251,14 +271,10 @@ class TradeController extends Controller
 
     /**
      * Check if user has specific permission.
-     *
-     * @param $user
-     * @param string $permission
-     * @return bool
      */
     protected function checkPermission($user, string $permission): bool
     {
-        if (!$user || !method_exists($user, 'can')) {
+        if (! $user || ! method_exists($user, 'can')) {
             return false;
         }
 

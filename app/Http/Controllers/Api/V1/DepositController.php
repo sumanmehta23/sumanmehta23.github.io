@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\WalletDeposit;
-use App\Models\TradeDeposit;
 use App\Http\Resources\V1\DepositResource;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
+use App\Models\TradeDeposit;
+use App\Models\WalletDeposit;
+use Illuminate\Http\Request;
 
 class DepositController extends Controller
 {
@@ -16,15 +14,14 @@ class DepositController extends Controller
      * Display a listing of deposits.
      * Supports filtering by deposit date range, user ID, type, and product ID.
      * Returns both wallet deposits and trade deposits.
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
         // Authorization check for API token permissions
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:deposits:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:deposits:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
@@ -32,19 +29,21 @@ class DepositController extends Controller
             'deposit_date_from' => 'nullable|date',
             'deposit_date_to' => 'nullable|date|after_or_equal:deposit_date_from',
             'user_id' => 'nullable|string',
+            'email' => 'nullable|string|email',
             'transaction_type' => 'nullable|string|max:50',
             'product_id' => 'nullable|string|max:50',
             'status' => 'nullable|string|max:50',
             'per_page' => 'nullable|integer|min:1|max:500',
             'sort_by' => 'nullable|string|in:id,deposit_date,amount,user_id,status,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
-            'include_archived' => 'nullable|boolean'
+            'include_archived' => 'nullable|boolean',
         ]);
 
         // Get date filters
         $dateFrom = $request->input('deposit_date_from');
         $dateTo = $request->input('deposit_date_to');
         $userId = $request->input('user_id');
+        $email = $request->input('email');
         $transactionType = $request->input('transaction_type');
         $productId = $request->input('product_id');
         $status = $request->input('status');
@@ -59,7 +58,7 @@ class DepositController extends Controller
             ->selectRaw("'wallet' as source");
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $walletQuery->whereNull('deleted_at');
         } else {
             $walletQuery->withTrashed();
@@ -71,7 +70,7 @@ class DepositController extends Controller
             ->selectRaw("'trade' as source");
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $tradeQuery->whereNull('deleted_at');
         } else {
             $tradeQuery->withTrashed();
@@ -87,6 +86,9 @@ class DepositController extends Controller
         if ($userId) {
             $walletQuery->where('user_id', $userId);
         }
+        if ($email) {
+            $walletQuery->where('email', $email);
+        }
         if ($transactionType) {
             $walletQuery->where('deposit_type', $transactionType);
         }
@@ -100,6 +102,9 @@ class DepositController extends Controller
         }
         if ($userId) {
             $tradeQuery->where('user_id', $userId);
+        }
+        if ($email) {
+            $tradeQuery->where('email', $email);
         }
         if ($transactionType) {
             $tradeQuery->where('deposit_type', $transactionType);
@@ -120,26 +125,26 @@ class DepositController extends Controller
 
     /**
      * Display a single deposit.
-     * 
-     * @param string $id Deposit ID
+     *
+     * @param  string  $id  Deposit ID
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
         // Authorization check
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:deposits:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:deposits:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
         // Check in both sources
         $deposit = WalletDeposit::find($id);
 
-        if (!$deposit) {
+        if (! $deposit) {
             $deposit = TradeDeposit::find($id);
         }
 
-        if (!$deposit) {
+        if (! $deposit) {
             return response()->json(['error' => 'Deposit not found'], 404);
         }
 
@@ -149,15 +154,14 @@ class DepositController extends Controller
     /**
      * Get deposit statistics.
      * Returns total deposits, total amount, average amount, etc.
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function statistics(Request $request)
     {
         // Authorization check
         $user = auth('sanctum')->user();
-        if ($user && !$this->checkPermission($user, 'api:kpi:deposits:read')) {
+        if ($user && ! $this->checkPermission($user, 'api:kpi:deposits:read')) {
             return response()->json(['error' => 'Insufficient permissions to access this endpoint'], 403);
         }
 
@@ -165,18 +169,19 @@ class DepositController extends Controller
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'user_id' => 'nullable|string',
-            'include_archived' => 'nullable|boolean'
+            'email' => 'nullable|string|email',
+            'include_archived' => 'nullable|boolean',
         ]);
 
         $includeArchived = filter_var($request->input('include_archived', false), FILTER_VALIDATE_BOOLEAN);
 
         // Build wallet query with explicit column selection
         $walletQuery = WalletDeposit::query()
-            ->select('id', 'user_id', 'deposted_date', 'deposit_amount', 'status', 'deposit_type', 'created_at', 'updated_at')
+            ->select('id', 'user_id', 'email', 'deposted_date', 'deposit_amount', 'status', 'deposit_type', 'created_at', 'updated_at')
             ->selectRaw("'wallet' as source");
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $walletQuery->whereNull('deleted_at');
         } else {
             $walletQuery->withTrashed();
@@ -184,11 +189,11 @@ class DepositController extends Controller
 
         // Build trade query with explicit column selection
         $tradeQuery = TradeDeposit::query()
-            ->select('id', 'user_id', 'deposted_date', 'deposit_amount', 'status', 'deposit_type', 'created_at', 'updated_at')
+            ->select('id', 'user_id', 'email', 'deposted_date', 'deposit_amount', 'status', 'deposit_type', 'created_at', 'updated_at')
             ->selectRaw("'trade' as source");
 
         // Handle archived records
-        if (!$includeArchived) {
+        if (! $includeArchived) {
             $tradeQuery->whereNull('deleted_at');
         } else {
             $tradeQuery->withTrashed();
@@ -205,6 +210,10 @@ class DepositController extends Controller
         if ($request->has('user_id')) {
             $walletQuery->where('user_id', $request->input('user_id'));
             $tradeQuery->where('user_id', $request->input('user_id'));
+        }
+        if ($request->has('email')) {
+            $walletQuery->where('email', $request->input('email'));
+            $tradeQuery->where('email', $request->input('email'));
         }
 
         // Union both queries for combined statistics
@@ -226,9 +235,9 @@ class DepositController extends Controller
 
     /**
      * Check if user has specific permission
-     * 
-     * @param object $user
-     * @param string $permission
+     *
+     * @param  object  $user
+     * @param  string  $permission
      * @return bool
      */
     private function checkPermission($user, $permission)
