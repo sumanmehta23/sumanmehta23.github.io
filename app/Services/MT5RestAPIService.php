@@ -613,7 +613,7 @@ class MT5RestAPIService
 
         foreach ($chunks as $chunk) {
             $result = $this->fetchDealBatchChunk($chunk, $from, $to);
-            Log::info('MT5RestAPI: Deal batch chunk data is ', [$result,$chunk, $from, $to]);
+            // Log::info('MT5RestAPI: Deal batch chunk data is ', [$result,$chunk, $from, $to]);
             if ($result === null) {
                 continue;
             }
