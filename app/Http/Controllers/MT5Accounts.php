@@ -70,7 +70,7 @@ class MT5Accounts extends Controller
             ->where('competition_end_date', NULL)
             ->where('competition_status', NULL)
             ->where('demo', false)
-            ->orderBy('id', 'desc')
+            ->orderByRaw('CASE WHEN account_request_status = 0 THEN 1 ELSE 0 END, id DESC')
             ->paginate(5);
         return view('live_accounts', compact('results'));
     }
