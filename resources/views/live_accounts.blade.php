@@ -65,11 +65,11 @@
                                                 </div>
                                                 <div class="mb-2 d-flex align-items-center justify-content-between">
                                                     <p class="mb-0 text-muted f-12">Balance</p>
-                                                    <p class="mb-0 f-w-400">$ {{ $acc->balance }}</p>
+                                                    <p class="mb-0 f-w-400">${{ $acc->balance }}</p>
                                                 </div>
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <p class="mb-0 text-muted f-12">Equity</p>
-                                                    <p class="mb-0 f-w-400">$ {{ $acc->equity }}</p>
+                                                    <p class="mb-0 f-w-400">${{ $acc->equity }}</p>
                                                 </div>
                                             </div>
 
@@ -150,8 +150,8 @@
                                                     </td>
                                                     <td class="f-w-400 f-16">{{ $acc->account_nick_name }}</td>
                                                     <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
+                                                    <td class="text-end f-w-400 f-16">${{ $acc->balance }}</td>
+                                                    <td class="text-end f-w-400 f-16">${{ $acc->equity }}</td>
                                                     <td class="text-end f-w-200">
                                                         @if ($acc->code && $acc->code != 'Rejected')
                                                             <div class="gap-2 d-flex align-items-center">

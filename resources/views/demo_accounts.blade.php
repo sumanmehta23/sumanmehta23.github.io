@@ -75,11 +75,11 @@
                                                 </div>
                                                 <div class="mb-2 d-flex align-items-center justify-content-between">
                                                     <p class="mb-0 text-muted f-12">Balance</p>
-                                                    <p class="mb-0 f-w-400">$ {{ number_format($acc->balance, 2) }}</p>
+                                                    <p class="mb-0 f-w-400">${{ number_format($acc->balance, 2) }}</p>
                                                 </div>
                                                 <div class="d-flex align-items-center justify-content-between">
                                                     <p class="mb-0 text-muted f-12">Equity</p>
-                                                    <p class="mb-0 f-w-400">$ {{ number_format($acc->equity, 2) }}</p>
+                                                    <p class="mb-0 f-w-400">${{ number_format($acc->equity, 2) }}</p>
                                                 </div>
                                             </div>
 
@@ -180,9 +180,9 @@
                                                         </div>
                                                     </td>
                                                     <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ number_format($acc->balance, 2) }}
+                                                    <td class="text-end f-w-400 f-16">${{ number_format($acc->balance, 2) }}
                                                     </td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ number_format($acc->equity, 2) }}
+                                                    <td class="text-end f-w-400 f-16">${{ number_format($acc->equity, 2) }}
                                                     </td>
                                                     <td class="text-end f-w-200">
                                                         <div class="d-flex align-items-center">
