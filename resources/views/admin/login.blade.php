@@ -149,10 +149,10 @@
 
     <!-- Visible language dropdown for login page -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
-    <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
+    {{-- <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
         @include('components.language-dropdown', [
             'selectId' => 'custom_translate_select_login',
             'flagPreviewId' => 'flag-preview-login'
         ])
-                            </div>
+    </div> --}}
 @endsection
