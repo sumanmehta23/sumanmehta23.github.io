@@ -1,5 +1,47 @@
 @php
     use Carbon\Carbon;
+    use Illuminate\Pagination\LengthAwarePaginator;
+
+    $tabAliases = [
+        'withdrawls' => 'withdrawals',
+        'internaltrans' => 'internal-transfers',
+        'internal_transfer' => 'internal-transfers',
+    ];
+
+    $activeTransactionTab = $tabAliases[request('tab')] ?? request('tab', 'deposits');
+
+    if (! in_array($activeTransactionTab, ['deposits', 'withdrawals', 'internal-transfers'], true)) {
+        $activeTransactionTab = 'deposits';
+    }
+
+    $paginateCollection = function ($items, int $perPage, string $pageName) {
+        if (
+            $items instanceof \Illuminate\Contracts\Pagination\Paginator ||
+            $items instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+        ) {
+            return $items;
+        }
+
+        $items = $items instanceof \Illuminate\Support\Collection ? $items : collect($items);
+        $currentPage = LengthAwarePaginator::resolveCurrentPage($pageName);
+        $currentItems = $items->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        return new LengthAwarePaginator(
+            $currentItems,
+            $items->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'pageName' => $pageName,
+                'query' => request()->query(),
+            ]
+        );
+    };
+
+    $deposit_history = $paginateCollection($deposit_history, 5, 'deposit_page');
+    $withdrawal_history = $paginateCollection($withdrawal_history, 5, 'withdrawal_page');
+    $internal_transfer = $paginateCollection($internal_transfer, 5, 'transfer_page');
 @endphp
 @extends('layouts.crm.crm')
 @section('content')
@@ -30,6 +72,35 @@
         background-color: red; /* Background red on hover */
         color: white;          /* Text white on hover */
         border-color: red;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-pagination-center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .transactions-tabs-mobile {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .transactions-tabs-mobile::-webkit-scrollbar {
+            display: none;
+        }
+
+        .transactions-tabs-mobile .nav-item {
+            flex: 0 0 auto;
+        }
+
+        .transactions-tabs-mobile .nav-link {
+            white-space: nowrap;
+            font-size: 12px;
+            padding: 0.75rem 0.45rem;
+        }
     }
 </style>
 <div class="pc-container">
@@ -62,22 +133,60 @@
                 </div>
               </div>
             </div>
-            <ul class="nav nav-tabs analytics-tab" id="myTab" role="tablist">
+            <ul class="nav nav-tabs analytics-tab transactions-tabs-mobile" id="myTab" role="tablist">
               <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#deposits" type="button" role="tab" aria-controls="deposits" aria-selected="true">Deposits</button>
+                <button class="nav-link {{ $activeTransactionTab === 'deposits' ? 'active' : '' }}" id="analytics-tab-1" data-bs-toggle="tab" data-bs-target="#deposits" type="button" role="tab" aria-controls="deposits" aria-selected="{{ $activeTransactionTab === 'deposits' ? 'true' : 'false' }}">Deposits</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="withdrawls" data-bs-toggle="tab" data-bs-target="#withdrawls-pane" type="button" role="tab" aria-controls="withdrawls-pane" aria-selected="false">Withdrawals</button>
+                <button class="nav-link {{ $activeTransactionTab === 'withdrawals' ? 'active' : '' }}" id="withdrawls" data-bs-toggle="tab" data-bs-target="#withdrawls-pane" type="button" role="tab" aria-controls="withdrawls-pane" aria-selected="{{ $activeTransactionTab === 'withdrawals' ? 'true' : 'false' }}">Withdrawals</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="internaltrans" data-bs-toggle="tab" data-bs-target="#internaltrans-pane" type="button" role="tab" aria-controls="internaltrans-pane" aria-selected="false">Internal Transfers</button>
+                <button class="nav-link {{ $activeTransactionTab === 'internal-transfers' ? 'active' : '' }}" id="internaltrans" data-bs-toggle="tab" data-bs-target="#internaltrans-pane" type="button" role="tab" aria-controls="internaltrans-pane" aria-selected="{{ $activeTransactionTab === 'internal-transfers' ? 'true' : 'false' }}">Internal Transfers</button>
               </li>
             </ul>
           </div>
           <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="deposits" role="tabpanel" aria-labelledby="analytics-tab-1">
-              @if($deposit_history->isNotEmpty())
-                <div class="px-5 table-responsive">
+            <div class="tab-pane fade {{ $activeTransactionTab === 'deposits' ? 'show active' : '' }}" id="deposits" role="tabpanel" aria-labelledby="analytics-tab-1">
+              @if($deposit_history->count() > 0)
+                {{-- Mobileview Deposit --}}
+                <div class="p-2 d-block d-md-none">
+                  @foreach ($deposit_history as $history)
+                    <div class="p-3 mb-3 border rounded">
+                      <div class="d-flex align-items-center">
+                        <div>
+                          <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
+                        </div>
+                        <div class="ms-2 flex-grow-1">
+                          <h6 class="mb-0">{{ $history->code }}</h6>
+                          <p class="mb-0 text-muted f-12">{{ $history->ac_name }}</p>
+                        </div>
+                      </div>
+                      <div class="mt-3">
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Date</p>
+                          <p class="mb-0 f-w-500">{{ Carbon::parse($history->deposted_date)->addHours(3)->format('Y-m-d') }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Time</p>
+                          <p class="mb-0 f-w-500">{{ Carbon::parse($history->deposted_date)->addHours(3)->format('H:i A') }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Type</p>
+                          <p class="mb-0 f-w-500">{{ $history->deposit_type }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Amount</p>
+                          <p class="mb-0 f-w-500 f-16">${{ number_format($history->deposit_amount, 2) }}</p>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Status</p>
+                          <p class="mb-0 f-w-500 {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">{{ $history->status == 0 ? 'Pending' : ($history->status == 1 ? 'Success' : 'Cancelled') }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+                <div class="px-5 table-responsive d-none d-md-block">
                   <table class="table">
                     <thead>
                       <tr>
@@ -124,9 +233,12 @@
                   <hr>
                   <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
-                      <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $deposit_history->count() }} of {{ $deposit_history->count() }} entries</div>
+                      {{-- <div class="dt-info" aria-live="polite" role="status">Showing {{ $deposit_history->firstItem() ?? 0 }} to {{ $deposit_history->lastItem() ?? 0 }} of {{ $deposit_history->total() }} entries</div> --}}
                     </div>
                   </div>
+                </div>
+                <div class="px-5 pb-3 mobile-pagination-center">
+                  {{ $deposit_history->withQueryString()->appends(['tab' => 'deposits'])->links('pagination::bootstrap-5') }}
                 </div>
               @else
                 <div class="px-5 table-responsive">
@@ -148,9 +260,127 @@
                 </div>
               </div>
             </div>
-            <div class="tab-pane fade" id="withdrawls-pane" role="tabpanel" aria-labelledby="withdrawls">
-              @if($withdrawal_history->isNotEmpty())
-                <div class="px-5 table-responsive">
+            <div class="tab-pane fade {{ $activeTransactionTab === 'withdrawals' ? 'show active' : '' }}" id="withdrawls-pane" role="tabpanel" aria-labelledby="withdrawls">
+              @if($withdrawal_history->count() > 0)
+                {{-- Mobile View Withdrawal --}}
+                <div class="p-2 d-block d-md-none">
+                  @foreach ($withdrawal_history as $history)
+                    @php
+                      if ($history->status == 0) {
+                          $statusText = ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0))
+                              ? 'Email Not Verify'
+                              : 'Pending';
+                      } elseif ($history->status == 1) {
+                          if (
+                              ($history->payout_callback_status && $history->payout_callback_status != 'complete') ||
+                              (!$history->payout_callback_status && $history->admin_remark != 'Manually Approved')
+                          ) {
+                              $statusText = 'Processing';
+                          } else {
+                              $statusText = 'Approved';
+                          }
+                      } else {
+                          $statusText = !empty($history->admin_remark) ? $history->admin_remark : 'Cancelled';
+                      }
+                      if($history->status == 1 && !empty($history->payout_res) && $statusText == 'Approved'){
+                          $data = json_decode($history->payout_res, true);
+                          $txid = $data['result']['txid'] ?? null;
+                          $kind = $data['result']['kind'] ?? '';
+                          $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0]);
+                          if($txid){
+                              if($coin =='ETH'){
+                                  $link = "https://etherscan.io/tx/{$txid}";
+                              }
+                              elseif($coin != 'USDT'){
+                                  $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                              }
+                              else{
+                                  $link = "https://tokenview.io/en/search/{$txid}";
+                              }
+                          }
+                      } else {
+                          $link = null;
+                      }
+                    @endphp
+                    <div class="p-3 mb-3 border rounded">
+                      <div class="d-flex align-items-center">
+                        <div>
+                          <div class="border avtar avtar-s"><img src="/assets/images/mt5.png" class="wid-30" alt="logo"></div>
+                        </div>
+                        <div class="ms-2 flex-grow-1">
+                          <h6 class="mb-0">{{ $history->code ?? '' }}</h6>
+                          <p class="mb-0 text-muted f-12">Live Account</p>
+                        </div>
+                      </div>
+                      <div class="mt-3">
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Transaction Id</p>
+                          <p class="mb-0 f-w-500" style="font-size:10px"> #{{ $history->id }} </p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Date</p>
+                          <p class="mb-0 f-w-500">{{ Carbon::parse($history->withdraw_date)->addHours(3)->format('Y-m-d') }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Time</p>
+                          <p class="mb-0 f-w-500">{{ Carbon::parse($history->withdraw_date)->addHours(3)->format('H:i A') }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Type</p>
+                          <p class="mb-0 f-w-500">{{ $history->withdraw_type }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Amount</p>
+                          <p class="mb-0 f-w-500 f-16">${{ number_format($history->withdrawal_amount, 2) }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Fee</p>
+                          <p class="mb-0 f-w-500 f-16">${{ number_format($history->withdraw_transaction_fee ?? $history->transaction_fee, 2) }}</p>
+                        </div>
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Status</p>
+                          <p class="mb-0 f-w-500 {{ $history->status == 0 ? 'text-warning' : ($history->status == 1 ? 'text-success' : 'text-danger') }}">
+                            {{ $history->status == 0
+                                ? ((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0)
+                                    ? 'Email Not Verify'
+                                    : 'Pending')
+                                : (($history->status == 1 && $history->payout_callback_status == 'complete')
+                                    ? 'Approved'
+                                    : (($history->status == 1)
+                                        ? (($history->admin_remark == 'Manually Approved')
+                                            ? 'Approved'
+                                            : 'Processing')
+                                        : ($history->admin_remark ?? 'Cancelled')))
+                            }}
+                          </p>
+                        </div>
+                        @if(isset($link))
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Transaction</p>
+                          <a class="btn btn-sm btn-outline-primary primary-btn" target="_blank" href="{{ $link }}">View</a>
+                        </div>
+                        @endif
+                        @if ($statusText == 'Approved' && $history->approved_date)
+                        <div class="mb-2 d-flex align-items-center justify-content-between">
+                          <p class="mb-0 text-muted f-12">Approved Date</p>
+                          <p class="mb-0 f-w-500">{{ Carbon::parse($history->approved_date)->addHours(3)->format('Y-m-d H:i A') }}</p>
+                        </div>
+                        @endif
+                        @if((($history->email_verified ?? 0) == 0) && (($history->verified ?? 0) == 0) && ($history->status == 0))
+                        <div class="gap-2 mt-3 d-flex">
+                          <a href="#" class="btn btn-sm btn-outline-primary primary-btn flex-grow-1" onclick="resendWalletWithdrawalVerifyEmail('{{ json_encode($history->id) }}')">Resend Email</a>
+                          <a href="#" class="btn btn-sm btn-outline-secondary reject-btn flex-grow-1" onclick="takeAction('{{ json_encode($history->id) }}','{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee}}',3)">Cancel</a>
+                        </div>
+                        @elseif($history->status == 0)
+                        <div class="gap-2 mt-3 d-flex">
+                          <a href="#" class="btn btn-sm btn-outline-secondary reject-btn w-100" onclick="takeAction('{{ json_encode($history->id) }}','{{ $history->email }}','{{ $history->withdraw_amount + $history->withdraw_transaction_fee}}',3)">Cancel</a>
+                        </div>
+                        @endif
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+                <div class="px-5 table-responsive d-none d-md-block">
                   <table class="table">
                     <thead>
                       <tr>
@@ -348,9 +578,12 @@
                   <hr>
                   <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
-                      <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $withdrawal_history->count() }} of {{ $withdrawal_history->count() }} entries</div>
+                      {{-- <div class="dt-info" aria-live="polite" role="status">Showing {{ $withdrawal_history->firstItem() ?? 0 }} to {{ $withdrawal_history->lastItem() ?? 0 }} of {{ $withdrawal_history->total() }} entries</div> --}}
                     </div>
                   </div>
+                </div>
+                <div class="px-5 pb-3 mobile-pagination-center">
+                  {{ $withdrawal_history->withQueryString()->appends(['tab' => 'withdrawals'])->links('pagination::bootstrap-5') }}
                 </div>
               @else
                 <div class="px-5 table-responsive">
@@ -372,9 +605,70 @@
                 </div>
               </div>
             </div>
-            <div class="tab-pane fade" id="internaltrans-pane" role="tabpanel" aria-labelledby="internaltrans">
-              @if($internal_transfer->isNotEmpty())
-                <div class="px-5 table-responsive">
+            <div class="tab-pane fade {{ $activeTransactionTab === 'internal-transfers' ? 'show active' : '' }}" id="internaltrans-pane" role="tabpanel" aria-labelledby="internaltrans">
+              @if($internal_transfer->count() > 0)
+                {{-- Mobile View Internal Transfer --}}
+                <div class="p-2 d-block d-md-none">
+                  @foreach ($internal_transfer as $history)
+                    @php
+                        if ($history->type == 'CRM') {
+                            $from = 'CRM';
+                        } elseif($history->type == 'IB Withdraw'){
+                            $from = 'IB Wallet';
+                        }elseif (!empty($history->accountFrom->code ?? null)) {
+                            $from = $history->accountFrom->code;
+                        }elseif($history->type == 'Wallet Transfer' && $history->source == 'TDID'){
+                            $from = 'Wallet';
+                        } else {
+                            $from = $history->accountFrom ? $history->accountFrom->code : $history->it_from;
+                        }
+
+                        if ($history->source == "TWID" && $history->type == 'Wallet Withdrawal') {
+                            $to = $history->it_to ?? 'Wallet';
+                        } else {
+                            $to = $history->accountTo ? $history->accountTo->code : '';
+                        }
+                    @endphp
+                    <div class="mb-3 overflow-hidden bg-white border rounded-4" style="box-shadow: 0 10px 30px rgba(31, 79, 120, 0.08); border-color: #d9e6ee !important;">
+                        <div class="p-3">
+                            <div class="gap-3 d-flex align-items-start justify-content-between">
+                                <div>
+                                    <h3 class="mb-2 f-w-700 text-success" style="font-size: 32px; line-height: 1;">${{ number_format($history['amount'], 2) }}</h3>
+                                    <p class="mb-0 text-muted" style="font-size: 12px;">
+                                        {{ Carbon::parse($history['date'])->addHours(3)->format('M d, Y') }}
+                                        <span class="mx-1">&middot;</span>
+                                        {{ Carbon::parse($history['date'])->addHours(3)->format('H:i:s') }}
+                                    </p>
+                                </div>
+                                <span class="px-3 py-2 rounded-pill f-w-600" style="font-size: 12px; color: {{ $history['status'] == 1 ? '#1f9d63' : '#dc3545' }}; background: {{ $history['status'] == 1 ? '#edf8f1' : '#fdecec' }};">
+                                    {{ ($history['status']==1 ? 'Successful' : 'Failed') }}
+                                </span>
+                            </div>
+
+                            <div class="mt-4 border-top" style="border-color: #d9e6ee !important;">
+                                <div class="py-3 d-flex align-items-center justify-content-between border-bottom" style="border-color: #e6eff5 !important;">
+                                    <p class="mb-0 text-muted f-12">From</p>
+                                    <p class="mb-0 f-w-600 text-dark">{{ $from }}</p>
+                                </div>
+                                <div class="py-3 d-flex align-items-center justify-content-between border-bottom" style="border-color: #e6eff5 !important;">
+                                    <p class="mb-0 text-muted f-12">To</p>
+                                    <p class="mb-0 f-w-600 text-dark">{{ $to }}</p>
+                                </div>
+                                <div class="py-3 d-flex align-items-center justify-content-between">
+                                    <p class="mb-0 text-muted f-12">Type</p>
+                                    <p class="mb-0 f-w-600 text-dark">{{ $history['type'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-3 py-3 border-top" style="background: #f7fbfd; border-color: #d9e6ee !important;">
+                            <p class="mb-1 text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.08em;">Transaction ID</p>
+                            <p class="mb-0 f-w-500 text-break" style="font-size: 12px; color: #0b7894;">#{{ $history['raw_id'] }}</p>
+                        </div>
+                    </div>
+                  @endforeach
+                </div>
+                <div class="px-5 table-responsive d-none d-md-block">
                   <table class="table">
                     <thead>
                       <tr>
@@ -446,9 +740,12 @@
                   <hr>
                   <div class="mt-2 row justify-content-between">
                     <div class="col-md-auto me-auto">
-                      <div class="dt-info" aria-live="polite" role="status">Showing 1 to {{ $internal_transfer->count() }} of {{ $internal_transfer->count() }} entries</div>
+                      {{-- <div class="dt-info" aria-live="polite" role="status">Showing {{ $internal_transfer->firstItem() ?? 0 }} to {{ $internal_transfer->lastItem() ?? 0 }} of {{ $internal_transfer->total() }} entries</div> --}}
                     </div>
                   </div>
+                </div>
+                <div class="px-5 pb-3 mobile-pagination-center">
+                  {{ $internal_transfer->withQueryString()->appends(['tab' => 'internal-transfers'])->links('pagination::bootstrap-5') }}
                 </div>
               @else
                 <div class="px-5 table-responsive">
