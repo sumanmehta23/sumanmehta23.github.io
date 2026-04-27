@@ -114,7 +114,8 @@
                     <div class="modal-footer"><button type="button" class="btn btn-primary"
                             data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
                             name="updateNickName" value="true">
-                            <!----> Update Nick Name</button></div>
+                            <!----> Update Nick Name</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -177,7 +178,7 @@
 
                                                 </div>
                                             </div>
-                                            <div class="col-sm-6 text-sm-end">
+                                            {{-- <div class="col-sm-6 text-sm-end">
                                                 <ul class="flex-wrap mb-0 list-inline ms-auto d-flex justify-content-end">
                                                     <li class="list-inline-item">
                                                         <div class="mb-0 card">
@@ -186,7 +187,7 @@
                                                         </div>
                                                     </li>
                                                 </ul>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
