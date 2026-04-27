@@ -38,6 +38,8 @@
         'delayMs' => $reviewPopupCampaign->delayMs(),
         'popupKey' => $reviewPopupPopupKey,
         'impressionUrl' => route('popup-impressions.review-popup'),
+        'metricsDismissUrl' => route('popup-impressions.review-popup.dismiss'),
+        'metricsClickUrl' => route('popup-impressions.review-popup.click'),
         'currentRouteName' => $reviewPopupCurrentRouteName,
         'localStorageFallbackKey' => 'popup-impression:' . $reviewPopupPopupKey . ':' . ($reviewPopupCurrentUser->id ?? 'guest'),
         'logo' => !empty($settings['review_popup_logo']) ? asset($settings['review_popup_logo']) : (isset($settings['admin_sidebar_logo']) ? asset($settings['admin_sidebar_logo']) : asset('assets/images/logo-dark.png')),

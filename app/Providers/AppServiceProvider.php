@@ -18,6 +18,7 @@ use App\Observers\TradeWithdrawalObserver;
 use App\Observers\BonusTransactionObserver;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Auth;
+use App\Models\EmployeeList;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,7 +45,10 @@ class AppServiceProvider extends ServiceProvider
         TradeDeposit::observe(TradeDepositObserver::class);
         TradeWithdrawals::observe(TradeWithdrawalObserver::class);
         BonusTransaction::observe(BonusTransactionObserver::class);
-
+        // Gate::define('viewPulse', function (EmployeeList $user) {
+        //     return true;
+        //     // return $user->isSuperAdmin();
+        // });
 
         RateLimiter::for('deposit', function ($request) {
             // Limit to 1 request every 10 seconds

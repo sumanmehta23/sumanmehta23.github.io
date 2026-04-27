@@ -185,7 +185,7 @@
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">Yes</span></strong>
+                                                                                        class="f-w-400 f-16">{{ $acc->ac_swap }}</span></strong>
                                                                                 Swap </span>
                                                                         </span>
                                                                     </div>

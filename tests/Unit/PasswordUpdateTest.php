@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\PlatformEnum;
 use Tests\TestCase;
 use App\Models\Account;
 use App\Models\User;
@@ -66,13 +67,13 @@ class PasswordUpdateTest extends TestCase
 
         $account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'MT5',
+            'platform' => PlatformEnum::MT5->value,
             'login' => '12345',
         ]);
 
         $this->assertDatabaseHas('accounts', [
             'user_id' => $user->id,
-            'platform' => 'MT5',
+            'platform' => PlatformEnum::MT5->value,
             'login' => '12345',
         ]);
 
@@ -91,16 +92,16 @@ class PasswordUpdateTest extends TestCase
 
         $mt5Account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'MT5',
+            'platform' => PlatformEnum::MT5->value,
         ]);
 
         $x9Account = Account::factory()->create([
             'user_id' => $user->id,
-            'platform' => 'X9',
+            'platform' => PlatformEnum::X9->value,
         ]);
 
-        $this->assertEquals('MT5', $mt5Account->platform);
-        $this->assertEquals('X9', $x9Account->platform);
+        $this->assertEquals(PlatformEnum::MT5->value, $mt5Account->platform);
+        $this->assertEquals(PlatformEnum::X9->value, $x9Account->platform);
     }
 
     /** @test */

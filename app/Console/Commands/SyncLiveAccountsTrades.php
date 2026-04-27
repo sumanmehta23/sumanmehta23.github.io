@@ -209,7 +209,6 @@ class SyncLiveAccountsTrades extends Command
 
                         if ($markNotFound) {
                             $account->update([
-                                'not_found_in_mt5' => true,
                                 'deletion_type' => 'not_found_in_mt5',
                             ]);
                             $this->warn("Account {$account->code} marked as not_found_in_mt5");
@@ -309,7 +308,7 @@ class SyncLiveAccountsTrades extends Command
                     'error_code' => $error_code,
                 ]);
                 $account->update([
-                    'trade_sync_status' => 'not_found',
+                    'deletion_type' => 'not_found_in_mt5',
                 ]);
                 return 'not_found';
             }

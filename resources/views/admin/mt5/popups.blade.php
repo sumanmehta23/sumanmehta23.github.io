@@ -98,7 +98,7 @@
                 <input type="hidden" name="account_id" id="account_id" value="{{ $getUser->id ?? '' }}">
                 <input type="hidden" name="email" id="email" value="{{ $getUser->email ?? '' }}">
                 <input type="hidden" name="login" id="login" value="{{ $getUser->code ?? '' }}">
-                <input type="hidden" name="platform" id="platform" value="{{ $getUser->trade_platform ?? '' }}">
+                <input type="hidden" name="platform" id="platform" value="{{ $getUser->platform ?? '' }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="accountArchiveModalLabel">Archive Account</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

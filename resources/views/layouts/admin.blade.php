@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link href="/admin_assets/assets/admin_files/css2.css" rel="stylesheet">
     <link rel="stylesheet" href="/admin_assets/assets/admin_files/index-9805cd58.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/admin_assets/assets/js/sweetalert2.all.min.js"></script>
     <style>
         .swal2-popup.swal2-toast {

@@ -177,7 +177,6 @@ class TradeController extends Controller
 
         // Get all trades (we'll paginate after merging with corrections)
         $trades = $query->get();
-
         // Query correction deals independently (action = 5)
         $correctionsQuery = Deal::query()
             ->with('account:id,user_id,currency,account_type_id')
@@ -231,7 +230,6 @@ class TradeController extends Controller
 
             // Sort combined collection by close time descending
             $combined = $combined->sortByDesc('sort_time')->values();
-
             // Paginate the combined results
             $perPage = min($request->input('per_page', 15), 500);
             $currentPage = $request->input('page', 1);
@@ -279,7 +277,7 @@ class TradeController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $trade = Trade::with('account:id,user_id,currency')->findOrFail($id);
+            $trade = Trade::with('account:id,user_id,currency')->where(['position_id' => $id])->first();
 
             return (new TradeResource($trade))
                 ->response()

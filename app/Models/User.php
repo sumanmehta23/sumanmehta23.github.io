@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Country;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use App\Services\MailService;
 use App\Models\TradeWithdrawals;
@@ -20,7 +21,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use  HasFactory, Notifiable, HasUuids, TwoFactorAuthenticatable;
+    use  HasFactory, Notifiable, HasUuids, TwoFactorAuthenticatable,SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -52,6 +53,7 @@ class User extends Authenticatable
         'customerio_last_error' => 'json',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'kyc_synced_at' => 'datetime',
     ];
 
     protected static function booted()
@@ -168,7 +170,105 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Country::class, 'country', 'country_name');
     }
-    // public function getWalletBalance($userId)
+
+    /**
+     * Get all KYC logs for this user
+     */
+    public function kycLogs()
+    {
+        return $this->hasMany(KycLog::class);
+    }
+
+    /**
+     * Get the latest KYC log (for efficient access without N+1)
+     */
+    public function latestKycLog()
+    {
+        return $this->hasOne(KycLog::class)
+            ->latest('created_at');
+    }
+
+    /**
+     * Get KYC status from latest log payload
+     * Usage: $user->kyc_status_from_log
+     * FAST: Uses eager-loaded relationship, no extra queries
+     */
+    public function getKycStatusFromLogAttribute(): ?string
+    {
+        // Use eager-loaded relationship (set via withLatestKycLog scope)
+        // Only lazy-load if not already loaded to avoid N+1 queries in loops
+        $latestLog = $this->relationLoaded('latestKycLog') 
+            ? $this->latestKycLog 
+            : $this->latestKycLog()->first();
+        
+        if (!$latestLog || !$latestLog->callback_payload) {
+            return null;
+        }
+
+        $payload = $latestLog->callback_payload;
+        $reviewStatus = $payload['reviewStatus'] ?? null;
+        $reviewResult = $payload['reviewResult'] ?? [];
+        $reviewAnswer = $reviewResult['reviewAnswer'] ?? null;
+
+        // Determine status from review answer
+        return match ($reviewAnswer) {
+            'GREEN' => 'APPROVED',
+            'RED' => 'REJECTED',
+            default => strtoupper($reviewStatus ?? 'PENDING'),
+        };
+    }
+
+    /**
+     * Get KYC reason from latest log payload
+     * Usage: $user->kyc_reason_from_log
+     * FAST: Uses eager-loaded relationship, no extra queries
+     */
+    public function getKycReasonFromLogAttribute(): ?string
+    {
+        // Use eager-loaded relationship (set via withLatestKycLog scope)
+        // Only lazy-load if not already loaded to avoid N+1 queries in loops
+        $latestLog = $this->relationLoaded('latestKycLog') 
+            ? $this->latestKycLog 
+            : $this->latestKycLog()->first();
+        
+        if (!$latestLog || !$latestLog->callback_payload) {
+            return null;
+        }
+
+        $payload = $latestLog->callback_payload;
+        $reviewResult = $payload['reviewResult'] ?? [];
+        $reviewAnswer = $reviewResult['reviewAnswer'] ?? null;
+        $rejectLabels = $reviewResult['rejectLabels'] ?? [];
+        $rejectReasons = $reviewResult['rejectReasons'] ?? [];
+
+        // Build reason based on status
+        if ($reviewAnswer === 'GREEN') {
+            return null; // No reason for approved
+        } elseif ($reviewAnswer === 'RED') {
+            // Build rejection reason from labels
+            if (!empty($rejectLabels)) {
+                return implode(' | ', array_map(function($label) {
+                    return ucfirst(strtolower(str_replace('_', ' ', $label)));
+                }, $rejectLabels));
+            } elseif (!empty($rejectReasons)) {
+                return implode(' | ', $rejectReasons);
+            }
+            return 'KYC verification rejected';
+        } else {
+            return 'KYC verification in progress';
+        }
+    }
+
+    /**
+     * Eager load latest KYC log to avoid N+1 queries
+     * Usage: User::withLatestKycLog()->get()
+     */
+    public function scopeWithLatestKycLog($query)
+    {
+        return $query->with(['latestKycLog' => function ($q) {
+            $q->select('id', 'user_id', 'callback_payload', 'created_at');
+        }]);
+    }
     // {
     //     $totalDeposit = WalletDeposit::where('user_id', $userId)
     //         ->where('status', 1)

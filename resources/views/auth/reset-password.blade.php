@@ -109,9 +109,9 @@
                     <div class="auth-footer">
                         <p class="m-0 text-center w-100" style="font-size: 11px;">
                             By logging in, you confirm that you have read and agree to {{ $settings['admin_title'] }}'s
-                            <a target="_blank" href="#">Privacy Policy,</a>
-                            <a target="_blank" href="#">Transaction Policy</a> and
-                            <a target="_blank" href="#">Risk Warning</a>.
+                            <a target="_blank" href="#" class="text-success">Privacy Policy</a>,
+                            <a target="_blank" href="#" class="text-success">Transaction Policy</a> and
+                            <a target="_blank" href="#" class="text-success">Risk Warning</a>.
                         </p>
                     </div>
                 </div>

@@ -41,9 +41,9 @@
                             </button>
                         </a>
                         @elseif ($ib_result->status == 0)
-                        <span class="badge bg-light-warning mt-4 mb-5">Pending Approval</span>
+                        <span class="badge bg-success text-white mt-4 mb-5 fs-6">Pending Approval</span>
                         @elseif ($ib_result->status == 2)
-                        <span class="badge bg-light-warning mt-4 mb-5">Approval Rejected</span>
+                        <span class="badge bg-light-warning mt-4 mb-5 fs-6">Approval Rejected</span>
                         <a href="#" class="d-grid ib_enrol">
                             <button class="btn btn-primary ib-resend">
                             <span class="text-truncate w-100">Resend Approval</span>

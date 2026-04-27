@@ -111,10 +111,10 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(auth()->user()->fullname) }}</h5>
-                                            <div class="d-flex align-items-center">
-                                                <p class="mb-0 me-3">{{ auth()->user()->email }}</p>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center justify-content-sm-start gap-2">
+                                                <p class="mb-0">{{ auth()->user()->email }}</p>
                                                 @if ($user->email_confirmed == 0)
-                                                    <label class="text-white badge bg-danger ms-2"
+                                                    <label class="text-white badge bg-danger"
                                                         style="font-size: 14px;">Email update unverified</label>
                                                 @endif
                                             </div>
@@ -263,51 +263,93 @@
                                                 <div class="col-6">
                                                     <h5>KYC Verification</h5>
                                                 </div>
-
                                             </div>
                                         </div>
-                                        {{-- {{ dd($user) }} --}}
                                         <div class="text-center card-body table-card">
-                                            @if ($user->kyc_verify == 0)
+                                            {{-- APPROVED - KYC Status is APPROVED OR kyc_verify is 1 --}}
+                                            @if ($user->kyc_status === 'APPROVED' || $user->kyc_verify == 1)
                                                 <div class="auth-main">
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
-                                                            <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/KYC.png') }}"
-                                                                    class="w-25" alt="img"></a>
+                                                            <img src="{{ asset('assets/images/kyc_verified.png') }}" class="w-25 mb-3" alt="Verified">
                                                         </div>
-                                                        <h6 class="mb-4 text-center text-secondary f-w-400 f-16"> KYC
-                                                            Verification Required to Create MT5 Accounts</h6>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-success" style="font-size: 14px;">
+                                                                <i class="ti ti-check me-2"></i>KYC Verified
+                                                            </span>
+                                                        </h6>
+                                                        <p class="text-secondary f-w-400 f-14 mb-3">Your KYC verification has been approved. You can now create trading accounts.</p>
+                                                        <button type="button" class="btn btn-light-success ps-5 pe-5" disabled>
+                                                            <i class="ti ti-check me-2"></i>KYC Verified
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                            {{-- REJECTED - KYC Status is REJECTED --}}
+                                            @elseif ($user->kyc_status === 'REJECTED')
+                                                <div class="auth-main">
+                                                    <div class="card-body">
+                                                        <div class="text-center me-4">
+                                                            <img src="{{ asset('assets/images/KYC.png') }}" class="w-25 mb-3" alt="Rejected">
+                                                        </div>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-danger" style="font-size: 14px;">
+                                                                <i class="ti ti-circle-x me-2"></i>KYC Rejected
+                                                            </span>
+                                                        </h6>
+                                                        @if ($user->kyc_reason)
+                                                            <p class="text-secondary f-w-400 f-14 mb-3">
+                                                                <strong>Reason:</strong> {{ $user->kyc_reason }}
+                                                            </p>
+                                                        @endif
+                                                        <p class="text-secondary f-w-400 f-12 mb-3">Rejected by Sumsub API</p>
                                                         <a id="verify-user-kyc" href="#" class="mt-3">
-                                                            <button class="btn btn-outline-primary"><span
-                                                                    class="text-truncate">Process To Verify Now
-                                                                </span></button>
+                                                            <button class="btn btn-outline-danger">
+                                                                <i class="ti ti-refresh me-2"></i>Try Again
+                                                            </button>
                                                         </a>
                                                     </div>
                                                 </div>
-                                            @elseif ($user->kyc_verify == 1)
+
+                                            {{-- PENDING - KYC Status is PENDING --}}
+                                            @elseif ($user->kyc_status === 'PENDING')
                                                 <div class="auth-main">
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
-                                                            <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/kyc_verified.png') }}"
-                                                                    class="w-25" alt="img"></a>
+                                                            <img src="{{ asset('assets/images/KYC.png') }}" class="w-25 mb-3" alt="Pending">
                                                         </div>
-                                                        <h6 class="font-bold text-center btn btn-light-success ps-5 pe-5">
-                                                            KYC Verified</h6>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-warning text-dark" style="font-size: 14px;">
+                                                                <i class="ti ti-loader-2 me-2"></i>Under Review
+                                                            </span>
+                                                        </h6>
+                                                        <p class="text-secondary f-w-400 f-14 mb-2">Under review by Sumsub</p>
+                                                        <p class="text-secondary f-w-400 f-14 mb-3">Your KYC verification is under review. We'll notify you once the review is complete.</p>
+                                                        <button type="button" class="btn btn-light-warning ps-5 pe-5" disabled>
+                                                            <i class="ti ti-clock me-2"></i>Under Review
+                                                        </button>
                                                     </div>
                                                 </div>
+
+                                            {{-- NOT VERIFIED / NOT STARTED --}}
                                             @else
                                                 <div class="auth-main">
                                                     <div class="card-body">
                                                         <div class="text-center me-4">
-                                                            <a href="user-profile#"><img
-                                                                    src="{{ asset('assets/images/empty.png') }}"
-                                                                    class="w-25" alt="img"></a>
+                                                            <img src="{{ asset('assets/images/KYC.png') }}" class="w-25 mb-3" alt="Not Verified">
                                                         </div>
-                                                        <h6 class="mb-0 text-center text-secondary f-w-400 f-16">No
-                                                            documents
-                                                            added</h6>
+                                                        <h6 class="mb-3 text-center">
+                                                            <span class="badge bg-secondary" style="font-size: 14px;">
+                                                                <i class="ti ti-alert-circle me-2"></i>Not Verified
+                                                            </span>
+                                                        </h6>
+                                                        <h6 class="mb-3 text-center text-secondary f-w-400 f-16">KYC Verification Required to Create MT5 Accounts</h6>
+                                                        <p class="text-secondary f-w-400 f-14 mb-3">Complete your KYC verification to unlock trading accounts and features.</p>
+                                                        <a id="verify-user-kyc" href="#" class="mt-3">
+                                                            <button class="btn btn-outline-primary">
+                                                                <i class="ti ti-check me-2"></i>Get KYC Verified
+                                                            </button>
+                                                        </a>
                                                     </div>
                                                 </div>
                                             @endif
@@ -459,14 +501,14 @@
                                                                                             </a>
                                                                                         @endif
 
-                                                                                        <span class="badge text-warning edit_wallet_address" data-id="{{ $acc->id }}" data-bs-toggle="tooltip" title="Edit Wallet Address">
+                                                                                        {{-- <span class="badge text-warning edit_wallet_address" data-id="{{ $acc->id }}" data-bs-toggle="tooltip" title="Edit Wallet Address">
                                                                                             <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon icon-tabler icons-tabler-outline icon-tabler-edit text-secondary'>
                                                                                                 <path stroke='none' d='M0 0h24v24H0z' fill='none' />
                                                                                                 <path d='M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1' />
                                                                                                 <path d='M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z' />
                                                                                                 <path d='M16 5l3 3' />
                                                                                             </svg>
-                                                                                        </span>
+                                                                                        </span> --}}
                                                                                     </div>
                                                                                 @elseif ($acc->wallet_delete_verification == 1)
                                                                                     <span class="text-warning">Deletion Not Verified</span>
@@ -634,17 +676,17 @@
                     toggle_wallet: "true",
                     id: trans
                 },
-                beforeSend: function() {
-                    swal.fire({
-                        showConfirmButton: false,
-                        showCancelButton: false,
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: function() {
-                            swal.showLoading();
-                        }
-                    });
-                },
+                // beforeSend: function() {
+                //     swal.fire({
+                //         showConfirmButton: false,
+                //         showCancelButton: false,
+                //         allowOutsideClick: false,
+                //         allowEscapeKey: false,
+                //         didOpen: function() {
+                //             swal.showLoading();
+                //         }
+                //     });
+                // },
                 success: function(data) {
                     swal.close();
                     if (data.success == true) {
@@ -673,10 +715,23 @@
                         });
                     } else {
                         swal.fire({
-                            icon: "warning",
-                            title: data
+                            icon: "error",
+                            title: "Cannot Update Wallet Status",
+                            text: data.message || "An error occurred while updating wallet status"
                         });
                     }
+                },
+                error: function(xhr) {
+                    swal.close();
+                    var errorMessage = "An error occurred while updating wallet status. Please try again.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: errorMessage
+                    });
                 }
             });
         });
@@ -729,40 +784,40 @@
             });
         });
 
-        $(".edit_wallet_address").click(function(e) {
-            e.preventDefault();
+        // $(".edit_wallet_address").click(function(e) {
+        //     e.preventDefault();
 
-            const wallet_id = this.getAttribute("data-id");
+        //     const wallet_id = this.getAttribute("data-id");
 
-            // Send an AJAX request to fetch the wallet details
-            $.ajax({
-                url: "/get_editing_wallet_details", // Change to your actual API endpoint
-                type: "GET",
-                data: {
-                    id: wallet_id
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Populate modal fields with the fetched data
-                        $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
-                        $("#editBankModal2 select[name='wallet_network']").val(response.data
-                            .wallet_network);
-                        $("#editBankModal2 input[name='wallet_address']").val(response.data
-                            .wallet_address);
-                        $("#editBankModal2 select[name='status']").val(response.data.status);
-                        $("#editBankModal2 input[name='id']").val(response.data.id);
+        //     // Send an AJAX request to fetch the wallet details
+        //     $.ajax({
+        //         url: "/get_editing_wallet_details", // Change to your actual API endpoint
+        //         type: "GET",
+        //         data: {
+        //             id: wallet_id
+        //         },
+        //         success: function(response) {
+        //             if (response.success) {
+        //                 // Populate modal fields with the fetched data
+        //                 $("#editBankModal2 input[name='wallet_name']").val(response.data.wallet_name);
+        //                 $("#editBankModal2 select[name='wallet_network']").val(response.data
+        //                     .wallet_network);
+        //                 $("#editBankModal2 input[name='wallet_address']").val(response.data
+        //                     .wallet_address);
+        //                 $("#editBankModal2 select[name='status']").val(response.data.status);
+        //                 $("#editBankModal2 input[name='id']").val(response.data.id);
 
-                        // Show the modal
-                        $("#editBankModal2").modal("show");
-                    } else {
-                        alert("Failed to fetch wallet details.");
-                    }
-                },
-                error: function() {
-                    alert("Error fetching wallet details.");
-                }
-            });
-        });
+        //                 // Show the modal
+        //                 $("#editBankModal2").modal("show");
+        //             } else {
+        //                 alert("Failed to fetch wallet details.");
+        //             }
+        //         },
+        //         error: function() {
+        //             alert("Error fetching wallet details.");
+        //         }
+        //     });
+        // });
 
 
 

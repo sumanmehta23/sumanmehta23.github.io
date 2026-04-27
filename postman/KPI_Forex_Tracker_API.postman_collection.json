@@ -1,0 +1,1431 @@
+{
+    "info": {
+        "name": "KPI Forex Tracker API",
+        "description": "Read-only API for KPI Forex Tracker data access. Contains endpoints for Users, Withdrawals, Deposits, Accounts, Trades, Relationship Managers, and IBs.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "version": "1.2.0",
+        "contact": {
+            "name": "API Support",
+            "email": "api-support@example.com"
+        }
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Generate API Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"kpiuser@dollarcloud.net\",\n  \"password\": \"change_me\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/tokens/fetch",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tokens",
+                                "fetch"
+                            ]
+                        },
+                        "description": "Generate a Sanctum API token for authentication.\n\n**IMPORTANT:** After running this request:\n1. Copy the token value from the response\n2. Go to Environment (Environments tab) \n3. Look for \"KPI Forex Tracker - Development\" \n4. Find the api_token variable\n5. Paste the full token (including the '1|' prefix) in the Value field\n6. Click Save\n\nExample response:\n{\n  \"token\": \"1|Xt5xW9k7P1qR2sT3uV4wX5yZ6aB7cD8eF9gH0iJ1kL2mN3oP4\"\n}\n\nCopy the entire value including '1|' prefix to the api_token environment variable."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Test Token (Check Permissions)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/users/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "users",
+                                "profile"
+                            ]
+                        },
+                        "description": "Test if your token is working correctly. This will show your user profile if the token is valid and you have permissions. If you get 403, your token is valid but missing api:kpi:users:read permission."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI Users",
+            "item": [
+                {
+                    "name": "List All Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/users?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, email, name, created_at, updated_at",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "registration_date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter users registered from this date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "registration_date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter users registered until this date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by specific user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "affiliate_id",
+                                    "value": "aff_001",
+                                    "description": "Filter by affiliate ID",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all users with optional filtering and sorting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "users",
+                                "{{user_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific user by ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/users/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "users",
+                                "profile"
+                            ]
+                        },
+                        "description": "Retrieve the authenticated user's profile information."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User Bonus History",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/users/{{user_id}}/bonus-history?per_page=15&sort_by=bonus_date&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "users",
+                                "{{user_id}}",
+                                "bonus-history"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "bonus_date",
+                                    "description": "Sort field: id, bonus_amount, bonus_date, status, created_at"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "bonus_date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter bonus transactions from this date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "bonus_date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter bonus transactions until this date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "completed",
+                                    "description": "Filter by bonus status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "bonus_type",
+                                    "value": "welcome",
+                                    "description": "Filter by bonus type",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get bonus transaction history for a specific user with optional filtering by date, status, and type."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User Competition Participation",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/users/{{user_id}}/competitions?per_page=15&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "users",
+                                "{{user_id}}",
+                                "competitions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, created_at, competition_status"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "active",
+                                    "description": "Filter by competition status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "start_date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter competitions created from this date (YYYY-MM-DD)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "start_date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter competitions created until this date (YYYY-MM-DD)",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all competitions a user participated in with optional filtering by status and date range."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI Withdrawals",
+            "item": [
+                {
+                    "name": "List All Withdrawals",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/withdrawals?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "withdrawals"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, withdraw_date, amount, user_id, status, created_at"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "withdraw_date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter withdrawals from this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "withdraw_date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter withdrawals until this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "transaction_type",
+                                    "value": "wire_transfer",
+                                    "description": "Filter by transaction type",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "product_id",
+                                    "value": "prod_001",
+                                    "description": "Filter by product ID",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all withdrawals with optional filtering and sorting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Withdrawal by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/withdrawals/{{withdrawal_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "withdrawals",
+                                "{{withdrawal_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific withdrawal by ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Withdrawal Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/withdrawals/statistics?date_from=2024-01-01&date_to=2024-12-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "withdrawals",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter from this date"
+                                },
+                                {
+                                    "key": "date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter until this date"
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get aggregated withdrawal statistics (total count, total amount, average, min, max)."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI Deposits",
+            "item": [
+                {
+                    "name": "List All Deposits",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/deposits?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "deposits"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, deposit_date, amount, user_id, status, created_at"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "deposit_date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter deposits from this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "deposit_date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter deposits until this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "transaction_type",
+                                    "value": "credit_card",
+                                    "description": "Filter by transaction type",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "product_id",
+                                    "value": "prod_001",
+                                    "description": "Filter by product ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "completed",
+                                    "description": "Filter by status",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all deposits with optional filtering and sorting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Deposit by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/deposits/{{deposit_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "deposits",
+                                "{{deposit_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific deposit by ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Deposit Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/deposits/statistics?date_from=2024-01-01&date_to=2024-12-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "deposits",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "date_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter from this date"
+                                },
+                                {
+                                    "key": "date_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter until this date"
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "user@example.com",
+                                    "description": "Filter by email address",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get aggregated deposit statistics (total count, total amount, average, min, max)."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI Accounts",
+            "item": [
+                {
+                    "name": "List All Accounts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/accounts?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "accounts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, user_id, account_type, balance, status, created_at"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "account_type",
+                                    "value": "live",
+                                    "description": "Filter by account type",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "active",
+                                    "description": "Filter by status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "created_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter accounts created from this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "created_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter accounts created until this date",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all accounts with optional filtering and sorting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Account by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/accounts/{{account_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "accounts",
+                                "{{account_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific account by ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User's Accounts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/accounts/user/{{user_id}}?status=active",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "accounts",
+                                "user",
+                                "{{user_id}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "active",
+                                    "description": "Filter by account status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "15",
+                                    "description": "Items per page",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all accounts for a specific user with optional filtering."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Account Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/accounts/statistics?status=active",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "accounts",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "active",
+                                    "description": "Filter by status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "account_type",
+                                    "value": "live",
+                                    "description": "Filter by account type",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get aggregated account statistics (total count, total balance, average balance, min balance, max balance)."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI Trades",
+            "item": [
+                {
+                    "name": "List All Trades",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/trades?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "trades"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, open_time, close_time, symbol, profit, volume, account_id, created_at"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "open_time_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter trades opened from this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "open_time_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter trades opened until this date",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "symbol",
+                                    "value": "GBPUSD",
+                                    "description": "Filter by trading symbol",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "buy",
+                                    "description": "Filter by trade type: buy or sell",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "closed",
+                                    "description": "Filter by trade status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "user_id",
+                                    "value": "user_123",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "include_archived",
+                                    "value": "0",
+                                    "description": "Include soft-deleted trades: 0 or 1",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all trades with optional filtering and sorting. Supports filtering by symbol, type (buy/sell), status, and date range."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Trade by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/trades/{{trade_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "trades",
+                                "{{trade_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific trade by ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Trade Statistics",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/trades/statistics?open_time_from=2024-01-01&open_time_to=2024-12-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "trades",
+                                "statistics"
+                            ],
+                            "query": [
+                                {
+                                    "key": "open_time_from",
+                                    "value": "2024-01-01",
+                                    "description": "Filter from this date"
+                                },
+                                {
+                                    "key": "open_time_to",
+                                    "value": "2024-12-31",
+                                    "description": "Filter until this date"
+                                },
+                                {
+                                    "key": "symbol",
+                                    "value": "GBPUSD",
+                                    "description": "Filter by symbol",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "buy",
+                                    "description": "Filter by type: buy or sell",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "include_archived",
+                                    "value": "0",
+                                    "description": "Include soft-deleted trades: 0 or 1",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get aggregated trade statistics (total trades, winning/losing/breakeven count, total profit, volume, commission, swap, win rate, average profit)."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI Relationship Managers",
+            "item": [
+                {
+                    "name": "List All Relationship Managers",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/relationship-managers?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "relationship-managers"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, name, email, created_at"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "name",
+                                    "value": "John",
+                                    "description": "Filter by RM name (partial match)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "rm@example.com",
+                                    "description": "Filter by RM email (exact match)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "role_id",
+                                    "value": "role_123",
+                                    "description": "Filter by role ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "include_archived",
+                                    "value": "0",
+                                    "description": "Include archived records: 0 or 1",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all relationship managers with optional filtering and sorting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Relationship Manager by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/relationship-managers/{{rm_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "relationship-managers",
+                                "{{rm_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific relationship manager by ID."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "KPI IBs (Affiliates)",
+            "item": [
+                {
+                    "name": "List All IBs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/ibs?per_page=20&sort_by=created_at&sort_order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "ibs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Items per page (max 500)"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "created_at",
+                                    "description": "Sort field: id, email, firstname, created_at, ib_status"
+                                },
+                                {
+                                    "key": "sort_order",
+                                    "value": "desc",
+                                    "description": "Sort order: asc or desc"
+                                },
+                                {
+                                    "key": "email",
+                                    "value": "ib@example.com",
+                                    "description": "Filter by IB email (exact match)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "name",
+                                    "value": "John",
+                                    "description": "Filter by IB name (partial match)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "country",
+                                    "value": "US",
+                                    "description": "Filter by country",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "ib_status",
+                                    "value": "approved",
+                                    "description": "Filter by IB status",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "include_archived",
+                                    "value": "0",
+                                    "description": "Include archived records: 0 or 1",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a paginated list of all IBs (Affiliate Partners) with optional filtering and sorting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get IB by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{api_token}}",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/ibs/{{ib_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "ibs",
+                                "{{ib_id}}"
+                            ]
+                        },
+                        "description": "Retrieve details of a specific IB/Affiliate Partner by ID."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https://api.example.com",
+            "type": "string",
+            "description": "Base URL for the API. Update this to your actual API endpoint."
+        },
+        {
+            "key": "api_token",
+            "value": "",
+            "type": "string",
+            "description": "Sanctum API token. Generate this using the 'Generate API Token' request in Authentication folder."
+        },
+        {
+            "key": "user_id",
+            "value": "user_123",
+            "type": "string",
+            "description": "User ID for testing. Replace with an actual user ID from your system."
+        },
+        {
+            "key": "withdrawal_id",
+            "value": "withdraw_456",
+            "type": "string",
+            "description": "Withdrawal ID for testing. Replace with an actual withdrawal ID."
+        },
+        {
+            "key": "deposit_id",
+            "value": "deposit_789",
+            "type": "string",
+            "description": "Deposit ID for testing. Replace with an actual deposit ID."
+        },
+        {
+            "key": "account_id",
+            "value": "account_101",
+            "type": "string",
+            "description": "Account ID for testing. Replace with an actual account ID."
+        },
+        {
+            "key": "trade_id",
+            "value": "trade_123",
+            "type": "string",
+            "description": "Trade ID for testing. Replace with an actual trade ID."
+        },
+        {
+            "key": "rm_id",
+            "value": "rm_001",
+            "type": "string",
+            "description": "Relationship Manager ID for testing. Replace with an actual RM ID."
+        },
+        {
+            "key": "ib_id",
+            "value": "ib_001",
+            "type": "string",
+            "description": "IB/Affiliate Partner ID for testing. Replace with an actual IB ID."
+        }
+    ]
+}

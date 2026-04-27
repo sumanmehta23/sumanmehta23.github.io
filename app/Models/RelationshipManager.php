@@ -19,4 +19,11 @@ class RelationshipManager extends Model
     {
         return $this->hasMany(Account::class)->where('demo', false);
     }
+    /**
+     * Get the employee (EmployeeList) for this relationship manager
+     */
+    public function employee()
+    {
+        return $this->belongsTo(EmployeeList::class, 'rm_id', 'id');
+    }
 }

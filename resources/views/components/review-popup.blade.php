@@ -18,6 +18,8 @@
     $impressionUrl = $impressionUrl ?? null;
     $currentRouteName = $currentRouteName ?? null;
     $localStorageFallbackKey = $localStorageFallbackKey ?? null;
+    $metricsDismissUrl = $metricsDismissUrl ?? null;
+    $metricsClickUrl = $metricsClickUrl ?? null;
 @endphp
 
 @if ($enabled)
@@ -202,7 +204,10 @@
         </style>
     @endonce
 
-    <div id="{{ $popupId }}" class="lqh-review-popup" role="dialog" aria-modal="true" aria-labelledby="{{ $popupId }}Title">
+    <div id="{{ $popupId }}" class="lqh-review-popup" role="dialog" aria-modal="true" aria-labelledby="{{ $popupId }}Title"
+        @if (!empty($popupKey)) data-review-popup-key="{{ $popupKey }}" @endif
+        @if (!empty($metricsDismissUrl)) data-review-popup-dismiss-url="{{ $metricsDismissUrl }}" @endif
+        @if (!empty($metricsClickUrl)) data-review-popup-click-url="{{ $metricsClickUrl }}" @endif>
         <div class="lqh-review-popup__backdrop" data-review-popup-close="true"></div>
         <div class="lqh-review-popup__card">
             <button type="button" class="lqh-review-popup__close" data-review-popup-close="true" aria-label="Close popup">
@@ -262,15 +267,57 @@
                     }
                 };
 
+                var getCsrfToken = function() {
+                    var meta = document.querySelector('meta[name="csrf-token"]');
+
+                    return meta ? meta.getAttribute('content') : '';
+                };
+
                 var buildApi = function(root) {
+                    var metricsSentDismiss = false;
+                    var metricsSentCta = false;
+
+                    var postMetric = function(url) {
+                        if (!url) {
+                            return;
+                        }
+
+                        var key = root.getAttribute('data-review-popup-key');
+                        if (!key) {
+                            return;
+                        }
+
+                        var body = JSON.stringify({ popup_key: key });
+
+                        try {
+                            fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': getCsrfToken()
+                                },
+                                credentials: 'same-origin',
+                                body: body,
+                                keepalive: true
+                            }).catch(function() {});
+                        } catch (e) {}
+                    };
+
                     var open = function() {
                         root.classList.add('is-visible');
                         addBodyLockIfNeeded();
                     };
 
                     var close = function() {
+                        var wasVisible = root.classList.contains('is-visible');
                         root.classList.remove('is-visible');
                         removeBodyLockIfNeeded();
+
+                        if (wasVisible && !metricsSentDismiss) {
+                            metricsSentDismiss = true;
+                            postMetric(root.getAttribute('data-review-popup-dismiss-url'));
+                        }
                     };
 
                     var init = function(options) {
@@ -283,6 +330,16 @@
                     };
 
                     root.addEventListener('click', function(event) {
+                        var cta = event.target.closest('.lqh-review-popup__cta');
+                        if (cta && root.contains(cta)) {
+                            if (!metricsSentCta) {
+                                metricsSentCta = true;
+                                postMetric(root.getAttribute('data-review-popup-click-url'));
+                            }
+
+                            return;
+                        }
+
                         if (event.target.closest('[data-review-popup-close="true"]')) {
                             close();
                         }

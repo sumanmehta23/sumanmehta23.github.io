@@ -112,7 +112,7 @@
             <div class="auth-wrapper v3">
                 <div class="auth-form register_mob" style="margin: 0;">
                     <div class="auth-header row ">
-                        <div class="my-1 col mob_logo_center"><a href="/login"><img class="mob_logo_center"
+                        <div class="my-1 col mob_logo_center"><a href="{{ $settings['main_website_url'] ?? '#' }}"><img class="mob_logo_center"
                                     src="/<?php echo $settings['admin_sidebar_logo']; ?>" alt="Logo"
                                     style="height: 8vh;"></a>
                         </div>
@@ -209,6 +209,7 @@
                                                     Login</a>
                                                 <a href="https://www.lqhmarkets.com/risk-disclaimer"
                                                     class="link-primary ms-auto"
+                                                    target="_blank"
                                                     style="font-size: 14px !important; padding-left: 10px;">
                                                     Risk Disclaimer
                                                 </a>
@@ -336,8 +337,8 @@
                             for <?= $settings['admin_title'] ?> to contact me for marketing purposes. <br
                                 data-v-97e32e5a=""> By
                             registering you agree
-                            to our <a data-v-97e32e5a="" href="#">Privacy Policy</a>, <a data-v-97e32e5a="" href="#">Client
-                                Agreement </a>&amp; <a data-v-97e32e5a="" href="#">Trading Risk
+                            to our <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/privacy-policy" class="link-success" target="_blank">Privacy Policy</a>, <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/client-agreement" class="link-success" target="_blank">Client
+                                Agreement </a>&amp; <a data-v-97e32e5a="" href="https://www.lqhmarkets.com/risk-disclaimer" class="link-success" target="_blank">Trading Risk
                                 Warning</a>. </p>
                     </div>
                     <?php } ?>

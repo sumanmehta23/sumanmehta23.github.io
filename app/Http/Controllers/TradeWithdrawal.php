@@ -526,7 +526,7 @@ class TradeWithdrawal extends Controller
                     'amount' => $withdrawalAmount
                 ]);
 
-                return redirect()->route('transactions', ['tab' => 'withdrawals'])->with('success', 'Verification email sent successfully.');
+                return redirect()->route('transactions', ['tab' => 'withdrawals'])->with('status', 'Verification email sent successfully.');
 
             } catch (\Exception $e) {
                 DB::rollBack();

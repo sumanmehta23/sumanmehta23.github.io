@@ -184,7 +184,7 @@
                                             <div class="mb-2 d-flex justify-content-between align-items-start">
                                                 <h6 class="mb-0">
                                                     <i class="fe fe-user text-primary"></i>
-                                                    {{ $note->admin->name ?? 'Admin' }}
+                                                    {{ $note->admin->username ?? 'Admin' }}
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="fe fe-clock"></i>
@@ -434,7 +434,7 @@
                                                         <div class="p-2 card-body">
                                                             <div class="gap-1 mb-1 d-flex flex-column flex-sm-row justify-content-between align-items-start">
                                                                 <small class="mb-0 fw-bold text-primary" style="font-size: 14px;">
-                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->name ?? 'Admin' }}
+                                                                    <i class="fe fe-user"></i> {{ $lastNote->admin->username ?? 'Admin' }}
                                                                 </small>
                                                                 <small class="text-muted text-nowrap" style="font-size: 14px;">
                                                                     <i class="fe fe-clock"></i> {{ $lastNote->created_at->diffForHumans() }}
@@ -593,7 +593,7 @@
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Soft Deleted
                                                                                     </div>
-                                                                                @elseif($acc->deleted_at && $acc->deletion_type == 'delete')
+                                                                                @elseif($acc->deleted_at && ($acc->deletion_type == 'delete' || $acc->deletion_type == 'not_found_in_mt5'))
                                                                                     <div class="mt-1 fs-18 text-danger fw-bold">
                                                                                         Deleted
                                                                                     </div>
@@ -643,9 +643,9 @@
                                                                             <div
                                                                                 class="pb-2 mt-2 mb-2 border-2 row border-bottom border-bottom-dashed">
                                                                                 <div class="d-flex w-50 flex-column">
-                                                                                    @if ($acc->platform == 'mt5')
+                                                                                    @if ($acc->platform === App\Enums\PlatformEnum::MT5->value)
                                                                                         <img src="/admin_assets/assets/images/mt5.png" alt="card img" style="width:50px;">
-                                                                                    @elseif($acc->platform == 'x9')
+                                                                                    @elseif($acc->platform === App\Enums\PlatformEnum::X9->value)
                                                                                         <img src="/assets/images/x9.png" alt="card img" style="width:50px;">
                                                                                     @endif
 
@@ -1148,31 +1148,29 @@
                                                         data-bs-toggle="modal" data-bs-target="#addTicketModal">
                                                         CREATE TICKET
                                                     </button> --}}
-                                                    @can('ib:viewAny')
-                                                        <div class="card custom-card">
-                                                            <div class="card-header">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <div class="card-title">INTRODUCING BROKER</div>
-                                                                    <div>
-                                                                        <?php if (isset($user->ib)): ?>
-                                                                        <?php if ($user->ib->status == 0): ?>
-                                                                        <span
-                                                                            class="badge bg-outline-warning text-end">Pending</span>
-                                                                        <?php elseif ($user->ib->status == 1): ?>
-                                                                        <span class="badge bg-outline-success text-end">Active
-                                                                            IB</span>
-                                                                        <?php endif; ?>
-                                                                        <?php else: ?>
-                                                                        <span class="badge bg-outline-info text-end">Not
-                                                                            Requested</span>
-                                                                        <?php endif; ?>
+                                                    <div class="card custom-card">
+                                                        <div class="card-header">
+                                                            <div class="d-flex justify-content-between">
+                                                                <div class="card-title">INTRODUCING BROKER</div>
+                                                                <div>
+                                                                    <?php if (isset($user->ib)): ?>
+                                                                    <?php if ($user->ib->status == 0): ?>
+                                                                    <span
+                                                                        class="badge bg-outline-warning text-end">Pending</span>
+                                                                    <?php elseif ($user->ib->status == 1): ?>
+                                                                    <span class="badge bg-outline-success text-end">Active
+                                                                        IB</span>
+                                                                    <?php endif; ?>
+                                                                    <?php else: ?>
+                                                                    <span class="badge bg-outline-info text-end">Not
+                                                                        Requested</span>
+                                                                    <?php endif; ?>
 
-                                                                    </div>
                                                                 </div>
                                                             </div>
+                                                        </div>
+                                                        @can('client:introducingBrokerButton')
                                                             <div class="card-body">
-                                                                <p class="card-text">A request on behalf of client for creating
-                                                                    IB profile for this client.</p>
 
                                                                 <?php if (!isset($user->ib) || ($user->ib && $user->ib->status != 1)): ?>
                                                                 <?php if (!isset($user->ib) || ($user->ib && $user->ib->status == '0')): ?>
@@ -1220,9 +1218,8 @@
                                                                 </div>
                                                                 <?php endif; ?>
                                                             </div>
-
-                                                        </div>
-                                                    @endcan
+                                                        @endcan
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

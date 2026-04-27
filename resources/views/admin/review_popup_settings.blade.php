@@ -1,6 +1,17 @@
 @extends('layouts.admin.admin')
 @section('content')
     @php
+        $reviewPopupMetrics = $reviewPopupMetrics ?? [
+            'campaign_key' => '—',
+            'users_saw_popup' => 0,
+            'users_dismissed_popup' => 0,
+            'users_clicked_cta' => 0,
+            'pure_dismissals' => 0,
+            'clicked_then_dismissed' => 0,
+            'pure_dismissal_rate_pct' => null,
+            'cta_click_rate_pct' => null,
+        ];
+
         $popupSettingOn = function ($value, $default = true) {
             if ($value === null || $value === '') {
                 return $default;
@@ -32,7 +43,7 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-8 col-sm-12">
+                <div class="col-12 col-xl-10">
                     <form method="post" action="{{ route('admin.review-popup-settings.update') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="card custom-card">
@@ -62,6 +73,13 @@
                                             Preview
                                         </button>
                                     </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="review-popup-metrics-tab" data-bs-toggle="tab"
+                                            data-bs-target="#review-popup-metrics-pane" type="button" role="tab"
+                                            aria-controls="review-popup-metrics-pane" aria-selected="false">
+                                            Metrics
+                                        </button>
+                                    </li>
                                 </ul>
 
                                 <div class="tab-content" id="review-popup-settings-tab-content">
@@ -87,13 +105,14 @@
                                             <label class="form-label">Popup ID</label>
                                             <input type="text" class="form-control" name="review_popup_id"
                                                 value="{{ $settings['review_popup_id'] ?? 'globalReviewPopup' }}">
+                                            <small class="text-muted">HTML element id for the popup on CRM pages. Keep unique if multiple popups exist.</small>
                                         </div>
 
                                         <div class="mb-3">
                                             <label class="form-label">Campaign Key</label>
                                             <input type="text" class="form-control" name="review_popup_campaign_key"
                                                 value="{{ $settings['review_popup_campaign_key'] ?? 'review_popup_v1' }}">
-                                            <small class="text-muted">Use a stable key per popup campaign. Change it only when you want to track a new popup campaign separately.</small>
+                                            <small class="text-muted">Used for impression tracking and the Metrics tab. Change it to start a new campaign without changing the Popup ID.</small>
                                         </div>
 
                                         <div class="mb-3">
@@ -253,7 +272,154 @@
                                                 flagged {{ $popupSettingOn($settings['review_popup_exclude_flagged'] ?? null, true) ? 'excluded' : 'allowed' }}.
                                             </div>
                                         </div>
-                                </div>
+                                    </div>
+
+                                    <div class="tab-pane fade" id="review-popup-metrics-pane" role="tabpanel"
+                                        aria-labelledby="review-popup-metrics-tab" tabindex="0">
+                                        <style>
+                                            #review-popup-metrics-pane .lqh-metrics-surface {
+                                                background: linear-gradient(180deg, #f1f3f5 0%, #e9ecef 100%);
+                                                border: 1px solid rgba(0, 0, 0, 0.06);
+                                                border-radius: 0.75rem;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-stat {
+                                                background: #fff;
+                                                border: 1px solid rgba(0, 0, 0, 0.06);
+                                                border-radius: 0.75rem;
+                                                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+                                                transition: box-shadow 0.15s ease, border-color 0.15s ease;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-stat:hover {
+                                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+                                                border-color: rgba(0, 0, 0, 0.08);
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-stat__value {
+                                                font-variant-numeric: tabular-nums;
+                                                color: #1e2d4a;
+                                                letter-spacing: -0.02em;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap {
+                                                background: #fff;
+                                                border: 1px solid rgba(0, 0, 0, 0.06);
+                                                border-radius: 0.75rem;
+                                                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+                                                overflow: hidden;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap .table {
+                                                margin-bottom: 0;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap thead th {
+                                                font-size: 0.8125rem;
+                                                font-weight: 600;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.04em;
+                                                color: #6c757d;
+                                                background: #f8f9fa;
+                                                border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap tbody td {
+                                                border-color: rgba(0, 0, 0, 0.06);
+                                                vertical-align: middle;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap tbody tr:last-child td {
+                                                border-bottom: 0;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap thead th,
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap tbody td {
+                                                padding-top: 0.875rem;
+                                                padding-bottom: 0.875rem;
+                                            }
+                                            #review-popup-metrics-pane .lqh-metrics-table-wrap tbody td:last-child {
+                                                font-variant-numeric: tabular-nums;
+                                                color: #1e2d4a;
+                                                font-weight: 600;
+                                            }
+                                        </style>
+                                        <div class="lqh-metrics-surface px-3 px-lg-4 py-4 py-lg-5">
+                                            <p class="small mb-4 pb-3 mb-lg-4 border-bottom text-muted border-light">
+                                                Counts and rates for the current <span class="text-body fw-medium">Campaign Key</span>
+                                                <code class="text-danger">{{ $reviewPopupMetrics['campaign_key'] ?? '—' }}</code>.
+                                                Data is collected when clients see, close, or click the CTA on CRM pages.
+                                            </p>
+
+                                            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 g-lg-4 mb-4 mb-lg-5">
+                                                <div class="col">
+                                                    <div class="lqh-metrics-stat h-100 d-flex align-items-center justify-content-center">
+                                                        <div class="text-center px-3 py-4 px-lg-3 w-100">
+                                                            <div class="small text-muted mb-2">Saw the popup</div>
+                                                            <div class="fs-2 fw-bold lqh-metrics-stat__value">{{ number_format($reviewPopupMetrics['users_saw_popup'] ?? 0) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="lqh-metrics-stat h-100 d-flex align-items-center justify-content-center">
+                                                        <div class="text-center px-3 py-4 px-lg-3 w-100">
+                                                            <div class="small text-muted mb-2">Clicked the CTA</div>
+                                                            <div class="fs-2 fw-bold lqh-metrics-stat__value">{{ number_format($reviewPopupMetrics['users_clicked_cta'] ?? 0) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="lqh-metrics-stat h-100 d-flex align-items-center justify-content-center">
+                                                        <div class="text-center px-3 py-4 px-lg-3 w-100">
+                                                            <div class="small text-muted mb-2">Pure dismissals</div>
+                                                            <div class="fs-2 fw-bold lqh-metrics-stat__value">{{ number_format($reviewPopupMetrics['pure_dismissals'] ?? 0) }}</div>
+                                                            <div class="small mt-2 text-muted">Dismissed, never clicked</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="lqh-metrics-stat h-100 d-flex align-items-center justify-content-center">
+                                                        <div class="text-center px-3 py-4 px-lg-3 w-100">
+                                                            <div class="small text-muted mb-2">Clicked then dismissed</div>
+                                                            <div class="fs-2 fw-bold lqh-metrics-stat__value">{{ number_format($reviewPopupMetrics['clicked_then_dismissed'] ?? 0) }}</div>
+                                                            <div class="small mt-2 text-muted">Engaged but also closed</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="lqh-metrics-table-wrap">
+                                                <div class="table-responsive mb-0">
+                                                    <table class="table align-middle mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="ps-4 text-start">Metric</th>
+                                                                <th class="text-end pe-4" style="min-width: 8rem;">Value</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td class="ps-4">Pure dismissal rate (never clicked)</td>
+                                                                <td class="text-end pe-4">
+                                                                    @if (($reviewPopupMetrics['pure_dismissal_rate_pct'] ?? null) !== null)
+                                                                        {{ $reviewPopupMetrics['pure_dismissal_rate_pct'] }}%
+                                                                    @else
+                                                                        <span class="text-muted fw-normal">—</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td class="ps-4">CTA click rate (clicked ÷ saw)</td>
+                                                                <td class="text-end pe-4">
+                                                                    @if (($reviewPopupMetrics['cta_click_rate_pct'] ?? null) !== null)
+                                                                        {{ $reviewPopupMetrics['cta_click_rate_pct'] }}%
+                                                                    @else
+                                                                        <span class="text-muted fw-normal">—</span>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                            <p class="small mt-4 pt-3 mb-0 border-top text-muted border-light">
+                                                A user can both dismiss and click the CTA in the same session; each action is counted once per user.
+                                                Changing the <span class="text-body">Campaign Key</span> in Content starts a new campaign for future metrics.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-footer text-end" id="review-popup-settings-footer">
@@ -287,16 +453,20 @@
             var previewPopupId = 'adminReviewPopupPreview';
             var openButton = document.getElementById('review-popup-preview-open');
             var previewTabButton = document.getElementById('review-popup-preview-tab');
+            var metricsTabButton = document.getElementById('review-popup-metrics-tab');
             var contentTabButton = document.getElementById('review-popup-content-tab');
             var conditionsTabButton = document.getElementById('review-popup-conditions-tab');
             var footer = document.getElementById('review-popup-settings-footer');
 
             var syncFooterVisibility = function() {
-                if (!footer || !previewTabButton) {
+                if (!footer) {
                     return;
                 }
 
-                footer.style.display = previewTabButton.classList.contains('active') ? 'none' : '';
+                var hideFooter = (previewTabButton && previewTabButton.classList.contains('active'))
+                    || (metricsTabButton && metricsTabButton.classList.contains('active'));
+
+                footer.style.display = hideFooter ? 'none' : '';
             };
 
             if (openButton) {
@@ -307,7 +477,7 @@
                 });
             }
 
-            [previewTabButton, contentTabButton, conditionsTabButton].forEach(function(tabButton) {
+            [previewTabButton, metricsTabButton, contentTabButton, conditionsTabButton].forEach(function(tabButton) {
                 if (!tabButton) {
                     return;
                 }

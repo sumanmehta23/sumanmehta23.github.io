@@ -111,10 +111,10 @@ class Home extends Controller
             ->whereNull('competition_status')
             ->whereNull('competition_start_date')
             ->whereNull('competition_end_date')
-            ->orderBy('id', 'desc')
+            ->orderByRaw('CASE WHEN account_request_status = 0 THEN 1 ELSE 0 END, id DESC')
             ->paginate(
                 5,
-                ['leverage', 'currency', 'balance', 'equity', 'id', 'user_id', 'code', 'trade_platform', 'registered_date', 'account_nick_name', 'account_type_id', 'platform', 'created_from'],
+                ['leverage', 'currency', 'balance', 'equity', 'id', 'user_id', 'code', 'registered_date', 'account_nick_name', 'account_type_id', 'platform', 'created_from'],
                 'live_page'
             );
 

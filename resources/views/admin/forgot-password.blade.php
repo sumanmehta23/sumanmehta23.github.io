@@ -17,7 +17,7 @@
                                                     <div class="bg-overlay"></div>
                                                     <div class="position-relative h-100 d-flex flex-column">
                                                         <div class="mb-4">
-                                                            <a href="{{ url('/admin/login') }}" class="d-block">
+                                                            <a href="{{ $settings['main_website_url'] ?? '#' }}" class="d-block">
                                                                 <img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                                                     alt="" height="70">
                                                             </a>

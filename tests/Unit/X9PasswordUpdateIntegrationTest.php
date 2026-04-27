@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\PlatformEnum;
 use App\Models\Account;
 use App\Services\X9Service;
 use Tests\TestCase;
@@ -43,7 +44,7 @@ class X9PasswordUpdateIntegrationTest extends TestCase
     public function test_password_update_logic_for_x9_accounts()
     {
         // Test the logic that should be in the controller
-        $account = new Account(['platform' => 'x9', 'code' => '12345']);
+        $account = new Account(['platform' => PlatformEnum::X9->value, 'code' => '12345']);
         $passType = 'main';
         $newPassword = 'TestPassword123!';
 
@@ -51,7 +52,7 @@ class X9PasswordUpdateIntegrationTest extends TestCase
         $x9PasswordType = $passType === 'main' ? 'master' : $passType;
 
         $this->assertEquals('master', $x9PasswordType);
-        $this->assertEquals('x9', $account->platform);
+        $this->assertEquals(PlatformEnum::X9->value, $account->platform);
         $this->assertEquals('12345', $account->code);
     }
 
@@ -59,10 +60,10 @@ class X9PasswordUpdateIntegrationTest extends TestCase
     public function test_password_update_logic_for_mt5_accounts()
     {
         // Test that MT5 accounts don't use the X9 logic
-        $account = new Account(['platform' => 'mt5', 'code' => '67890']);
+        $account = new Account(['platform' => PlatformEnum::MT5->value, 'code' => '67890']);
 
-        $this->assertEquals('mt5', $account->platform);
-        $this->assertNotEquals('x9', $account->platform);
+        $this->assertEquals(PlatformEnum::MT5->value, $account->platform);
+        $this->assertNotEquals(PlatformEnum::X9->value, $account->platform);
     }
 
     /** @test */
@@ -71,11 +72,11 @@ class X9PasswordUpdateIntegrationTest extends TestCase
         $account = new Account();
 
         // Test that we can set and get the platform property
-        $account->platform = 'x9';
-        $this->assertEquals('x9', $account->platform);
+        $account->platform = PlatformEnum::X9->value;
+        $this->assertEquals(PlatformEnum::X9->value, $account->platform);
 
-        $account->platform = 'mt5';
-        $this->assertEquals('mt5', $account->platform);
+        $account->platform = PlatformEnum::MT5->value;
+        $this->assertEquals(PlatformEnum::MT5->value, $account->platform);
     }
 
     /** @test */

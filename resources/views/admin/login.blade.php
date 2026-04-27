@@ -17,7 +17,7 @@
                                                     <div class="bg-overlay"></div>
                                                     <div class="position-relative h-100 d-flex flex-column">
                                                         <div class="mb-4">
-                                                            <a href="{{ url('/admin/login') }}" class="d-block">
+                                                            <a href="{{ $settings['main_website_url'] ?? '#' }}" class="d-block">
                                                                 <img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                                                     alt="" height="70">
                                                             </a>
@@ -149,10 +149,10 @@
 
     <!-- Visible language dropdown for login page -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/css/flag-icons.min.css">
-    <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
+    {{-- <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
         @include('components.language-dropdown', [
             'selectId' => 'custom_translate_select_login',
             'flagPreviewId' => 'flag-preview-login'
         ])
-                            </div>
+    </div> --}}
 @endsection

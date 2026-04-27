@@ -320,12 +320,12 @@ if (app()->environment('local') || app()->environment('development')) {
                     <!-- End::header-element -->
 
                     <!-- Start::header-element: Language Dropdown -->
-                    <li class="header-element">
+                    {{-- <li class="header-element">
                         @include('components.language-dropdown', [
                             'selectId' => 'custom_translate_select_header',
                             'flagPreviewId' => 'flag-preview-admin-header'
                         ])
-                    </li>
+                    </li> --}}
                     <!-- End::header-element: Language Dropdown -->
 
                     <!-- Start::header-element -->
@@ -405,15 +405,11 @@ if (app()->environment('local') || app()->environment('development')) {
                             <ul class="slide-menu child1">
                             </ul>
                         </li>
-                        @if (
-                                auth()->user()->can('account:viewLiveAccounts') ||
-                                auth()->user()->can('account:viewDemoAccounts') ||
-                                auth()->user()->can('client:viewAny')
-                            )
+                        @if (auth('admin')->check() && (auth('admin')->user()->can('account:viewLiveAccounts') || auth('admin')->user()->can('account:viewDemoAccounts') || auth('admin')->user()->can('client:viewAny')))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">CLIENT</span>
                             </li>
-                            @can('client:viewAny')
+                            @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('client:viewAny'))
                                 <li class="slide menu-item-main ">
                                     <a href="{{ route('admin.clients.index') }}" class="side-menu__item">
                                         <i class="side-menu__icon fe fe-users"></i>
@@ -422,7 +418,7 @@ if (app()->environment('local') || app()->environment('development')) {
                                     <ul class="slide-menu child1">
                                     </ul>
                                 </li>
-                            @endcan
+                            @endif
 
                             <li class="slide has-sub menu-item-main ">
                                 <a href="#" class="side-menu__item">
@@ -433,25 +429,25 @@ if (app()->environment('local') || app()->environment('development')) {
                                 <ul class="slide-menu child1"
                                     style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 288px);"
                                     data-popper-placement="bottom">
-                                    @can('account:viewLiveAccounts')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('account:viewLiveAccounts'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.liveAccounts') }}" class="side-menu__item ">Live
                                                 Accounts</a>
                                         </li>
-                                    @endcan
+                                    @endif
 
-                                    @can('account:viewDemoAccounts')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('account:viewDemoAccounts'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.demoAccounts') }}" class="side-menu__item ">Demo
                                                 Accounts</a>
                                         </li>
-                                    @endcan
-                                    @can('account:viewRequestedAccounts')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('account:viewRequestedAccounts'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.requestedAccounts') }}" class="side-menu__item ">Requested
                                                 Accounts</a>
                                         </li>
-                                    @endcan
+                                    @endif
                                       <li class="slide menu-item-sub ">
                                             <a href="{{ route('admin.zapier-accounts.index') }}" class="side-menu__item">
                                                 <span class="side-menu__label">Zapier Accounts</span>
@@ -459,17 +455,18 @@ if (app()->environment('local') || app()->environment('development')) {
                                             <ul class="slide-menu child1">
                                             </ul>
                                         </li>
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('accounts:view_not_found'))
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.accounts.not_found_in_mt5.index') }}" class="side-menu__item">
+                                                <i class="side-menu__icon fe fe-alert-circle"></i>
+                                                <span class="side-menu__label">Not Found in MT5</span>
+                                            </a>
+                                        </li>
+                                    @endif
                                 </ul>
                             </li>
                         @endif
-                        @if (
-                                auth()->user()->can('wallet_deposit:viewAny') ||
-                                auth()->user()->can('wallet_withdrawal:viewAny') ||
-                                auth()->user()->can('trade_deposit:viewAny') ||
-                                auth()->user()->can('trade_withdrawals:viewAny') ||
-                                auth()->user()->can('internal_transfer:viewAny') ||
-                                auth()->user()->can('trade:viewAny')
-                            )
+                        @if (auth('admin')->check() && (auth('admin')->user()->can('wallet_deposit:viewAny') || auth('admin')->user()->can('wallet_withdrawal:viewAny') || auth('admin')->user()->can('trade_deposit:viewAny') || auth('admin')->user()->can('trade_withdrawals:viewAny') || auth('admin')->user()->can('internal_transfer:viewAny') || auth('admin')->user()->can('trade:viewAny')))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">FINANCE</span>
                             </li>
@@ -483,42 +480,42 @@ if (app()->environment('local') || app()->environment('development')) {
                                 <ul class="slide-menu child1"
                                     style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 417px);"
                                     data-popper-placement="bottom">
-                                    @can('wallet_deposit:viewAny')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('wallet_deposit:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.wallet-deposit') }}"
                                                 class="side-menu__item ">Wallet Deposit</a>
                                         </li>
-                                    @endcan
-                                    @can('wallet_withdraw:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('wallet_withdraw:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.wallet-withdrawal') }}"
                                                 class="side-menu__item ">Wallet Withdrawal</a>
                                         </li>
-                                    @endcan
-                                    @can('trade_deposit:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('trade_deposit:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.trading-deposit') }}"
                                                 class="side-menu__item ">
                                                 Trading Deposit
                                             </a>
                                         </li>
-                                    @endcan
-                                    @can('trade_withdrawals:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('trade_withdrawals:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.trading-withdrawal') }}"
                                                 class="side-menu__item ">
                                                 Trading Withdrawal
                                             </a>
                                         </li>
-                                    @endcan
-                                    @can('internal_transfer:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('internal_transfer:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.internal-transfer') }}"
                                                 class="side-menu__item ">
                                                 Internal Transfer
                                             </a>
                                         </li>
-                                    @endcan
+                                    @endif
                                 </ul>
                             </li>
 
@@ -531,39 +528,39 @@ if (app()->environment('local') || app()->environment('development')) {
                                 <ul class="slide-menu child1"
                                     style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 461px);"
                                     data-popper-placement="bottom">
-                                    @can('wallet_deposit:viewAny')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('wallet_deposit:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.pending.wallet-deposit') }}"
                                                 class="side-menu__item ">Wallet Deposit</a>
                                         </li>
-                                    @endcan
-                                    @can('wallet_withdraw:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('wallet_withdraw:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.pending.wallet-withdrawal') }}"
                                                 class="side-menu__item ">Wallet Withdrawal</a>
                                         </li>
-                                    @endcan
-                                    @can('trade_deposit:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('trade_deposit:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.pending.trading-deposit') }}"
                                                 class="side-menu__item ">Trading Deposit</a>
                                         </li>
-                                    @endcan
-                                    @can('trade_withdrawals:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('trade_withdrawals:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.transactions.pending.trading-withdrawal') }}"
                                                 class="side-menu__item ">Trading Withdrawal</a>
                                         </li>
-                                    @endcan
+                                    @endif
                                 </ul>
                             </li>
                         @endif
 
-                        @can('trades:view')
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('trades:view'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">TRADES</span>
                             </li>
-                            @can('trades:viewAny')
+                            @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('trades:viewAny'))
                                 <li class="slide menu-item-main ">
                                     <a href="{{ route('admin.trades.index') }}" class="side-menu__item">
                                         <i class="side-menu__icon fe fe-trending-up"></i>
@@ -571,10 +568,10 @@ if (app()->environment('local') || app()->environment('development')) {
                                     </a>
                                     <ul class="slide-menu child1"></ul>
                                 </li>
-                            @endcan
-                        @endcan
+                            @endif
+                        @endif
 
-                        @if (auth()->user()->can('ib:viewAny') || auth()->user()->can('ib:manageSettings'))
+                        @if (auth('admin')->check() && auth('admin')->user() && (auth('admin')->user()->can('ib:viewAny') || auth('admin')->user()->can('ib:manageSettings')))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">INTRODUCING BROKER</span>
                             </li>
@@ -588,34 +585,44 @@ if (app()->environment('local') || app()->environment('development')) {
                                 <ul class="slide-menu child1"
                                     style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 501px);"
                                     data-popper-placement="top">
-                                    @can('ib:viewAny')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('ib:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.ib.dashboard') }}" class="side-menu__item ">IB
                                                 Dashboard</a>
                                         </li>
-                                    @endcan
-                                    @can('ib:manageRequests')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('ib:manageRequests'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.ib.list') }}" class="side-menu__item ">IB
                                                 Requests</a>
                                         </li>
-                                    @endcan
-                                    @can('ib:viewAny')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('ib:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.ib.active.list') }}" class="side-menu__item ">IB
                                                 Users</a>
                                         </li>
-                                    @endcan
-                                    @can('ib:manageSettings')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('ib:manageSettings'))
                                         <li class="slide menu-item-sub">
                                             <a href="/admin/ib_settings" class="side-menu__item ">IB Com. Settings</a>
                                         </li>
-                                    @endcan
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('ib:viewAny'))
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.ib.commission-analysis') }}" class="side-menu__item ">Commission Analysis</a>
+                                        </li>
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('ib:viewAny'))
+                                        <li class="slide menu-item-sub">
+                                            <a href="{{ route('admin.ib.withdrawals.index') }}" class="side-menu__item ">IB Withdrawals</a>
+                                        </li>
+                                    @endif
 
                                 </ul>
                             </li>
                         @endif
-                        @can('m_t5_group:viewAny')
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('m_t5_group:viewAny'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">MT5 CONFIGURATION</span>
                             </li>
@@ -650,33 +657,33 @@ if (app()->environment('local') || app()->environment('development')) {
 
                                 </ul>
                             </li>
-                        @endcan
+                        @endif
 
-                        @can('menu:tasks')
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('menu:tasks'))
                         <li class="slide__category menu-item-category">
                             <span class="category-name">TASKS</span>
                         </li>
-                            @can('task:viewAny')
+                            @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('task:viewAny'))
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.index') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
                                     <span class="side-menu__label">Tasks</span>
                                 </a>
                             </li>
-                            @endcan
-                            @can('clientTask:viewAny')
+                            @endif
+                            @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('clientTask:viewAny'))
                             <li class="slide menu-item-main">
                                 <a href="{{ route('admin.tasks.client_tasks') }}" class="side-menu__item">
                                     <i class="side-menu__icon fe fe-list"></i>
                                     <span class="side-menu__label">Client Tasks</span>
                                 </a>
                             </li>
-                            @endcan
-                        @endcan
+                            @endif
+                        @endif
 
 
-                        @can('m_t5_group:viewAny')
-                            {{-- @if (strpos(auth()->user()->email, 'lqhmarkets.com') !== false) --}}
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('m_t5_group:viewAny'))
+                            {{-- @if (strpos(auth('admin')->user()->email, 'lqhmarkets.com') !== false) --}}
                                 <li class="slide__category menu-item-category">
                                     <span class="category-name">MT5 COMPETITION</span>
                                 </li>
@@ -713,9 +720,9 @@ if (app()->environment('local') || app()->environment('development')) {
                                     </ul>
                                 </li>
                             {{-- @endif --}}
-                        @endcan
+                        @endif
 
-                        @if (auth()->user()->can('setting:viewAny'))
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('setting:viewAny'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">AFFILIATE MANAGEMENT</span>
                             </li>
@@ -748,7 +755,7 @@ if (app()->environment('local') || app()->environment('development')) {
                             </li>
                         @endif
 
-                        @if (auth()->user()->can('setting:viewAny'))
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('setting:viewAny'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">2FA SETTINGS</span>
                             </li>
@@ -762,7 +769,7 @@ if (app()->environment('local') || app()->environment('development')) {
                             </li>
                         @endif
 
-                        @can('employee:viewAny')
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('employee:viewAny'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">ADMIN USERS</span>
                             </li>
@@ -776,29 +783,29 @@ if (app()->environment('local') || app()->environment('development')) {
                                 <ul class="slide-menu child1"
                                     style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 669px);"
                                     data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-                                    @can('role:viewAny')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('role:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.roles') }}" class="side-menu__item ">
                                                 Roles
                                             </a>
                                         </li>
-                                    @endcan
-                                    @can('permission:update')
+                                    @endif
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('permission:update'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.role_permissions') }}" class="side-menu__item "> Role
                                                 Permissions</a>
                                         </li>
-                                    @endcan
+                                    @endif
 
-                                    @can('employee:viewAny')
+                                    @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('employee:viewAny'))
                                         <li class="slide menu-item-sub">
                                             <a href="{{ route('admin.admin_users') }}" class="side-menu__item ">Staffs
                                                 Management</a>
                                         </li>
-                                    @endcan
+                                    @endif
                                 </ul>
                             </li>
-                        @endcan
+                        @endif
                         {{-- <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-help-circle"></i>
@@ -831,11 +838,11 @@ if (app()->environment('local') || app()->environment('development')) {
 
                             </ul>
                         </li> --}}
-                        @can('blog:view')
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('blog:view'))
                             <li class="slide__category menu-item-category">
                                 <span class="category-name">BLOG</span>
                             </li>
-                            @can('blog:viewAny')
+                            @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('blog:viewAny'))
                                 <li class="slide menu-item-main">
                                     <a href="{{ route('admin.blog.index') }}" class="side-menu__item">
                                         <i class="side-menu__icon fe fe-file-text"></i>
@@ -844,11 +851,11 @@ if (app()->environment('local') || app()->environment('development')) {
                                     <ul class="slide-menu child1">
                                     </ul>
                                 </li>
-                            @endcan
-                        @endcan
+                            @endif
+                        @endif
 
 
-                        @can('menu:settings')
+                        @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('menu:settings'))
                         <li class="slide has-sub menu-item-main ">
                             <a href="#" class="side-menu__item">
                                 <i class="side-menu__icon fe fe-settings"></i>
@@ -858,66 +865,66 @@ if (app()->environment('local') || app()->environment('development')) {
                             <ul class="slide-menu child1"
                                 style="position: relative; left: 0px; top: 0px; margin: 0px; transform: translate(128px, 758px);"
                                 data-popper-reference-hidden="" data-popper-escaped="" data-popper-placement="top">
-                                @can('settings:sumsub')
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:sumsub'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.kyc.sync.page') }}" class="side-menu__item ">
                                             Sumsub KYC Sync
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:updatePassword')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:updatePassword'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.update_password') }}" class="side-menu__item ">
                                             Update Password
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:uiSettings')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:uiSettings'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.ui-settings.view') }}" class="side-menu__item ">
                                             UI Settings
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:reviewPopup')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:reviewPopup'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.review-popup-settings.view') }}" class="side-menu__item ">
                                             Review Popup Settings
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:logs')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:logs'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.logs.view') }}" class="side-menu__item ">
                                             Logs
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:apiToken')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:apiToken'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.apitoken.create') }}" class="side-menu__item ">
                                             API Token
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:banIps')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:banIps'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.ip_ban') }}" class="side-menu__item ">
                                             Ban IP's
                                         </a>
                                     </li>
-                                @endcan
-                                @can('settings:emailBroadcasting')
+                                @endif
+                                @if (auth('admin')->check() && auth('admin')->user() && auth('admin')->user()->can('settings:emailBroadcasting'))
                                     <li class="slide menu-item-sub">
                                         <a href="{{ route('admin.emailbroadcast') }}" class="side-menu__item ">
                                             Email Broadcasting
                                         </a>
                                     </li>
-                                @endcan
+                                @endif
 
                             </ul>
                         </li>
-                        @endcan
+                        @endif
                     </ul>
                     {{-- <ul class="main-menu">
 

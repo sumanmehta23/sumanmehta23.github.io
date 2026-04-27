@@ -17,9 +17,9 @@
                 {{-- @if ($user->kyc_verify > 0) --}}
                 <div class="col-sm-11">
                     <div class="card">
-                        <div class="card-header">
+                        {{-- <div class="card-header">
                             <h5>SET UP YOUR COMPETITION ACCOUNT</h5>
-                        </div>
+                        </div> --}}
                         @if ($results->count() > 0)
                             <div class="card-body">
                                 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -183,6 +183,14 @@
                                     <h6 class="mt-2 mb-0 mb-3 text-center text-secondary f-w-400 f-16"> Please check back later
                                         or contact support for more information.
                                     </h6>
+                                    <div class="gap-2 mt-4 d-flex flex-column flex-sm-row justify-content-center align-items-center">
+                                        <a href="{{ route('competition') }}" class="btn btn-primary">
+                                            Browse Past Competitions
+                                        </a>
+                                        <a href="{{ route('dashboard') }}" class="btn btn-primary">
+                                            Return to Dashboard
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         @endif

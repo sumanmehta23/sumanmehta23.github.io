@@ -254,7 +254,23 @@ class UniversalMT5Service
             return false;
         }
     }
+/**
+     * Get MT5 server common information (REST API pattern)
+     *
+     * Returns an array with server configuration and limits
+     */
+    public function getServerCommon(): ?array
+    {
+        try {
+            $restService = new MT5RestAPIService;
 
+            return $restService->getServerCommon();
+        } catch (\Exception $e) {
+            Log::error('UniversalMT5: Failed to get server common info: '.$e->getMessage());
+
+            return null;
+        }
+    }
     /**
      * Report connection error
      */

@@ -9,7 +9,7 @@
             align-items: center;
         }
     }
-
+    font { display: contents !important; color: inherit !important; }
 </style>
         <div id="app" data-v-app="">
             <div  class="auth-main">
@@ -17,7 +17,7 @@
                     <div  class="auth-form">
                         <div  class="auth-header row">
                             <div  class="my-1 col mob_logo_center">
-                                <a href="{{ route('login') }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
+                                <a href="{{ $settings['main_website_url'] ?? '#' }}"><img src="{{ asset($settings['admin_sidebar_logo']) }}"
                                         alt="Logo" style="height: 8vh;"></a>
                             </div>
                         </div>
@@ -84,8 +84,8 @@
                             </div>
                         </div>
                         <div data-v-dde07c83="" class="auth-footer">
-                            <p data-v-dde07c83="" class="m-0 text-center w-100" style="font-size: 11px;"> By logging in, you confirm that you have read and agree to <?= ($settings['admin_title']) ?>'s <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/risk-disclaimer">Risk Disclaimer</a>,
-                             <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/terms-conditions">Terms & Conditions</a>, and <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/privacy-policy">Privacy Policy</a>.
+                            <p data-v-dde07c83="" class="m-0 text-center w-100" style="font-size: 11px;"> By logging in, you confirm that you have read and agree to <?= ($settings['admin_title']) ?>'s <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/risk-disclaimer" class="text-success">Risk Disclaimer</a>,
+                             <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/terms-conditions" class="text-success">Terms & Conditions</a>, and <a data-v-dde07c83="" target="_blank" href="https://www.lqhmarkets.com/privacy-policy" class="text-success">Privacy Policy</a>.
                             </p>
                           </div>
                     </div>
@@ -195,8 +195,56 @@
                 'flagPreviewId' => 'flag-preview-client-login'
             ])
         </div>
+        <script>
+            window.intercomSettings = {
+                api_base: "https://api-iam.intercom.io",
+                app_id: "hcaolnkq"
+            };
+        </script>
 
-        @if (session('retry_after'))
+        <script>
+            (function () {
+                var w = window;
+                var ic = w.Intercom;
+                if (typeof ic === "function") {
+                    ic('reattach_activator');
+                    ic('update', w.intercomSettings);
+                } else {
+                    var d = document;
+                    var i = function () { i.c(arguments); };
+                    i.q = [];
+                    i.c = function (args) { i.q.push(args); };
+                    w.Intercom = i;
+                    var l = function () {
+                        var s = d.createElement('script');
+                        s.type = 'text/javascript';
+                        s.async = true;
+                        s.src = 'https://widget.intercom.io/widget/hcaolnkq';
+                        var x = d.getElementsByTagName('script')[0];
+                        x.parentNode.insertBefore(s, x);
+                    };
+                    if (document.readyState === 'complete') {
+                        l();
+                    } else if (w.attachEvent) {
+                        w.attachEvent('onload', l);
+                    } else {
+                        w.addEventListener('load', l, false);
+                    }
+                }
+            })();
+
+            // 👇 This clears cached user and reboots as anonymous when Intercom button is clicked
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('#intercom-button, .intercom-launcher, [class*="intercom"]')) {
+                    window.Intercom('shutdown');
+                    window.Intercom('boot', {
+                        api_base: "https://api-iam.intercom.io",
+                        app_id: "hcaolnkq"
+                    });
+                }
+            });
+        </script>
+    @if (session('retry_after'))
         <script>
             (function() {
                 let retryAfter = {{ session('retry_after') }};
@@ -252,6 +300,6 @@
                 }
             })();
         </script>
-        @endif
+    @endif
 
 @endsection

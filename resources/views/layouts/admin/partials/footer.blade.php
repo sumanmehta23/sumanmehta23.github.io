@@ -41,49 +41,49 @@
 <script src="/admin_assets/assets/libs/flatpickr/flatpickr.min.js"></script>
 <script src="/admin_assets/assets/libs/apexcharts/apexcharts.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('.menu-item-main.has-sub').each(function() {
+    $(document).ready(function () {
+        $('.menu-item-main.has-sub').each(function () {
             if ($(this).find('.menu-item-sub').length === 0) {
                 $(this).hide();
             }
         });
 
-    $("#ibRequestForm").submit(function(e) {
-        e.preventDefault();
-        var formData = $("#ibRequestForm").serializeArray();
-        // console.log(formData);
-        formData.push({
-            name: 'action',
-            value: 'requestIB'
-        });
-        $.ajax({
-            url: "/admin/ajax",
-            type: "POST",
-            data: formData,
-            responseType: 'json',
-            success: function(data) {
-                // console.log('test');
-                // data = JSON.parse(data.trim());
-                if (data.status == true) {
-                    swal.fire({
-                        icon: "success",
-                        title: "IB Request Successfully Updated",
-                    }).then((val) => {
-                        location.reload();
-                    });
-                } else {
-                    swal.fire({
-                        icon: "error",
-                        title: "Something went wrong.",
-                        text: "Please try again or contact support."
-                    }).then((val) => {
-                        location.reload();
-                    });
+        $("#ibRequestForm").submit(function (e) {
+            e.preventDefault();
+            var formData = $("#ibRequestForm").serializeArray();
+            // console.log(formData);
+            formData.push({
+                name: 'action',
+                value: 'requestIB'
+            });
+            $.ajax({
+                url: "/admin/ajax",
+                type: "POST",
+                data: formData,
+                responseType: 'json',
+                success: function (data) {
+                    // console.log('test');
+                    // data = JSON.parse(data.trim());
+                    if (data.status == true) {
+                        swal.fire({
+                            icon: "success",
+                            title: "IB Request Successfully Updated",
+                        }).then((val) => {
+                            location.reload();
+                        });
+                    } else {
+                        swal.fire({
+                            icon: "error",
+                            title: "Something went wrong.",
+                            text: "Please try again or contact support."
+                        }).then((val) => {
+                            location.reload();
+                        });
+                    }
                 }
-            }
+            });
         });
     });
-
 </script>
 
 <!-- Server Time Display - Real-time update with seconds (runs continuously) -->
@@ -179,6 +179,12 @@
             } catch (error) {
                 console.error('Error updating server time:', error);
             }
+
+            // Update immediately
+            updateServerTime();
+
+            // Update every second (1000 milliseconds) - runs continuously without page refresh
+            timeInterval = setInterval(updateServerTime, 1000);
         }
 
         // Update immediately
@@ -201,8 +207,15 @@
         if (!timeInterval) {
             initServerTime();
         }
-    }, 500);
-})();
+
+        // Also try initialization after a short delay as fallback
+        setTimeout(function () {
+            if (!timeInterval) {
+                initServerTime();
+            }
+        }, 500);
+    });
+});
 </script>
 @yield('scripts')
 @include('sweetalert::alert')

@@ -15,4 +15,12 @@ class KycLog extends Model
     protected $casts=[
         'callback_payload'=>'array'
     ];
+
+    /**
+     * Get the user that owns this KYC log
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

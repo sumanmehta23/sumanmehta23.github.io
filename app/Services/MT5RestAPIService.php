@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Mt5User;
 use App\Models\Account;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -52,6 +51,117 @@ class MT5RestAPIService
         }
 
         return $balances;
+    }
+    /**
+     * Get MT5 server common information via REST API
+     *
+     * @return array|null Server configuration and limits, or null on error
+     */
+    public function getServerCommon(): ?array
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (! $apiRequest) {
+            Log::error('MT5RestAPI: Failed to get connection from pool for server common info');
+
+            return null;
+        }
+
+        try {
+            // Make request to server common info endpoint
+            $result = $apiRequest->Get('/api/common/get');
+
+            if ($result === false) {
+                Log::warning('MT5RestAPI: Server common info request failed');
+                $this->connectionPool->reportConnectionError($apiRequest);
+
+                return null;
+            }
+
+            return $this->processServerCommonResponse($result);
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Exception in getServerCommon', [
+                'error' => $e->getMessage(),
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+
+            return null;
+        }
+    }
+
+    /**
+     * Process server common response from REST API
+     */
+    private function processServerCommonResponse($response): ?array
+    {
+        // Decode JSON if needed
+        if (is_string($response)) {
+            $response = json_decode($response, true);
+            if (! $response) {
+                Log::warning('MT5RestAPI: Invalid JSON in server common response');
+                return null;
+            }
+        }
+
+        // Check for API error
+        if (isset($response['retcode']) && $response['retcode'] !== '0 Done') {
+            Log::warning('MT5RestAPI: Server common API error', [
+                'retcode' => $response['retcode'],
+                'retmsg' => $response['retmsg'] ?? 'Unknown error',
+            ]);
+            return null;
+        }
+
+        // Extract server data from different possible response formats
+        $serverData = null;
+        if (isset($response['answer']) && is_array($response['answer'])) {
+            $serverData = $response['answer'];
+        } elseif (isset($response['data']) && is_array($response['data'])) {
+            $serverData = $response['data'];
+        } elseif (is_array($response) && ! isset($response['retcode'])) {
+            // Direct array response
+            $serverData = $response;
+        } else {
+            Log::warning('MT5RestAPI: Invalid server common response format', [
+                'response' => $response,
+            ]);
+
+            return null;
+        }
+
+        if (! is_array($serverData)) {
+            Log::warning('MT5RestAPI: Server data is not an array', [
+                'server_data_type' => gettype($serverData),
+            ]);
+
+            return null;
+        }
+
+        // Return normalized server common data
+        return [
+            'name' => $serverData['Name'] ?? $serverData['name'] ?? '',
+            'owner' => $serverData['Owner'] ?? $serverData['owner'] ?? '',
+            'owner_id' => $serverData['OwnerID'] ?? $serverData['owner_id'] ?? '',
+            'owner_host' => $serverData['OwnerHost'] ?? $serverData['owner_host'] ?? '',
+            'owner_email' => $serverData['OwnerEmail'] ?? $serverData['owner_email'] ?? '',
+            'product' => $serverData['Product'] ?? $serverData['product'] ?? '',
+            'expiration_license' => (int) ($serverData['ExpirationLicense'] ?? $serverData['expiration_license'] ?? 0),
+            'expiration_support' => (int) ($serverData['ExpirationSupport'] ?? $serverData['expiration_support'] ?? 0),
+            'limit_trade_servers' => (int) ($serverData['LimitTradeServers'] ?? $serverData['limit_trade_servers'] ?? 0),
+            'limit_web_servers' => (int) ($serverData['LimitWebServers'] ?? $serverData['limit_web_servers'] ?? 0),
+            'limit_accounts' => (int) ($serverData['LimitAccounts'] ?? $serverData['limit_accounts'] ?? 0),
+            'limit_deals' => (int) ($serverData['LimitDeals'] ?? $serverData['limit_deals'] ?? 0),
+            'limit_symbols' => (int) ($serverData['LimitSymbols'] ?? $serverData['limit_symbols'] ?? 0),
+            'limit_groups' => (int) ($serverData['LimitGroups'] ?? $serverData['limit_groups'] ?? 0),
+            'live_update_mode' => (int) ($serverData['LiveUpdateMode'] ?? $serverData['live_update_mode'] ?? 0),
+            'total_users' => (int) ($serverData['TotalUsers'] ?? $serverData['total_users'] ?? 0),
+            'total_users_real' => (int) ($serverData['TotalUsersReal'] ?? $serverData['total_users_real'] ?? 0),
+            'total_deals' => (int) ($serverData['TotalDeals'] ?? $serverData['total_deals'] ?? 0),
+            'total_orders' => (int) ($serverData['TotalOrders'] ?? $serverData['total_orders'] ?? 0),
+            'total_orders_history' => (int) ($serverData['TotalOrdersHistory'] ?? $serverData['total_orders_history'] ?? 0),
+            'total_positions' => (int) ($serverData['TotalPositions'] ?? $serverData['total_positions'] ?? 0),
+            'account_url' => $serverData['AccountURL'] ?? $serverData['account_url'] ?? '',
+            'account_auto' => (int) ($serverData['AccountAuto'] ?? $serverData['account_auto'] ?? 0),
+        ];
     }
 
     /**
@@ -457,6 +567,237 @@ class MT5RestAPIService
     {
         $balances = $this->getBatchBalances([$login]);
         return $balances[$login] ?? null;
+    }
+
+    // ──────────────────────────────────────────────────────────
+    //  Deal Batch API  (GET /api/deal/get_batch)
+    //
+    //  Benchmarks (empirical):
+    //    ~2,500 deals/sec throughput regardless of login count.
+    //    5 logins × 90 days ≈ 68K deals in 25s.
+    //    Target: keep each HTTP round-trip under 20s to avoid
+    //    connection timeouts, so we cap at ~50K deals per call.
+    // ──────────────────────────────────────────────────────────
+
+    /** Target max deals per single REST call (~20s at 2,500 d/s) */
+    private const DEAL_BATCH_TARGET_DEALS = 50000;
+
+    /** Absolute max logins we ever send in one GET request */
+    private const DEAL_BATCH_MAX_LOGINS = 50;
+
+    /** Fallback avg deals/account when we have no history */
+    private const DEAL_BATCH_DEFAULT_AVG = 500;
+
+    /**
+     * Fetch deals for multiple logins in one REST call.
+     *
+     * @param  array  $logins  Array of MT5 login IDs
+     * @param  int    $from    Unix timestamp start
+     * @param  int    $to      Unix timestamp end
+     * @return array  ['deals' => [...], 'meta' => [...]]
+     *                deals grouped by login: [ login => [ deal, ... ] ]
+     */
+    public function getBatchDeals(array $logins, int $from, int $to): array
+    {
+        if (empty($logins)) {
+            return ['deals' => [], 'meta' => ['total' => 0, 'time' => 0, 'batches' => 0]];
+        }
+
+        $logins = array_values(array_unique(array_map('intval', $logins)));
+        $chunks = $this->buildDealBatchChunks($logins, $from, $to);
+
+        $allDeals = [];
+        $totalFetched = 0;
+        $batchCount = 0;
+        $startTime = microtime(true);
+
+        foreach ($chunks as $chunk) {
+            $result = $this->fetchDealBatchChunk($chunk, $from, $to);
+            // Log::info('MT5RestAPI: Deal batch chunk data is ', [$result,$chunk, $from, $to]);
+            if ($result === null) {
+                continue;
+            }
+
+            foreach ($result as $deal) {
+                $login = (string)($deal['Login'] ?? '');
+                if ($login === '') {
+                    continue;
+                }
+                $allDeals[$login][] = $deal;
+                $totalFetched++;
+            }
+            $batchCount++;
+        }
+
+        $elapsed = round(microtime(true) - $startTime, 3);
+
+        Log::info('MT5RestAPI: getBatchDeals completed', [
+            'logins_requested' => count($logins),
+            'logins_returned' => count($allDeals),
+            'total_deals' => $totalFetched,
+            'batches' => $batchCount,
+            'time' => $elapsed,
+        ]);
+
+        return [
+            'deals' => $allDeals,
+            'meta' => [
+                'total' => $totalFetched,
+                'time' => $elapsed,
+                'batches' => $batchCount,
+            ],
+        ];
+    }
+
+    /**
+     * Intelligently partition logins into chunks that each stay
+     * under the target deal count per REST call.
+     *
+     * Strategy:
+     *  1. Look up recent average deals/account from the deals table
+     *     (cheap aggregate, cached 10 min).
+     *  2. Compute how many logins fit under DEAL_BATCH_TARGET_DEALS.
+     *  3. Clamp between 1 and DEAL_BATCH_MAX_LOGINS.
+     *  4. Chunk the login list accordingly.
+     */
+    private function buildDealBatchChunks(array $logins, int $from, int $to): array
+    {
+        $avgDeals = $this->estimateAvgDealsPerAccount($from, $to);
+        $loginsPerChunk = (int) floor(self::DEAL_BATCH_TARGET_DEALS / max($avgDeals, 1));
+        $loginsPerChunk = max(1, min($loginsPerChunk, self::DEAL_BATCH_MAX_LOGINS));
+
+        Log::info('MT5RestAPI: Deal batch sizing', [
+            'avg_deals_per_account' => $avgDeals,
+            'logins_per_chunk' => $loginsPerChunk,
+            'total_logins' => count($logins),
+            'chunks' => (int) ceil(count($logins) / $loginsPerChunk),
+        ]);
+
+        return array_chunk($logins, $loginsPerChunk);
+    }
+
+    /**
+     * Estimate average deals per account for the given time window.
+     * Uses a lightweight DB aggregate, cached for 10 minutes.
+     */
+    private function estimateAvgDealsPerAccount(int $from, int $to): float
+    {
+        $cacheKey = "mt5:avg_deals_per_account:{$from}:{$to}";
+
+        return (float) \Illuminate\Support\Facades\Cache::remember($cacheKey, 600, function () use ($from, $to) {
+            $fromDate = date('Y-m-d H:i:s', $from);
+            $toDate = date('Y-m-d H:i:s', $to);
+
+            $stats = \App\Models\Deal::selectRaw('COUNT(*) as total_deals, COUNT(DISTINCT account_id) as accounts')
+                ->whereBetween('time_done', [$fromDate, $toDate])
+                ->first();
+
+            if (!$stats || $stats->accounts == 0) {
+                return self::DEAL_BATCH_DEFAULT_AVG;
+            }
+
+            return round($stats->total_deals / $stats->accounts, 1);
+        });
+    }
+
+    /**
+     * Execute a single REST call for a chunk of logins.
+     *
+     * @return array|null  Raw deal arrays on success, null on failure
+     */
+    private function fetchDealBatchChunk(array $logins, int $from, int $to): ?array
+    {
+        $apiRequest = $this->connectionPool->getConnection();
+        if (!$apiRequest) {
+            Log::error('MT5RestAPI: No connection for deal batch chunk');
+            return null;
+        }
+
+        try {
+            $loginString = implode(',', $logins);
+            $url = "/api/deal/get_batch?login={$loginString}&from={$from}&to={$to}";
+
+            $start = microtime(true);
+            $raw = $apiRequest->Get($url);
+            $elapsed = round(microtime(true) - $start, 3);
+
+            if ($raw === false) {
+                Log::warning('MT5RestAPI: Deal batch chunk failed', [
+                    'logins' => count($logins),
+                    'time' => $elapsed,
+                ]);
+                $this->connectionPool->reportConnectionError($apiRequest);
+                return null;
+            }
+
+            $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+
+            if (!is_array($decoded)) {
+                Log::warning('MT5RestAPI: Deal batch invalid JSON', [
+                    'raw_preview' => substr($raw, 0, 200),
+                ]);
+                return null;
+            }
+
+            if (isset($decoded['retcode']) && $decoded['retcode'] !== '0 Done') {
+                Log::warning('MT5RestAPI: Deal batch API error', [
+                    'retcode' => $decoded['retcode'],
+                    'logins' => $logins,
+                ]);
+                return null;
+            }
+
+            $deals = $decoded['answer'] ?? [];
+            if (!is_array($deals)) {
+                return null;
+            }
+
+            Log::info('MT5RestAPI: Deal batch chunk OK', [
+                'logins' => count($logins),
+                'deals' => count($deals),
+                'time' => $elapsed,
+            ]);
+
+            return $deals;
+        } catch (Exception $e) {
+            Log::error('MT5RestAPI: Deal batch chunk exception', [
+                'error' => $e->getMessage(),
+                'logins' => $logins,
+            ]);
+            $this->connectionPool->reportConnectionError($apiRequest);
+            return null;
+        }
+    }
+
+    /**
+     * Get total deal counts for multiple logins via REST API.
+     *
+     * @param  array  $logins
+     * @param  int    $from  Unix timestamp
+     * @param  int    $to    Unix timestamp
+     * @return array  [ login => total_count, ... ]
+     */
+    public function getDealTotals(array $logins, int $from, int $to): array
+    {
+        $totals = [];
+        $apiRequest = $this->connectionPool->getConnection();
+        if (!$apiRequest) {
+            return $totals;
+        }
+
+        foreach ($logins as $login) {
+            try {
+                $raw = $apiRequest->Get("/api/deal/get_total?login=" . intval($login) . "&from={$from}&to={$to}");
+                $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+                if (isset($decoded['answer']['total'])) {
+                    $totals[(string)$login] = (int)$decoded['answer']['total'];
+                }
+            } catch (Exception $e) {
+                Log::warning('MT5RestAPI: getDealTotals failed', ['login' => $login, 'error' => $e->getMessage()]);
+            }
+        }
+
+        return $totals;
     }
 
     /**

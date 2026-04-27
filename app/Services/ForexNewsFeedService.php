@@ -200,8 +200,9 @@ class ForexNewsFeedService
         }
 
         $eventText = $title . ' ' . strip_tags($description);
-        $forecast = $this->extractMetric($eventText, 'forecast');
-        $previous = $this->extractMetric($eventText, 'previous');
+        $descriptionPlain = $description !== '' ? strip_tags($description) : '';
+        $forecast = $this->extractMetric($descriptionPlain, 'forecast');
+        $previous = $this->extractMetric($descriptionPlain, 'previous');
 
         return [
             'guid_hash' => hash('sha256', $guid !== '' ? $guid : $link),
@@ -254,13 +255,71 @@ class ForexNewsFeedService
 
     private function extractMetric(string $text, string $label): ?string
     {
-        $pattern = '/\b' . preg_quote($label, '/') . '\b\s*[:\-]?\s*([^\n\r\|,;]{1,50})/i';
+        if ($text === '') {
+            return null;
+        }
+
+        $pattern = '/\b' . preg_quote($label, '/') . '\b\s*[:\-]\s*([^\n\r|]{1,160})/iu';
         if (preg_match($pattern, $text, $matches) !== 1) {
             return null;
         }
 
         $value = trim($matches[1]);
-        return $value !== '' ? $value : null;
+        $value = preg_replace('/\s+/', ' ', $value);
+
+        if (preg_match('/^(.+?)(?<!\d)[\.!?](?:\s+|\s*$)/u', $value, $sentence) === 1) {
+            $value = trim($sentence[1]);
+        }
+
+        if ($value === '' || !$this->isPlausibleMetricValue($value)) {
+            return null;
+        }
+
+        return $this->sanitizeMetricValue($value);
+    }
+
+    private function isPlausibleMetricValue(string $value): bool
+    {
+        $len = Str::length($value);
+        if ($len > 48) {
+            return false;
+        }
+
+        $compact = strtolower(str_replace([' ', "\u{00A0}"], '', $value));
+        $allowedTokens = ['n/a', 'na', '—', '-', 'tbd', 'tbc', 'tba'];
+        if (in_array($compact, $allowedTokens, true)) {
+            return true;
+        }
+
+        if (preg_match('/\b(remains|capped|rebounds?|recovery|extend|breaking|analysts?|despite|however|according|expected\s+to|likely\s+to|toward|might\s|falls|rises?|climbs?|trading\s+day|price\s+forecast)\b/iu', $value) === 1) {
+            return false;
+        }
+
+        if (preg_match('/\bnear\s+.*\bnear\b/iu', $value) === 1) {
+            return false;
+        }
+
+        if (preg_match_all('/\S+/u', $value) > 8) {
+            return false;
+        }
+
+        if (preg_match('/^[\d\s.,+−\-—%()\/kmb]+$/iu', $value) === 1) {
+            return true;
+        }
+
+        if (preg_match('/\d/', $value) !== 1) {
+            return false;
+        }
+
+        return $len <= 28;
+    }
+
+    private function sanitizeMetricValue(string $value): string
+    {
+        $value = trim($value);
+        $value = rtrim($value, '.,;');
+
+        return Str::limit($value, 64, '');
     }
 }
 

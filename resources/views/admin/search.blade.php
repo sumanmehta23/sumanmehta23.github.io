@@ -76,8 +76,8 @@
                                                     <div class="row align-items-center">
                                                         <div class="col-auto pe-0">
                                                             <?php
-                                                            $platformImg = $result->platform === 'x9' ? '/assets/images/x9.png' : '/assets/images/mt5.png';
-                                                            $platformAlt = $result->platform === 'x9' ? 'X9 Platform' : 'MT5 Platform';
+                                                            $platformImg = $result->platform === App\Enums\PlatformEnum::X9->value ? '/assets/images/x9.png' : '/assets/images/mt5.png';
+                                                            $platformAlt = $result->platform === App\Enums\PlatformEnum::X9->value ? 'X9 Platform' : 'MT5 Platform';
                                                         ?>
                                                         <img src="<?= $platformImg ?>" class="w-32 h-32 rounded" style="width:24px" alt="<?= $platformAlt ?>"
                                                             >

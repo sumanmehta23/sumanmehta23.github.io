@@ -499,7 +499,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                     <li><a href="{{ route('pamm.investor') }}">Investor</a></li>
                                 </ul>
                             </li>
-                            <li class="pc-item">
+                            {{-- <li class="pc-item">
                                 <a href="{{ route('forex-news.index') }}" class="pc-link">
                                     <span class="pc-micon">
                                         <svg class="pc-icon">
@@ -508,7 +508,7 @@ if (!isset($_COOKIE["sitetheme"])) { ?>
                                     </span>
                                     <span class="pc-mtext">News</span>
                                 </a>
-                            </li>
+                            </li> --}}
 
                             {{-- <li class="pc-item">
                                 <a href="{{ route('learn') }}" class="pc-link">

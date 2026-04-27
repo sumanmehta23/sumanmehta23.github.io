@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ib1;
 use App\Models\User;
+use App\Enums\PlatformEnum;
 use App\MT5\MTRetCode;
 use App\Models\Account;
 use App\Models\Leverage;
@@ -69,7 +70,7 @@ class MT5Accounts extends Controller
             ->where('competition_end_date', NULL)
             ->where('competition_status', NULL)
             ->where('demo', false)
-            ->orderBy('id', 'desc')
+            ->orderByRaw('CASE WHEN account_request_status = 0 THEN 1 ELSE 0 END, id DESC')
             ->paginate(5);
         return view('live_accounts', compact('results'));
     }
@@ -114,7 +115,7 @@ class MT5Accounts extends Controller
         $profit = '';
 
         // Handle different platforms
-        if ($account->platform === Account::PLATFORM_X9) {
+        if ($account->platform === PlatformEnum::X9->value) {
             return $this->viewX9AccountDetails($account, $code, $type, $settings);
         } else {
             // Default to MT5 handling
@@ -934,7 +935,7 @@ class MT5Accounts extends Controller
         try {
             $login = (int)$account->code;
 
-            if ($platform === 'x9') {
+            if ($platform === PlatformEnum::X9->value) {
                 $response = $this->x9Service->getUserDetails($login);
                 if ($response['data']['trading_account']['trading_account_balance']['balance'] > 0) {
                     if ($response['data']['trading_account']['client_group_type'] != 'DEMO') {
@@ -948,7 +949,7 @@ class MT5Accounts extends Controller
                 }
                 // Delete from local database
                 $account->delete();
-            } elseif ($platform === 'mt5') {
+            } elseif ($platform === PlatformEnum::MT5->value) {
 
                 $trade_user = null;
                 if (($error_code = $this->api->UserGet($login, $trade_user) != MTRetCode::MT_RET_OK)) {
@@ -1051,11 +1052,11 @@ class MT5Accounts extends Controller
 
         // Validate platform selection
         $request->validate([
-            'platform' => 'required|in:mt5,x9',
+            'platform' => 'required|in:' . implode(',', PlatformEnum::all()),
         ]);
 
         $platform = $request->input('platform');
-        if ($platform === 'mt5') {
+        if ($platform === PlatformEnum::MT5->value) {
             return $this->createMT5DemoAccount($request);
         } else {
             return $this->createX9DemoAccount($request);
@@ -1126,7 +1127,7 @@ class MT5Accounts extends Controller
                             'ip' => $request->ip(),
                             'email' => $user->email,
                             'type' => 'Demo',
-                            'platform' => 'MT5',
+                            'platform' => PlatformEnum::MT5->displayName(),
                             'code' => $new_user->Login,
                             'amount' => $validatedData['demo_deposit'],
                             'leverage' => $new_user->Leverage,
@@ -1253,7 +1254,7 @@ class MT5Accounts extends Controller
                     'ip' => $request->ip(),
                     'email' => $user->email,
                     'type' => 'Demo',
-                    'platform' => 'X9',
+                    'platform' => PlatformEnum::X9->displayName(),
                     'code' => $loginId,
                     'amount' => $validatedData['demo_deposit'],
                     'leverage' => $validatedData['leverage'],
@@ -1298,7 +1299,7 @@ class MT5Accounts extends Controller
                 "Leverage" => $validatedData['leverage'],
                 "type" => $accountType->ac_name,
             ]));
-            $this->sendMail($new_user, 'Demo', 'X9');
+            $this->sendMail($new_user, 'Demo', PlatformEnum::X9->displayName());
             if ($balanceResponse['status']) {
                 // Create demo deposit record
                 $data = [
@@ -1422,7 +1423,7 @@ class MT5Accounts extends Controller
         $type = $request->input('type', 'live');
 
         // Handle password update based on platform
-        if ($account->platform === 'x9') {
+        if ($account->platform === PlatformEnum::X9->value) {
             return $this->updateX9Password($account, $code, $pass_type, $new_password);
         } else {
             return $this->updateMT5Password($account, $code, $pass_type, $new_password);
@@ -1460,7 +1461,7 @@ class MT5Accounts extends Controller
                     'user_id' => Auth::user()->id,
                     'code' => $code,
                     'new_password' => $new_password,
-                    'platform' => 'x9',
+                    'platform' => PlatformEnum::X9->value,
                     'password_type' => $x9PasswordType,
                     'remark' => 'Update ' . ucfirst($pass_type) . ' Password (X9)'
                 ])
@@ -1503,7 +1504,7 @@ class MT5Accounts extends Controller
                 'user_id' => Auth::user()->id,
                 'code' => $code,
                 'new_password' => $new_password,
-                'platform' => 'mt5',
+                'platform' => PlatformEnum::MT5->value,
                 'password_type' => $pass_type,
                 'remark' => 'Update ' . ucfirst($pass_type) . ' Password (MT5)'
             ])

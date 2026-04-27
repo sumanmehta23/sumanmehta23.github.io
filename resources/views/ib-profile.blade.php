@@ -159,7 +159,7 @@
                                                     <div class="col-12 text-end">
                                                         <h3 class="mb-1 me-2 ms-2 f-w-500">
                                                             @money($ib_wallet)</h3>
-                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferrable Balance</p>
+                                                        <p class="mb-0 text-warning me-2 ms-2"> Transferable Balance</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -213,7 +213,7 @@
                                             <label class="form-label" for="exampleFormControlSelect1">Enter
                                                 Amount</label>
                                             <div class="mb-3 input-group"><span class="input-group-text">$</span>
-                                                <input type="number" name="amount" min="0.01" step="0.01" max="{{ $ib_wallet }}" class="form-control" required aria-label="Amount (to the nearest dollar)">
+                                                <input type="number" name="amount" min="0.01" step="0.01" class="form-control" required aria-label="Amount (to the nearest dollar)">
                                                     <span class="input-group-text">.00</span>
                                                 <!---->
                                             </div>
@@ -229,12 +229,11 @@
                                     Swal.fire({
                                         icon: 'error',
                                         title: "Can't Transfer Commission",
-                                        html: `<ul>
-                                                                                                                                                                                                                                                                                                                                                                                            @foreach ($errors->all() as $error)
-                                                                                                                                                                                                                                                                                                                                                                                                <li>{{ $error }}</li>
-                                                                                                                                                                                                                                                                                                                                                                                            @endforeach
-                                                                                                                                                                                                                                                                                                                                                                                        </ul>
-                                                                                                                                                                                                                                                                                                                                                                                    `
+                                        html: `<div style="text-align: left; padding-left: 10px;">
+                                            @foreach ($errors->all() as $error)
+                                                <div style="margin-bottom: 5px;">• {{ $error }}</div>
+                                            @endforeach
+                                        </div>`
                                     });
                                 </script>
                             @endif
@@ -258,7 +257,7 @@
                                     </div>
                                     <?php
 
-                                                                                                                                                                                                        ?>
+                                    ?>
                                     <hr style="opacity:.1;"><label class="col-form-label col-12 text-lg-start">Your personal
                                         referral link is now available! Share it to help new clients sign up and kick-start
                                         their trading journey.</label>

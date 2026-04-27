@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Exception;
 use Carbon\Carbon;
+use App\Enums\PlatformEnum;
 use App\Models\Ib1;
 use App\Models\Task;
 use App\Models\User;
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AjaxController extends Controller
@@ -842,11 +844,11 @@ class AjaxController extends Controller
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
-                    $platformName = 'MT5';
+                    $platformName = PlatformEnum::MT5->displayName();
 
-                    if ($row->platform === 'x9') {
+                    if ($row->platform === PlatformEnum::X9->value) {
                         $platformImage = '/assets/images/x9.png';
-                        $platformName = 'X9';
+                        $platformName = PlatformEnum::X9->displayName();
                         // For X9 accounts, show the account type name instead of group
                         $accountGroup = $row->accountType->ac_name ?? 'Standard';
                     }
@@ -902,11 +904,10 @@ class AjaxController extends Controller
                     return "<span class='{$class}'>{$days} days</span>";
                 })
                 ->addColumn('deposited', function ($row) {
-                    $hasDeposits = $row->successful_trade_deposits_count > 0;
-
                     $badgeStyle = 'padding:0.35rem 0.5rem';
-                    if ($hasDeposits) {
-                        $green = '#00b894';
+
+                    // Check for CryptoChill, CreditCardPayissa, RagaPay deposits (Yes)
+                    if ($row->successful_trade_deposits_count > 0) {
                         return "
                             <span class='gap-1 border badge rounded-pill border-success d-inline-flex align-items-center justify-content-center'
                                   style='background-color:rgba(232,252,244,1);{$badgeStyle}'>
@@ -920,6 +921,42 @@ class AjaxController extends Controller
                         ";
                     }
 
+                    // Check for Wallet Transfer deposits
+                    if ($row->wallet_deposit_count > 0) {
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-info d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(23,162,184,0.1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#17a2b8' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <circle cx='12' cy='12' r='1' />
+                                    <path d='M12 1v6m0 6v6' />
+                                    <path d='M4.22 4.22l4.24 4.24m5.08 0l4.24-4.24' />
+                                    <path d='M1 12h6m6 0h6' />
+                                    <path d='M4.22 19.78l4.24-4.24m5.08 0l4.24 4.24' />
+                                </svg>
+                                <span class='fw-bold' style='color:#17a2b8'>Wallet Deposit</span>
+                            </span>
+                        ";
+                    }
+
+                    // Check for Internal Transfer deposits
+                    if ($row->internal_transfer_count > 0) {
+                        return "
+                            <span class='gap-1 border badge rounded-pill border-warning d-inline-flex align-items-center justify-content-center'
+                                  style='background-color:rgba(255,193,7,0.1);{$badgeStyle}'>
+                                <svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'
+                                     fill='none' stroke='#ffc107' stroke-width='2.4' stroke-linecap='round'
+                                     stroke-linejoin='round'>
+                                    <line x1='12' y1='5' x2='12' y2='19' />
+                                    <polyline points='19 12 12 19 5 12' />
+                                </svg>
+                                <span class='fw-bold' style='color:#ffc107'>Internal Transfer</span>
+                            </span>
+                        ";
+                    }
+
+                    // No deposits
                     return "
                         <span class='gap-1 border badge rounded-pill border-danger d-inline-flex align-items-center justify-content-center'
                               style='background-color:rgba(255,0,0,0.08);{$badgeStyle}'>
@@ -1106,6 +1143,12 @@ class AjaxController extends Controller
                 'tradeDeposits as successful_trade_deposits_count' => function ($q) {
                     $q->where('status', 1)->whereIn('deposit_type', ['CryptoChill', 'CreditCardPayissa', 'RagaPay']);
                 },
+                'tradeDeposits as wallet_deposit_count' => function ($q) {
+                    $q->where('status', 1)->where('deposit_type', 'Wallet Transfer');
+                },
+                'tradeDeposits as internal_transfer_count' => function ($q) {
+                    $q->where('status', 1)->where('deposit_type', 'Internal Transfer');
+                },
                 'trades as trades_count',
             ]);
 
@@ -1200,6 +1243,25 @@ class AjaxController extends Controller
               AND td.deleted_at IS NULL
         )";
 
+        $hasSuccessfulWAlletDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deposit_type ='Wallet Transfer'
+              AND td.deposit_from = 'Wallet Transfer'
+              AND td.deleted_at IS NULL
+        )";
+
+        $hasSuccessfulInternalDepositSql = "EXISTS (
+            SELECT 1
+            FROM trade_deposits td
+            WHERE td.account_id = accounts.id
+              AND td.status = 1
+              AND td.deposit_type ='Internal Transfer'
+              AND td.deleted_at IS NULL
+        )";
+
         $hasTradesSql = "(accounts.last_trade_at IS NOT NULL OR EXISTS (
             SELECT 1
             FROM trades tr
@@ -1213,7 +1275,12 @@ class AjaxController extends Controller
             $query->whereRaw($hasSuccessfulDepositSql);
         } elseif ($deposited === 'no') {
             $query->whereRaw("NOT {$hasSuccessfulDepositSql}");
+        } elseif ($deposited === 'wallet_deposit') {
+            $query->whereRaw($hasSuccessfulWAlletDepositSql);
+        } elseif ($deposited === 'internal_transfer') {
+            $query->whereRaw($hasSuccessfulInternalDepositSql);
         }
+        
 
         // Separate Not Traded filter
         $Traded = $request->get('traded');
@@ -1297,11 +1364,11 @@ class AjaxController extends Controller
 
                     // Determine platform image and display name
                     $platformImage = '/assets/images/mt5.png';
-                    $platformName = 'MT5';
+                    $platformName = PlatformEnum::MT5->displayName();
 
-                    if ($row->platform === 'x9') {
+                    if ($row->platform === PlatformEnum::X9->value) {
                         $platformImage = '/assets/images/x9.png';
-                        $platformName = 'X9';
+                        $platformName = PlatformEnum::X9->displayName();
                         // For X9 accounts, show the account type name instead of group
                         $accountGroup = $row->accountType->ac_name ?? 'Standard';
                     }
@@ -1840,6 +1907,8 @@ class AjaxController extends Controller
             $query->where('trade_withdrawal.user_id', $request->clientId);
         }
 
+        $query->orderByDesc('trade_withdrawal.created_at');
+
         // Fetch data
         // $query->orderByDesc('id')->get();
 
@@ -2376,6 +2445,22 @@ class AjaxController extends Controller
 
         if ($request->ajax()) {
             return DataTables::of($query)
+                ->filter(function ($query) use ($request) {
+                    if (!empty($request->search['value'])) {
+                        $searchValue = $request->search['value'];
+
+                        $query->where(function ($q) use ($searchValue) {
+                            $q->where('trade_deposits.email', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.code', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_amount', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_from', 'LIKE', "%{$searchValue}%")
+                                ->orWhere('trade_deposits.deposit_type', 'LIKE', "%{$searchValue}%")
+                                ->orWhereHas('accountDepositFrom', function ($query2) use ($searchValue) {
+                                    $query2->where('code', 'LIKE', "%{$searchValue}%");
+                                });
+                        });
+                    }
+                })
                 ->addColumn('name', function ($row) {
                     return $row->user->fullname ?? '-';
                 })
@@ -3560,6 +3645,7 @@ class AjaxController extends Controller
         $sql = "SELECT e.client_index, (e.id) as enc_id,e.username, e.email, e.number, e.userRole, e.gender, e.dob, e.address, e.website, e.uid, e.company_name, e.company_address, e.company_number, e.country,e.state, e.city, e.zipcode, e.two_factor_secret, e.two_factor_recovery_codes, e.two_factor_confirmed_at, 0 as permissions_count, e.status,r.name,r.id
                 FROM emplist e
                 LEFT JOIN roles r ON e.role_id = r.id
+                WHERE e.deleted_at IS NULL
                 -- LEFT JOIN pages ON p.page_id = pages.page_id
                 GROUP BY e.id";
         $query = DB::select($sql);
@@ -3966,6 +4052,29 @@ class AjaxController extends Controller
             $amount = isset($row->withdraw_amount) ? $row->withdraw_amount : $row->withdrawal_amount;
             $fee = isset($row->withdraw_transaction_fee) ? $row->withdraw_transaction_fee : $row->transaction_fee;
 
+            $link = '';
+            if ($row->status == 1 && !empty($row->payout_res)) {
+                // Decode JSON
+                $payoutData = json_decode($row->payout_res, true);
+
+                // Get txid
+                $txid = $payoutData['result']['txid'] ?? null;
+
+                // Example: BTC, ETH_TRC, ETH-ERC20 → ETH
+                $kind = $payoutData['result']['kind'] ?? '';
+                $coin = strtoupper(preg_split('/[^a-zA-Z]/', $kind)[0] ?? '');
+
+                if ($coin == 'ETH') {
+                    $link = "https://etherscan.io/tx/{$txid}";
+                } elseif ($coin != 'USDT' && $coin != '') {
+                    $link = "https://www.blockchain.com/explorer/transactions/{$coin}/{$txid}";
+                } elseif ($coin == 'USDT') {
+                    $link = "https://tokenview.io/en/search/{$txid}";
+                }
+            }
+            $paymentMethod = $link
+                ? '<a class="text-success" target="_blank" rel="noopener noreferrer" href="' . $link . '">' . $row->withdraw_type . '</a>'
+                : '<span class="text-success">' . $row->withdraw_type . '</span>';
             $status = '<span class="badge bg-outline-primary">Pending</span>';
 
             if ($row->status == 1) {
@@ -3983,7 +4092,7 @@ class AjaxController extends Controller
             $data[] = [
                 'created_on' => Carbon::parse($row->withdraw_date)->addHours(3)->format('Y-m-d H:i:s'),
                 'from_to' => $row->code ?? 'Wallet',
-                'payment_method' => '<a class="text-success" href="https://uniwire.com/payout/' . $row->transaction_id . '">' . $row->withdraw_type . '</a>',
+                'payment_method' => $paymentMethod,
                 'amount' => '$' . number_format((float)$amount, 2),
                 'fee' => '$' . number_format((float)$fee, 2),
                 'status' => $status,
@@ -4995,7 +5104,7 @@ class AjaxController extends Controller
                         $isDeposited = $hasDeposits ? 'Yes' : 'No';
                         $Traded = $hasTrades ? 'Yes' : 'No';
 
-                        
+
                         fputcsv($handle, [
                         $account->id,
                         $account->user->fullname ?? '',

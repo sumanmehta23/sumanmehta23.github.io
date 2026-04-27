@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
@@ -30,14 +31,18 @@ class PrioritySyncAccountsCommand extends Command
                             {--full-trade-sync : Force full trade sync for all eligible accounts from the beginning}
                             {--max-concurrent= : Maximum concurrent batches (default from config)}
                             {--cycle-delay= : Delay between sync cycles in seconds (default from config)}
-                            {--min-sync-interval= : Minimum minutes between syncs for same account (default from config)}
+                            {--min-sync-interval= : Minimum minutes between syncs for same account (default from config, improved: 20m)}
                             {--max-pending-jobs= : Maximum pending BatchSyncTradesJob jobs allowed (default from config)}
+                            {--stale-threshold= : Sync accounts not synced for X hours (default: 3 hours, was 6-12)}
                             {--max-trades= : Skip accounts with more than this many pending trades (e.g., 200)}
                             {--min-trades= : Only sync accounts with at least this many pending trades}
                             {--trades-range= : Sync accounts with trades in range, format: min,max (e.g., 200,500)}
                             {--ignore-balance-filter : Sync all accounts regardless of balance changes}
+                            {--sync-inactive : Include inactive accounts (dormant > 30 days) in sync}
                             {--oldest-first : Prioritize older accounts (created_at asc) over newer accounts (default: newest first)}
                             {--accounts= : Sync specific accounts only (comma-separated IDs or codes)}
+                            {--single-trade-sync : Sync only one account per cycle (for targeted updates)}
+                            {--distribute-commissions : Auto-dispatch commission distribution after sync (EXPERIMENTAL)}
                             {--daemon : Run continuously as daemon}
                             {--status : Show current sync status}
                             {--unflag-account= : Manually unflag a problematic account by code}
@@ -50,13 +55,17 @@ class PrioritySyncAccountsCommand extends Command
         $batchSize = (int) ($this->option('batch-size') ?: config('sync-all-trades.priority_sync.batch_size', 10));
         $maxConcurrent = (int) ($this->option('max-concurrent') ?: config('sync-all-trades.priority_sync.max_concurrent', 5));
         $cycleDelay = (int) ($this->option('cycle-delay') ?: config('sync-all-trades.priority_sync.cycle_delay', 5));
-        $minSyncInterval = (int) ($this->option('min-sync-interval') ?: config('sync-all-trades.priority_sync.min_sync_interval', 60));
+        $minSyncInterval = (int) ($this->option('min-sync-interval') ?: config('sync-all-trades.priority_sync.min_sync_interval', 20)); // IMPROVED: 20m default
         $maxPendingJobs = (int) ($this->option('max-pending-jobs') ?: config('sync-all-trades.priority_sync.max_pending_jobs', 100));
+        $staleThreshold = (int) ($this->option('stale-threshold') ?: 3); // IMPROVED: 3 hours instead of 6-12
         $ignoreBalanceFilter = $this->option('ignore-balance-filter');
+        $syncInactive = $this->option('sync-inactive');
         $oldestFirst = $this->option('oldest-first'); // Default is newest first
         $isDaemon = $this->option('daemon');
         $showStatus = $this->option('status');
         $fullTradeSync = $this->option('full-trade-sync') ?? false;
+        $singleTradeSync = $this->option('single-trade-sync') ?? false;
+        $distributeCommissions = $this->option('distribute-commissions') ?? false;
 
         // Parse specific accounts to sync
         $specificAccounts = null;
@@ -103,7 +112,8 @@ class PrioritySyncAccountsCommand extends Command
         $this->info("- Batch size: {$batchSize}" . ($this->option('batch-size') ? '' : ' (config)'));
         $this->info("- Max concurrent: {$maxConcurrent}" . ($this->option('max-concurrent') ? '' : ' (config)'));
         $this->info("- Cycle delay: {$cycleDelay}s" . ($this->option('cycle-delay') ? '' : ' (config)'));
-        $this->info("- Min sync interval: {$minSyncInterval}m" . ($this->option('min-sync-interval') ? '' : ' (config)'));
+        $this->info("- Min sync interval: {$minSyncInterval}m" . ($this->option('min-sync-interval') ? '' : ' (config - IMPROVED: 20m)'));
+        $this->info("- Stale threshold: {$staleThreshold}h (IMPROVED: default 3h instead of 6-12h)");
         $this->info("- Max pending jobs: {$maxPendingJobs}" . ($this->option('max-pending-jobs') ? '' : ' (config)'));
 
         // Trade count filtering info
@@ -132,13 +142,25 @@ class PrioritySyncAccountsCommand extends Command
         if ($ignoreBalanceFilter) {
             $this->warn("- Balance filter: DISABLED (will sync all accounts)");
         } else {
-            $this->info("- Balance filter: ENABLED (only accounts with balance changes)");
+            $this->info("- Balance filter: ENABLED (IMPROVED: remove to sync inactive accounts)");
+        }
+
+        if ($syncInactive) {
+            $this->warn("- Inactive accounts: INCLUDED (dormant > 30 days)");
+        }
+
+        if ($singleTradeSync) {
+            $this->warn("- Single trade sync mode: ONE account per cycle for targeted updates");
+        }
+
+        if ($distributeCommissions) {
+            $this->warn("- Commission distribution: Will dispatch after successful trade syncs (EXPERIMENTAL)");
         }
 
         if ($isDaemon) {
-            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts);
+            $this->runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts, $staleThreshold, $syncInactive, $singleTradeSync, $distributeCommissions);
         } else {
-            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts);
+            $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts, $staleThreshold, $syncInactive, $singleTradeSync, $distributeCommissions);
         }
     }
 
@@ -300,7 +322,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades = null, $minTrades = null, $oldestFirst = false, $fullTradeSync = false, $specificAccounts = null)
+    protected function runDaemonMode($batchSize, $maxConcurrent, $cycleDelay, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades = null, $minTrades = null, $oldestFirst = false, $fullTradeSync = false, $specificAccounts = null, $staleThreshold = 3, $syncInactive = false, $singleTradeSync = false, $distributeCommissions = false)
     {
         $this->info("Running in daemon mode. Press Ctrl+C to stop.");
 
@@ -320,7 +342,7 @@ class PrioritySyncAccountsCommand extends Command
                     continue;
                 }
 
-                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts);
+                $processed = $this->runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter, $maxTrades, $minTrades, $oldestFirst, $fullTradeSync, $specificAccounts, $staleThreshold, $syncInactive, $singleTradeSync, $distributeCommissions);
 
                 if ($processed === 0) {
                     $this->info("No accounts needed syncing. Waiting {$cycleDelay}s before next cycle...");
@@ -337,7 +359,7 @@ class PrioritySyncAccountsCommand extends Command
         }
     }
 
-    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false, $maxTrades = null, $minTrades = null, $oldestFirst = false, $fullTradeSync = false, $specificAccounts = null): int
+    protected function runSingleCycle($batchSize, $maxConcurrent, $minSyncInterval, $maxPendingJobs, $ignoreBalanceFilter = false, $maxTrades = null, $minTrades = null, $oldestFirst = false, $fullTradeSync = false, $specificAccounts = null, $staleThreshold = 3, $syncInactive = false, $singleTradeSync = false, $distributeCommissions = false): int
     {
         // First, handle any stuck accounts from previous cycles
         $this->handleStuckAccounts();
@@ -353,8 +375,8 @@ class PrioritySyncAccountsCommand extends Command
 
         // Get accounts that need syncing with balance change optimization
         $cutoffTime = now()->subMinutes($minSyncInterval);  // Don't sync accounts synced within min interval
-        $staleTime = now()->subHours(6);  // Force sync every 6 hours for accounts with balance activity
-        $veryStaleTime = now()->subHours(12);  // Force sync every 12 hours for accounts without balance tracking
+        $staleTime = now()->subHours($staleThreshold);  // IMPROVED: Use configurable stale threshold (default 3h instead of 6h)
+        $veryStaleTime = now()->subHours($staleThreshold * 2);  // Double the threshold for very stale (6h default instead of 12h)
 
         $query = Account::whereNotNull('code')
             ->whereNull('deleted_at')
@@ -381,18 +403,19 @@ class PrioritySyncAccountsCommand extends Command
         // Skip balance and status filters when specific accounts are provided
         if ($specificAccounts === null) {
             if (!$ignoreBalanceFilter) {
-                // MAJOR OPTIMIZATION: Only sync accounts with balance activity or that need retry
-                $query->where('balance', '<>', 0)->where(function ($q) use ($staleTime, $veryStaleTime) {
+                // IMPROVED: Balance filter is optional - can be disabled to sync inactive accounts
+                // Filter includes: accounts with balance activity OR retry accounts OR inactive ages
+                $query->where('balance', '<>', 0)->where(function ($q) use ($staleTime, $veryStaleTime, $syncInactive) {
                     $q->whereIn('sync_status', ['needs_retry', 'pending']) // Always include retry accounts
-                        ->orWhere(function ($balanceQuery) use ($staleTime) {
+                        ->orWhere(function ($balanceQuery) use ($staleTime, $syncInactive) {
                             $balanceQuery->where('has_balance_activity', true)
                                 ->where(function ($syncQuery) use ($staleTime) {
                                     $syncQuery->whereNull('last_sync_attempt_at') // Never synced trades
                                         ->orWhereColumn('last_balance_changed_at', '>', 'last_sync_attempt_at') // Balance changed since last TRADE sync
-                                        ->orWhere('last_sync_attempt_at', '<', $staleTime); // Force sync every 6 hours
+                                        ->orWhere('last_sync_attempt_at', '<', $staleTime); // Force sync at stale threshold
                                 });
                         })
-                        ->orWhere(function ($fallbackQuery) use ($veryStaleTime) {
+                        ->orWhere(function ($fallbackQuery) use ($veryStaleTime, $syncInactive) {
                             // Fallback: sync accounts without balance tracking that are very stale
                             $fallbackQuery->whereNull('has_balance_activity')
                                 ->where(function ($staleQuery) use ($veryStaleTime) {
@@ -400,19 +423,41 @@ class PrioritySyncAccountsCommand extends Command
                                         ->orWhere('last_sync_attempt_at', '<', $veryStaleTime);
                                 });
                         });
+
+                    // IMPROVED: Optionally include inactive accounts for minimal checks
+                    if ($syncInactive) {
+                        $q->orWhere(function ($inactiveQuery) use ($veryStaleTime) {
+                            $inactiveQuery->where('last_trade_at', '<', now()->subDays(30))
+                                ->where(function ($inactiveCheck) use ($veryStaleTime) {
+                                    $inactiveCheck->whereNull('last_sync_attempt_at')
+                                        ->orWhere('last_sync_attempt_at', '<', $veryStaleTime);
+                                });
+                        });
+                    }
                 });
             } else {
                 // Original logic when balance filter is disabled
                 // Only include accounts that need syncing or retry
-                $query->where(function ($q) {
+                $query->where(function ($q) use ($syncInactive, $veryStaleTime) {
                     $q->whereIn('sync_status', ['pending', 'needs_retry'])  // Always include these
-                        ->orWhere(function ($timeQuery) {
+                        ->orWhere(function ($timeQuery) use ($syncInactive, $veryStaleTime) {
                             $timeQuery->where(function ($statusQuery) {
                                 $statusQuery->whereNull('sync_status')  // No status (fresh accounts)
                                     ->orWhereNotIn('sync_status', ['skipped', 'failed', 'completed', 'synced', 'error', 'not_found_in_mt5']);  // Exclude final statuses and accounts not found in MT5
                             });
                             // Note: The timing check is already applied above in the main query
                         });
+
+                    // IMPROVED: Include inactive accounts when requested
+                    if ($syncInactive) {
+                        $q->orWhere(function ($inactiveQuery) use ($veryStaleTime) {
+                            $inactiveQuery->where('last_trade_at', '<', now()->subDays(30))
+                                ->where(function ($inactiveCheck) use ($veryStaleTime) {
+                                    $inactiveCheck->whereNull('last_sync_attempt_at')
+                                        ->orWhere('last_sync_attempt_at', '<', $veryStaleTime);
+                                });
+                        });
+                    }
                 });
             }
         }
@@ -443,8 +488,11 @@ class PrioritySyncAccountsCommand extends Command
             $accounts = $accounts->orderBy('created_at', 'desc'); // Newest first (default)
         }
 
+        // IMPROVED: Support single-trade-sync mode for targeted updates
+        $limitAccounts = $singleTradeSync ? $batchSize : ($batchSize * $maxConcurrent);
+
         $accounts = $accounts
-            ->limit($batchSize * $maxConcurrent) // Get enough for all concurrent batches
+            ->limit($limitAccounts) // Get enough for all concurrent batches, or single batch if single-trade-sync mode
             ->get();
 
         if ($accounts->isEmpty()) {
@@ -543,6 +591,35 @@ class PrioritySyncAccountsCommand extends Command
             $batchJob = new BatchSyncTradesJob($batchAccounts, $batchSyncTimes, $maxTrades, $minTrades);
             dispatch($batchJob)->onQueue('priority-sync-trades');
 
+            // IMPROVED: Optionally dispatch commission distribution immediately after trade sync
+            // This integrates IB commission calculation into the sync pipeline
+            if ($distributeCommissions) {
+                foreach ($accountBatch as $account) {
+                    // Dispatch commission distribution for this account's IB referrers
+                    // The commission job will process trades synced by the BatchSyncTradesJob
+                    $ib1 = $account->ib1_code ?? null; // Assuming account has IB relationship
+
+                    if ($ib1) {
+                        // Find all users who have this account's IB code in their referral chain
+                        $ibUsers = DB::table('aspnetusers')
+                            ->where('status', 1)
+                            ->where(function ($q) use ($ib1) {
+                                for ($i = 1; $i <= 15; $i++) {
+                                    $q->orWhere("ib$i", $ib1);
+                                }
+                            })
+                            ->pluck('id', 'email')
+                            ->toArray();
+
+                        foreach ($ibUsers as $email => $userId) {
+                            $commissionJob = new \App\Jobs\DistributeIbCommissionJob($ib1, $userId, [], $account->id);
+                            dispatch($commissionJob)->onQueue('distributeibcommission');
+                            $this->info("Commission job queued for account {$account->code} (IB: {$ib1}, User: {$userId})");
+                        }
+                    }
+                }
+            }
+
             $processedCount += count($batchAccounts);
 
             // Small delay between batch dispatches to avoid overwhelming
@@ -551,7 +628,8 @@ class PrioritySyncAccountsCommand extends Command
             }
         }
 
-        $this->info("Dispatched {$processedCount} accounts in " . $accountBatches->count() . " batches");
+        $this->info("Dispatched {$processedCount} accounts in " . $accountBatches->count() . " batches" .
+            ($distributeCommissions ? " (with commission distribution enabled)" : ""));
         return $processedCount;
     }
 

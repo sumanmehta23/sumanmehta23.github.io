@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\PlatformEnum;
 use App\Models\Account;
 use Tests\TestCase;
 
@@ -63,14 +64,14 @@ class PasswordUpdateUnitTest extends TestCase
     public function test_platform_detection_logic()
     {
         // Test X9 platform detection
-        $x9Account = new Account(['platform' => 'x9']);
-        $this->assertEquals('x9', $x9Account->platform);
-        $this->assertTrue($x9Account->platform === 'x9');
+        $x9Account = new Account(['platform' => PlatformEnum::X9->value]);
+        $this->assertEquals(PlatformEnum::X9->value, $x9Account->platform);
+        $this->assertTrue($x9Account->platform === PlatformEnum::X9->value);
 
         // Test MT5 platform detection
-        $mt5Account = new Account(['platform' => 'mt5']);
-        $this->assertEquals('mt5', $mt5Account->platform);
-        $this->assertTrue($mt5Account->platform !== 'x9');
+        $mt5Account = new Account(['platform' => PlatformEnum::MT5->value]);
+        $this->assertEquals(PlatformEnum::MT5->value, $mt5Account->platform);
+        $this->assertTrue($mt5Account->platform !== PlatformEnum::X9->value);
     }
 
     /** @test */
