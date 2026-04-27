@@ -66,7 +66,7 @@
                                     href="https://www.lqhmarkets.com/privacy-policy" class="text-success"
                                     target="_blank" rel="noopener noreferrer">Privacy Policy</a>, <a
                                     href="https://www.lqhmarkets.com/terms-conditions" class="text-success"
-                                    target="_blank" rel="noopener noreferrer">Client Agreement</a>&amp; <a
+                                    target="_blank" rel="noopener noreferrer">Client Agreement</a> &amp; <a
                                     href="https://www.lqhmarkets.com/risk-disclaimer" class="text-success"
                                     target="_blank" rel="noopener noreferrer">Trading Risk Warning</a>.</p>
                         </div>
