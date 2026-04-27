@@ -549,7 +549,7 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane" id="two-factor-auth" role="tabpanel"
-                                    aria-labelledby="profile-tab-6">
+                                    aria-labelledby="two-factor-auth-tab">
                                     <x-two-factor-authentication />
                                 </div>
                             </div>
@@ -563,9 +563,19 @@
         document.addEventListener("DOMContentLoaded", function () {
             let hash = window.location.hash;
             if (hash) {
-                let tab = document.querySelector(`a[href="${hash}"]`);
+                let tab = document.querySelector(`a[href="${hash}"], button[data-bs-target="${hash}"]`);
+
+                if (!tab && hash.startsWith('#')) {
+                    let tabId = hash.substring(1);
+                    let tabById = document.getElementById(tabId);
+
+                    if (tabById && tabById.matches('[data-bs-toggle="tab"]')) {
+                        tab = tabById;
+                    }
+                }
+
                 if (tab) {
-                    new bootstrap.Tab(tab).show();
+                    bootstrap.Tab.getOrCreateInstance(tab).show();
                 }
             }
         });

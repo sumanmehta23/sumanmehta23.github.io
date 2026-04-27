@@ -61,7 +61,7 @@
                 .then(response => {
                     console.log("Two-Factor Authentication enabled:", response.data);
 
-                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    window.location.href = '{{ route('user-profile') }}#two-factor-auth-tab';
                 })
                 .catch(error => {
                     console.error("Error:", error.response.data);
@@ -87,7 +87,7 @@
                 .then(response => {
                     console.log("Two-Factor Authentication enabled:", response.data);
 
-                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    window.location.href = '{{ route('user-profile') }}#two-factor-auth-tab';
                 })
                 .catch(error => {
                     console.error("Error:", error.response.data);
