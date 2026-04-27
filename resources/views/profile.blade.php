@@ -111,10 +111,10 @@
                                     <div class="row justify-content-between align-items-end">
                                         <div class="col-md-auto soc-profile-data">
                                             <h5 class="mb-1">{{ ucfirst(auth()->user()->fullname) }}</h5>
-                                            <div class="d-flex align-items-center">
-                                                <p class="mb-0 me-3">{{ auth()->user()->email }}</p>
+                                            <div class="d-flex flex-column flex-sm-row align-items-center justify-content-center justify-content-sm-start gap-2">
+                                                <p class="mb-0">{{ auth()->user()->email }}</p>
                                                 @if ($user->email_confirmed == 0)
-                                                    <label class="text-white badge bg-danger ms-2"
+                                                    <label class="text-white badge bg-danger"
                                                         style="font-size: 14px;">Email update unverified</label>
                                                 @endif
                                             </div>
