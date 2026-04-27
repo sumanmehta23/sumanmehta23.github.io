@@ -2,7 +2,7 @@
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
-            <div class="page-header mb-0 pb-0">
+            <div class="pb-0 mb-0 page-header">
                 <div class="page-block">
                     <div class="row align-items-center">
                         <div class="col-md-12">
@@ -31,7 +31,7 @@
                                 <form method="post" enctype="multipart/form-data"
                                     action="{{ route('create-live-account') }}">
                                     @csrf
-                                    <div class="form-group mb-0">
+                                    <div class="mb-0 form-group">
                                         <div class="row">
                                             <div class="col-3">
                                                 <label class="form-label">Choose Account Type</label>
@@ -40,7 +40,7 @@
                                                 <div class="row">
                                                     @foreach ($results as $i => $acc)
                                                         {{-- {{ dd($acc); }} --}}
-                                                        <div class="col-lg-6 col-xl-4 mb-2">
+                                                        <div class="mb-2 col-lg-6 col-xl-4">
                                                             <div class="auth-option">
                                                                 <input type="radio" data-group="{{ $acc->ac_name }}"
                                                                     data-inquiry="{{ $acc->inquiry_status }}"
@@ -51,7 +51,7 @@
                                                                 <label class="auth-megaoption"
                                                                     for="option{{ $acc->ac_index }}"
                                                                     style="height: 230px !important;">
-                                                                    <div class="d-block m-4" style="width: 80%;"
+                                                                    <div class="m-4 d-block" style="width: 80%;"
                                                                         @php
                                                                             echo strtoupper($acc->ac_name) == 'PRO' ? 'style="width: 80% !important;"' : '';
                                                                         @endphp>
@@ -64,23 +64,23 @@
                                                                                 {{ strtoupper($acc->ac_name == 'Competition' ? date('F', strtotime('+1 month')) . ' - ' . $acc->ac_name : $acc->ac_name) }}
                                                                             </span>
                                                                             {{-- @if (strtoupper($acc->ac_name) != 'PRO')
-                                                                                <span class="h6 d-block mt-4 f-w-400 f-12" style="width: 80%;">
+                                                                                <span class="mt-4 h6 d-block f-w-400 f-12" style="width: 80%;">
                                                                                     A commission-free account, perfect for new traders to start investing.
                                                                                 </span>
                                                                             @endif --}}
                                                                             <hr>
                                                                             <span
-                                                                                class="h6 d-block mt-3 f-w-300 f-14"><strong
+                                                                                class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_min_deposit) }}$</span></strong>
+                                                                                        class="f-w-400 f-16">${{ strtoupper($acc->ac_min_deposit) }}</span></strong>
                                                                                 Minimum Deposit </span>
                                                                             <span
-                                                                                class="h6 d-block mt-3 f-w-300 f-14"><strong
+                                                                                class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_spread) }}$</span></strong>
+                                                                                        class="f-w-400 f-16">${{ strtoupper($acc->ac_spread) }}</span></strong>
                                                                                 Spread </span>
                                                                             <span
-                                                                                class="h6 d-block mt-3 f-w-300 f-14"><strong
+                                                                                class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
                                                                                         class="f-w-400 f-16">{{ $acc->ac_swap }}</span></strong>
                                                                                 Swap </span>
@@ -94,7 +94,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row mt-5 is_account">
+                                        <div class="mt-5 row is_account">
                                             <div class="col-3">
                                                 <label class="form-label">Select Leverage</label>
                                             </div>
@@ -105,7 +105,7 @@
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
                                         </div>
-                                        <div class="row mt-2 is_account">
+                                        <div class="mt-2 row is_account">
                                             <div class="col-3">
                                                 <label class="form-label">Nick Name(Optional)</label>
                                             </div>
@@ -117,20 +117,20 @@
                                                 <div class="invalid-feedback" style="display: block !important;"></div>
                                             </div>
                                         </div>
-                                        <div class="row mt-3 is_account">
+                                        <div class="mt-3 row is_account">
                                             <div class="col-3"></div>
                                             <div class="col-9">
-                                                <div class="d-grid gap-2 mt-2">
+                                                <div class="gap-2 mt-2 d-grid">
                                                     <button class="btn btn-lg btn-primary" value="Live Account Creation"
                                                         name="a[register]" type="submit"><i class="ti ti-plus me-2"></i>
                                                         Create Account</button>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row mt-3 is_inquiry d-none">
+                                        <div class="mt-3 row is_inquiry d-none">
                                             <div class="col-3"></div>
                                             <div class="col-9">
-                                                <div class="d-grid gap-2 w-100 mt-2">
+                                                <div class="gap-2 mt-2 d-grid w-100">
                                                     <a href="#" class="w-100 contactus-btn">
                                                         <button class="btn btn-lg w-100 btn-primary"
                                                             value="Live Account Creation" type="button"><i
@@ -145,12 +145,12 @@
                         </div>
                     </div>
                 @else
-                    <div class="card support-tickets ribbon-box border ribbon-fill shadow-none pb-1">
-                        <div class="row p-3">
-                            <div class="card-body text-center">
+                    <div class="pb-1 border shadow-none card support-tickets ribbon-box ribbon-fill">
+                        <div class="p-3 row">
+                            <div class="text-center card-body">
                                 <div class="text-center me-4"><a href="/transactions/deposit#"><img
                                             src="/assets/images/doc_upload.png" class="w-25" alt="img"></a></div>
-                                <h6 class="text-center text-secondary mb-3 mt-2 f-w-400 mb-0 f-16">KYC Not Yet Verified !
+                                <h6 class="mt-2 mb-0 mb-3 text-center text-secondary f-w-400 f-16">KYC Not Yet Verified !
                                 </h6>
                                 <a  id="verify-user-kyc" class="mt-3"><button class="btn btn-outline-primary"><span
                                             class="text-truncate">Verify Now To Proceed</span></button></a>

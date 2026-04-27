@@ -208,8 +208,8 @@
                                                 <div class="flex-grow-1 ms-3">
                                                     <div class="row g-1">
                                                         <div class="col-6">
-                                                            <h3 class="mb-0 text-white f-w-500">$
-                                                                {{ isset($balance) ? number_format((float) $balance, 2) : '0.00' }}
+                                                            <h3 class="mb-0 text-white f-w-500">
+                                                                ${{ isset($balance) ? number_format((float) $balance, 2) : '0.00' }}
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">

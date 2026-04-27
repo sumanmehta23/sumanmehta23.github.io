@@ -117,12 +117,12 @@
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_min_deposit) }}$</span></strong>
+                                                                                        class="f-w-400 f-16">${{ strtoupper($acc->ac_min_deposit) }}</span></strong>
                                                                                 Minimum Deposit </span>
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_spread) }}$</span></strong>
+                                                                                        class="f-w-400 f-16">${{ strtoupper($acc->ac_spread) }}</span></strong>
                                                                                 Spread </span>
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
@@ -175,12 +175,12 @@
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_min_deposit) }}$</span></strong>
+                                                                                        class="f-w-400 f-16">${{ strtoupper($acc->ac_min_deposit) }}</span></strong>
                                                                                 Minimum Deposit </span>
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
                                                                                     class="float-end"><span
-                                                                                        class="f-w-400 f-16">{{ strtoupper($acc->ac_spread) }}$</span></strong>
+                                                                                        class="f-w-400 f-16">${{ strtoupper($acc->ac_spread) }}</span></strong>
                                                                                 Spread </span>
                                                                             <span
                                                                                 class="mt-3 h6 d-block f-w-300 f-14"><strong
@@ -409,18 +409,18 @@
             const $btn = $('#createAccountBtn');
             const $btnText = $('#btnText');
             const $btnLoading = $('#btnLoading');
-            
+
             // Check if button is already disabled (prevent double submission)
             if ($btn.prop('disabled')) {
                 e.preventDefault();
                 return false;
             }
-            
+
             // Disable button and show loading state
             $btn.prop('disabled', true);
             $btnText.addClass('d-none');
             $btnLoading.removeClass('d-none');
-            
+
             // Re-enable button after 12 seconds as fallback (in case of error)
             setTimeout(function() {
                 $btn.prop('disabled', false);
