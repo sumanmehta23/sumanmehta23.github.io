@@ -525,6 +525,7 @@
                 const value = jQuery(this).data('value');
                 const code = jQuery(this).data('code');
                 const balance = jQuery(this).data('balance');
+                const formattedBalance = '$' + parseFloat(balance).toFixed(2);
 
                 // Update hidden select
                 jQuery('#liveAccountSelect').val(value).trigger('change');
@@ -539,7 +540,7 @@
                     </span>
                     <span class="pb-0 mb-0 col-6 text-end pe-3">
                         <span class="mb-0 h5 d-block f-w-500">
-                           ${parseFloat(balance).toFixed(2)}
+                           ${formattedBalance}
                         </span>
                         <span class="mb-0 text-muted f-10">Current Balance</span>
                     </span>
@@ -565,6 +566,7 @@
                 if (selectedOption && selectedOption.value) {
                     const code = selectedOption.getAttribute('data-code');
                     const balance = selectedOption.getAttribute('data-balance');
+                    const formattedBalance = '$' + parseFloat(balance).toFixed(2);
                     const htmlContent = `
                         <span class="mt-1 col-6" style="padding-left: 0;">
                             <span class="pb-0 mb-0 h5 d-block f-w-500 f-14">
@@ -574,7 +576,7 @@
                         </span>
                         <span class="pb-0 mb-0 col-6 text-end pe-3">
                             <span class="mb-0 h5 d-block f-w-500">
-                               ${parseFloat(balance).toFixed(2)}
+                               ${formattedBalance}
                             </span>
                             <span class="mb-0 text-muted f-10">Current Balance</span>
                         </span>
