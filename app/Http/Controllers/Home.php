@@ -129,7 +129,7 @@ class Home extends Controller
             ->orderBy('id', 'desc')
             ->paginate(
                 5,
-                ['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'registered_date', 'platform', 'account_type_id'],
+                ['leverage', 'currency', 'balance', 'equity', 'id', 'code', 'trade_platform', 'registered_date', 'platform', 'account_type_id', 'account_nick_name'],
                 'demo_page'
             );
         return $demoaccount_details;
