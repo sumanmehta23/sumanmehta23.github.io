@@ -63,8 +63,12 @@
                         </form>
                         <div class="auth-footer">
                             <p class="m-0 text-center w-100 mobile-left-align" style="font-size: 11px;"> By signing up, I acknowledge that I have read, understood, and agree to <br> the Client Agreement and consent to LQH Markets contacting me with <br>relevant updates and information <br><br> By registering you agree to our <a
-                                    href="https://www.lqhmarkets.com/privacy-policy" >Privacy Policy</a>, <a href="https://www.lqhmarkets.com/terms-conditions">Client Agreement</a>&amp; <a href="https://www.lqhmarkets.com/risk-disclaimer"
-                                    >Trading Risk Warning</a>.</p>
+                                    href="https://www.lqhmarkets.com/privacy-policy" class="text-success"
+                                    target="_blank" rel="noopener noreferrer">Privacy Policy</a>, <a
+                                    href="https://lqhmarkets.com/client-agreement" class="text-success"
+                                    target="_blank" rel="noopener noreferrer">Client Agreement</a> &amp; <a
+                                    href="https://www.lqhmarkets.com/risk-disclaimer" class="text-success"
+                                    target="_blank" rel="noopener noreferrer">Trading Risk Warning</a>.</p>
                         </div>
                     </div>
                     <div  class="auth-sidecontent"
