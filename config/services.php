@@ -43,7 +43,7 @@ return [
     ],
     'payissa' => [
         'url' => env('PAYISSA_URL', 'https://api.payissa.com'),
-        'checkouturl' => env('PAYISSA_CHECKOUT_URL', 'https://multi.payissa.com/'),
+        'checkouturl' => env('PAYISSA_CHECKOUT_URL', 'https://api.payissa.com'),
         'address' => env('PAYISSA_WALLET_ADDRESS'),
         'valid_coins' => json_decode(env('PAYISSA_VALID_COINS', '[]'), true),
         'payment_issue_email' => env('PAYISSA_PAYMENT_ISSUE_EMAIL', ''),
