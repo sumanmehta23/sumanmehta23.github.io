@@ -287,11 +287,11 @@
                                             <div class="mobile-card__stats">
                                                 <div class="mobile-card__stat">
                                                     <span class="mobile-card__stat-label">Balance</span>
-                                                    <p class="mobile-card__stat-value">$ {{ number_format((float) $acc->balance, 2) }}</p>
+                                                    <p class="mobile-card__stat-value">${{ number_format((float) $acc->balance, 2) }}</p>
                                                 </div>
                                                 <div class="mobile-card__stat">
                                                     <span class="mobile-card__stat-label">Equity</span>
-                                                    <p class="mobile-card__stat-value">$ {{ number_format((float) $acc->equity, 2) }}</p>
+                                                    <p class="mobile-card__stat-value">${{ number_format((float) $acc->equity, 2) }}</p>
                                                 </div>
                                             </div>
 
