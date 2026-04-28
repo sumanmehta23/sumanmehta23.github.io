@@ -1,4 +1,218 @@
 @extends('layouts.crm.crm')
+@section('styles')
+    <style>
+        @media (max-width: 767.98px) {
+            .mobile-list {
+                padding: 0.75rem;
+            }
+
+            .mobile-card {
+                padding: 1.25rem;
+                border: 1px solid rgba(var(--bs-primary-rgb), 0.16);
+                border-radius: 1.75rem;
+                background: linear-gradient(180deg, rgba(var(--bs-primary-rgb), 0.07) 0%, #ffffff 26%);
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            }
+
+            .mobile-card__head {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+
+            .mobile-card__identity {
+                display: flex;
+                align-items: center;
+                gap: 0.875rem;
+                min-width: 0;
+                flex: 1;
+            }
+
+            .mobile-card__icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 3.6rem;
+                height: 3.6rem;
+                border-radius: 1.1rem;
+                background: rgba(var(--bs-primary-rgb), 0.1);
+                border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+                flex-shrink: 0;
+            }
+
+            .mobile-card__icon img {
+                width: 2rem;
+                height: 2rem;
+                object-fit: contain;
+            }
+
+            .mobile-card__title {
+                margin: 0;
+                font-size: 1.55rem;
+                font-weight: 700;
+                line-height: 1.1;
+                color: #163432;
+                word-break: break-word;
+            }
+
+            .mobile-card__content {
+                min-width: 0;
+            }
+
+            .mobile-card__badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 0.45rem;
+                padding: 0.28rem 0.75rem;
+                border-radius: 999px;
+                background: rgba(var(--bs-primary-rgb), 0.1);
+                border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+                color: var(--bs-primary);
+                font-size: 0.8rem;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            .mobile-card__leverage-wrap {
+                min-width: fit-content;
+                text-align: right;
+            }
+
+            .mobile-card__leverage-label {
+                display: block;
+                color: rgba(22, 52, 50, 0.62);
+                font-size: 0.82rem;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .mobile-card__leverage-value {
+                display: block;
+                margin-top: 0.2rem;
+                color: #0d6f66;
+                font-size: 1.7rem;
+                font-weight: 800;
+                line-height: 1;
+            }
+
+            .mobile-card__divider {
+                margin: 1.15rem 0;
+                border: 0;
+                border-top: 1px solid rgba(var(--bs-primary-rgb), 0.16);
+                opacity: 1;
+            }
+
+            .mobile-card__meta {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .mobile-card__meta-label {
+                color: rgba(22, 52, 50, 0.68);
+                font-size: 0.92rem;
+                font-weight: 500;
+            }
+
+            .mobile-card__meta-value {
+                color: #163432;
+                font-size: 0.95rem;
+                font-weight: 600;
+                text-align: right;
+                word-break: break-word;
+            }
+
+            .mobile-card__stats {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+
+            .mobile-card__stat {
+                padding: 0.8rem 0.9rem;
+                border-radius: 1rem;
+                background: rgba(var(--bs-primary-rgb), 0.08);
+                border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+            }
+
+            .mobile-card__stat-label {
+                display: block;
+                margin-bottom: 0.35rem;
+                color: rgba(22, 52, 50, 0.55);
+                font-size: 0.78rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .mobile-card__stat-value {
+                margin: 0;
+                color: #163432;
+                font-size: 1.35rem;
+                font-weight: 800;
+                line-height: 1.15;
+            }
+
+            .mobile-card__actions {
+                display: grid;
+                gap: 0.75rem;
+                margin-top: 1rem;
+            }
+
+            .mobile-card__btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 3.2rem;
+                padding: 0.85rem 0.6rem;
+                border-radius: 0.95rem;
+                border: 1px solid rgba(var(--bs-primary-rgb), 0.28);
+                background: #ffffff;
+                color: rgba(22, 52, 50, 0.84);
+                font-size: 1rem;
+                font-weight: 700;
+                line-height: 1;
+                text-align: center;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .mobile-card__btn--primary {
+                background: var(--bs-primary);
+                border-color: var(--bs-primary);
+                color: #ffffff;
+                box-shadow: 0 8px 18px rgba(var(--bs-primary-rgb), 0.22);
+            }
+
+            .mobile-card__notice {
+                margin-top: 1rem;
+                padding: 0.9rem 1rem;
+                border-radius: 1rem;
+                font-size: 0.92rem;
+                font-weight: 500;
+                line-height: 1.45;
+            }
+
+            .mobile-card__notice--danger {
+                background: rgba(220, 53, 69, 0.08);
+                border: 1px solid rgba(220, 53, 69, 0.16);
+                color: #b42318;
+            }
+
+            .mobile-card__notice--warning {
+                background: rgba(255, 193, 7, 0.12);
+                border: 1px solid rgba(255, 193, 7, 0.26);
+                color: #8a6116;
+            }
+        }
+    </style>
+@endsection
 @section('content')
     <div class="pc-container">
         <div class="pc-content">
@@ -131,78 +345,81 @@
                                 aria-labelledby="analytics-tab-1" tabindex="0">
                                 @if ($liveAccountDetails->count() > 0)
                                     <div>
-                                        <div class="p-2 d-block d-md-none">
+                                        <div class="d-block d-md-none mobile-list">
                                             @foreach ($liveAccountDetails as $liveAccount)
-                                                <div class="p-3 mb-3 border rounded">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="me-2">
-                                                            @if($liveAccount->platform === 'x9')
-                                                                <img src="/images/x92.png" alt="X9 Platform"
-                                                                    class="rounded wid-50 hei-50">
-                                                            @else
-                                                                <img src="/assets/images/mt5.png" alt="MT5 Platform"
-                                                                    class="rounded wid-50 hei-50">
-                                                            @endif
+                                                <div class="mb-3 mobile-card">
+                                                    <div class="mobile-card__head">
+                                                        <div class="mobile-card__identity">
+                                                            <div class="mobile-card__icon">
+                                                                @if($liveAccount->platform === 'x9')
+                                                                    <img src="/images/x92.png" alt="X9 Platform">
+                                                                @else
+                                                                    <img src="/assets/images/mt5.png" alt="MT5 Platform">
+                                                                @endif
+                                                            </div>
+                                                            <div class="mobile-card__content">
+                                                                @if ($liveAccount->code && $liveAccount->code != 'Rejected')
+                                                                    <h5 class="mobile-card__title">{{ $liveAccount->code }}</h5>
+                                                                @elseif($liveAccount->code == 'Rejected')
+                                                                    <h5 class="mobile-card__title text-danger">Rejected</h5>
+                                                                @else
+                                                                    <h5 class="mobile-card__title text-warning">Pending</h5>
+                                                                @endif
+                                                                <span class="mobile-card__badge">{{ $liveAccount->accountType->ac_name }}</span>
+                                                            </div>
                                                         </div>
-                                                        <div class="flex-grow-1">
-                                                            @if ($liveAccount->code && $liveAccount->code != 'Rejected')
-                                                                <h5 class="mb-1">{{ $liveAccount->code }}</h5>
-                                                            @elseif($liveAccount->code == 'Rejected')
-                                                                <h5 class="mb-1 text-danger">Rejected</h5>
-                                                            @else
-                                                                <h5 class="mb-1 text-warning">Pending</h5>
-                                                            @endif
-                                                            <p class="mb-0 text-muted f-12">
-                                                                {{ $liveAccount->accountType->ac_name }}
-                                                            </p>
+
+                                                        <div class="mobile-card__leverage-wrap">
+                                                            <span class="mobile-card__leverage-label">Leverage</span>
+                                                            <strong class="mobile-card__leverage-value">1:{{ $liveAccount->leverage }}</strong>
                                                         </div>
                                                     </div>
 
-                                                    <div class="mt-3">
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Nick Name</p>
-                                                            <p class="mb-0 f-w-400">{{ $liveAccount->account_nick_name }}</p>
+                                                    <hr class="mobile-card__divider">
+
+                                                    <div class="mobile-card__meta">
+                                                        <span class="mobile-card__meta-label">Nickname</span>
+                                                        <span class="mobile-card__meta-value">
+                                                            {{ $liveAccount->account_nick_name ?: '—' }}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="mobile-card__stats">
+                                                        <div class="mobile-card__stat">
+                                                            <span class="mobile-card__stat-label">Balance</span>
+                                                            <p class="mobile-card__stat-value">${{ number_format((float) ($liveAccount->balance ?? 0), 2) }}</p>
                                                         </div>
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Leverage</p>
-                                                            <p class="mb-0 f-w-400">{{ $liveAccount->leverage }}</p>
-                                                        </div>
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Balance</p>
-                                                            <p class="mb-0 f-w-400">@money($liveAccount->balance ?? '0.00')</p>
-                                                        </div>
-                                                        <div class="d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Equity</p>
-                                                            <p class="mb-0 f-w-400">@money($liveAccount->equity)</p>
+                                                        <div class="mobile-card__stat">
+                                                            <span class="mobile-card__stat-label">Equity</span>
+                                                            <p class="mobile-card__stat-value">${{ number_format((float) ($liveAccount->equity ?? 0), 2) }}</p>
                                                         </div>
                                                     </div>
 
                                                     @if ($liveAccount->code && $liveAccount->code != 'Rejected')
-                                                        <div class="flex-wrap gap-2 mt-3 d-flex justify-content-center">
+                                                        <div class="mobile-card__actions"
+                                                            style="grid-template-columns: repeat({{ $liveAccount->isZapierAccount() ? 2 : 3 }}, minmax(0, 1fr));">
                                                             <a href="{{ route('view-account-details', $liveAccount->id) }}"
-                                                                class="btn btn-sm btn-outline-secondary">
-                                                                <span>View <svg class="pc-icon">
-                                                                        <use xlink:href="#custom-login"></use>
-                                                                    </svg></span>
+                                                                class="mobile-card__btn">
+                                                                View
                                                             </a>
                                                             @if(!$liveAccount->isZapierAccount())
                                                                 <a href="{{ url('/trade-deposit') }}"
-                                                                    class="btn btn-sm btn-outline-secondary">
-                                                                    <span>Deposit <i class="ti ti-database-import"></i></span>
+                                                                    class="mobile-card__btn mobile-card__btn--primary">
+                                                                    Deposit
                                                                 </a>
                                                             @endif
-                                                            <a href="{{ route('trade-withdrawal') }}"
-                                                                class="btn btn-sm btn-outline-secondary">
-                                                                <span>Withdraw <i class="ti ti-database-import"></i></span>
+                                                            <a href="{{ route('trade-withdrawal', ['account_id' => $liveAccount->id]) }}"
+                                                                class="mobile-card__btn">
+                                                                Withdraw
                                                             </a>
                                                         </div>
                                                     @elseif ($liveAccount->code && $liveAccount->code == 'Rejected')
-                                                        <div class="mt-3">
-                                                            <span class="text-danger">Your request is rejected. Create your account again.</span>
+                                                        <div class="mobile-card__notice mobile-card__notice--danger">
+                                                            Your request is rejected. Create your account again.
                                                         </div>
                                                     @else
-                                                        <div class="mt-3">
-                                                            <span class="text-warning">Once your request is approved you will receive an email with your new account information.</span>
+                                                        <div class="mobile-card__notice mobile-card__notice--warning">
+                                                            Once your request is approved you will receive an email with your new account information.
                                                         </div>
                                                     @endif
                                                 </div>
@@ -358,55 +575,72 @@
                                 aria-labelledby="analytics-tab-2" tabindex="0">
                                 @if ($demoAccountDetails->count() > 0)
                                     <div>
-                                        <div class="p-2 d-block d-md-none">
+                                        <div class="d-block d-md-none mobile-list">
                                             @foreach ($demoAccountDetails as $demoAccount)
-                                                <div class="p-3 mb-3 border rounded">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="me-2">
-                                                            @if($demoAccount->platform === 'x9')
-                                                                <img src="/images/x92.png" alt="X9 Platform"
-                                                                    class="rounded wid-50 hei-50">
-                                                            @else
-                                                                <img src="/assets/images/mt5.png" alt="MT5 Platform"
-                                                                    class="rounded wid-50 hei-50">
-                                                            @endif
+                                                <div class="mb-3 mobile-card">
+                                                    <div class="mobile-card__head">
+                                                        <div class="mobile-card__identity">
+                                                            <div class="mobile-card__icon">
+                                                                @if($demoAccount->platform === 'x9')
+                                                                    <img src="/images/x92.png" alt="X9 Platform">
+                                                                @else
+                                                                    <img src="/assets/images/mt5.png" alt="MT5 Platform">
+                                                                @endif
+                                                            </div>
+                                                            <div class="mobile-card__content">
+                                                                @if ($demoAccount->code && $demoAccount->code != 'Rejected')
+                                                                    <h5 class="mobile-card__title">{{ $demoAccount->code }}</h5>
+                                                                @elseif($demoAccount->code == 'Rejected')
+                                                                    <h5 class="mobile-card__title text-danger">Rejected</h5>
+                                                                @else
+                                                                    <h5 class="mobile-card__title text-warning">Pending</h5>
+                                                                @endif
+                                                                <span class="mobile-card__badge">
+                                                                    {{ $demoAccount->accountType ? $demoAccount->accountType->ac_name : '' }}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div class="flex-grow-1">
-                                                            <h5 class="mb-1">
-                                                                <span>{{ $demoAccount->code ?? 'Pending' }}</span>
-                                                            </h5>
-                                                            <p class="mb-0 text-muted f-12">
-                                                                {{ $demoAccount->account_type }}
-                                                            </p>
-                                                            <p class="mb-0 text-muted f-12">
-                                                                {{ $demoAccount->accountType ? $demoAccount->accountType->ac_name : '' }}
-                                                            </p>
+
+                                                        <div class="mobile-card__leverage-wrap">
+                                                            <span class="mobile-card__leverage-label">Leverage</span>
+                                                            <strong class="mobile-card__leverage-value">1:{{ $demoAccount->leverage }}</strong>
                                                         </div>
                                                     </div>
 
-                                                    <div class="mt-3">
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Leverage</p>
-                                                            <p class="mb-0 f-w-400">{{ $demoAccount->leverage }}</p>
+                                                    <hr class="mobile-card__divider">
+
+                                                    <div class="mobile-card__meta">
+                                                        <span class="mobile-card__meta-label">Nickname</span>
+                                                        <span class="mobile-card__meta-value">
+                                                            {{ $demoAccount->account_nick_name ?: '—' }}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="mobile-card__stats">
+                                                        <div class="mobile-card__stat">
+                                                            <span class="mobile-card__stat-label">Balance</span>
+                                                            <p class="mobile-card__stat-value">${{ number_format((float) ($demoAccount->balance ?? 0), 2) }}</p>
                                                         </div>
-                                                        <div class="mb-2 d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Balance</p>
-                                                            <p class="mb-0 f-w-400">@money($demoAccount->balance ?? '0.00')</p>
-                                                        </div>
-                                                        <div class="d-flex align-items-center justify-content-between">
-                                                            <p class="mb-0 text-muted f-12">Equity</p>
-                                                            <p class="mb-0 f-w-400">@money($demoAccount->equity)</p>
+                                                        <div class="mobile-card__stat">
+                                                            <span class="mobile-card__stat-label">Equity</span>
+                                                            <p class="mobile-card__stat-value">${{ number_format((float) ($demoAccount->equity ?? 0), 2) }}</p>
                                                         </div>
                                                     </div>
 
                                                     @if ($demoAccount->code && $demoAccount->code != 'Rejected')
-                                                        <div class="flex-wrap gap-2 mt-3 d-flex justify-content-center">
+                                                        <div class="mobile-card__actions">
                                                             <a href="{{ route('view-account-details', $demoAccount->id) }}"
-                                                                class="btn btn-sm btn-outline-secondary">
-                                                                <span>View <svg class="pc-icon">
-                                                                        <use xlink:href="#custom-login"></use>
-                                                                    </svg></span>
+                                                                class="mobile-card__btn">
+                                                                View
                                                             </a>
+                                                        </div>
+                                                    @elseif ($demoAccount->code && $demoAccount->code == 'Rejected')
+                                                        <div class="mobile-card__notice mobile-card__notice--danger">
+                                                            Your request is rejected. Create your account again.
+                                                        </div>
+                                                    @else
+                                                        <div class="mobile-card__notice mobile-card__notice--warning">
+                                                            Once your request is approved you will receive an email with your new account information.
                                                         </div>
                                                     @endif
                                                 </div>
