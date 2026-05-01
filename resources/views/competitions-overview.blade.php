@@ -166,12 +166,12 @@
                 <div class="col-6 col-md-3 col-lg-2">
                     <h6 class="mb-3 fw-bold">Explore</h6>
                     <ul class="list-unstyled">
-                        <li><a href="https://www.lqhmarkets.com/" class="text-decoration-none text-dark">Home</a></li>
-                        <li><a href="https://www.lqhmarkets.com/mt5" class="text-decoration-none text-dark">MetaTrader 5</a></li>
-                        <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About Us</a></li>
-                        <li><a href="https://www.lqhmarkets.com/help-center" class="text-decoration-none text-dark">Help Center</a>
+                        <li><a href="https://www.lqhmarkets.com/" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Home</a></li>
+                        <li><a href="https://www.lqhmarkets.com/mt5" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">MetaTrader 5</a></li>
+                        <li><a href="https://www.lqhmarkets.com/about-us" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">About Us</a></li>
+                        <li><a href="https://www.lqhmarkets.com/help-center" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Help Center</a>
                         </li>
-                        <li><a href="https://www.lqhmarkets.com/lot-size-calculator" class="text-decoration-none text-dark">Lot Size Calculator</a></li>
+                        <li><a href="https://www.lqhmarkets.com/lot-size-calculator" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Lot Size Calculator</a></li>
                     </ul>
                 </div>
 
@@ -179,9 +179,9 @@
                 <div class="col-6 col-md-3 col-lg-2">
                     <h6 class="mb-3 fw-bold">Disclosures</h6>
                     <ul class="list-unstyled">
-                        <li><a href="https://www.lqhmarkets.com/risk-disclaimer" class="text-decoration-none text-dark">Risk Disclaimer</a></li>
-                        <li><a href="https://www.lqhmarkets.com/terms-conditions" class="text-decoration-none text-dark">Terms &amp; Conditions</a></li>
-                        <li><a href="https://www.lqhmarkets.com/privacy-policy" class="text-decoration-none text-dark">Privacy Policy</a></li>
+                        <li><a href="https://www.lqhmarkets.com/risk-disclaimer" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Risk Disclaimer</a></li>
+                        <li><a href="https://www.lqhmarkets.com/terms-conditions" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Terms &amp; Conditions</a></li>
+                        <li><a href="https://www.lqhmarkets.com/privacy-policy" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Privacy Policy</a></li>
                     </ul>
                 </div>
 
@@ -189,8 +189,8 @@
                 <div class="col-6 col-md-3 col-lg-2">
                     <h6 class="mb-3 fw-bold">Company</h6>
                     <ul class="list-unstyled">
-                        <li><a href="https://www.lqhmarkets.com/about-us" class="text-decoration-none text-dark">About</a></li>
-                        <li><a href="https://www.lqhmarkets.com/contact-us" class="text-decoration-none text-dark">Contact</a></li>
+                        <li><a href="https://www.lqhmarkets.com/about-us" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">About</a></li>
+                        <li><a href="https://www.lqhmarkets.com/contact-us" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">Contact</a></li>
                     </ul>
                 </div>
 
