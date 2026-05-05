@@ -169,7 +169,7 @@ class Transactions extends Controller
         // Combine data into a single variable
         // $internal_transfer = $tradeDeposits->merge($tradeWithdrawals);
         // Optional: Sort by date
-        $internal_transfer = !empty($internal_transfer) ? $internal_transfer->sortBy('date') : collect();
+        $internal_transfer = !empty($internal_transfer) ? $internal_transfer->sortByDesc('date') : collect();
         // dd($internal_transfer);
         // foreach ($internal_transfer as $key => $value) {
         //     echo ($value).'/n';
