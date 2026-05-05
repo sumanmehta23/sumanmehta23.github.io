@@ -179,6 +179,12 @@
             enableButtonVisible: true,
             isLoading: false,
             errorMessage: '',
+            twoFactorTabHash: '#two-factor-auth',
+
+            reloadToTwoFactorTab() {
+                window.location.hash = this.twoFactorTabHash;
+                window.location.reload();
+            },
 
             async confirmPassword() {
                 if (this.isLoading) return;
@@ -229,7 +235,7 @@
 
                     if (response.data.success) {
                         // Reload to show QR code and confirmation
-                        window.location.reload();
+                        this.reloadToTwoFactorTab();
                     }
                 } catch (error) {
                     console.error("Enable 2FA error:", error);
@@ -274,7 +280,7 @@
                         title: 'Success',
                         text: 'Two factor authentication has been confirmed successfully!',
                     }).then(() => {
-                        window.location.reload();
+                        this.reloadToTwoFactorTab();
                     });
                 } catch (error) {
                     console.error("Confirm 2FA error:", error);
@@ -314,7 +320,7 @@
                         title: 'Success',
                         text: 'Recovery codes have been regenerated!',
                     }).then(() => {
-                        window.location.reload();
+                        this.reloadToTwoFactorTab();
                     });
                 } catch (error) {
                     console.error("Regenerate recovery codes error:", error);
@@ -336,7 +342,7 @@
                     const response = await axios.get("{{ route('admin.two-factor.recovery-codes.show') }}");
                     console.log("Recovery codes:", response.data);
 
-                    window.location.reload();
+                    this.reloadToTwoFactorTab();
                 } catch (error) {
                     console.error("Show recovery codes error:", error);
                     Swal.fire({
@@ -376,7 +382,7 @@
                         title: 'Success',
                         text: 'Two factor authentication has been disabled!',
                     }).then(() => {
-                        window.location.reload();
+                        this.reloadToTwoFactorTab();
                     });
                 } catch (error) {
                     console.error("Disable 2FA error:", error);
@@ -400,10 +406,10 @@
                 // Cancel the 2FA setup by disabling it
                 try {
                     await axios.delete("{{ route('admin.two-factor.disable') }}");
-                    window.location.reload();
+                    this.reloadToTwoFactorTab();
                 } catch (error) {
                     console.error("Cancel enable error:", error);
-                    window.location.reload();
+                    this.reloadToTwoFactorTab();
                 }
             }
         }
