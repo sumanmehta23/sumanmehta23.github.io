@@ -102,7 +102,10 @@ class Home extends Controller
     }
     public function getLiveAccountCount($userId)
     {
-       return auth()->user()->liveAccounts()->count();
+       return auth()->user()->liveAccounts()
+           ->whereNotNull('code')
+           ->where('code', '!=', 'Rejected')
+           ->count();
     }
     public function getLiveAccountDetails($email)
     {
