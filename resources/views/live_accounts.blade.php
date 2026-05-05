@@ -287,11 +287,11 @@
                                             <div class="mobile-card__stats">
                                                 <div class="mobile-card__stat">
                                                     <span class="mobile-card__stat-label">Balance</span>
-                                                    <p class="mobile-card__stat-value">$ {{ number_format((float) $acc->balance, 2) }}</p>
+                                                    <p class="mobile-card__stat-value">${{ number_format((float) $acc->balance, 2) }}</p>
                                                 </div>
                                                 <div class="mobile-card__stat">
                                                     <span class="mobile-card__stat-label">Equity</span>
-                                                    <p class="mobile-card__stat-value">$ {{ number_format((float) $acc->equity, 2) }}</p>
+                                                    <p class="mobile-card__stat-value">${{ number_format((float) $acc->equity, 2) }}</p>
                                                 </div>
                                             </div>
 
@@ -371,8 +371,8 @@
                                                     </td>
                                                     <td class="f-w-400 f-16">{{ $acc->account_nick_name }}</td>
                                                     <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
+                                                    <td class="text-end f-w-400 f-16">${{ $acc->balance }}</td>
+                                                    <td class="text-end f-w-400 f-16">${{ $acc->equity }}</td>
                                                     <td class="text-end f-w-200">
                                                         @if ($acc->code && $acc->code != 'Rejected')
                                                             <div class="gap-2 d-flex align-items-center">

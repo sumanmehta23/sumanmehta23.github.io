@@ -114,7 +114,8 @@
                     <div class="modal-footer"><button type="button" class="btn btn-primary"
                             data-bs-dismiss="modal">Close</button><button class="btn btn-primary" type="submit"
                             name="updateNickName" value="true">
-                            <!----> Update Nick Name</button></div>
+                            <!----> Update Nick Name</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -177,7 +178,7 @@
 
                                                 </div>
                                             </div>
-                                            <div class="col-sm-6 text-sm-end">
+                                            {{-- <div class="col-sm-6 text-sm-end">
                                                 <ul class="flex-wrap mb-0 list-inline ms-auto d-flex justify-content-end">
                                                     <li class="list-inline-item">
                                                         <div class="mb-0 card">
@@ -186,7 +187,7 @@
                                                         </div>
                                                     </li>
                                                 </ul>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
@@ -208,8 +209,8 @@
                                                 <div class="flex-grow-1 ms-3">
                                                     <div class="row g-1">
                                                         <div class="col-6">
-                                                            <h3 class="mb-0 text-white f-w-500">$
-                                                                {{ isset($balance) ? number_format((float) $balance, 2) : '0.00' }}
+                                                            <h3 class="mb-0 text-white f-w-500">
+                                                                ${{ isset($balance) ? number_format((float) $balance, 2) : '0.00' }}
                                                             </h3>
                                                         </div>
                                                         <div class="col-6 text-end">

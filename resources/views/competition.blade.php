@@ -93,8 +93,8 @@
                                                         {{ isset($acc->code) ? $acc->rank : 'Competition Not Started' }}
                                                     </td>
                                                     <td class="f-w-400 f-16">1:{{ $acc->leverage }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ $acc->balance }}</td>
-                                                    <td class="text-end f-w-400 f-16">$ {{ $acc->equity }}</td>
+                                                    <td class="text-end f-w-400 f-16">${{ $acc->balance }}</td>
+                                                    <td class="text-end f-w-400 f-16">${{ $acc->equity }}</td>
                                                     <td class="text-end f-w-200">
                                                         @if ($acc->code && $acc->code != 'Rejected')
                                                                                                     <div class="gap-2 d-flex align-items-center">

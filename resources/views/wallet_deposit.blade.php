@@ -547,7 +547,7 @@
                                                             </li>
                                                             <li class="list-group-item">
                                                                 <div class="float-end">
-                                                                    <h4 class="mb-0 fw-medium">$ {{ $totals->equity }}</h4>
+                                                                    <h4 class="mb-0 fw-medium">${{ $totals->equity }}</h4>
                                                                 </div>
                                                                 <span class="text-muted">TOTAL EQUITY</span>
                                                             </li>
@@ -560,7 +560,7 @@
                                                         <ul class="list-group list-group-flush">
                                                             <li class="px-0 list-group-item">
                                                                 <div class="float-end">
-                                                                    <h3 class="mb-0 fw-medium">$ {{ $totals->balance }}
+                                                                    <h3 class="mb-0 fw-medium">${{ $totals->balance }}
                                                                     </h3>
                                                                 </div>
                                                                 <h5 class="mb-0 d-inline-block">TOTAL BALANCE</h5>
