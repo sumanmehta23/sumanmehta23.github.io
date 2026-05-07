@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use App\Models\WalletDeposit;
 use App\Models\BonusTransaction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\PendingManualPayment;
 use Illuminate\Support\Facades\Mail;
@@ -393,7 +394,8 @@ class Payment extends Controller
                 $paymentlinkresponse = json_decode($paymentLog->payment_req);
                 $validationToken = $paymentlinkresponse->polygon_address_in;
                 // && $responsedata['value_coin']==$paymentLog->payment_amount can't compare as it will never be same as intial input
-                if ($responsedata['address_in'] == $validationToken) {
+//                if ($responsedata['address_in'] == $validationToken) {
+                if ($this->validatePaymentWithPayissa($paymentLog)) {
                     $existingPayment = TradeDeposit::where('transaction_id', $transactionId)->first();
                     if ($existingPayment) {
                         Log::channel("creditcardpayissa")->info('Payment already exists for transaction ID: ' . $transactionId);
@@ -1123,5 +1125,64 @@ class Payment extends Controller
             "btn_text" => "Go To Dashboard",
         ];
         $this->mailService->sendEmail($toEmail, $emailSubject, $headers, '', $templateVars);
+    }
+    /**
+     * Validate payment with Payissa API using the stored ipn_token
+     */
+    private function validatePaymentWithPayissa(PaymentLog $paymentLog): bool
+    {
+        try {
+            // Get ipn_token from payment_req or dedicated field
+            $paymentRequest = json_decode($paymentLog->payment_req, true);
+            $ipnToken = $paymentRequest['ipn_token'] ?? null;
+
+            if (! $ipnToken) {
+                Log::channel('creditcardpayissa')->warning('No ipn_token found in payment log', [
+                    'payment_log_id' => $paymentLog->id,
+                ]);
+
+                return false;
+            }
+
+            // Call Payissa API to validate payment
+            $response = Http::get(config('services.payissa.url').'/control/payment-status.php', [
+                'ipn_token' => $ipnToken,
+            ]);
+
+            if (! $response->successful()) {
+                Log::channel('creditcardpayissa')->warning('Payissa API validation failed', [
+                    'payment_log_id' => $paymentLog->id,
+                    'status_code' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+
+                return false;
+            }
+
+            $responseData = $response->json();
+
+            // Verify response contains confirmation of payment
+            if (isset($responseData['status']) && $responseData['status'] === 'paid') {
+                Log::channel('creditcardpayissa')->info('Payment validated successfully with Payissa API', [
+                    'payment_log_id' => $paymentLog->id,
+                ]);
+
+                return true;
+            }
+
+            Log::channel('creditcardpayissa')->warning('Payissa API returned non-confirmed status', [
+                'payment_log_id' => $paymentLog->id,
+                'api_response' => $responseData,
+            ]);
+
+            return false;
+        } catch (\Exception $e) {
+            Log::channel('creditcardpayissa')->error('Exception during Payissa API validation', [
+                'payment_log_id' => $paymentLog->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }
