@@ -136,8 +136,16 @@
     let twoFA = () => {
         return {
             invalidCode: false,
+            twoFactorTabHash: '#two-factor-auth-tab',
             // showPasswordConfirmation: false,
             code: '',
+            reloadToTwoFactorTab() {
+                window.location.hash = this.twoFactorTabHash;
+                window.location.reload();
+            },
+            redirectToConfirmPassword() {
+                window.location.href = '{{ route('confirm_password') }}' + this.twoFactorTabHash;
+            },
             // confirmPassword() {
             //     axios.post('{{ route('two-factor.confirm') }}', {
             //         code: this.code
@@ -157,8 +165,7 @@
                     code: this.code
                 }).then(response => {
                     if (response.data.errors == undefined) {
-                        location.reload();
-                        window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                        this.reloadToTwoFactorTab();
                     } else {
                         this.invalidCode = true;
                     }
@@ -166,7 +173,7 @@
                     console.log(error.response.data);
 
                     if(error.response.data.message == "Password confirmation required."){
-                        window.location.href = '{{ route('confirm_password') }}#two-factor-auth';
+                        this.redirectToConfirmPassword();
                     }else{
                         Swal.fire({
                             icon: 'error',
@@ -179,11 +186,10 @@
             enableTwoFactorAuthentication() {
                 console.log('enableTwoFactorAuthentication');
                 axios.post('{{ route('two-factor.enable') }}').then(response => {
-                    location.reload();
-                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    this.reloadToTwoFactorTab();
                 }).catch(error => {
                     if (error.response.data.message !== undefined) {
-                        window.location.href = '{{ route('confirm_password') }}';
+                        this.redirectToConfirmPassword();
                         // this.showPasswordConfirmation = true;
                     }
                     console.log(error.response.data);
@@ -192,17 +198,16 @@
             regenerateRecoveryCodes() {
                 console.log('regenerateRecoveryCodes');
                 axios.post('{{ route('two-factor.recovery-codes') }}').then(response => {
-                    location.reload();
-                    window.location.href = '{{ route('user-profile') }}#two-factor-auth';
+                    this.reloadToTwoFactorTab();
                 }).catch(error => {
                     console.log(error.response.data);
-                    window.location.href = '{{ route('confirm_password') }}';
+                    this.redirectToConfirmPassword();
                 });
             },
             showRecoveryCodes() {
                 console.log('showRecoveryCodes');
                 axios.get('{{ route('two-factor.recovery-codes') }}').then(response => {
-                    location.reload();
+                    this.reloadToTwoFactorTab();
                 }).catch(error => {
                     console.log(error.response.data);
                 });
@@ -212,11 +217,10 @@
                 axios.delete('{{ route('two-factor.disable') }}', {
                     action: 'cancel'
                 }).then(response => {
-                    location.reload();
+                    this.reloadToTwoFactorTab();
                 }).catch(error => {
                     console.log(error.response.data);
-                    location.reload();
-                    window.location.href = '{{ route('confirm_password') }}#two-factor-auth';
+                    this.redirectToConfirmPassword();
                 });
             },
         }

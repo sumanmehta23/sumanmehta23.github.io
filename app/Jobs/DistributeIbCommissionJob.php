@@ -79,7 +79,7 @@ class DistributeIbCommissionJob implements ShouldQueue
             // OPTIMIZATION PHASE 5: Replaced 15 orWhere checks with efficient raw SQL query
             $unprocessedCount = Ib1Commission::where('orderstate', 4)
                 ->whereRaw(
-                    "CONCAT(',', COALESCE(user_id, ''), ',') IN 
+                    "CONCAT(',', COALESCE(user_id, ''), ',') IN
                     (SELECT CONCAT(',', id, ',') FROM aspnetusers WHERE " .
                         collect(range(1, 15))->map(fn($i) => "ib{$i} = ?")->join(' OR ') . ")",
                     array_fill(0, 15, $this->referral_code)
@@ -489,7 +489,7 @@ class DistributeIbCommissionJob implements ShouldQueue
                         ? 3
                         : ($planLevelId !== null ? ($ibAccPlans[$accountTypeId][$planLevelId]["d{$ibLevel}"] ?? null) : null);
                     if ($commission) {
-                        $commission = in_array($this->referral_code, ['K08EjL', 'EzHMpw', 'dhMKco', '4uStWn', 'ZiVehO', 'ubFUp7', 'HGvsS1', 'JV4a0Q', 'hvzla', 'zOhX4z', 'jDZVem', 'g6ofHI', 'zzLXS5', 'jMKn9O', 'W0V2I5', 'MPE8QF', 'bNiFv5', 'viQJWM', 'B0AG0Q', '2uDAEC', 'n8veXm', 'MREUR', 'bonus', 'LoTDGy', 'r5rY60', 'l1ILDq', '0D7QTR', 'NfMdsB', '5I6KMP', 'BnqfyN', 'aAWtvV', 'n19Nvf', 'NMdvcb', 'hlS4W0', 'Chinner', 'zym6oK', 'xh8Ule', 'FmL7M0', 'IvkCZH', 'o7Bzs5', 'fpate08', 'EIz0Oy', 'jbz0sX', 'xJpgdd', 'yWFOZc', 'tLnCex', 'jKRjpD'])
+                        $commission = in_array($this->referral_code, ['K08EjL', 'EzHMpw', 'dhMKco', '4uStWn', 'ZiVehO', 'ubFUp7', 'HGvsS1', 'JV4a0Q', 'hvzla', 'zOhX4z', 'jDZVem', 'g6ofHI', 'zzLXS5', 'jMKn9O', 'W0V2I5', 'MPE8QF', 'bNiFv5', 'viQJWM', 'B0AG0Q', '2uDAEC', 'n8veXm', 'MREUR', 'bonus', 'LoTDGy', 'r5rY60', 'l1ILDq', '0D7QTR', 'NfMdsB', '5I6KMP', 'BnqfyN', 'aAWtvV', 'n19Nvf', 'NMdvcb', 'hlS4W0', 'Chinner', 'zym6oK', 'xh8Ule', 'FmL7M0', 'IvkCZH', 'o7Bzs5', 'fpate08', 'EIz0Oy', 'jbz0sX', 'xJpgdd', 'yWFOZc', 'tLnCex', 'jKRjpD','P1OvW1', 'waCJXU', 'Veedmj', 'RHF2N0', 'dV2STG', 'FzomIK', 'yaUWBg', 'mV7z7o', 'hAvjby', '7WhWdD', 'kRDJN3', 'sWNb7n'])
                             ? 6
                             : $commission;
                     } else {
