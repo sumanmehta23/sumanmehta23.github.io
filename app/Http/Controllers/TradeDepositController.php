@@ -663,7 +663,7 @@ class TradeDepositController extends Controller
                 'remarks' => $success_url,
             ]);
             $amount += (4 / 100) * $amount;
-            $url = config("services.payissa.checkouturl") . 'pay.php?address=' . $responsdata['address_in'] . "&amount=" . $amount . "&email=" . $user->email . "&currency=" . $currency;
+            $url = config("services.payissa.checkouturl") . '/pay.php?address=' . $responsdata['address_in'] . "&amount=" . $amount . "&email=" . $user->email . "&currency=" . $currency;
 
             return ['invoice_url' => $url];
         }
