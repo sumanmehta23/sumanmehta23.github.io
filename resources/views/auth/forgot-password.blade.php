@@ -154,54 +154,62 @@
                 </div>
             </div>
         </div>
+        @include('components.google-translate')
+        <!-- Visible language dropdown for client login page -->
+        <div style="position: fixed; top: 10px; right: 10px; z-index: 2000;">
+            @include('components.language-dropdown', [
+                'selectId' => 'custom_translate_select_client_login',
+                'flagPreviewId' => 'flag-preview-client-login'
+            ])
+        </div>
     </body>
     <script>
-            window.intercomSettings = {
-                api_base: "https://api-iam.intercom.io",
-                app_id: "hcaolnkq"
-            };
-        </script>
+        window.intercomSettings = {
+            api_base: "https://api-iam.intercom.io",
+            app_id: "hcaolnkq"
+        };
+    </script>
 
-        <script>
-            (function () {
-                var w = window;
-                var ic = w.Intercom;
-                if (typeof ic === "function") {
-                    ic('reattach_activator');
-                    ic('update', w.intercomSettings);
+    <script>
+        (function () {
+            var w = window;
+            var ic = w.Intercom;
+            if (typeof ic === "function") {
+                ic('reattach_activator');
+                ic('update', w.intercomSettings);
+            } else {
+                var d = document;
+                var i = function () { i.c(arguments); };
+                i.q = [];
+                i.c = function (args) { i.q.push(args); };
+                w.Intercom = i;
+                var l = function () {
+                    var s = d.createElement('script');
+                    s.type = 'text/javascript';
+                    s.async = true;
+                    s.src = 'https://widget.intercom.io/widget/hcaolnkq';
+                    var x = d.getElementsByTagName('script')[0];
+                    x.parentNode.insertBefore(s, x);
+                };
+                if (document.readyState === 'complete') {
+                    l();
+                } else if (w.attachEvent) {
+                    w.attachEvent('onload', l);
                 } else {
-                    var d = document;
-                    var i = function () { i.c(arguments); };
-                    i.q = [];
-                    i.c = function (args) { i.q.push(args); };
-                    w.Intercom = i;
-                    var l = function () {
-                        var s = d.createElement('script');
-                        s.type = 'text/javascript';
-                        s.async = true;
-                        s.src = 'https://widget.intercom.io/widget/hcaolnkq';
-                        var x = d.getElementsByTagName('script')[0];
-                        x.parentNode.insertBefore(s, x);
-                    };
-                    if (document.readyState === 'complete') {
-                        l();
-                    } else if (w.attachEvent) {
-                        w.attachEvent('onload', l);
-                    } else {
-                        w.addEventListener('load', l, false);
-                    }
+                    w.addEventListener('load', l, false);
                 }
-            })();
+            }
+        })();
 
-            // 👇 This clears cached user and reboots as anonymous when Intercom button is clicked
-            document.addEventListener('click', function (e) {
-                if (e.target.closest('#intercom-button, .intercom-launcher, [class*="intercom"]')) {
-                    window.Intercom('shutdown');
-                    window.Intercom('boot', {
-                        api_base: "https://api-iam.intercom.io",
-                        app_id: "hcaolnkq"
-                    });
-                }
-            });
-        </script>
+        // 👇 This clears cached user and reboots as anonymous when Intercom button is clicked
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('#intercom-button, .intercom-launcher, [class*="intercom"]')) {
+                window.Intercom('shutdown');
+                window.Intercom('boot', {
+                    api_base: "https://api-iam.intercom.io",
+                    app_id: "hcaolnkq"
+                });
+            }
+        });
+    </script>
 @endsection
