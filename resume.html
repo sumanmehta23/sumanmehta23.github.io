@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suman Mehta — Resume | Senior Web Developer (Laravel Specialist)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+
+    /* ==========================================
+       GLOBAL RESET & BASE
+    ========================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:        #1b2a47;
+      --navy-mid:    #243456;
+      --navy-light:  #2e4170;
+      --accent:      #4a90d9;
+      --accent-2:    #6c63ff;
+      --gold:        #f0a500;
+      --green:       #10b981;
+      --white:       #ffffff;
+      --off-white:   #f8f9fc;
+      --border:      #e2e8f0;
+      --text:        #1e2d3d;
+      --text-mid:    #374151;
+      --text-muted:  #6b7280;
+      --font:        'Inter', sans-serif;
+    }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font);
+      background: #dde3ed;
+      margin: 0;
+      padding: 28px 16px 48px;
+      min-height: 100vh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ==========================================
+       CONTROLS BAR  (hidden when printing)
+    ========================================== */
+    .controls-bar {
+      max-width: 960px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .ctrl-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: #fff;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: #374151;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      transition: background 0.2s;
+    }
+    .ctrl-back:hover { background: #f1f5f9; }
+    .ctrl-right { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-pdf {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: linear-gradient(135deg, #6c63ff 0%, #4a90d9 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(108,99,255,0.35);
+      transition: all 0.2s;
+    }
+    .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(108,99,255,0.45); }
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: #fff;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-print:hover { background: #f9fafb; border-color: #9ca3af; }
+
+    /* ==========================================
+       RESUME WRAPPER
+    ========================================== */
+    .resume {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      min-height: 1080px;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.18);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    /* ==========================================
+       LEFT SIDEBAR
+    ========================================== */
+    .sidebar {
+      width: 310px;
+      min-width: 310px;
+      background: var(--navy);
+      color: #fff;
+      padding: 40px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* --- Name block --- */
+    .sb-name {
+      margin-bottom: 28px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .sb-name h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+      line-height: 1.15;
+    }
+    .sb-name .title-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 5px 12px;
+      background: rgba(74,144,217,0.25);
+      border: 1px solid rgba(74,144,217,0.5);
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #90c6f0;
+      line-height: 1.4;
+    }
+
+    /* --- Sidebar section --- */
+    .sb-section {
+      margin-bottom: 22px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sb-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .sb-heading {
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sb-heading i { font-size: 0.75rem; }
+    .sb-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* --- Contact rows --- */
+    .sb-contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 11px;
+    }
+    .sb-contact-item:last-child { margin-bottom: 0; }
+    .sb-contact-item i {
+      color: var(--accent);
+      font-size: 0.82rem;
+      margin-top: 2px;
+      width: 14px;
+      flex-shrink: 0;
+    }
+    .sb-contact-item .ci-text {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .sb-contact-item .ci-text a {
+      color: rgba(255,255,255,0.85);
+      transition: color 0.2s;
+    }
+    .sb-contact-item .ci-text a:hover { color: var(--accent); }
+
+    /* --- Tags / pills --- */
+    .sb-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sb-tag {
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.88);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.14);
+      line-height: 1.3;
+    }
+    .sb-tag.blue { background: rgba(74,144,217,0.2); border-color: rgba(74,144,217,0.4); color: #90c6f0; }
+
+    /* --- Sidebar skill rows --- */
+    .sb-skill { margin-bottom: 10px; }
+    .sb-skill:last-child { margin-bottom: 0; }
+    .sb-skill-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.88);
+      margin-bottom: 5px;
+    }
+    .sb-skill-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .sb-skill-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: 2px;
+    }
+
+    /* --- Stack rows --- */
+    .sb-stack-row {
+      font-size: 0.79rem;
+      color: rgba(255,255,255,0.82);
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      line-height: 1.5;
+    }
+    .sb-stack-row:last-child { border-bottom: none; }
+    .sb-stack-row span { color: rgba(74,144,217,0.9); margin: 0 4px; }
+
+    /* --- Simple list --- */
+    .sb-list { list-style: none; }
+    .sb-list li {
+      font-size: 0.79rem;
+      color: rgba(255,255,255,0.82);
+      padding: 4px 0 4px 14px;
+      position: relative;
+      line-height: 1.5;
+    }
+    .sb-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: 0.65rem;
+    }
+
+    /* ==========================================
+       MAIN CONTENT
+    ========================================== */
+    .main {
+      flex: 1;
+      background: var(--white);
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* --- Main section --- */
+    .m-section { margin-bottom: 26px; }
+    .m-section:last-child { margin-bottom: 0; }
+
+    .m-heading {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--navy);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .m-heading::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: linear-gradient(to bottom, var(--accent-2), var(--accent));
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .m-heading::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* --- Summary --- */
+    .summary-text {
+      font-size: 0.88rem;
+      color: var(--text-mid);
+      line-height: 1.8;
+    }
+
+    /* --- Experience items --- */
+    .exp-item {
+      margin-bottom: 22px;
+      padding-bottom: 20px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .exp-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .exp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 2px;
+      flex-wrap: wrap;
+    }
+    .exp-role {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .exp-role .team-lead {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-2);
+      background: rgba(108,99,255,0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+    .exp-date {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(74,144,217,0.1);
+      padding: 3px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .exp-company {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .exp-company i { color: var(--accent); font-size: 0.72rem; }
+
+    .exp-list { list-style: none; }
+    .exp-list li {
+      font-size: 0.84rem;
+      color: var(--text-mid);
+      padding: 3px 0 3px 18px;
+      position: relative;
+      line-height: 1.65;
+    }
+    .exp-list li::before {
+      content: '•';
+      position: absolute;
+      left: 5px;
+      color: var(--accent-2);
+      font-weight: 700;
+      font-size: 1rem;
+      top: 1px;
+    }
+    .exp-list li strong { color: var(--text); }
+
+    .exp-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .exp-tag {
+      font-size: 0.69rem;
+      padding: 3px 8px;
+      background: rgba(108,99,255,0.07);
+      color: var(--accent-2);
+      border-radius: 4px;
+      font-weight: 500;
+      border: 1px solid rgba(108,99,255,0.18);
+    }
+
+    /* --- Education --- */
+    .edu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .edu-left { flex: 1; }
+    .edu-degree {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .edu-uni {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .edu-uni i { color: var(--accent); font-size: 0.75rem; }
+    .edu-score-wrap { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .edu-badge {
+      display: inline-block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 4px;
+    }
+    .edu-badge.green { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25); }
+    .edu-badge.blue  { background: rgba(74,144,217,0.1); color: var(--accent); border: 1px solid rgba(74,144,217,0.25); }
+    .edu-date {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(74,144,217,0.1);
+      padding: 4px 12px;
+      border-radius: 4px;
+      white-space: nowrap;
+      align-self: flex-start;
+    }
+
+    /* --- Key Highlights --- */
+    .highlights-list { list-style: none; }
+    .highlights-list li {
+      font-size: 0.84rem;
+      color: var(--text-mid);
+      padding: 6px 0 6px 22px;
+      position: relative;
+      border-bottom: 1px dotted var(--border);
+      line-height: 1.65;
+    }
+    .highlights-list li:last-child { border-bottom: none; }
+    .highlights-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    /* ==========================================
+       PRINT / PDF STYLES
+    ========================================== */
+    @page { size: A4; margin: 0; }
+
+    @media print {
+      .controls-bar, .no-print { display: none !important; }
+      html, body {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .resume {
+        max-width: 100%;
+        width: 210mm;
+        min-height: 297mm;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      .sidebar {
+        background: #1b2a47 !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+      .exp-item, .m-section { page-break-inside: avoid; }
+    }
+
+    /* ==========================================
+       RESPONSIVE
+    ========================================== */
+    @media (max-width: 720px) {
+      body { padding: 12px 8px 40px; }
+      .resume { flex-direction: column; }
+      .sidebar { width: 100%; min-width: unset; }
+      .main { padding: 28px 20px; }
+      .controls-bar { flex-direction: column; align-items: stretch; }
+      .ctrl-right { justify-content: stretch; }
+      .btn-pdf, .btn-print { flex: 1; justify-content: center; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ===== CONTROLS (hidden on print) ===== -->
+  <div class="controls-bar no-print">
+    <a href="index.html" class="ctrl-back">
+      <i class="fas fa-arrow-left"></i> Back to Portfolio
+    </a>
+    <div class="ctrl-right">
+      <button class="btn-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Resume
+      </button>
+      <button class="btn-pdf" onclick="downloadPDF()">
+        <i class="fas fa-file-pdf"></i> Download PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ===========================
+       RESUME  (id="resume" for PDF target)
+  ============================ -->
+  <div class="resume" id="resume">
+
+    <!-- =================== LEFT SIDEBAR =================== -->
+    <div class="sidebar">
+
+      <!-- NAME -->
+      <div class="sb-name">
+        <h1>SUMAN<br>MEHTA</h1>
+        <span class="title-badge">Senior Web Developer<br>Laravel Specialist</span>
+      </div>
+
+      <!-- ---- CONTACT ---- -->
+      <!-- To update: edit the <span class="ci-text"> values below -->
+      <div class="sb-section">
+        <div class="sb-heading"><i class="fas fa-address-card"></i> Contact</div>
+
+        <div class="sb-contact-item">
+          <i class="fas fa-phone-alt"></i>
+          <div class="ci-text">
+            <a href="tel:+918219303023">+91 82193 03023</a><br>
+            <a href="tel:+917018777815">+91 70187 77815</a>
+          </div>
+        </div>
+
+        <div class="sb-contact-item">
+          <i class="fas fa-envelope"></i>
+          <div class="ci-text">
+            <a href="mailto:sammehtasam@gmail.com">sammehtasam@gmail.com</a>
+          </div>
+        </div>
+
+        <div class="sb-contact-item">
+          <i class="fab fa-linkedin-in"></i>
+          <div class="ci-text">
+            <a href="https://linkedin.com/in/suman-mehta" target="_blank">linkedin.com/in/suman-mehta</a>
+          </div>
+        </div>
+
+        <div class="sb-contact-item">
+          <i class="fab fa-github"></i>
+          <div class="ci-text">
+            <a href="https://github.com/sumanmehta" target="_blank">github.com/sumanmehta</a>
+          </div>
+        </div>
+
+        <div class="sb-contact-item">
+          <i class="fas fa-map-marker-alt"></i>
+          <div class="ci-text">
+            Village Panoli, PO Khunni,<br>
+            Tehsil Nankhari, Rampur,<br>
+            Distt. Shimla — 171213<br>
+            Himachal Pradesh, India
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- LARAVEL EXPERTISE ---- -->
+      <!-- To update: add/remove <span class="sb-tag blue"> items below -->
+      <div class="sb-section">
+        <div class="sb-heading"><i class="fab fa-laravel"></i> Laravel Expertise</div>
+        <div class="sb-tags">
+          <span class="sb-tag blue">Eloquent ORM</span>
+          <span class="sb-tag blue">Service Patterns</span>
+          <span class="sb-tag blue">RESTful APIs</span>
+          <span class="sb-tag blue">Sanctum/Passport</span>
+          <span class="sb-tag blue">Redis Caching</span>
+          <span class="sb-tag blue">Queue/Horizon</span>
+          <span class="sb-tag blue">Event Listeners</span>
+          <span class="sb-tag blue">Unit Testing</span>
+          <span class="sb-tag blue">Service-Repository</span>
+          <span class="sb-tag blue">DDD / SOLID</span>
+        </div>
+      </div>
+
+      <!-- ---- TECHNICAL STACK ---- -->
+      <!-- To update: edit the text inside each .sb-stack-row -->
+      <div class="sb-section">
+        <div class="sb-heading"><i class="fas fa-layer-group"></i> Technical Stack</div>
+        <div class="sb-stack-row">PHP <span>|</span> Laravel <span>|</span> CakePHP</div>
+        <div class="sb-stack-row">React.js <span>|</span> Vue.js <span>|</span> Tailwind CSS</div>
+        <div class="sb-stack-row">Bootstrap <span>|</span> JavaScript (ES6+)</div>
+        <div class="sb-stack-row">MySQL <span>|</span> Redis <span>|</span> REST APIs</div>
+        <div class="sb-stack-row">WordPress <span>|</span> WooCommerce <span>|</span> WHMCS</div>
+        <div class="sb-stack-row">Git <span>|</span> Docker <span>|</span> Linux / cPanel</div>
+        <div class="sb-stack-row">CodeIgniter <span>|</span> CakePHP</div>
+        <div class="sb-stack-row">CI/CD Pipelines <span>|</span> Composer <span>|</span> npm</div>
+      </div>
+
+      <!-- ---- LANGUAGES ---- -->
+      <div class="sb-section">
+        <div class="sb-heading"><i class="fas fa-language"></i> Languages</div>
+        <ul class="sb-list">
+          <li>English — Proficient</li>
+          <li>Hindi — Native</li>
+        </ul>
+      </div>
+
+      <!-- ---- FLEXIBILITY ---- -->
+      <div class="sb-section">
+        <div class="sb-heading"><i class="fas fa-clock"></i> Flexibility</div>
+        <ul class="sb-list">
+          <li>Day &amp; Night Shift Proficient</li>
+          <li>Remote &amp; On-site Available</li>
+          <li>Freelance &amp; Full-time Open</li>
+        </ul>
+      </div>
+
+    </div>
+    <!-- =================== END SIDEBAR =================== -->
+
+    <!-- =================== MAIN CONTENT =================== -->
+    <div class="main">
+
+      <!-- ---- EXPERTISE SUMMARY ---- -->
+      <!-- To update: edit the paragraph text below -->
+      <div class="m-section">
+        <div class="m-heading">Expertise Summary</div>
+        <p class="summary-text">
+          Strategic and results-driven Senior Web Developer with over <strong>12 years</strong> of deep expertise
+          in architecting enterprise-level Laravel applications. Specialist in building scalable, secure, and
+          high-performance backends using Domain-Driven Design (DDD) and SOLID principles. Proficient in
+          integrating complex third-party APIs, optimising database performance, and modernising legacy
+          codebases into modern frameworks. Equally capable on the frontend with React.js, Vue.js, Tailwind CSS,
+          and Bootstrap. Experienced in WHMCS customisation, WordPress plugin/theme development, Technical SEO,
+          and Social Media Marketing (SMM).
+        </p>
+      </div>
+
+      <!-- ---- PROFESSIONAL EXPERIENCE ---- -->
+      <!-- To add a new role: copy an entire .exp-item block and update its content -->
+      <div class="m-section">
+        <div class="m-heading">Professional Experience</div>
+
+        <!-- Job 1 -->
+        <div class="exp-item">
+          <div class="exp-header">
+            <div class="exp-role">
+              Senior Web Developer
+              <span class="team-lead">Team Lead</span>
+            </div>
+            <span class="exp-date">2018 — Present</span>
+          </div>
+          <div class="exp-company">
+            <i class="fas fa-building"></i> Premier Tech Solutions
+          </div>
+          <ul class="exp-list">
+            <li>Architected and led development of complex <strong>Laravel</strong> applications implementing Service-Repository patterns for clean, decoupled, testable code.</li>
+            <li>Developed high-performance <strong>RESTful APIs</strong> with Sanctum/Passport authentication, serving mobile and web clients at scale.</li>
+            <li>Integrated <strong>WHMCS</strong> with custom Laravel applications to automate billing and server provisioning workflows.</li>
+            <li>Optimised complex SQL queries and Eloquent relationships, reducing server response time by <strong>45%</strong>.</li>
+            <li>Implemented asynchronous job processing using <strong>Laravel Queues and Redis</strong> for high-volume email and notification systems.</li>
+            <li>Mastered frontend SPA integration using <strong>React.js and Vue.js</strong> with Laravel Mix/Vite for seamless user experiences.</li>
+            <li>Mentored junior developers, conducted code reviews, and maintained coding standards across the team.</li>
+          </ul>
+          <div class="exp-tags">
+            <span class="exp-tag">Laravel</span>
+            <span class="exp-tag">REST API</span>
+            <span class="exp-tag">Sanctum/Passport</span>
+            <span class="exp-tag">React.js</span>
+            <span class="exp-tag">Vue.js</span>
+            <span class="exp-tag">Redis</span>
+            <span class="exp-tag">WHMCS</span>
+            <span class="exp-tag">MySQL</span>
+            <span class="exp-tag">Docker</span>
+          </div>
+        </div>
+
+        <!-- Job 2 -->
+        <div class="exp-item">
+          <div class="exp-header">
+            <div class="exp-role">Web Developer</div>
+            <span class="exp-date">2014 — 2018</span>
+          </div>
+          <div class="exp-company">
+            <i class="fas fa-laptop-code"></i> Agency / Freelance
+          </div>
+          <ul class="exp-list">
+            <li>Designed and maintained websites using <strong>PHP, CodeIgniter,</strong> and <strong>CakePHP</strong>.</li>
+            <li>Developed custom <strong>WordPress</strong> plugins and themes to bridge API data with CMS frontends.</li>
+            <li>Built e-commerce solutions with <strong>WooCommerce</strong> including payment gateway integrations.</li>
+            <li>Boosted client visibility by implementing advanced <strong>Technical SEO</strong> and Social Media Marketing (SMM) strategies.</li>
+            <li>Managed complete project lifecycle from client requirement gathering to deployment and post-launch maintenance.</li>
+          </ul>
+          <div class="exp-tags">
+            <span class="exp-tag">PHP</span>
+            <span class="exp-tag">CodeIgniter</span>
+            <span class="exp-tag">CakePHP</span>
+            <span class="exp-tag">WordPress</span>
+            <span class="exp-tag">WooCommerce</span>
+            <span class="exp-tag">Technical SEO</span>
+            <span class="exp-tag">SMM</span>
+            <span class="exp-tag">Bootstrap</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- EDUCATION ---- -->
+      <!-- To update: edit the degree, university, score below -->
+      <div class="m-section">
+        <div class="m-heading">Education</div>
+        <div class="edu-item">
+          <div class="edu-left">
+            <div class="edu-degree">B.Tech in Information Technology</div>
+            <div class="edu-uni">
+              <i class="fas fa-university"></i>
+              UIIT — Himachal Pradesh University, Shimla
+            </div>
+            <div class="edu-score-wrap">
+              <span class="edu-badge green">Percentage: 72.9%</span>
+              <span class="edu-badge blue">B.Tech IT</span>
+            </div>
+          </div>
+          <div class="edu-date">2014 — 2018</div>
+        </div>
+      </div>
+
+      <!-- ---- KEY HIGHLIGHTS ---- -->
+      <!-- To add a highlight: add a new <li> inside the list below -->
+      <div class="m-section">
+        <div class="m-heading">Key Highlights</div>
+        <ul class="highlights-list">
+          <li>Successfully integrated custom WordPress plugins with complex <strong>API-driven accounting systems</strong> for enterprise clients.</li>
+          <li>Recognised for technical leadership in managing <strong>mission-critical night shift deployments</strong> with zero downtime.</li>
+          <li>Achieved a <strong>45% reduction in server response time</strong> through advanced MySQL and Eloquent query optimisation.</li>
+          <li>Represented <strong>HPU in Inter-University Cricket Tournament</strong> — Winner. Proven team player on and off the field.</li>
+          <li>Expert in modern <strong>DevOps</strong>: Git workflows, Docker containers, CI/CD pipelines, and Linux server administration.</li>
+          <li>Extensive experience with <strong>WHMCS</strong> module development, automating hosting billing and provisioning workflows.</li>
+          <li>Proficient in building <strong>SaaS products</strong> using Laravel multi-tenancy, subscription billing, and role-based access control.</li>
+        </ul>
+      </div>
+
+    </div>
+    <!-- =================== END MAIN =================== -->
+
+  </div>
+  <!-- ===== END RESUME ===== -->
+
+  <!-- html2pdf.js for direct PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    function downloadPDF() {
+      const btn = document.querySelector('.btn-pdf');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+      btn.disabled = true;
+
+      const element = document.getElementById('resume');
+      const opt = {
+        margin:       0,
+        filename:     'Suman-Mehta-Resume.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css'] }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
+        btn.disabled = false;
+      }).catch(() => {
+        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
+        btn.disabled = false;
+        window.print();
+      });
+    }
+  </script>
+
+</body>
+</html>

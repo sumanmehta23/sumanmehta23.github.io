@@ -70,12 +70,13 @@ document.getElementById('backToTop').addEventListener('click', () => {
 
 // ===== TYPEWRITER =====
 const phrases = [
-  'Full Stack PHP Developer',
+  'Senior Web Developer',
   'Laravel Specialist',
+  'Full Stack PHP Developer',
   'WordPress Expert',
-  'React & Vue Developer',
-  'WHMCS Customizer',
-  'Digital Problem Solver',
+  'React & Vue Frontend Dev',
+  'WHMCS Customisation Pro',
+  'API Architecture Expert',
 ];
 let phraseIdx = 0;
 let charIdx = 0;
@@ -240,6 +241,11 @@ document.querySelectorAll('.service-card').forEach((el, i) => {
   el.style.transitionDelay = `${i * 0.08}s`;
   revealObserver.observe(el);
 });
+document.querySelectorAll('.highlight-card').forEach((el, i) => {
+  el.classList.add('reveal');
+  el.style.transitionDelay = `${i * 0.08}s`;
+  revealObserver.observe(el);
+});
 document.querySelectorAll('.skill-card').forEach((el, i) => {
   el.classList.add('reveal');
   el.style.transitionDelay = `${i * 0.06}s`;
@@ -260,55 +266,72 @@ document.querySelectorAll('.about-text-col').forEach(el => { el.classList.add('r
 document.querySelectorAll('.contact-info').forEach(el => { el.classList.add('reveal-left'); revealObserver.observe(el); });
 document.querySelectorAll('.contact-form').forEach(el => { el.classList.add('reveal-right'); revealObserver.observe(el); });
 
-// ===== CONTACT FORM VALIDATION =====
+// ===== CONTACT FORM — real POST to contact.php =====
 const form = document.getElementById('contactForm');
 if (form) {
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     let valid = true;
 
-    const name = form.querySelector('[name="name"]');
-    const email = form.querySelector('[name="email"]');
-    const message = form.querySelector('[name="message"]');
-    const nameErr = document.getElementById('nameErr');
-    const emailErr = document.getElementById('emailErr');
-    const msgErr = document.getElementById('msgErr');
+    const nameEl    = form.querySelector('[name="name"]');
+    const emailEl   = form.querySelector('[name="email"]');
+    const messageEl = form.querySelector('[name="message"]');
+    const nameErr   = document.getElementById('nameErr');
+    const emailErr  = document.getElementById('emailErr');
+    const msgErr    = document.getElementById('msgErr');
 
-    // Reset
+    // Reset errors
     [nameErr, emailErr, msgErr].forEach(el => { if (el) el.textContent = ''; });
-    [name, email, message].forEach(el => el.style.borderColor = '');
+    [nameEl, emailEl, messageEl].forEach(el => { el.style.borderColor = ''; });
 
-    if (!name.value.trim()) {
-      nameErr.textContent = 'Name is required.';
-      name.style.borderColor = '#ef4444';
+    if (!nameEl.value.trim() || nameEl.value.trim().length < 2) {
+      nameErr.textContent = 'Please enter your full name.';
+      nameEl.style.borderColor = '#ef4444';
       valid = false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.value.trim() || !emailRegex.test(email.value)) {
-      emailErr.textContent = 'Valid email is required.';
-      email.style.borderColor = '#ef4444';
+    if (!emailEl.value.trim() || !emailRegex.test(emailEl.value.trim())) {
+      emailErr.textContent = 'Please enter a valid email address.';
+      emailEl.style.borderColor = '#ef4444';
       valid = false;
     }
-    if (!message.value.trim() || message.value.trim().length < 10) {
+    if (!messageEl.value.trim() || messageEl.value.trim().length < 10) {
       msgErr.textContent = 'Message must be at least 10 characters.';
-      message.style.borderColor = '#ef4444';
+      messageEl.style.borderColor = '#ef4444';
       valid = false;
     }
 
-    if (valid) {
-      const btn = document.getElementById('formSubmitBtn');
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-      btn.disabled = true;
+    if (!valid) return;
 
-      // Simulate send (replace with actual fetch/ajax)
-      setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-        btn.disabled = false;
-        const success = document.getElementById('formSuccess');
+    const btn     = document.getElementById('formSubmitBtn');
+    const success = document.getElementById('formSuccess');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+    btn.disabled  = true;
+
+    try {
+      const formData = new FormData(form);
+      const res  = await fetch('contact.php', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.success) {
+        success.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
         success.classList.add('show');
         form.reset();
-        setTimeout(() => success.classList.remove('show'), 5000);
-      }, 1500);
+        setTimeout(() => success.classList.remove('show'), 6000);
+      } else {
+        success.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i> ' + data.message;
+        success.style.color = '#ef4444';
+        success.classList.add('show');
+        setTimeout(() => { success.classList.remove('show'); success.style.color = ''; }, 8000);
+      }
+    } catch (err) {
+      success.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i> Could not connect. Please email <a href="mailto:sammehtasam@gmail.com" style="color:var(--accent)">sammehtasam@gmail.com</a> directly.';
+      success.style.color = '#ef4444';
+      success.classList.add('show');
+      setTimeout(() => { success.classList.remove('show'); success.style.color = ''; }, 10000);
+    } finally {
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+      btn.disabled  = false;
     }
   });
 }

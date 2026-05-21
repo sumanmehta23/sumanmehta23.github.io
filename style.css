@@ -853,6 +853,50 @@ section { padding: 96px 0; }
 .project-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
 .project-body p { font-size: 0.88rem; color: var(--text-light); line-height: 1.6; }
 
+/* ===== KEY HIGHLIGHTS ===== */
+#highlights { background: var(--bg-2); }
+.highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+.highlight-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.highlight-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition);
+}
+.highlight-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.highlight-card:hover::before { transform: scaleX(1); }
+.highlight-icon {
+  width: 52px; height: 52px;
+  border-radius: var(--radius);
+  background: rgba(108,99,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  color: var(--accent);
+  transition: all var(--transition);
+}
+.highlight-card:hover .highlight-icon { background: var(--gradient); color: #fff; }
+.highlight-card h4 { font-size: 1rem; font-weight: 700; color: var(--text); }
+.highlight-card p { font-size: 0.88rem; color: var(--text-light); line-height: 1.7; }
+
 /* ===== TESTIMONIALS ===== */
 #testimonials { background: var(--bg); }
 .testimonials-slider { position: relative; overflow: hidden; }
