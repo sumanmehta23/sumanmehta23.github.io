@@ -266,7 +266,14 @@ document.querySelectorAll('.about-text-col').forEach(el => { el.classList.add('r
 document.querySelectorAll('.contact-info').forEach(el => { el.classList.add('reveal-left'); revealObserver.observe(el); });
 document.querySelectorAll('.contact-form').forEach(el => { el.classList.add('reveal-right'); revealObserver.observe(el); });
 
-// ===== CONTACT FORM — PHP / Gmail SMTP (contact.php) =====
+// ===== CONTACT FORM — Web3Forms (works on GitHub Pages) =====
+// HOW TO ACTIVATE (takes 2 minutes):
+//   1. Go to https://web3forms.com
+//   2. Enter your email: sammehtasam@gmail.com  → click "Create Access Key"
+//   3. Check your Gmail inbox → copy the access key they send you
+//   4. Paste it below replacing YOUR_ACCESS_KEY
+const WEB3FORMS_KEY = '26e9b9c8-f219-4056-a589-4874fe60b7a7';
+
 const form = document.getElementById('contactForm');
 if (form) {
   form.addEventListener('submit', async (e) => {
@@ -276,6 +283,8 @@ if (form) {
     const nameEl    = form.querySelector('[name="name"]');
     const emailEl   = form.querySelector('[name="email"]');
     const messageEl = form.querySelector('[name="message"]');
+    const serviceEl = form.querySelector('[name="service"]');
+    const subjectEl = form.querySelector('[name="subject"]');
     const nameErr   = document.getElementById('nameErr');
     const emailErr  = document.getElementById('emailErr');
     const msgErr    = document.getElementById('msgErr');
@@ -308,17 +317,37 @@ if (form) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
     btn.disabled  = true;
 
+    // Not yet configured
+    if (WEB3FORMS_KEY === 'YOUR_ACCESS_KEY') {
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+      btn.disabled  = false;
+      success.innerHTML = '<i class="fas fa-info-circle"></i> Contact form not yet activated. Please email <a href="mailto:sammehtasam@gmail.com" style="color:var(--accent)">sammehtasam@gmail.com</a> directly.';
+      success.style.color = 'var(--accent)';
+      success.classList.add('show');
+      setTimeout(() => { success.classList.remove('show'); success.style.color = ''; }, 10000);
+      return;
+    }
+
     try {
-      const formData = new FormData(form);
-      const res  = await fetch('contact.php', {
+      const payload = {
+        access_key: WEB3FORMS_KEY,
+        name:       nameEl.value.trim(),
+        email:      emailEl.value.trim(),
+        subject:    'Portfolio Contact: ' + (subjectEl ? subjectEl.value.trim() : nameEl.value.trim()),
+        message:    (serviceEl && serviceEl.value ? 'Service: ' + serviceEl.value + '\n\n' : '') + messageEl.value.trim(),
+        from_name:  'Portfolio — ' + nameEl.value.trim(),
+        botcheck:   ''
+      };
+
+      const res  = await fetch('https://api.web3forms.com/submit', {
         method:  'POST',
-        body:    formData,
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body:    JSON.stringify(payload)
       });
       const data = await res.json();
 
       if (data.success) {
-        success.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+        success.innerHTML = '<i class="fas fa-check-circle"></i> Message sent! I\'ll get back to you within 24 hours.';
         success.style.color = '';
         success.classList.add('show');
         form.reset();
