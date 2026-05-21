@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suman Mehta — Full Stack Developer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <a href="#hero" class="nav-logo">
+        <span class="logo-bracket">&lt;</span>SM<span class="logo-bracket">/&gt;</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <i class="fas fa-sun" id="themeIcon"></i>
+        </button>
+        <a href="#contact" class="btn-hire">Hire Me</a>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section id="hero">
+    <div class="hero-bg">
+      <div class="hero-grid"></div>
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span> Available for Freelance
+      </div>
+      <h1 class="hero-title">
+        Hi, I'm <span class="gradient-text">Suman Mehta</span>
+      </h1>
+      <h2 class="hero-subtitle typewriter" id="typewriter"></h2>
+      <p class="hero-desc">
+        Full Stack Developer with <strong>7+ years</strong> of experience crafting robust web applications.
+        Specializing in PHP ecosystems, modern JavaScript frameworks, and scalable digital solutions.
+      </p>
+      <div class="hero-cta">
+        <a href="#projects" class="btn-primary">
+          <i class="fas fa-rocket"></i> View My Work
+        </a>
+        <a href="#contact" class="btn-outline">
+          <i class="fas fa-paper-plane"></i> Get In Touch
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num" data-count="7">0</span><span>+</span>
+          <span class="stat-label">Years Exp.</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="50">0</span><span>+</span>
+          <span class="stat-label">Projects</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="30">0</span><span>+</span>
+          <span class="stat-label">Happy Clients</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="10">0</span><span>+</span>
+          <span class="stat-label">Technologies</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="avatar-wrapper">
+        <div class="avatar-ring ring-1"></div>
+        <div class="avatar-ring ring-2"></div>
+        <div class="avatar-placeholder">
+          <span>SM</span>
+        </div>
+        <div class="floating-badge fb-1"><i class="fab fa-laravel"></i> Laravel</div>
+        <div class="floating-badge fb-2"><i class="fab fa-react"></i> React</div>
+        <div class="floating-badge fb-3"><i class="fab fa-wordpress"></i> WordPress</div>
+        <div class="floating-badge fb-4"><i class="fab fa-vuejs"></i> Vue</div>
+      </div>
+    </div>
+    <a href="#about" class="scroll-down" aria-label="Scroll down">
+      <i class="fas fa-chevron-down"></i>
+    </a>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section id="about">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">About Me</span>
+        <h2 class="section-title">The Developer Behind the Code</h2>
+      </div>
+      <div class="about-grid">
+        <div class="about-image-col">
+          <div class="about-card-visual">
+            <div class="code-block">
+              <div class="code-top">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="code-file">suman.php</span>
+              </div>
+              <pre class="code-content"><span class="c-purple">$developer</span> = [
+  <span class="c-green">'name'</span>    =&gt; <span class="c-yellow">'Suman Mehta'</span>,
+  <span class="c-green">'role'</span>    =&gt; <span class="c-yellow">'Full Stack Dev'</span>,
+  <span class="c-green">'exp'</span>     =&gt; <span class="c-yellow">'7+ years'</span>,
+  <span class="c-green">'stack'</span>   =&gt; [
+    <span class="c-yellow">'PHP'</span>, <span class="c-yellow">'Laravel'</span>,
+    <span class="c-yellow">'React'</span>, <span class="c-yellow">'Vue'</span>,
+    <span class="c-yellow">'WordPress'</span>,
+  ],
+  <span class="c-green">'passion'</span> =&gt; <span class="c-yellow">'Building things'</span>,
+  <span class="c-green">'coffee'</span>  =&gt; <span class="c-yellow">'Always ☕'</span>,
+];</pre>
+            </div>
+          </div>
+        </div>
+        <div class="about-text-col">
+          <h3>Passionate Full Stack Developer from Himachal Pradesh</h3>
+          <p>
+            I'm <strong>Suman Mehta</strong>, a dedicated full stack web developer holding a <strong>B.Tech in Information Technology</strong>
+            from HPU University Institute of Information Technology. Since October 2018, I've been building
+            feature-rich web solutions across diverse industries.
+          </p>
+          <p>
+            My core strength lies in the PHP ecosystem — from raw PHP to powerful frameworks like <strong>Laravel</strong>,
+            <strong>CodeIgniter</strong>, and <strong>CakePHP</strong>. On the CMS side, I excel at custom <strong>WordPress</strong>
+            development and WHMCS customization. My modern frontend skills include <strong>React</strong>, <strong>Vue.js</strong>,
+            <strong>Bootstrap</strong>, and <strong>Tailwind CSS</strong>.
+          </p>
+          <p>
+            Beyond development, I have hands-on experience with <strong>Social Media Marketing (SMM)</strong> and
+            <strong>SEO strategies</strong> — giving me a holistic view of web presence and digital growth.
+          </p>
+          <div class="about-info-grid">
+            <div class="info-item">
+              <i class="fas fa-graduation-cap"></i>
+              <div>
+                <strong>Education</strong>
+                <span>B.Tech IT — HPU UIIT</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-calendar-alt"></i>
+              <div>
+                <strong>Experience Since</strong>
+                <span>October 2018</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <strong>Location</strong>
+                <span>Shimla, Himachal Pradesh</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-code"></i>
+              <div>
+                <strong>Specialty</strong>
+                <span>PHP & Full Stack</span>
+              </div>
+            </div>
+          </div>
+          <div class="about-actions">
+            <a href="#contact" class="btn-primary"><i class="fas fa-envelope"></i> Contact Me</a>
+            <a href="#" class="btn-outline"><i class="fas fa-download"></i> Download CV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SKILLS ===== -->
+  <section id="skills">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Technical Skills</span>
+        <h2 class="section-title">My Technology Arsenal</h2>
+      </div>
+
+      <div class="skills-tabs">
+        <button class="skill-tab active" data-tab="backend">Backend</button>
+        <button class="skill-tab" data-tab="frontend">Frontend</button>
+        <button class="skill-tab" data-tab="cms">CMS & Platforms</button>
+        <button class="skill-tab" data-tab="other">Tools & Others</button>
+      </div>
+
+      <div class="skills-panel active" id="tab-backend">
+        <div class="skills-grid">
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fab fa-php"></i></div>
+            <h4>PHP</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="95"></div></div>
+            <span class="skill-pct">95%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon laravel-icon"><i class="fab fa-laravel"></i></div>
+            <h4>Laravel</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="92"></div></div>
+            <span class="skill-pct">92%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-fire"></i></div>
+            <h4>CodeIgniter</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="70"></div></div>
+            <span class="skill-pct">70%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-layer-group"></i></div>
+            <h4>CakePHP</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="65"></div></div>
+            <span class="skill-pct">65%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-database"></i></div>
+            <h4>MySQL</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="88"></div></div>
+            <span class="skill-pct">88%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-exchange-alt"></i></div>
+            <h4>REST APIs</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="90"></div></div>
+            <span class="skill-pct">90%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-panel" id="tab-frontend">
+        <div class="skills-grid">
+          <div class="skill-card">
+            <div class="skill-icon react-icon"><i class="fab fa-react"></i></div>
+            <h4>React.js</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="82"></div></div>
+            <span class="skill-pct">82%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon vue-icon"><i class="fab fa-vuejs"></i></div>
+            <h4>Vue.js</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="78"></div></div>
+            <span class="skill-pct">78%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fab fa-js-square"></i></div>
+            <h4>JavaScript</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="85"></div></div>
+            <span class="skill-pct">85%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon bootstrap-icon"><i class="fab fa-bootstrap"></i></div>
+            <h4>Bootstrap</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="90"></div></div>
+            <span class="skill-pct">90%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon tailwind-icon"><i class="fas fa-wind"></i></div>
+            <h4>Tailwind CSS</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="85"></div></div>
+            <span class="skill-pct">85%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fab fa-html5"></i></div>
+            <h4>HTML5 / CSS3</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="95"></div></div>
+            <span class="skill-pct">95%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-panel" id="tab-cms">
+        <div class="skills-grid">
+          <div class="skill-card">
+            <div class="skill-icon wp-icon"><i class="fab fa-wordpress"></i></div>
+            <h4>WordPress</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="93"></div></div>
+            <span class="skill-pct">93%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-server"></i></div>
+            <h4>WHMCS</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="80"></div></div>
+            <span class="skill-pct">80%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-shopping-cart"></i></div>
+            <h4>WooCommerce</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="85"></div></div>
+            <span class="skill-pct">85%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-puzzle-piece"></i></div>
+            <h4>Theme Dev</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="88"></div></div>
+            <span class="skill-pct">88%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-plug"></i></div>
+            <h4>Plugin Dev</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="82"></div></div>
+            <span class="skill-pct">82%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-store"></i></div>
+            <h4>E-Commerce</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="87"></div></div>
+            <span class="skill-pct">87%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-panel" id="tab-other">
+        <div class="skills-grid">
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-share-alt"></i></div>
+            <h4>SMM</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="75"></div></div>
+            <span class="skill-pct">75%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-search"></i></div>
+            <h4>SEO</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="60"></div></div>
+            <span class="skill-pct">60%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fab fa-git-alt"></i></div>
+            <h4>Git / GitHub</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="85"></div></div>
+            <span class="skill-pct">85%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fab fa-linux"></i></div>
+            <h4>Linux Server</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="70"></div></div>
+            <span class="skill-pct">70%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-cloud"></i></div>
+            <h4>cPanel / WHM</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="80"></div></div>
+            <span class="skill-pct">80%</span>
+          </div>
+          <div class="skill-card">
+            <div class="skill-icon"><i class="fas fa-code-branch"></i></div>
+            <h4>Composer / npm</h4>
+            <div class="skill-bar"><div class="skill-fill" data-width="82"></div></div>
+            <span class="skill-pct">82%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Logos Strip -->
+      <div class="tech-strip">
+        <div class="tech-strip-inner">
+          <span><i class="fab fa-php"></i> PHP</span>
+          <span><i class="fab fa-laravel"></i> Laravel</span>
+          <span><i class="fab fa-react"></i> React</span>
+          <span><i class="fab fa-vuejs"></i> Vue</span>
+          <span><i class="fab fa-wordpress"></i> WordPress</span>
+          <span><i class="fab fa-js"></i> JavaScript</span>
+          <span><i class="fab fa-bootstrap"></i> Bootstrap</span>
+          <span><i class="fas fa-wind"></i> Tailwind</span>
+          <span><i class="fas fa-server"></i> WHMCS</span>
+          <span><i class="fas fa-search"></i> SEO</span>
+          <span><i class="fas fa-share-alt"></i> SMM</span>
+          <span><i class="fab fa-git-alt"></i> Git</span>
+          <!-- duplicate for infinite scroll -->
+          <span><i class="fab fa-php"></i> PHP</span>
+          <span><i class="fab fa-laravel"></i> Laravel</span>
+          <span><i class="fab fa-react"></i> React</span>
+          <span><i class="fab fa-vuejs"></i> Vue</span>
+          <span><i class="fab fa-wordpress"></i> WordPress</span>
+          <span><i class="fab fa-js"></i> JavaScript</span>
+          <span><i class="fab fa-bootstrap"></i> Bootstrap</span>
+          <span><i class="fas fa-wind"></i> Tailwind</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== EXPERIENCE ===== -->
+  <section id="experience">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Experience</span>
+        <h2 class="section-title">Professional Journey</h2>
+      </div>
+      <div class="timeline">
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-card">
+            <div class="tl-header">
+              <div>
+                <h3>Senior Full Stack Developer</h3>
+                <span class="tl-company"><i class="fas fa-building"></i> Web Development Agency</span>
+              </div>
+              <span class="tl-date"><i class="fas fa-calendar"></i> 2022 — Present</span>
+            </div>
+            <ul class="tl-list">
+              <li>Architecting and developing complex Laravel-based web applications</li>
+              <li>Leading frontend development with React and Vue.js</li>
+              <li>Custom WordPress theme & plugin development</li>
+              <li>WHMCS customization for hosting providers</li>
+              <li>Team mentoring and code reviews</li>
+            </ul>
+            <div class="tl-tags">
+              <span>Laravel</span><span>React</span><span>Vue</span><span>WordPress</span><span>WHMCS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-card">
+            <div class="tl-header">
+              <div>
+                <h3>Full Stack PHP Developer</h3>
+                <span class="tl-company"><i class="fas fa-building"></i> Software Company</span>
+              </div>
+              <span class="tl-date"><i class="fas fa-calendar"></i> 2020 — 2022</span>
+            </div>
+            <ul class="tl-list">
+              <li>Developed RESTful APIs for mobile and web consumption</li>
+              <li>Built e-commerce solutions with WooCommerce</li>
+              <li>Database design and optimization (MySQL)</li>
+              <li>Implemented SEO best practices</li>
+              <li>Social Media Marketing campaigns</li>
+            </ul>
+            <div class="tl-tags">
+              <span>PHP</span><span>MySQL</span><span>WooCommerce</span><span>SEO</span><span>SMM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-card">
+            <div class="tl-header">
+              <div>
+                <h3>Junior Web Developer</h3>
+                <span class="tl-company"><i class="fas fa-building"></i> IT Startup</span>
+              </div>
+              <span class="tl-date"><i class="fas fa-calendar"></i> Oct 2018 — 2020</span>
+            </div>
+            <ul class="tl-list">
+              <li>Started career building PHP & CodeIgniter applications</li>
+              <li>WordPress customization and theme development</li>
+              <li>Frontend development with Bootstrap and vanilla JavaScript</li>
+              <li>Client management and requirement gathering</li>
+            </ul>
+            <div class="tl-tags">
+              <span>PHP</span><span>CodeIgniter</span><span>Bootstrap</span><span>WordPress</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICES ===== -->
+  <section id="services">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">What I Do</span>
+        <h2 class="section-title">Services I Offer</h2>
+      </div>
+      <div class="services-grid">
+
+        <div class="service-card">
+          <div class="service-icon"><i class="fab fa-laravel"></i></div>
+          <h3>Laravel Development</h3>
+          <p>Scalable, secure Laravel applications with clean architecture, REST APIs, queues, and advanced features.</p>
+          <ul>
+            <li>Custom web applications</li>
+            <li>REST API development</li>
+            <li>Admin dashboards</li>
+            <li>SaaS products</li>
+          </ul>
+        </div>
+
+        <div class="service-card featured">
+          <div class="service-badge">Most Popular</div>
+          <div class="service-icon"><i class="fab fa-wordpress"></i></div>
+          <h3>WordPress Solutions</h3>
+          <p>End-to-end WordPress development including custom themes, plugins, WooCommerce, and performance optimization.</p>
+          <ul>
+            <li>Custom theme development</li>
+            <li>Plugin development</li>
+            <li>WooCommerce stores</li>
+            <li>Speed optimization</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon"><i class="fab fa-react"></i></div>
+          <h3>React / Vue Frontend</h3>
+          <p>Modern, reactive user interfaces with React.js and Vue.js paired with Tailwind CSS or Bootstrap.</p>
+          <ul>
+            <li>SPA development</li>
+            <li>Component libraries</li>
+            <li>API integration</li>
+            <li>Performance tuning</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-server"></i></div>
+          <h3>WHMCS Customization</h3>
+          <p>Custom WHMCS modules, hooks, templates, and integrations for web hosting businesses.</p>
+          <ul>
+            <li>Custom modules</li>
+            <li>Payment gateways</li>
+            <li>Template design</li>
+            <li>Automation hooks</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-shopping-cart"></i></div>
+          <h3>E-Commerce Development</h3>
+          <p>Complete online store setup with payment integration, inventory management, and order tracking.</p>
+          <ul>
+            <li>WooCommerce stores</li>
+            <li>Payment integration</li>
+            <li>Custom cart logic</li>
+            <li>Multi-vendor setups</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Digital Marketing</h3>
+          <p>Social media marketing strategies and SEO implementation to boost your online visibility.</p>
+          <ul>
+            <li>Social media campaigns</li>
+            <li>On-page SEO</li>
+            <li>Content strategy</li>
+            <li>Analytics setup</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROJECTS ===== -->
+  <section id="projects">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Portfolio</span>
+        <h2 class="section-title">Featured Projects</h2>
+      </div>
+      <div class="projects-filter">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="laravel">Laravel</button>
+        <button class="filter-btn" data-filter="wordpress">WordPress</button>
+        <button class="filter-btn" data-filter="react">React/Vue</button>
+        <button class="filter-btn" data-filter="whmcs">WHMCS</button>
+      </div>
+      <div class="projects-grid" id="projectsGrid">
+
+        <div class="project-card" data-category="laravel">
+          <div class="project-img">
+            <div class="project-placeholder"><i class="fab fa-laravel"></i></div>
+            <div class="project-overlay">
+              <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+              <a href="#" class="project-link"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags"><span>Laravel</span><span>MySQL</span><span>REST API</span></div>
+            <h3>Multi-Tenant SaaS Platform</h3>
+            <p>A scalable SaaS application with multi-tenancy, subscription billing, and role-based access control built with Laravel.</p>
+          </div>
+        </div>
+
+        <div class="project-card" data-category="wordpress">
+          <div class="project-img">
+            <div class="project-placeholder wp"><i class="fab fa-wordpress"></i></div>
+            <div class="project-overlay">
+              <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+              <a href="#" class="project-link"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags"><span>WordPress</span><span>WooCommerce</span><span>PHP</span></div>
+            <h3>E-Commerce Fashion Store</h3>
+            <p>Custom WooCommerce store with advanced filtering, wishlist, comparison, and integrated payment gateways.</p>
+          </div>
+        </div>
+
+        <div class="project-card" data-category="react">
+          <div class="project-img">
+            <div class="project-placeholder react"><i class="fab fa-react"></i></div>
+            <div class="project-overlay">
+              <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+              <a href="#" class="project-link"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags"><span>React</span><span>Laravel API</span><span>Tailwind</span></div>
+            <h3>Real-Estate Listing App</h3>
+            <p>React SPA with Laravel backend — property listings, advanced search, map integration, and agent dashboard.</p>
+          </div>
+        </div>
+
+        <div class="project-card" data-category="whmcs">
+          <div class="project-img">
+            <div class="project-placeholder whmcs"><i class="fas fa-server"></i></div>
+            <div class="project-overlay">
+              <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+              <a href="#" class="project-link"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags"><span>WHMCS</span><span>PHP</span><span>Custom Module</span></div>
+            <h3>WHMCS Hosting Automation</h3>
+            <p>Custom WHMCS modules for automated server provisioning, domain management, and client billing workflows.</p>
+          </div>
+        </div>
+
+        <div class="project-card" data-category="laravel">
+          <div class="project-img">
+            <div class="project-placeholder laravel2"><i class="fas fa-chart-bar"></i></div>
+            <div class="project-overlay">
+              <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+              <a href="#" class="project-link"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags"><span>Laravel</span><span>Vue</span><span>Chart.js</span></div>
+            <h3>Business Analytics Dashboard</h3>
+            <p>Comprehensive analytics dashboard with real-time data visualization, reporting, and export features.</p>
+          </div>
+        </div>
+
+        <div class="project-card" data-category="wordpress">
+          <div class="project-img">
+            <div class="project-placeholder wp2"><i class="fas fa-newspaper"></i></div>
+            <div class="project-overlay">
+              <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+              <a href="#" class="project-link"><i class="fab fa-github"></i></a>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-tags"><span>WordPress</span><span>Custom Theme</span><span>SEO</span></div>
+            <h3>News & Media Portal</h3>
+            <p>High-traffic news portal with custom WordPress theme, advanced caching, AMP support, and full SEO optimization.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Testimonials</span>
+        <h2 class="section-title">What Clients Say</h2>
+      </div>
+      <div class="testimonials-slider" id="testimonialSlider">
+        <div class="testimonial-track" id="testimonialTrack">
+
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>"Suman delivered an exceptional Laravel application that exceeded our expectations. His attention to detail and clean code made the project a huge success."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">AK</div>
+              <div>
+                <strong>Amit Kumar</strong>
+                <span>CEO, TechSolutions India</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>"Our WordPress store went from slow and buggy to blazing fast after Suman's work. The custom WooCommerce features he built are exactly what we needed."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">PV</div>
+              <div>
+                <strong>Priya Verma</strong>
+                <span>Owner, Fashion Boutique</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>"The WHMCS customization was flawless. Suman understood our hosting business requirements perfectly and delivered a robust automation solution."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">RS</div>
+              <div>
+                <strong>Rahul Sharma</strong>
+                <span>Director, HostingPro</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★☆</div>
+            <p>"Suman's React + Laravel project for us was top-notch. Great communication throughout the project and very knowledgeable in modern frameworks."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">NJ</div>
+              <div>
+                <strong>Neeraj Joshi</strong>
+                <span>Product Manager, StartupHub</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="slider-controls">
+          <button class="slider-btn" id="sliderPrev"><i class="fas fa-chevron-left"></i></button>
+          <div class="slider-dots" id="sliderDots"></div>
+          <button class="slider-btn" id="sliderNext"><i class="fas fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Get In Touch</span>
+        <h2 class="section-title">Let's Work Together</h2>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h3>I'm here to help you build something amazing</h3>
+          <p>Whether you need a full web application, WordPress site, WHMCS setup, or just want to discuss your project — I'm just a message away.</p>
+
+          <div class="contact-items">
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
+              <div>
+                <strong>Phone / WhatsApp</strong>
+                <a href="tel:+918219303023">+91 8219303023</a>
+                <a href="tel:+917018777815">+91 7018777815</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+              <div>
+                <strong>Email</strong>
+                <a href="mailto:sumanmehta@example.com">sumanmehta@example.com</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <div>
+                <strong>Address</strong>
+                <span>Village Panoli, PO Khunni, Teshil Nankhari,<br>Rampur, Distt. Shimla — 171213<br>Himachal Pradesh, India</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://wa.me/918219303023" class="social-link" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fname">Full Name *</label>
+              <input type="text" id="fname" name="name" placeholder="John Doe" required />
+              <span class="form-error" id="nameErr"></span>
+            </div>
+            <div class="form-group">
+              <label for="femail">Email Address *</label>
+              <input type="email" id="femail" name="email" placeholder="john@example.com" required />
+              <span class="form-error" id="emailErr"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="fsubject">Subject *</label>
+            <input type="text" id="fsubject" name="subject" placeholder="Project inquiry" required />
+          </div>
+          <div class="form-group">
+            <label for="fservice">Service Needed</label>
+            <select id="fservice" name="service">
+              <option value="">Select a service...</option>
+              <option>Laravel Development</option>
+              <option>WordPress Development</option>
+              <option>React / Vue Frontend</option>
+              <option>WHMCS Customization</option>
+              <option>E-Commerce Development</option>
+              <option>Digital Marketing / SEO</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="fmessage">Message *</label>
+            <textarea id="fmessage" name="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+            <span class="form-error" id="msgErr"></span>
+          </div>
+          <button type="submit" class="btn-primary btn-full" id="formSubmitBtn">
+            <i class="fas fa-paper-plane"></i> Send Message
+          </button>
+          <div class="form-success" id="formSuccess">
+            <i class="fas fa-check-circle"></i> Message sent! I'll get back to you soon.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#hero" class="nav-logo">
+            <span class="logo-bracket">&lt;</span>SM<span class="logo-bracket">/&gt;</span>
+          </a>
+          <p>Full Stack Developer passionate about building beautiful, performant web solutions.</p>
+          <div class="social-links">
+            <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+            <a href="https://wa.me/918219303023" class="social-link" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          </div>
+        </div>
+        <div class="footer-links-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#projects">Projects</a></li>
+          </ul>
+        </div>
+        <div class="footer-links-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="#services">Laravel Dev</a></li>
+            <li><a href="#services">WordPress</a></li>
+            <li><a href="#services">React / Vue</a></li>
+            <li><a href="#services">WHMCS</a></li>
+          </ul>
+        </div>
+        <div class="footer-links-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="tel:+918219303023">+91 8219303023</a></li>
+            <li><a href="tel:+917018777815">+91 7018777815</a></li>
+            <li><a href="#contact">Send Message</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Suman Mehta. Crafted with <i class="fas fa-heart" style="color:#e74c3c"></i> in Himachal Pradesh</p>
+        <p>Built with HTML5 · CSS3 · Vanilla JS</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to top -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <script src="script.js"></script>
+</body>
+</html>
