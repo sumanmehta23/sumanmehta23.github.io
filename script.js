@@ -266,13 +266,7 @@ document.querySelectorAll('.about-text-col').forEach(el => { el.classList.add('r
 document.querySelectorAll('.contact-info').forEach(el => { el.classList.add('reveal-left'); revealObserver.observe(el); });
 document.querySelectorAll('.contact-form').forEach(el => { el.classList.add('reveal-right'); revealObserver.observe(el); });
 
-// ===== CONTACT FORM — Formspree (works on GitHub Pages + any static host) =====
-// HOW TO ACTIVATE:
-//   1. Go to https://formspree.io → Sign up free
-//   2. Create a new form → enter sammehtasam@gmail.com as recipient
-//   3. Copy your Form ID (e.g. "xdkozwpb") and replace YOUR_FORM_ID below
-const FORMSPREE_ID = 'YOUR_FORM_ID'; // <-- Replace this with your Formspree form ID
-
+// ===== CONTACT FORM — PHP / Gmail SMTP (contact.php) =====
 const form = document.getElementById('contactForm');
 if (form) {
   form.addEventListener('submit', async (e) => {
@@ -314,41 +308,29 @@ if (form) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
     btn.disabled  = true;
 
-    // If Formspree ID not yet set, show a helpful fallback
-    if (FORMSPREE_ID === 'YOUR_FORM_ID') {
-      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-      btn.disabled  = false;
-      success.innerHTML = '<i class="fas fa-info-circle"></i> Contact form not yet configured. Please email <a href="mailto:sammehtasam@gmail.com" style="color:var(--accent)">sammehtasam@gmail.com</a> directly.';
-      success.style.color = 'var(--accent)';
-      success.classList.add('show');
-      setTimeout(() => { success.classList.remove('show'); success.style.color = ''; }, 10000);
-      return;
-    }
-
     try {
       const formData = new FormData(form);
-      const res  = await fetch('https://formspree.io/f/' + FORMSPREE_ID, {
+      const res  = await fetch('contact.php', {
         method:  'POST',
         body:    formData,
         headers: { 'Accept': 'application/json' }
       });
       const data = await res.json();
 
-      if (res.ok) {
-        success.innerHTML = '<i class="fas fa-check-circle"></i> Message sent! I\'ll get back to you within 24 hours.';
+      if (data.success) {
+        success.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
         success.style.color = '';
         success.classList.add('show');
         form.reset();
-        setTimeout(() => success.classList.remove('show'), 6000);
+        setTimeout(() => success.classList.remove('show'), 7000);
       } else {
-        const errMsg = data.errors ? data.errors.map(e => e.message).join(', ') : 'Something went wrong. Please try again.';
-        success.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i> ' + errMsg;
+        success.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i> ' + (data.message || 'Something went wrong. Please try again.');
         success.style.color = '#ef4444';
         success.classList.add('show');
         setTimeout(() => { success.classList.remove('show'); success.style.color = ''; }, 8000);
       }
     } catch (err) {
-      success.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i> Could not connect. Please email <a href="mailto:sammehtasam@gmail.com" style="color:var(--accent)">sammehtasam@gmail.com</a> directly.';
+      success.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i> Could not send. Please email <a href="mailto:sammehtasam@gmail.com" style="color:var(--accent)">sammehtasam@gmail.com</a> directly.';
       success.style.color = '#ef4444';
       success.classList.add('show');
       setTimeout(() => { success.classList.remove('show'); success.style.color = ''; }, 10000);
